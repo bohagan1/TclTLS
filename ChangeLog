@@ -1,0 +1,55 @@
+2000-07-10  Jeff Hobbs  <hobbs@scriptics.com>
+
+	* tlsBIO.c (BioWrite, BioRead): changed Tcl_Read/Write to
+	Tcl_ReadRaw/TclWriteRaw.
+
+	* tls.c: added use of Tcl_GetTopChannel after Tcl_GetChannel and
+	got return value from Tcl_StackChannel.
+
+	* tests/tlsIO.test: added some handshaking that shouldn't be
+	necessary, but we crash otherwise (needs more testing).
+
+	* tlsIO.c: added support for "corrected" stacked channels.  All
+	the above channels are in TCL_CHANNEL_VERSION_2 #ifdefs.
+
+2000-06-05  Scott Stanton  <stanton@ajubasolutions.com>
+
+	* Makefile.in: Fixed broken test target.
+
+	* tlsInt.h: 
+	* tls.c: Cleaned up declarations of Tls_Clean to avoid errors on
+	Windows (lint).
+
+2000-06-05  Brent Welch <welch@ajubasolutions.com>
+
+	* tls.c, tlsIO.c:  Split Tls_Free into Tls_Clean, which does
+	the SSL cleanup, and the Tcl_Free call.  It is important to shutdown
+	the SSL state "synchronously" during a stacked flush.
+
+2000-06-01  Scott Stanton  <stanton@ajubasolutions.com>
+
+	* tlsIO.c: Restored call to Tcl_NotifyChannel from ChannelHandler
+	to ensure that events propagate from the lower driver.  This may
+	result in an infinite loop in some cases, so this is not a total
+	fix.  This may be sufficient for now, however. [Bug: 5623]
+
+2000-06-01  Scott Stanton  <stanton@scriptics.com>
+
+	* tlsIO.c: Restore the previous version.  Fixed the CloseProc so
+	it unregisters the channel handler on the superceded channel
+	instead of the upper channel. Also removed the call to
+	Tcl_NotifyChannel in the ChannelHandler because this will result
+	in an infinite loop if data is ever buffered in the BIO
+	structure. [Bug: 5623]
+
+2000-05-31  Brent Welch <welch@scriptics.com>
+
+	* tls.c: Change the ChannelHandler to be registered on the main
+	channel as oppsed to the "parent", or superceeded, channel.  This
+	is because the socket driver notifies the main channel, and there
+	are times with the main channel gets closed, but the superceded
+	one is not yet closed.  If the channel handler gets triggered in
+	this half-open state it is associated with the superceeded
+	channedl, but uses its private pointer to the main channel, which
+	is mostly destroyed.  Eliminated the redundant call to
+	Tcl_NotifyChannel from TlsWatchProc. [Bug: 5623]
