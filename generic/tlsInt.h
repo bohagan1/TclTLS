@@ -42,11 +42,7 @@
  * Backwards compatibility for size type change
  */
 #if TCL_MAJOR_VERSION < 9 && TCL_MINOR_VERSION < 7
-    #ifndef Tcl_Size
-        typedef int Tcl_Size;
-    #endif
-
-    #define TCL_SIZE_MODIFIER ""
+#   define Tcl_Size int
 #endif
 
 #include <openssl/ssl.h>
