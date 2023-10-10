@@ -978,7 +978,7 @@ HashCalc(Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], const EVP_MD *type
 /*
  *-------------------------------------------------------------------
  *
- * Hash Commands -- Return hash hex string for message digest
+ * Hash Commands -- Return hash value for digest as hex string
  *
  * Results:
  *	A standard Tcl result.
@@ -1038,6 +1038,43 @@ HashSHA1Cmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const 
 int
 HashSHA256Cmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
     return HashCalc(interp, objc, objv, EVP_sha256());
+}
+
+/*
+ *-------------------------------------------------------------------
+ *
+ * Hash List Command -- Return list of hash message digests
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ *	None.
+ *
+ *-------------------------------------------------------------------
+ */
+
+void HashListCallback(const OBJ_NAME *obj, void *arg) {
+    Tcl_Obj *objPtr = (Tcl_Obj *) arg;
+    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(obj->name,-1));
+}
+
+/*
+ * Command to list available Hash values
+ */
+int
+HashListCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
+    Tcl_Obj *objPtr = Tcl_NewListObj(0, NULL);
+
+    OpenSSL_add_all_digests(); //make sure they're loaded
+    OBJ_NAME_do_all(OBJ_NAME_TYPE_MD_METH, HashListCallback, (void *) objPtr);
+    Tcl_ResetResult(interp);
+    Tcl_SetObjResult(interp, objPtr);
+
+    return TCL_OK;
+	clientData = clientData;
+	objc = objc;
+	objv = objv;
 }
 
 /*
@@ -2900,6 +2937,7 @@ DLLEXPORT int Tls_Init(Tcl_Interp *interp) {
     Tcl_CreateObjCommand(interp, "tls::protocols", ProtocolsObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
 
     Tcl_CreateObjCommand(interp, "tls::hash", HashCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
+    Tcl_CreateObjCommand(interp, "tls::hashes", HashListCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
     Tcl_CreateObjCommand(interp, "tls::md4", HashMD4Cmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
     Tcl_CreateObjCommand(interp, "tls::md5", HashMD5Cmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
     Tcl_CreateObjCommand(interp, "tls::sha1", HashSHA1Cmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
