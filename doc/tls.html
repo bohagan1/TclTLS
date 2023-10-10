@@ -31,9 +31,15 @@ content="text/html; charset=iso-8859-1">
 	    <dd><b>tls::import</b> <em>channel ?options?</em></dd>
 	    <dd><b>tls::unimport</b> <em>channel</em></dd>
 	    <dt>&nbsp;</dt>
-	    <dd><b>tls::ciphers </b> <em>protocol ?verbose? ?supported?</em></dd>
+	    <dd><b>tls::ciphers</b> <em>protocol ?verbose? ?supported?</em></dd>
 	    <dd><b>tls::protocols</b></dd>
 	    <dd><b>tls::version</b></dd>
+	    <dt>&nbsp;</dt>
+	    <dd><b>tls::hash</b> <em>type data</em></dd>
+	    <dd><b>tls::md4</b> <em>data</em></dd>
+	    <dd><b>tls::md5</b> <em>data</em></dd>
+	    <dd><b>tls::sha1</b> <em>data</em></dd>
+	    <dd><b>tls::sha256</b> <em>data</em></dd>
 	</dl>
     </dd>
     <dd><a href="#COMMANDS">COMMANDS</a></dd>
@@ -52,7 +58,7 @@ toolkit.</p>
 
 <h3><a name="SYNOPSIS">SYNOPSIS</a></h3>
 
-<p><b>package require Tcl 8.4</b><br>
+<p><b>package require Tcl 8.5</b><br>
 <b>package require tls</b><br>
 <br>
 <a href="#tls::init"><b>tls::init</b> <i>?options?</i></a><br>
@@ -65,8 +71,14 @@ toolkit.</p>
 <a href="#tls::unimport"><b>tls::unimport</b> <i>channel</i></a><br>
 <br>
 <a href="#tls::ciphers"><b>tls::ciphers</b> <i>protocol ?verbose? ?supported?</i></a><br>
-<a href="#tls::protocols"><b>tls::protocols</b></a>
-<a href="#tls::version"><b>tls::version</b></a>
+<a href="#tls::protocols"><b>tls::protocols</b></a><br>
+<a href="#tls::version"><b>tls::version</b></a><br>
+<br>
+<a href="#tls::hash"><b>tls::hash</b> <i>type data</i></a><br>
+<a href="#tls::md4"><b>tls::md4</b> <i>data</i></a><br>
+<a href="#tls::md5"><b>tls::md5</b> <i>data</i></a><br>
+<a href="#tls::sha1"><b>tls::sha1</b> <i>data</i></a><br>
+<a href="#tls::sha256"><b>tls::sha256</b> <i>data</i></a><br>
 </p>
 
 <h3><a name="DESCRIPTION">DESCRIPTION</a></h3>
@@ -432,6 +444,27 @@ used directly.</p>
 
     <dt><a name="tls::version"><strong>tls::version</strong></a></dt>
     <dd>Returns the OpenSSL version string.</dd>
+
+    <br>
+    <dt><a name="tls::hash"><strong>tls::hash</strong> <em>type data</em></a></dt>
+    <dd>Calculate the hash for <em>data</em> using <em>type</em> digest.
+	Returns value as a hex string. Type cam be any OpenSSL supported
+	hash digest including: <b>md4</b>, <b>md5</b>, <b>sha1</b>,
+	sha2 (<b>sha224</b>, <b>sha256</b>, <b>sha384</b>, <b>sha512</b>,
+	<b>sha512-224</b>, and <b>sha512-256</b>),
+	sha3 (<b>sha3-224</b>, <b>sha3-256</b>, <b>sha3-384</b>, and <b>sha3-512</b>), etc.</dd>
+
+    <dt><a name="tls::md4"><strong>tls::md4</strong> <em>data</em></a></dt>
+    <dd>Calculate the hash for <em>data</em> using the MD4 message-digest algorithm.</dd>
+
+    <dt><a name="tls::md5"><strong>tls::md5</strong> <em>data</em></a></dt>
+    <dd>Calculate the hash for <em>data</em> using the MD5 message-digest algorithm.</dd>
+
+    <dt><a name="tls::sha1"><strong>tls::sha1</strong> <em>data</em></a></dt>
+    <dd>Calculate the hash for <em>data</em> using the SHA-1 secure hash algorithm.</dd>
+
+    <dt><a name="tls::sha256"><strong>tls::sha256</strong> <em>data</em></a></dt>
+    <dd>Calculate the hash for <em>data</em> using the SHA-2 SHA-256 secure hash algorithm.</dd>
 </dl>
 
 <h3><a name="CALLBACK OPTIONS">CALLBACK OPTIONS</a></h3>

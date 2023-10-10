@@ -928,6 +928,121 @@ HelloCallback(const SSL *ssl, int *alert, void *arg) {
 /*
  *-------------------------------------------------------------------
  *
+ * Hash Calc -- return hash hex string for message digest
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ *	None.
+ *
+ *-------------------------------------------------------------------
+ */
+int
+HashCalc(Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], const EVP_MD *type) {
+    char *data;
+    int len;
+    unsigned int mdlen;
+    unsigned char mdbuf[EVP_MAX_MD_SIZE];
+    unsigned char hashbuf[EVP_MAX_MD_SIZE*2+1];
+    const char *hex = "0123456789ABCDEF";
+
+    if (objc != 2) {
+	Tcl_WrongNumArgs(interp, 1, objv, "data");
+	return TCL_ERROR;
+    }
+
+    data = Tcl_GetByteArrayFromObj(objv[1], &len);
+    if (data == NULL) {
+	return TCL_ERROR;
+    }
+
+    /* Calc hash, convert to hex string, and write to result */
+    if (EVP_Digest(data, (size_t) len, mdbuf, &mdlen, type, NULL)) {
+	unsigned char *mptr = mdbuf;
+	unsigned char *hptr = &hashbuf[0];
+
+	for (unsigned int i = 0; i < mdlen; i++) {
+	    *hptr++ = hex[(*mptr>>4)&0xF];
+	    *hptr++ = hex[(*mptr++)&0xF];
+	}
+	*hptr = 0;
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(hashbuf, mdlen*2));
+    } else {
+	Tcl_SetResult(interp, "Hash calculation error", NULL);
+	return TCL_ERROR;
+    }
+    return TCL_OK;
+}
+
+/*
+ *-------------------------------------------------------------------
+ *
+ * Hash Commands -- Return hash hex string for message digest
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ *	None.
+ *
+ *-------------------------------------------------------------------
+ */
+HashCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
+    int len;
+    const char *name;
+    const EVP_MD *type;
+
+    if (objc != 3) {
+	Tcl_WrongNumArgs(interp, 1, objv, "type data");
+	return TCL_ERROR;
+    }
+
+    name = Tcl_GetStringFromObj(objv[1],&len);
+    if (name == NULL || (type = EVP_get_digestbyname(name)) == NULL) {
+	Tcl_AppendResult(interp, "Invalid digest type \"", name, "\"", NULL);
+	return TCL_ERROR;
+    }
+    objc--;
+    objv++;
+    return HashCalc(interp, objc, objv, type);
+}
+
+/*
+ * Command to Calculate MD4 Hash
+ */
+int
+HashMD4Cmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
+    return HashCalc(interp, objc, objv, EVP_md4());
+}
+
+/*
+ * Command to Calculate MD5 Hash
+ */
+int
+HashMD5Cmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
+    return HashCalc(interp, objc, objv, EVP_md5());
+}
+
+/*
+ * Command to Calculate SHA-1 Hash
+ */
+int
+HashSHA1Cmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
+    return HashCalc(interp, objc, objv, EVP_sha1());
+}
+
+/*
+ * Command to Calculate SHA-256 Hash
+ */
+int
+HashSHA256Cmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
+    return HashCalc(interp, objc, objv, EVP_sha256());
+}
+
+/*
+ *-------------------------------------------------------------------
+ *
  * CiphersObjCmd -- list available ciphers
  *
  *	This procedure is invoked to process the "tls::ciphers" command
@@ -2783,6 +2898,12 @@ DLLEXPORT int Tls_Init(Tcl_Interp *interp) {
     Tcl_CreateObjCommand(interp, "tls::version", VersionObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
     Tcl_CreateObjCommand(interp, "tls::misc", MiscObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
     Tcl_CreateObjCommand(interp, "tls::protocols", ProtocolsObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
+
+    Tcl_CreateObjCommand(interp, "tls::hash", HashCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
+    Tcl_CreateObjCommand(interp, "tls::md4", HashMD4Cmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
+    Tcl_CreateObjCommand(interp, "tls::md5", HashMD5Cmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
+    Tcl_CreateObjCommand(interp, "tls::sha1", HashSHA1Cmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
+    Tcl_CreateObjCommand(interp, "tls::sha256", HashSHA256Cmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
 
     if (interp) {
 	Tcl_Eval(interp, tlsTclInitScript);
