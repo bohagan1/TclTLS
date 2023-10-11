@@ -26,6 +26,10 @@
 #include "tclOpts.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <openssl/crypto.h>
+#include <openssl/ssl.h>
+#include <openssl/evp.h>
+#include <openssl/objects.h>
 #include <openssl/rsa.h>
 #include <openssl/safestack.h>
 
@@ -928,7 +932,9 @@ HelloCallback(const SSL *ssl, int *alert, void *arg) {
 /*
  *-------------------------------------------------------------------
  *
- * Hash Calc -- return hash hex string for message digest
+ * Hash Calc --
+ *
+ *	Calculate message digest of data using type hash algorithm.
  *
  * Results:
  *	A standard Tcl result.
@@ -1056,8 +1062,8 @@ HashSHA256Cmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *cons
 
 void HashListCallback(const OBJ_NAME *obj, void *arg) {
     Tcl_Obj *objPtr = (Tcl_Obj *) arg;
-    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(obj->name,-1));
-}
+	Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(obj->name,-1));
+    }
 
 /*
  * Command to list available Hash values
@@ -1066,8 +1072,11 @@ int
 HashListCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
     Tcl_Obj *objPtr = Tcl_NewListObj(0, NULL);
 
-    OpenSSL_add_all_digests(); //make sure they're loaded
-    OBJ_NAME_do_all(OBJ_NAME_TYPE_MD_METH, HashListCallback, (void *) objPtr);
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+    OpenSSL_add_all_digests(); /* Make sure they're loaded */
+#endif
+
+    OBJ_NAME_do_all(OBJ_NAME_TYPE_MD_METH, ListCallback, (void *) objPtr);
     Tcl_ResetResult(interp);
     Tcl_SetObjResult(interp, objPtr);
 
@@ -1077,6 +1086,16 @@ HashListCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const 
 	objv = objv;
 }
 
+/*
+ * Valid SSL and TLS Protocol Versions
+ */
+static const char *protocols[] = {
+	"ssl2", "ssl3", "tls1", "tls1.1", "tls1.2", "tls1.3", NULL
+};
+enum protocol {
+    TLS_SSL2, TLS_SSL3, TLS_TLS1, TLS_TLS1_1, TLS_TLS1_2, TLS_TLS1_3, TLS_NONE
+};
+
 /*
  *-------------------------------------------------------------------
  *
@@ -1093,12 +1112,6 @@ HashListCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const 
  *
  *-------------------------------------------------------------------
  */
-static const char *protocols[] = {
-	"ssl2", "ssl3", "tls1", "tls1.1", "tls1.2", "tls1.3", NULL
-};
-enum protocol {
-    TLS_SSL2, TLS_SSL3, TLS_TLS1, TLS_TLS1_1, TLS_TLS1_2, TLS_TLS1_3, TLS_NONE
-};
 
 static int
 CiphersObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
@@ -1112,11 +1125,24 @@ CiphersObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *cons
 
     dprintf("Called");
 
-    if ((objc < 2) || (objc > 4)) {
-	Tcl_WrongNumArgs(interp, 1, objv, "protocol ?verbose? ?supported?");
+    if ((objc < 1) || (objc > 4)) {
+	Tcl_WrongNumArgs(interp, 1, objv, "?protocol? ?verbose? ?supported?");
 	return TCL_ERROR;
     }
-    if (Tcl_GetIndexFromObj(interp, objv[1], protocols, "protocol", 0, &index) != TCL_OK) {
+    if (objc == 1) {
+	/* List all ciphers */
+	Tcl_Obj *objPtr = Tcl_NewListObj(0, NULL);
+
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+	OpenSSL_add_all_ciphers(); /* Make sure they're loaded */
+#endif
+
+	OBJ_NAME_do_all(OBJ_NAME_TYPE_CIPHER_METH, ListCallback, (void *) objPtr);
+	Tcl_ResetResult(interp);
+	Tcl_SetObjResult(interp, objPtr);
+	return TCL_OK;
+
+    } else if (Tcl_GetIndexFromObj(interp, objv[1], protocols, "protocol", 0, &index) != TCL_OK) {
 	return TCL_ERROR;
     }
     if ((objc > 2) && Tcl_GetBooleanFromObj(interp, objv[2], &verbose) != TCL_OK) {
@@ -1233,6 +1259,7 @@ CiphersObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *cons
     SSL_free(ssl);
     SSL_CTX_free(ctx);
 
+    Tcl_ResetResult(interp);
     Tcl_SetObjResult(interp, objPtr);
     return TCL_OK;
 	clientData = clientData;
@@ -1291,6 +1318,34 @@ ProtocolsObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *co
     Tcl_SetObjResult(interp, objPtr);
     return TCL_OK;
 	clientData = clientData;
+}
+
+/*
+ *-------------------------------------------------------------------
+ *
+ * VersionObjCmd -- return version string from OpenSSL.
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ *	None.
+ *
+ *-------------------------------------------------------------------
+ */
+static int
+VersionObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
+    Tcl_Obj *objPtr;
+
+    dprintf("Called");
+
+    objPtr = Tcl_NewStringObj(OPENSSL_VERSION_TEXT, -1);
+    Tcl_SetObjResult(interp, objPtr);
+
+    return TCL_OK;
+	clientData = clientData;
+	objc = objc;
+	objv = objv;
 }
 
 /*
@@ -1998,6 +2053,10 @@ CTX_Init(State *statePtr, int isServer, int proto, char *keyfile, char *certfile
 	SSL_CTX_set_options(ctx, SSL_OP_CIPHER_SERVER_PREFERENCE);
     }
 
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+    OpenSSL_add_all_algorithms(); /* Load ciphers and digests */
+#endif
+
     SSL_CTX_set_app_data(ctx, (void*)interp);	/* remember the interpreter */
     SSL_CTX_set_options(ctx, SSL_OP_ALL);	/* all SSL bug workarounds */
     SSL_CTX_set_options(ctx, SSL_OP_NO_COMPRESSION);	/* disable compression even if supported */
@@ -2545,34 +2604,6 @@ static int ConnectionInfoObjCmd(ClientData clientData, Tcl_Interp *interp, int o
 /*
  *-------------------------------------------------------------------
  *
- * VersionObjCmd -- return version string from OpenSSL.
- *
- * Results:
- *	A standard Tcl result.
- *
- * Side effects:
- *	None.
- *
- *-------------------------------------------------------------------
- */
-static int
-VersionObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
-    Tcl_Obj *objPtr;
-
-    dprintf("Called");
-
-    objPtr = Tcl_NewStringObj(OPENSSL_VERSION_TEXT, -1);
-    Tcl_SetObjResult(interp, objPtr);
-
-    return TCL_OK;
-	clientData = clientData;
-	objc = objc;
-	objv = objv;
-}
-
-/*
- *-------------------------------------------------------------------
- *
  * MiscObjCmd -- misc commands
  *
  * Results:
@@ -2926,15 +2957,16 @@ DLLEXPORT int Tls_Init(Tcl_Interp *interp) {
 	return TCL_ERROR;
     }
 
-    Tcl_CreateObjCommand(interp, "tls::ciphers", CiphersObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
     Tcl_CreateObjCommand(interp, "tls::connection", ConnectionInfoObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
     Tcl_CreateObjCommand(interp, "tls::handshake", HandshakeObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
     Tcl_CreateObjCommand(interp, "tls::import", ImportObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
+    Tcl_CreateObjCommand(interp, "tls::misc", MiscObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
     Tcl_CreateObjCommand(interp, "tls::unimport", UnimportObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
     Tcl_CreateObjCommand(interp, "tls::status", StatusObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
-    Tcl_CreateObjCommand(interp, "tls::version", VersionObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
-    Tcl_CreateObjCommand(interp, "tls::misc", MiscObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
+
+    Tcl_CreateObjCommand(interp, "tls::ciphers", CiphersObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
     Tcl_CreateObjCommand(interp, "tls::protocols", ProtocolsObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
+    Tcl_CreateObjCommand(interp, "tls::version", VersionObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
 
     Tcl_CreateObjCommand(interp, "tls::hash", HashCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
     Tcl_CreateObjCommand(interp, "tls::hashes", HashListCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);

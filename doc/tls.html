@@ -31,7 +31,7 @@ content="text/html; charset=iso-8859-1">
 	    <dd><b>tls::import</b> <em>channel ?options?</em></dd>
 	    <dd><b>tls::unimport</b> <em>channel</em></dd>
 	    <dt>&nbsp;</dt>
-	    <dd><b>tls::ciphers</b> <em>protocol ?verbose? ?supported?</em></dd>
+	    <dd><b>tls::ciphers</b> <em>?protocol? ?verbose? ?supported?</em></dd>
 	    <dd><b>tls::protocols</b></dd>
 	    <dd><b>tls::version</b></dd>
 	    <dt>&nbsp;</dt>
@@ -71,7 +71,7 @@ toolkit.</p>
 <a href="#tls::import"><b>tls::import</b> <i>channel ?options?</i></a><br>
 <a href="#tls::unimport"><b>tls::unimport</b> <i>channel</i></a><br>
 <br>
-<a href="#tls::ciphers"><b>tls::ciphers</b> <i>protocol ?verbose? ?supported?</i></a><br>
+<a href="#tls::ciphers"><b>tls::ciphers</b> <i>?protocol? ?verbose? ?supported?</i></a><br>
 <a href="#tls::protocols"><b>tls::protocols</b></a><br>
 <a href="#tls::version"><b>tls::version</b></a><br>
 <br>
@@ -429,12 +429,13 @@ used directly.</p>
 </blockquote>
 
     <dt><a name="tls::ciphers"><strong>tls::ciphers</strong>
-    <em>protocol ?verbose? ?supported?</em></a></dt>
-    <dd>Returns a list of supported ciphers available for <em>protocol</em>,
-	where protocol must be one of <b>ssl2, ssl3, tls1, tls1.1,
-	tls1.2,</b> or <b>tls1.3</b>. If <em>verbose</em> is specified as
-	true then a verbose, human readable list is returned with
-	additional information on the cipher. If <em>supported</em>
+    <em>?protocol? ?verbose? ?supported?</em></a></dt>
+    <dd>Without any args, returns a list of all ciphers. With
+	<em>protocol</em>, only the ciphers supportted for that protocol
+	are returned where <em>protocol</em> must be one of <b>ssl2, ssl3,
+	tls1, tls1.1, tls1.2,</b> or <b>tls1.3</b>. If <em>verbose</em> is
+	specified as true then a verbose, human readable list is returned
+	with additional information on the cipher. If <em>supported</em>
 	is specified as true, then only the ciphers supported for protocol
 	will be listed.</dd>
 
