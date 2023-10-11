@@ -984,7 +984,9 @@ HashCalc(Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], const EVP_MD *type
 /*
  *-------------------------------------------------------------------
  *
- * Hash Commands -- Return hash value for digest as hex string
+ * Hash Commands --
+ *
+ *	Return the digest as a hex string for data using type message digest.
  *
  * Results:
  *	A standard Tcl result.
@@ -994,7 +996,7 @@ HashCalc(Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], const EVP_MD *type
  *
  *-------------------------------------------------------------------
  */
-HashCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
+DigestCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
     int len;
     const char *name;
     const EVP_MD *type;
@@ -1015,18 +1017,18 @@ HashCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv
 }
 
 /*
- * Command to Calculate MD4 Hash
+ * Command to Calculate MD4 Message Digest
  */
 int
-HashMD4Cmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
+DigestMD4Cmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
     return HashCalc(interp, objc, objv, EVP_md4());
 }
 
 /*
- * Command to Calculate MD5 Hash
+ * Command to Calculate MD5 Message Digest
  */
 int
-HashMD5Cmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
+DigestMD5Cmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
     return HashCalc(interp, objc, objv, EVP_md5());
 }
 
@@ -1034,42 +1036,42 @@ HashMD5Cmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const o
  * Command to Calculate SHA-1 Hash
  */
 int
-HashSHA1Cmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
+DigestSHA1Cmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
     return HashCalc(interp, objc, objv, EVP_sha1());
 }
 
 /*
- * Command to Calculate SHA-256 Hash
+ * Command to Calculate SHA2 SHA-256 Hash
  */
 int
-HashSHA256Cmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
+DigestSHA256Cmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
     return HashCalc(interp, objc, objv, EVP_sha256());
 }
 
 /*
  *-------------------------------------------------------------------
  *
- * Hash List Command -- Return list of hash message digests
+ * Hash List Command --
+ *
+ *	Return a list of all valid hash algorithms or message digests.
  *
  * Results:
- *	A standard Tcl result.
+ *	A standard Tcl result list.
  *
  * Side effects:
  *	None.
  *
  *-------------------------------------------------------------------
  */
-
-void HashListCallback(const OBJ_NAME *obj, void *arg) {
+void ListCallback(const OBJ_NAME *obj, void *arg) {
     Tcl_Obj *objPtr = (Tcl_Obj *) arg;
+    if (1 || !obj->alias) {
 	Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(obj->name,-1));
     }
+}
 
-/*
- * Command to list available Hash values
- */
 int
-HashListCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
+DigestListCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
     Tcl_Obj *objPtr = Tcl_NewListObj(0, NULL);
 
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
@@ -2968,12 +2970,12 @@ DLLEXPORT int Tls_Init(Tcl_Interp *interp) {
     Tcl_CreateObjCommand(interp, "tls::protocols", ProtocolsObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
     Tcl_CreateObjCommand(interp, "tls::version", VersionObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
 
-    Tcl_CreateObjCommand(interp, "tls::hash", HashCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
-    Tcl_CreateObjCommand(interp, "tls::hashes", HashListCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
-    Tcl_CreateObjCommand(interp, "tls::md4", HashMD4Cmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
-    Tcl_CreateObjCommand(interp, "tls::md5", HashMD5Cmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
-    Tcl_CreateObjCommand(interp, "tls::sha1", HashSHA1Cmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
-    Tcl_CreateObjCommand(interp, "tls::sha256", HashSHA256Cmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
+    Tcl_CreateObjCommand(interp, "tls::digest", DigestCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
+    Tcl_CreateObjCommand(interp, "tls::digests", DigestListCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
+    Tcl_CreateObjCommand(interp, "tls::md4", DigestMD4Cmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
+    Tcl_CreateObjCommand(interp, "tls::md5", DigestMD5Cmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
+    Tcl_CreateObjCommand(interp, "tls::sha1", DigestSHA1Cmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
+    Tcl_CreateObjCommand(interp, "tls::sha256", DigestSHA256Cmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
 
     if (interp) {
 	Tcl_Eval(interp, tlsTclInitScript);
