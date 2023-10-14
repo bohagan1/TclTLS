@@ -23,7 +23,6 @@ proc lcompare {list1 list2} {set m "";set u "";foreach i $list1 {if {$i ni $list
 proc exec_get {delim args} {return [split [exec openssl {*}$args] $delim]}
 proc exec_get_ciphers {} {set list [list];set data [exec openssl ciphers ALL];foreach cipher [split $data ":"] {lappend list [string tolower $cipher]};return [lsort $list]}
 proc exec_get_digests {} {set list [list];set data [exec openssl dgst -list];foreach line [split $data "\n"] {foreach digest $line {if {[string match "-*" $digest]} {lappend list [string trimleft $digest "-"]}}};return [lsort $list]}
-proc no_rsa {digests} {set list [list];foreach digest $digests {if {![string match -nocase "*RSA*" $digest]} {lappend list $digest}};return [lsort $list]}
 # Test list ciphers
 
 
@@ -122,7 +121,7 @@ test Version-5.2 {OpenSSL} -constraints {OpenSSL} -body {
 
 
 test Digest_List-6.1 {Digest List} -body {
-	lcompare [exec_get_digests] [no-rsa [tls::digests]]
+	lcompare [lsort [exec_get_digests]] [lsort [tls::digests]]
     } -result {missing {} unexpected {}}
 # Test Digests
 

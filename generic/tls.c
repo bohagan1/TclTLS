@@ -1068,7 +1068,10 @@ DigestSHA256Cmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *co
 void ListCallback(const OBJ_NAME *obj, void *arg) {
     Tcl_Obj *objPtr = (Tcl_Obj *) arg;
     if (1 || !obj->alias) {
-	Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(obj->name,-1));
+	/* Filter out signed digests (a.k.a signature algorithms) */
+	if (strstr(obj->name, "rsa") == NULL && strstr(obj->name, "RSA") == NULL) {
+	    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(obj->name,-1));
+	}
     }
 }
 
