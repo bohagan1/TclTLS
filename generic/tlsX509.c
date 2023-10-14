@@ -20,13 +20,17 @@
 /*
  * Binary string to hex string
  */
-int String_to_Hex(char* input, int ilen, char *output, int olen) {
+int String_to_Hex(unsigned char* input, int ilen, unsigned char *output, int olen) {
     int count = 0;
+    unsigned char *iptr = input;
+    unsigned char *optr = &output[0];
+    const char *hex = "0123456789ABCDEF";
 
     for (int i = 0; i < ilen && count < olen - 1; i++, count += 2) {
-	sprintf(output + count, "%02X", input[i] & 0xff);
+        *optr++ = hex[(*iptr>>4)&0xF];
+        *optr++ = hex[(*iptr++)&0xF];
     }
-    output[count] = 0;
+    *optr = 0;
     return count;
 }
 
@@ -79,7 +83,7 @@ Tcl_Obj *Tls_x509Identifier(ASN1_OCTET_STRING *astring) {
     char buffer[1024];
 
     if (astring != NULL) {
-	len = String_to_Hex((char *)ASN1_STRING_get0_data(astring),
+	len = String_to_Hex(ASN1_STRING_get0_data(astring),
 	    ASN1_STRING_length(astring), buffer, 1024);
     }
     resultPtr = Tcl_NewStringObj(buffer, len);

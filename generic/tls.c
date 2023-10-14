@@ -950,7 +950,6 @@ HashCalc(Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], const EVP_MD *type
     int len;
     unsigned int mdlen;
     unsigned char mdbuf[EVP_MAX_MD_SIZE];
-    unsigned char hashbuf[EVP_MAX_MD_SIZE*2+1];
     const char *hex = "0123456789ABCDEF";
 
     if (objc != 2) {
@@ -958,22 +957,25 @@ HashCalc(Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], const EVP_MD *type
 	return TCL_ERROR;
     }
 
+    /* Get data */
     data = Tcl_GetByteArrayFromObj(objv[1], &len);
-    if (data == NULL) {
+    if (data == NULL || len == 0) {
+	Tcl_SetResult(interp, "No data", NULL);
 	return TCL_ERROR;
     }
 
-    /* Calc hash, convert to hex string, and write to result */
+    /* Calc hash value, create hex representation, and write to result */
     if (EVP_Digest(data, (size_t) len, mdbuf, &mdlen, type, NULL)) {
-	unsigned char *mptr = mdbuf;
-	unsigned char *hptr = &hashbuf[0];
+	Tcl_Obj *resultObj;
+	unsigned char *ptr;
+	resultObj = Tcl_NewObj();
+	ptr = Tcl_SetByteArrayLength(resultObj, mdlen*2);
 
 	for (unsigned int i = 0; i < mdlen; i++) {
-	    *hptr++ = hex[(*mptr>>4)&0xF];
-	    *hptr++ = hex[(*mptr++)&0xF];
+	    *ptr++ = hex[(mdbuf[i] >> 4) & 0x0F];
+	    *ptr++ = hex[mdbuf[i] & 0x0F];
 	}
-	*hptr = 0;
-	Tcl_SetObjResult(interp, Tcl_NewStringObj(hashbuf, mdlen*2));
+	Tcl_SetObjResult(interp, resultObj);
     } else {
 	Tcl_SetResult(interp, "Hash calculation error", NULL);
 	return TCL_ERROR;
