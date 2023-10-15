@@ -8,6 +8,12 @@
 #ifndef _TCL_OPTS_H
 #define _TCL_OPTS_H
 
+#define OPTFLAG(option, var)			\
+    if (strcmp(opt, (option)) == 0) {		\
+	var = 1;				\
+	continue;				\
+    }
+
 #define OPT_PROLOG(option)			\
     if (strcmp(opt, (option)) == 0) {		\
 	if (++idx >= objc) {			\
@@ -17,9 +23,11 @@
 		(char *) NULL);			\
 	    return TCL_ERROR;			\
 	}
+
 #define OPT_POSTLOG()				\
 	continue;				\
     }
+
 #define OPTOBJ(option, var)			\
     OPT_PROLOG(option)				\
     var = objv[idx];				\
