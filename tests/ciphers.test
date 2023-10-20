@@ -21,13 +21,14 @@ foreach protocol [::tls::protocols] {::tcltest::testConstraint $protocol 1}
 # Helper functions
 proc lcompare {list1 list2} {set m "";set u "";foreach i $list1 {if {$i ni $list2} {lappend m $i}};foreach i $list2 {if {$i ni $list1} {lappend u $i}};return [list "missing" $m "unexpected" $u]}
 proc exec_get {delim args} {return [split [exec openssl {*}$args] $delim]}
-proc exec_get_ciphers {} {set list [list];set data [exec openssl ciphers ALL];foreach cipher [split $data ":"] {lappend list [string tolower $cipher]};return [lsort $list]}
+proc exec_get_ciphers {} {set list [list];set data [exec openssl list -cipher-algorithms];foreach line [split $data "\n"] {foreach {cipher null alias} [split [string trim $line]] {lappend list [string tolower $cipher]}};return [lsort -unique $list]}
 proc exec_get_digests {} {set list [list];set data [exec openssl dgst -list];foreach line [split $data "\n"] {foreach digest $line {if {[string match "-*" $digest]} {lappend list [string trimleft $digest "-"]}}};return [lsort $list]}
+proc list_toupper {list} {set result [list];foreach element $list {lappend result [string toupper $element]};return $result}
 # Test list ciphers
 
 
 test CiphersAll-1.1 {} -body {
-	lcompare [lsort [exec_get_ciphers]] [lsort [::tls::ciphers]]
+	lcompare [lsort [exec_get_ciphers]] [lsort [list_toupper [::tls::ciphers]]]
     } -result {missing {} unexpected {}}
 # Test list ciphers for protocols
 
@@ -107,62 +108,62 @@ test CiphersSpecific-4.5 {TLS1.2} -constraints {tls1.2} -body {
 test CiphersSpecific-4.6 {TLS1.3} -constraints {tls1.3} -body {
 	lcompare [exec_get ":" ciphers -tls1_3 -s] [::tls::ciphers tls1.3 0 1]
     } -result {missing {} unexpected {}}
-# Test version
-
-
-test Version-5.1 {All} -body {
-	::tls::version
-    } -match {glob} -result {*}
-
-test Version-5.2 {OpenSSL} -constraints {OpenSSL} -body {
-	::tls::version
-    } -match {glob} -result {OpenSSL*}
 # Test list digests
 
 
-test Digest_List-6.1 {Digest List} -body {
+test Digest_List-5.1 {Digest List} -body {
 	lcompare [lsort [exec_get_digests]] [lsort [tls::digests]]
     } -result {missing {} unexpected {}}
 # Test Digests
 
 
-test Digest-7.1 {md4 opt} -body {
+test Digest-6.1 {md4 opt} -body {
 	tls::md4 "Example string for message digest tests."
     } -result {181CDCF9DB9B6FA8FC0A3BF9C34E29D9}
 
-test Digest-7.2 {md5 opt} -body {
+test Digest-6.2 {md5 opt} -body {
 	tls::md5 "Example string for message digest tests."
     } -result {CCB1BE2E11D8183E843FF73DA8C6D206}
 
-test Digest-7.3 {sha1 opt} -body {
+test Digest-6.3 {sha1 opt} -body {
 	tls::sha1 "Example string for message digest tests."
     } -result {3AEFE840CA492C387E903F15ED6019E7AD833B47}
 
-test Digest-7.4 {sha256 opt} -body {
+test Digest-6.4 {sha256 opt} -body {
 	tls::sha256 "Example string for message digest tests."
     } -result {B7DFDDEB0314A74FF56A8AC1E3DC57DF09BB52A96DA50F6549EB62CA61A0A491}
 
-test Digest-7.5 {md4} -body {
+test Digest-6.5 {md4} -body {
 	tls::digest md4 "Example string for message digest tests."
     } -result {181CDCF9DB9B6FA8FC0A3BF9C34E29D9}
 
-test Digest-7.6 {md5} -body {
+test Digest-6.6 {md5} -body {
 	tls::digest md5 "Example string for message digest tests."
     } -result {CCB1BE2E11D8183E843FF73DA8C6D206}
 
-test Digest-7.7 {sha1} -body {
+test Digest-6.7 {sha1} -body {
 	tls::digest sha1 "Example string for message digest tests."
     } -result {3AEFE840CA492C387E903F15ED6019E7AD833B47}
 
-test Digest-7.8 {sha256} -body {
+test Digest-6.8 {sha256} -body {
 	tls::digest sha256 "Example string for message digest tests."
     } -result {B7DFDDEB0314A74FF56A8AC1E3DC57DF09BB52A96DA50F6549EB62CA61A0A491}
 # Test protocols
 
 
-test Protocols-8.1 {All} -body {
+test Protocols-7.1 {All} -body {
 	lcompare $protocols [::tls::protocols]
     } -result {missing {ssl2 ssl3} unexpected {}}
+# Test version
+
+
+test Version-8.1 {All} -body {
+	::tls::version
+    } -match {glob} -result {*}
+
+test Version-8.2 {OpenSSL} -constraints {OpenSSL} -body {
+	::tls::version
+    } -match {glob} -result {OpenSSL*}
 
 # Cleanup
 ::tcltest::cleanupTests
