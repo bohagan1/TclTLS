@@ -27,6 +27,7 @@ PROJECT=tls
 # defined by rules for object files.
 PRJ_OBJS = $(TMP_DIR)\tls.obj \
 	$(TMP_DIR)\tlsBIO.obj \
+	$(TMP_DIR)\tlsDigest.obj \
 	$(TMP_DIR)\tlsIO.obj \
 	$(TMP_DIR)\tlsX509.obj
 
@@ -36,7 +37,8 @@ PRJ_INCLUDES = -I"$(SSL_INSTALL_FOLDER)\include" -I"$(OPENSSL_INSTALL_DIR)\inclu
 
 # Define any additional compiler flags that might be required for the project
 PRJ_DEFINES = -D NO_SSL2 -D NO_SSL3 -D _CRT_SECURE_NO_WARNINGS
- 
+
+#
 # SSL Libs:
 #    1. ${LIBCRYPTO}.dll
 #    2. ${LIBSSL}.dll
@@ -54,6 +56,10 @@ PRJ_LIBS = \
 !include "targets.vc"
 
 # Project specific targets
+
+all:
+
+clean: default-clean
 
 # We must define a pkgindex target that will create a pkgIndex.tcl
 # file in the $(OUT_DIR) directory. We can just redirect to the

@@ -71,7 +71,7 @@ TEA_SETUP_COMPILER
 # and PKG_TCL_SOURCES.
 #-----------------------------------------------------------------------
 
-TEA_ADD_SOURCES([tls.c tlsBIO.c tlsIO.c tlsX509.c])
+TEA_ADD_SOURCES([tls.c tlsBIO.c tlsDigest.c tlsIO.c tlsX509.c])
 TEA_ADD_HEADERS([generic/tls.h])
 TEA_ADD_INCLUDES([])
 TEA_ADD_LIBS([])

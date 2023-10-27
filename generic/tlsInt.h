@@ -194,6 +194,7 @@ void            Tls_Error(State *statePtr, char *msg);
 void            Tls_Free(char *blockPtr);
 void            Tls_Clean(State *statePtr);
 int             Tls_WaitForConnect(State *statePtr, int *errorCodePtr, int handshakeFailureIsPermanent);
+int             Tls_DigestCommands(Tcl_Interp *interp);
 
 BIO             *BIO_new_tcl(State* statePtr, int flags);
 
