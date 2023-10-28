@@ -26,11 +26,6 @@
 static void TlsChannelHandlerTimer(ClientData clientData);
 
 /*
- * TLS Channel Type
- */
-static Tcl_ChannelType *tlsChannelType = NULL;
-
-/*
  *-------------------------------------------------------------------
  *
  * TlsBlockModeProc --
@@ -669,6 +664,7 @@ TlsWatchProc(ClientData instanceData,    /* The socket state. */
 {
     Tcl_Channel     downChan;
     State *statePtr = (State *) instanceData;
+    Tcl_DriverWatchProc *watchProc;
 
     dprintf("TlsWatchProc(0x%x)", mask);
 
@@ -687,7 +683,8 @@ TlsWatchProc(ClientData instanceData,    /* The socket state. */
 	dprintf("Asked to watch a socket with a failed handshake -- nothing can happen here");
 	dprintf("Unregistering interest in the lower channel");
 
-	(Tcl_GetChannelType(downChan))->watchProc(Tcl_GetChannelInstanceData(downChan), 0);
+	watchProc = Tcl_ChannelWatchProc(Tcl_GetChannelType(downChan));
+	watchProc(Tcl_GetChannelInstanceData(downChan), 0);
 	statePtr->watchMask = 0;
 	return;
     }
@@ -702,7 +699,9 @@ TlsWatchProc(ClientData instanceData,    /* The socket state. */
      * the request down, unchanged.
      */
     dprintf("Registering our interest in the lower channel (chan=%p)", (void *) downChan);
-    (Tcl_GetChannelType(downChan))->watchProc(Tcl_GetChannelInstanceData(downChan), mask);
+    watchProc = Tcl_ChannelWatchProc(Tcl_GetChannelType(downChan));
+    watchProc(Tcl_GetChannelInstanceData(downChan), mask);
+
 
     /*
      * Management of the internal timer.
@@ -812,82 +811,6 @@ static int TlsNotifyProc(ClientData instanceData,    /* Socket state. */
     return(mask);
 }
 
-#if 0
-/*
- *------------------------------------------------------*
- *
- *      TlsChannelHandler --
- *
- *      ------------------------------------------------*
- *      Handler called by Tcl as a result of
- *      Tcl_CreateChannelHandler - to inform us of activity
- *      on the underlying channel.
- *      ------------------------------------------------*
- *
- *      Side effects:
- *              May generate subsequent calls to
- *              Tcl_NotifyChannel.
- *
- *      Result:
- *              None.
- *
- *------------------------------------------------------*
- */
-static void
-TlsChannelHandler(ClientData clientData, int mask) {
-    State *statePtr = (State *) clientData;
-
-    dprintf("HANDLER(0x%x)", mask);
-    Tcl_Preserve((ClientData)statePtr);
-
-    if (mask & TCL_READABLE) {
-	BIO_set_flags(statePtr->p_bio, BIO_FLAGS_READ);
-    } else {
-	BIO_clear_flags(statePtr->p_bio, BIO_FLAGS_READ);
-    }
-
-    if (mask & TCL_WRITABLE) {
-	BIO_set_flags(statePtr->p_bio, BIO_FLAGS_WRITE);
-    } else {
-	BIO_clear_flags(statePtr->p_bio, BIO_FLAGS_WRITE);
-    }
-
-    mask = 0;
-    if (BIO_wpending(statePtr->bio)) {
-	mask |= TCL_WRITABLE;
-    }
-    if (BIO_pending(statePtr->bio)) {
-	mask |= TCL_READABLE;
-    }
-
-    /*
-     * The following NotifyChannel calls seems to be important, but
-     * we don't know why.  It looks like if the mask is ever non-zero
-     * that it will enter an infinite loop.
-     *
-     * Notify the upper channel of the current BIO state so the event
-     * continues to propagate up the chain.
-     *
-     * stanton: It looks like this could result in an infinite loop if
-     * the upper channel doesn't cause ChannelHandler to be removed
-     * before Tcl_NotifyChannel calls channel handlers on the lower channel.
-     */
-    Tcl_NotifyChannel(statePtr->self, mask);
-
-    if (statePtr->timer != (Tcl_TimerToken)NULL) {
-	Tcl_DeleteTimerHandler(statePtr->timer);
-	statePtr->timer = (Tcl_TimerToken)NULL;
-    }
-    if ((mask & TCL_READABLE) && Tcl_InputBuffered(statePtr->self) > 0) {
-	/*
-	 * Data is waiting, flush it out in short time
-	 */
-	statePtr->timer = Tcl_CreateTimerHandler(TLS_TCL_DELAY, TlsChannelHandlerTimer, (ClientData) statePtr);
-    }
-    Tcl_Release((ClientData)statePtr);
-}
-#endif
-
 /*
  *------------------------------------------------------*
  *
@@ -959,55 +882,26 @@ Tcl_Channel Tls_GetParent(State *statePtr, int maskFlags) {
  *
  *-------------------------------------------------------------------
  */
+static const Tcl_ChannelType tlsChannelType = {
+    "tls",			/* Type name */
+    TCL_CHANNEL_VERSION_5,	/* v5 channel */
+    TlsCloseProc,		/* Close proc */
+    TlsInputProc,		/* Input proc */
+    TlsOutputProc,		/* Output proc */
+    NULL,			/* Seek proc */
+    TlsSetOptionProc,		/* Set option proc */
+    TlsGetOptionProc,		/* Get option proc */
+    TlsWatchProc,		/* Initialize notifier */
+    TlsGetHandleProc,		/* Get OS handles out of channel */
+    TlsClose2Proc,		/* close2proc */
+    TlsBlockModeProc,		/* Set blocking/nonblocking mode*/
+    NULL,			/* Flush proc */
+    TlsNotifyProc,		/* Handling of events bubbling up */
+    NULL,			/* Wide seek proc */
+    NULL,			/* Thread action */
+    NULL			/* Truncate */
+};
+
 Tcl_ChannelType *Tls_ChannelType(void) {
-    unsigned int size;
-
-    /*
-     * Initialize the channel type if necessary
-     */
-    if (tlsChannelType == NULL) {
-	/* Allocate new channel type structure */
-	size = sizeof(Tcl_ChannelType) * 2; /* Base size plus pad for future changes */
-	tlsChannelType = (Tcl_ChannelType *) ckalloc(size);
-	memset((void *) tlsChannelType, 0, size);
-
-	/* Init structure */
-	tlsChannelType->typeName	= "tls";
-	/* TCL 8.5 and later */
-#if TCL_MAJOR_VERSION > 8 || defined(TCL_CHANNEL_VERSION_5)
-	tlsChannelType->version		= TCL_CHANNEL_VERSION_5;
-	tlsChannelType->closeProc	= TlsCloseProc;
-	tlsChannelType->inputProc	= TlsInputProc;
-	tlsChannelType->outputProc	= TlsOutputProc;
-	tlsChannelType->seekProc	= NULL;
-	tlsChannelType->setOptionProc	= TlsSetOptionProc;
-	tlsChannelType->getOptionProc	= TlsGetOptionProc;
-	tlsChannelType->watchProc	= TlsWatchProc;
-	tlsChannelType->getHandleProc	= TlsGetHandleProc;
-	tlsChannelType->close2Proc	= TlsClose2Proc;
-	tlsChannelType->blockModeProc	= TlsBlockModeProc;
-	tlsChannelType->flushProc	= NULL;
-	tlsChannelType->handlerProc	= TlsNotifyProc;
-	tlsChannelType->wideSeekProc	= NULL;
-	tlsChannelType->threadActionProc = NULL;
-	tlsChannelType->truncateProc	= NULL;
-#else
-	tlsChannelType->version		= TCL_CHANNEL_VERSION_4;
-	tlsChannelType->closeProc	= TlsCloseProc;
-	tlsChannelType->inputProc	= TlsInputProc;
-	tlsChannelType->outputProc	= TlsOutputProc;
-	tlsChannelType->seekProc	= NULL;
-	tlsChannelType->setOptionProc	= TlsSetOptionProc;
-	tlsChannelType->getOptionProc	= TlsGetOptionProc;
-	tlsChannelType->watchProc	= TlsWatchProc;
-	tlsChannelType->getHandleProc	= TlsGetHandleProc;
-	tlsChannelType->close2Proc	= NULL;
-	tlsChannelType->blockModeProc	= TlsBlockModeProc;
-	tlsChannelType->flushProc	= NULL;
-	tlsChannelType->handlerProc	= TlsNotifyProc;
-	tlsChannelType->wideSeekProc	= NULL;
-	tlsChannelType->threadActionProc = NULL;
-#endif
-    }
-    return(tlsChannelType);
+    return &tlsChannelType;
 }
