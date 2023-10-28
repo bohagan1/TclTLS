@@ -8,9 +8,9 @@
 #ifndef _TCL_OPTS_H
 #define _TCL_OPTS_H
 
-#define OPTFLAG(option, var)			\
+#define OPTFLAG(option, var, val)		\
     if (strcmp(opt, (option)) == 0) {		\
-	var = 1;				\
+	var = val;				\
 	continue;				\
     }
 
@@ -54,7 +54,7 @@
     }						\
     OPT_POSTLOG()
 
-#define OPTBYTE(option, var, lvar)			\
+#define OPTBYTE(option, var, lvar)		\
     OPT_PROLOG(option)				\
     var = Tcl_GetByteArrayFromObj(objv[idx], &(lvar));\
     OPT_POSTLOG()
