@@ -23,145 +23,185 @@ proc lcompare {list1 list2} {set m "";set u "";foreach i $list1 {if {$i ni $list
 proc exec_get {delim args} {return [split [exec openssl {*}$args] $delim]}
 proc exec_get_ciphers {} {set list [list];set data [exec openssl list -cipher-algorithms];foreach line [split $data "\n"] {foreach {cipher null alias} [split [string trim $line]] {lappend list [string tolower $cipher]}};return [lsort -unique $list]}
 proc exec_get_digests {} {set list [list];set data [exec openssl dgst -list];foreach line [split $data "\n"] {foreach digest $line {if {[string match "-*" $digest]} {lappend list [string trimleft $digest "-"]}}};return [lsort $list]}
-proc list_toupper {list} {set result [list];foreach element $list {lappend result [string toupper $element]};return $result}
+proc list_tolower {list} {set result [list];foreach element $list {lappend result [string tolower $element]};return $result}
 # Test list ciphers
 
 
-test CiphersAll-1.1 {} -body {
-	lcompare [lsort [exec_get_ciphers]] [lsort [list_toupper [::tls::ciphers]]]
-    } -result {missing {} unexpected {}}
+test Ciphers_List-1.1 {All} -body {
+	lcompare [lsort [exec_get_ciphers]] [list_tolower [lsort [::tls::ciphers]]]
+    } -result {missing {rc5 rc5-cbc rc5-cfb rc5-ecb rc5-ofb} unexpected {aes-128-ccm aes-128-gcm aes-192-ccm aes-192-gcm aes-256-ccm aes-256-gcm}}
 # Test list ciphers for protocols
 
 
-test CiphersProtocols-2.1 {SSL2} -constraints {ssl2} -body {
+test Ciphers_By_Protocol-2.1 {SSL2} -constraints {ssl2} -body {
 	lcompare [exec_get ":" ciphers -ssl2] [::tls::ciphers ssl2]
     } -result {missing {} unexpected {}}
 
-test CiphersProtocols-2.2 {SSL3} -constraints {ssl3} -body {
+test Ciphers_By_Protocol-2.2 {SSL3} -constraints {ssl3} -body {
 	lcompare [exec_get ":" ciphers -ssl3] [::tls::ciphers ssl3]
     } -result {missing {} unexpected {}}
 
-test CiphersProtocols-2.3 {TLS1} -constraints {tls1} -body {
+test Ciphers_By_Protocol-2.3 {TLS1} -constraints {tls1} -body {
 	lcompare [exec_get ":" ciphers -tls1] [::tls::ciphers tls1]
     } -result {missing {} unexpected {}}
 
-test CiphersProtocols-2.4 {TLS1.1} -constraints {tls1.1} -body {
+test Ciphers_By_Protocol-2.4 {TLS1.1} -constraints {tls1.1} -body {
 	lcompare [exec_get ":" ciphers -tls1_1] [::tls::ciphers tls1.1]
     } -result {missing {} unexpected {}}
 
-test CiphersProtocols-2.5 {TLS1.2} -constraints {tls1.2} -body {
+test Ciphers_By_Protocol-2.5 {TLS1.2} -constraints {tls1.2} -body {
 	lcompare [exec_get ":" ciphers -tls1_2] [::tls::ciphers tls1.2]
     } -result {missing {} unexpected {}}
 
-test CiphersProtocols-2.6 {TLS1.3} -constraints {tls1.3} -body {
+test Ciphers_By_Protocol-2.6 {TLS1.3} -constraints {tls1.3} -body {
 	lcompare [exec_get ":" ciphers -tls1_3] [::tls::ciphers tls1.3]
     } -result {missing {} unexpected {}}
 # Test cipher descriptions
 
 
-test CiphersDescriptions-3.1 {SSL2} -constraints {ssl2} -body {
+test Ciphers_With_Descriptions-3.1 {SSL2} -constraints {ssl2} -body {
 	lcompare [exec_get "\r\n" ciphers -ssl2 -v] [split [string trim [::tls::ciphers ssl2 1]] \n]
     } -result {missing {} unexpected {}}
 
-test CiphersDescriptions-3.2 {SSL3} -constraints {ssl3} -body {
+test Ciphers_With_Descriptions-3.2 {SSL3} -constraints {ssl3} -body {
 	lcompare [exec_get "\r\n" ciphers -ssl3 -v] [split [string trim [::tls::ciphers ssl3 1]] \n]
     } -result {missing {} unexpected {}}
 
-test CiphersDescriptions-3.3 {TLS1} -constraints {tls1} -body {
+test Ciphers_With_Descriptions-3.3 {TLS1} -constraints {tls1} -body {
 	lcompare [exec_get "\r\n" ciphers -tls1 -v] [split [string trim [::tls::ciphers tls1 1]] \n]
     } -result {missing {} unexpected {}}
 
-test CiphersDescriptions-3.4 {TLS1.1} -constraints {tls1.1} -body {
+test Ciphers_With_Descriptions-3.4 {TLS1.1} -constraints {tls1.1} -body {
 	lcompare [exec_get "\r\n" ciphers -tls1_1 -v] [split [string trim [::tls::ciphers tls1.1 1]] \n]
     } -result {missing {} unexpected {}}
 
-test CiphersDescriptions-3.5 {TLS1.2} -constraints {tls1.2} -body {
+test Ciphers_With_Descriptions-3.5 {TLS1.2} -constraints {tls1.2} -body {
 	lcompare [exec_get "\r\n" ciphers -tls1_2 -v] [split [string trim [::tls::ciphers tls1.2 1]] \n]
     } -result {missing {} unexpected {}}
 
-test CiphersDescriptions-3.6 {TLS1.3} -constraints {tls1.3} -body {
+test Ciphers_With_Descriptions-3.6 {TLS1.3} -constraints {tls1.3} -body {
 	lcompare [exec_get "\r\n" ciphers -tls1_3 -v] [split [string trim [::tls::ciphers tls1.3 1]] \n]
     } -result {missing {} unexpected {}}
 # Test protocol specific ciphers
 
 
-test CiphersSpecific-4.1 {SSL2} -constraints {ssl2} -body {
+test Ciphers_Protocol_Specific-4.1 {SSL2} -constraints {ssl2} -body {
 	lcompare [exec_get ":" ciphers -ssl2 -s] [::tls::ciphers ssl2 0 1]
     } -result {missing {} unexpected {}}
 
-test CiphersSpecific-4.2 {SSL3} -constraints {ssl3} -body {
+test Ciphers_Protocol_Specific-4.2 {SSL3} -constraints {ssl3} -body {
 	lcompare [exec_get ":" ciphers -ssl3 -s] [::tls::ciphers ssl3 0 1]
     } -result {missing {} unexpected {}}
 
-test CiphersSpecific-4.3 {TLS1} -constraints {tls1} -body {
+test Ciphers_Protocol_Specific-4.3 {TLS1} -constraints {tls1} -body {
 	lcompare [exec_get ":" ciphers -tls1 -s] [::tls::ciphers tls1 0 1]
     } -result {missing {} unexpected {}}
 
-test CiphersSpecific-4.4 {TLS1.1} -constraints {tls1.1} -body {
+test Ciphers_Protocol_Specific-4.4 {TLS1.1} -constraints {tls1.1} -body {
 	lcompare [exec_get ":" ciphers -tls1_1 -s] [::tls::ciphers tls1.1 0 1]
     } -result {missing {} unexpected {}}
 
-test CiphersSpecific-4.5 {TLS1.2} -constraints {tls1.2} -body {
+test Ciphers_Protocol_Specific-4.5 {TLS1.2} -constraints {tls1.2} -body {
 	lcompare [exec_get ":" ciphers -tls1_2 -s] [::tls::ciphers tls1.2 0 1]
     } -result {missing {} unexpected {}}
 
-test CiphersSpecific-4.6 {TLS1.3} -constraints {tls1.3} -body {
-	lcompare [exec_get ":" ciphers -tls1_3 -s] [::tls::ciphers tls1.3 0 1]
+test Ciphers_Protocol_Specific-4.6 {TLS1.3} -constraints {tls1.3} -body {
+	lcompare [concat [exec_get ":" ciphers -tls1_3 -s] [exec_get ":" ciphers -tls1_2 -s]] [::tls::ciphers tls1.3 0 1]
     } -result {missing {} unexpected {}}
 # Test list digests
 
 
-test Digest_List-5.1 {Digest List} -body {
+test Digest_List-5.1 {All} -body {
 	lcompare [lsort [exec_get_digests]] [lsort [tls::digests]]
     } -result {missing {} unexpected {}}
-# Test Digests
+# Test digest commands
 
 
-test Digest-6.1 {md4 opt} -body {
+test Digest_Cmds-6.1 {md4 cmd} -body {
 	tls::md4 "Example string for message digest tests."
     } -result {181CDCF9DB9B6FA8FC0A3BF9C34E29D9}
 
-test Digest-6.2 {md5 opt} -body {
+test Digest_Cmds-6.2 {md5 cmd} -body {
 	tls::md5 "Example string for message digest tests."
     } -result {CCB1BE2E11D8183E843FF73DA8C6D206}
 
-test Digest-6.3 {sha1 opt} -body {
+test Digest_Cmds-6.3 {sha1 cmd} -body {
 	tls::sha1 "Example string for message digest tests."
     } -result {3AEFE840CA492C387E903F15ED6019E7AD833B47}
 
-test Digest-6.4 {sha256 opt} -body {
+test Digest_Cmds-6.4 {sha256 cmd} -body {
 	tls::sha256 "Example string for message digest tests."
     } -result {B7DFDDEB0314A74FF56A8AC1E3DC57DF09BB52A96DA50F6549EB62CA61A0A491}
+# Test digest command for data
 
-test Digest-6.5 {md4} -body {
+
+test Digest_Data-7.1 {md4} -body {
 	tls::digest md4 "Example string for message digest tests."
     } -result {181CDCF9DB9B6FA8FC0A3BF9C34E29D9}
 
-test Digest-6.6 {md5} -body {
+test Digest_Data-7.2 {md5} -body {
 	tls::digest md5 "Example string for message digest tests."
     } -result {CCB1BE2E11D8183E843FF73DA8C6D206}
 
-test Digest-6.7 {sha1} -body {
+test Digest_Data-7.3 {sha1} -body {
 	tls::digest sha1 "Example string for message digest tests."
     } -result {3AEFE840CA492C387E903F15ED6019E7AD833B47}
 
-test Digest-6.8 {sha256} -body {
+test Digest_Data-7.4 {sha256} -body {
 	tls::digest sha256 "Example string for message digest tests."
     } -result {B7DFDDEB0314A74FF56A8AC1E3DC57DF09BB52A96DA50F6549EB62CA61A0A491}
-# Test protocols
+
+test Digest_Data-7.5 {md5 bin} -body {
+	string toupper [binary encode hex [tls::digest md5 -bin "Example string for message digest tests."]]
+    } -result {CCB1BE2E11D8183E843FF73DA8C6D206}
+
+test Digest_Data-7.6 {md5 hex} -body {
+	tls::digest md5 -hex "Example string for message digest tests."
+    } -result {CCB1BE2E11D8183E843FF73DA8C6D206}
+
+test Digest_Data-7.7 {md5 with arg} -body {
+	tls::digest md5 -data "Example string for message digest tests."
+    } -result {CCB1BE2E11D8183E843FF73DA8C6D206}
+# Test digest command for files
 
 
-test Protocols-7.1 {All} -body {
+test Digest_File-8.1 {md4} -body {
+	tls::digest md4 -file md_data.dat
+    } -result {181CDCF9DB9B6FA8FC0A3BF9C34E29D9}
+
+test Digest_File-8.2 {md5} -body {
+	tls::digest md5 -file md_data.dat
+    } -result {CCB1BE2E11D8183E843FF73DA8C6D206}
+
+test Digest_File-8.3 {sha1} -body {
+	tls::digest sha1 -file md_data.dat
+    } -result {3AEFE840CA492C387E903F15ED6019E7AD833B47}
+
+test Digest_File-8.4 {sha256} -body {
+	tls::digest sha256 -file md_data.dat
+    } -result {B7DFDDEB0314A74FF56A8AC1E3DC57DF09BB52A96DA50F6549EB62CA61A0A491}
+
+test Digest_File-8.5 {md5 bin} -body {
+	string toupper [binary encode hex [tls::digest md5 -bin -file md_data.dat]]
+    } -result {CCB1BE2E11D8183E843FF73DA8C6D206}
+
+test Digest_File-8.6 {md5 hex} -body {
+	tls::digest md5 -hex -file md_data.dat
+    } -result {CCB1BE2E11D8183E843FF73DA8C6D206}
+# Test list protocols
+
+
+test Protocols-9.1 {All} -body {
 	lcompare $protocols [::tls::protocols]
     } -result {missing {ssl2 ssl3} unexpected {}}
-# Test version
+# Test show version
 
 
-test Version-8.1 {All} -body {
+test Version-10.1 {All} -body {
 	::tls::version
     } -match {glob} -result {*}
 
-test Version-8.2 {OpenSSL} -constraints {OpenSSL} -body {
+test Version-10.2 {OpenSSL} -constraints {OpenSSL} -body {
 	::tls::version
     } -match {glob} -result {OpenSSL*}
 
