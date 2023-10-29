@@ -35,7 +35,7 @@ content="text/html; charset=iso-8859-1">
 	    <dd><b>tls::protocols</b></dd>
 	    <dd><b>tls::version</b></dd>
 	    <dt>&nbsp;</dt>
-	    <dd><b>tls::digest</b> <em>type ?-bin|-hex? [-file filename | ?-data? data]</em></dd>
+	    <dd><b>tls::digest</b> <em>type ?-bin|-hex? [-file filename | -chan channel | ?-data? data]</em></dd>
 	    <dd><b>tls::digests</b></dd>
 	    <dd><b>tls::md4</b> <em>data</em></dd>
 	    <dd><b>tls::md5</b> <em>data</em></dd>
@@ -75,7 +75,7 @@ toolkit.</p>
 <a href="#tls::protocols"><b>tls::protocols</b></a><br>
 <a href="#tls::version"><b>tls::version</b></a><br>
 <br>
-<a href="#tls::digest"><b>tls::digest</b> <i>type ?-bin|-hex? [-file filename | ?-data? data]</i></a><br>
+<a href="#tls::digest"><b>tls::digest</b> <i>type ?-bin|-hex? [-file filename | -chan channel | ?-data? data]</i></a><br>
 <a href="#tls::digests"><b>tls::digests</b></a><br>
 <a href="#tls::md4"><b>tls::md4</b> <i>data</i></a><br>
 <a href="#tls::md5"><b>tls::md5</b> <i>data</i></a><br>
@@ -450,10 +450,13 @@ used directly.</p>
 
     <br>
     <dt><a name="tls::digest"><strong>tls::digest</strong> <em>type ?-bin|-hex?
-	[-file filename | ?-data? data]</em></a></dt>
+	[-file filename | -chan channel | ?-data? data]</em></a></dt>
     <dd>Calculate the message digest for <em>data</em> or file <em>filename</em>
 	using <em>type</em> hash algorithm. Returns value as a hex string
-	(default) or as a binary value with <em>-bin</em> option. Type can be
+	(default) or as a binary value with <em>-bin</em> option. Using
+	<em>-chan</em> option, a stacked channel is created and data read
+	from the channel is used to calculate a message digest with the result
+	returned with the last read operation before EOF. Type can be
 	any OpenSSL supported hash algorithm including: <b>md4</b>, <b>md5</b>,
 	<b>sha1</b>, <b>sha256</b>, <b>sha512</b>, <b>sha3-256</b>, etc.
 	See <b>tls::digests</b> command for a full list.</dd>
