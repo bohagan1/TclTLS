@@ -15,7 +15,9 @@
 /* Constants */
 const char *hex = "0123456789ABCDEF";
 #define REASON()	ERR_reason_error_string(ERR_get_error())
-
+#define BUFFER_SIZE 65536
+#define BIN_FORMAT 0
+#define HEX_FORMAT 1
 
 /*
  * This structure describes the per-instance state of an SSL channel.
@@ -52,74 +54,92 @@ typedef struct DigestState {
  *
  *-------------------------------------------------------------------
  */
-int DigestFile(Tcl_Interp *interp, Tcl_Obj *filename, const EVP_MD *md, int format) {
-    EVP_MD_CTX *ctx;
+int DigestFile(Tcl_Interp *interp, Tcl_Obj *filename, const EVP_MD *md, int format,
+	Tcl_Obj *keyObj) {
+    EVP_MD_CTX *ctx = (EVP_MD_CTX *) NULL;
+    HMAC_CTX *hctx = (HMAC_CTX *) NULL;
     Tcl_Channel chan;
-    char buf[32768];
+    unsigned char buf[BUFFER_SIZE];
     unsigned char md_buf[EVP_MAX_MD_SIZE];
     unsigned int md_len;
+    unsigned char *key;
+    int key_len, res;
 
     /* Open file channel */
     chan = Tcl_FSOpenFileChannel(interp, filename, "rb", 0444);
-    if (chan == NULL) {
+    if (chan == (Tcl_Channel) NULL) {
 	return TCL_ERROR;
     }
 
     /* Configure channel */
-    if (Tcl_SetChannelOption(interp, chan, "-translation", "binary") == TCL_ERROR ||
-	Tcl_SetChannelOption(interp, chan, "-buffersize", "32768") == TCL_ERROR) {
-	Tcl_Close(interp, chan);
-	return TCL_ERROR;
+    if (Tcl_SetChannelOption(interp, chan, "-translation", "binary") == TCL_ERROR) {
+	goto error;
     }
+    Tcl_SetChannelBufferSize(chan, BUFFER_SIZE);
 
     /* Create message digest context */
-    ctx = EVP_MD_CTX_new();
-    if (ctx == NULL) {
+    if (keyObj == NULL) {
+	ctx = EVP_MD_CTX_new();
+	res = (ctx != NULL);
+    } else {
+	hctx = HMAC_CTX_new();
+	res = (hctx != NULL);
+    }
+    if (!res) {
 	Tcl_AppendResult(interp, "Create digest context failed: ", REASON(), NULL);
-	Tcl_Close(interp, chan);
-	return TCL_ERROR;
+	goto error;
     }
 
     /* Initialize hash function */
-#if OPENSSL_VERSION_NUMBER < 0x30000000L
-    if (!EVP_DigestInit_ex(ctx, md, NULL))
-#else
-    if (!EVP_DigestInit_ex2(ctx, md, NULL))
-#endif
-    {
+    if (keyObj == NULL) {
+	res = EVP_DigestInit_ex(ctx, md, NULL);
+    } else {
+	key = Tcl_GetByteArrayFromObj(keyObj, &key_len);
+	res = HMAC_Init_ex(hctx, (const void *) key, key_len, md, NULL);
+    }
+    if (!res) {
 	Tcl_AppendResult(interp, "Initialize digest failed: ", REASON(), NULL);
-	Tcl_Close(interp, chan);
-	EVP_MD_CTX_free(ctx);
-	return TCL_ERROR;
+	goto error;
     }
 
     /* Read file data and update hash function */
     while (!Tcl_Eof(chan)) {
-	int len = Tcl_ReadRaw(chan, buf, 32768);
-	if (len > 0 && !EVP_DigestUpdate(ctx, &buf, (size_t) len)) {
+	int len = Tcl_ReadRaw(chan, (char *) buf, BUFFER_SIZE);
+	if (keyObj == NULL) {
+	    res = EVP_DigestUpdate(ctx, &buf, (size_t) len);
+	} else {
+	    res = HMAC_Update(hctx, &buf[0], (size_t) len);
+	}
+	if (len > 0 && !res) {
 	    Tcl_AppendResult(interp, "Update digest failed: ", REASON(), NULL);
-	    Tcl_Close(interp, chan);
-	    EVP_MD_CTX_free(ctx);
-	    return TCL_ERROR;
+	    goto error;
 	}
     }
 
     /* Close channel */
     if (Tcl_Close(interp, chan) == TCL_ERROR) {
-	EVP_MD_CTX_free(ctx);
-	return TCL_ERROR;
+	chan = (Tcl_Channel) NULL;
+	goto error;
     }
+    chan = (Tcl_Channel) NULL;
 
     /* Finalize hash function and calculate message digest */
-    if (!EVP_DigestFinal_ex(ctx, md_buf, &md_len)) {
-	Tcl_AppendResult(interp, "Finalize digest failed: ", REASON(), NULL);
-	EVP_MD_CTX_free(ctx);
-	return TCL_ERROR;
+    if (keyObj == NULL) {
+	res = EVP_DigestFinal_ex(ctx, md_buf, &md_len);
+    } else {
+	res = HMAC_Final(hctx, md_buf, &md_len);
     }
+    if (!res) {
+	Tcl_AppendResult(interp, "Finalize digest failed: ", REASON(), NULL);
+	goto error;
+    }
+
+    /* Done with struct */
     EVP_MD_CTX_free(ctx);
+    ctx = NULL;
 
     /* Return message digest as either a binary or hex string */
-    if (format == 0) {
+    if (format == BIN_FORMAT) {
 	Tcl_SetObjResult(interp, Tcl_NewByteArrayObj(md_buf, md_len));
 
     } else {
@@ -133,6 +153,18 @@ int DigestFile(Tcl_Interp *interp, Tcl_Obj *filename, const EVP_MD *md, int form
 	Tcl_SetObjResult(interp, resultObj);
     }
     return TCL_OK;
+
+error:
+    if (chan != (Tcl_Channel) NULL) {
+	Tcl_Close(interp, chan);
+    }
+    if (ctx != (EVP_MD_CTX *) NULL) {
+	EVP_MD_CTX_free(ctx);
+    }
+    if (hctx != (HMAC_CTX *) NULL) {
+	HMAC_CTX_free(hctx);
+    }
+    return TCL_ERROR;
 }
 
 /*******************************************************************/
@@ -287,7 +319,7 @@ int DigestInputProc(ClientData clientData, char *buf, int toRead, int *errorCode
 
 	/* Write message digest to output channel as byte array or hex string */
 	} else if (md_len > 0) {
-	    if (statePtr->format == 0) {
+	    if (statePtr->format == BIN_FORMAT) {
 		read = md_len;
 		memcpy(buf, md_buf, read);
 
@@ -664,9 +696,10 @@ DigestChannel(Tcl_Interp *interp, const char *channel, const EVP_MD *md, int for
  *-------------------------------------------------------------------
  */
 int
-DigestHashFunction(Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], const EVP_MD *md, int format) {
+DigestHashFunction(Tcl_Interp *interp, int objc, Tcl_Obj *const objv[],
+	const EVP_MD *md, int format, Tcl_Obj *keyObj) {
     char *data;
-    int len;
+    int len, res;
     unsigned int md_len;
     unsigned char md_buf[EVP_MAX_MD_SIZE];
 
@@ -682,9 +715,22 @@ DigestHashFunction(Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], const EV
 	return TCL_ERROR;
     }
 
-    /* Calculate hash value, create bin/hex representation, and write to result */
-    if (EVP_Digest(data, (size_t) len, md_buf, &md_len, md, NULL)) {
-	if (format == 0) {
+    /* Calculate digest based on hash function */
+    if (keyObj == NULL) {
+	res = EVP_Digest(data, (size_t) len, md_buf, &md_len, md, NULL);
+    } else {
+	unsigned char *key, *hmac;
+	int key_len;
+
+	key = Tcl_GetByteArrayFromObj(keyObj, &key_len);
+	hmac = HMAC(md, (const void *) key, key_len, (const unsigned char *) data,
+	    (size_t) len, md_buf, &md_len);
+	res = (hmac != NULL);
+    }
+
+    /* Output digest to result per format (bin or hex) */
+    if (res) {
+	if (format == BIN_FORMAT) {
 	    Tcl_SetObjResult(interp, Tcl_NewByteArrayObj(md_buf, md_len));
 
 	} else {
@@ -722,16 +768,16 @@ DigestHashFunction(Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], const EV
  */
 static int
 DigestObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
-    int idx, len, format = 1, key_len = 0, data_len = 0;
+    int idx, len, format = HEX_FORMAT, key_len = 0, data_len = 0;
     const char *digestname, *channel = NULL;
-    Tcl_Obj *dataObj = NULL, *fileObj = NULL;
+    Tcl_Obj *dataObj = NULL, *fileObj = NULL, *keyObj = NULL;
     unsigned char *key = NULL;
     const EVP_MD *md;
 
     Tcl_ResetResult(interp);
 
-    if (objc < 3 || objc > 5) {
-	Tcl_WrongNumArgs(interp, 1, objv, "type ?-bin|-hex? [-channel chan | -file filename | ?-data? data]");
+    if (objc < 3 || objc > 7) {
+	Tcl_WrongNumArgs(interp, 1, objv, "type ?-bin|-hex? ?-key hmac_key? [-channel chan | -file filename | ?-data? data]");
 	return TCL_ERROR;
     }
 
@@ -744,7 +790,7 @@ DigestObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const
 
     /* Optimal case for blob of data */
     if (objc == 3) {
-	return DigestHashFunction(interp, --objc, ++objv, md, format);
+	return DigestHashFunction(interp, --objc, ++objv, md, format, NULL);
     }
 
     /* Get options */
@@ -754,17 +800,18 @@ DigestObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const
 	if (opt[0] != '-')
 	    break;
 
-	OPTFLAG("-bin", format, 0);
-	OPTFLAG("-binary", format, 0);
-	OPTFLAG("-hex", format, 1);
-	OPTFLAG("-hexadecimal", format, 1);
+	OPTFLAG("-bin", format, BIN_FORMAT);
+	OPTFLAG("-binary", format, BIN_FORMAT);
+	OPTFLAG("-hex", format, HEX_FORMAT);
+	OPTFLAG("-hexadecimal", format, HEX_FORMAT);
 	OPTOBJ("-data", dataObj);
 	OPTSTR("-chan", channel);
 	OPTSTR("-channel", channel);
 	OPTOBJ("-file", fileObj);
 	OPTOBJ("-filename", fileObj);
+	OPTOBJ("-key", keyObj);
 
-	OPTBAD("option", "-bin, -data, -file, -filename, -key, or -hex");
+	OPTBAD("option", "-bin, -data, -file, -filename, -hex, or -key");
 	return TCL_ERROR;
     }
 
@@ -775,14 +822,14 @@ DigestObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const
 
     /* Calc digest on file, stacked channel, or data blob */
     if (fileObj != NULL) {
-	return DigestFile(interp, fileObj, md, format);
+	return DigestFile(interp, fileObj, md, format, keyObj);
     } else if (channel != NULL) {
 	return DigestChannel(interp, channel, md, format);
     } else if (dataObj != NULL) {
 	Tcl_Obj *objs[2];
 	objs[0] = NULL;
 	objs[1] = dataObj;
-	return DigestHashFunction(interp, 2, objs, md, format);
+	return DigestHashFunction(interp, 2, objs, md, format, keyObj);
     }
 
     Tcl_AppendResult(interp, "No data specified.", NULL);
@@ -805,19 +852,19 @@ DigestObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const
  *-------------------------------------------------------------------
  */
 int DigestMD4Cmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
-    return DigestHashFunction(interp, objc, objv, EVP_md4(), 1);
+    return DigestHashFunction(interp, objc, objv, EVP_md4(), HEX_FORMAT, NULL);
 }
 
 int DigestMD5Cmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
-    return DigestHashFunction(interp, objc, objv, EVP_md5(), 1);
+    return DigestHashFunction(interp, objc, objv, EVP_md5(), HEX_FORMAT, NULL);
 }
 
 int DigestSHA1Cmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
-    return DigestHashFunction(interp, objc, objv, EVP_sha1(), 1);
+    return DigestHashFunction(interp, objc, objv, EVP_sha1(), HEX_FORMAT, NULL);
 }
 
 int DigestSHA256Cmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
-    return DigestHashFunction(interp, objc, objv, EVP_sha256(), 1);
+    return DigestHashFunction(interp, objc, objv, EVP_sha256(), HEX_FORMAT, NULL);
 }
 
 /*
