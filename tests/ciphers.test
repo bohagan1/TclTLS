@@ -24,6 +24,7 @@ proc exec_get {delim args} {return [split [exec openssl {*}$args] $delim]}
 proc exec_get_ciphers {} {set list [list];set data [exec openssl list -cipher-algorithms];foreach line [split $data "\n"] {foreach {cipher null alias} [split [string trim $line]] {lappend list [string tolower $cipher]}};return [lsort -unique $list]}
 proc exec_get_digests {} {set list [list];set data [exec openssl dgst -list];foreach line [split $data "\n"] {foreach digest $line {if {[string match "-*" $digest]} {lappend list [string trimleft $digest "-"]}}};return [lsort $list]}
 proc list_tolower {list} {set result [list];foreach element $list {lappend result [string tolower $element]};return $result}
+proc read_chan {md filename args} {set ch [open $filename rb];fconfigure $ch -translation binary;set new [tls::digest $md {*}$args -chan $ch];while {![eof $new]} {set result [read $new]};close $new;return $result}
 # Test list ciphers
 
 
@@ -188,20 +189,46 @@ test Digest_File-8.5 {md5 bin} -body {
 test Digest_File-8.6 {md5 hex} -body {
 	tls::digest md5 -hex -file md_data.dat
     } -result {CCB1BE2E11D8183E843FF73DA8C6D206}
+# Test digest command for channel
+
+
+test Digest_Chan-9.1 {md4} -body {
+	read_chan md4 md_data.dat
+    } -result {181CDCF9DB9B6FA8FC0A3BF9C34E29D9}
+
+test Digest_Chan-9.2 {md5} -body {
+	read_chan md5 md_data.dat
+    } -result {CCB1BE2E11D8183E843FF73DA8C6D206}
+
+test Digest_Chan-9.3 {sha1} -body {
+	read_chan sha1 md_data.dat
+    } -result {3AEFE840CA492C387E903F15ED6019E7AD833B47}
+
+test Digest_Chan-9.4 {sha256} -body {
+	read_chan sha256 md_data.dat
+    } -result {B7DFDDEB0314A74FF56A8AC1E3DC57DF09BB52A96DA50F6549EB62CA61A0A491}
+
+test Digest_Chan-9.5 {md5 bin} -body {
+	string toupper [binary encode hex [read_chan md5 md_data.dat -bin]]
+    } -result {CCB1BE2E11D8183E843FF73DA8C6D206}
+
+test Digest_Chan-9.6 {md5 hex} -body {
+	read_chan md5 md_data.dat -hex
+    } -result {CCB1BE2E11D8183E843FF73DA8C6D206}
 # Test list protocols
 
 
-test Protocols-9.1 {All} -body {
+test Protocols-10.1 {All} -body {
 	lcompare $protocols [::tls::protocols]
     } -result {missing {ssl2 ssl3} unexpected {}}
 # Test show version
 
 
-test Version-10.1 {All} -body {
+test Version-11.1 {All} -body {
 	::tls::version
     } -match {glob} -result {*}
 
-test Version-10.2 {OpenSSL} -constraints {OpenSSL} -body {
+test Version-11.2 {OpenSSL} -constraints {OpenSSL} -body {
 	::tls::version
     } -match {glob} -result {OpenSSL*}
 
