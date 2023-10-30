@@ -215,20 +215,38 @@ test Digest_Chan-9.5 {md5 bin} -body {
 test Digest_Chan-9.6 {md5 hex} -body {
 	read_chan md5 md_data.dat -hex
     } -result {CCB1BE2E11D8183E843FF73DA8C6D206}
+# Test HMAC
+
+
+test Digest_HMAC-10.1 {data} -body {
+	tls::digest md5 -key "Example key" -data "Example string for message digest tests."
+    } -result {901DA6E6976A71650C77443C37FF9C7F}
+
+test Digest_HMAC-10.2 {file} -body {
+	tls::digest md5 -key "Example key" -file md_data.dat
+    } -result {901DA6E6976A71650C77443C37FF9C7F}
+
+test Digest_HMAC-10.3 {channel} -constraint {knownBug} -body {
+	read_chan md5 md_data.dat -key "Example key"
+    } -result {901DA6E6976A71650C77443C37FF9C7F}
+
+test Digest_HMAC-10.4 {data bin} -body {
+	string toupper [binary encode hex [tls::digest md5 -bin -key "Example key" -data "Example string for message digest tests."]]
+    } -result {901DA6E6976A71650C77443C37FF9C7F}
 # Test list protocols
 
 
-test Protocols-10.1 {All} -body {
+test Protocols-11.1 {All} -body {
 	lcompare $protocols [::tls::protocols]
     } -result {missing {ssl2 ssl3} unexpected {}}
 # Test show version
 
 
-test Version-11.1 {All} -body {
+test Version-12.1 {All} -body {
 	::tls::version
     } -match {glob} -result {*}
 
-test Version-11.2 {OpenSSL} -constraints {OpenSSL} -body {
+test Version-12.2 {OpenSSL} -constraints {OpenSSL} -body {
 	::tls::version
     } -match {glob} -result {OpenSSL*}
 
