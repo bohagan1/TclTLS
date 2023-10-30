@@ -678,6 +678,57 @@ DigestChannel(Tcl_Interp *interp, const char *channel, const EVP_MD *md, int for
     return TCL_OK;
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * Unstack Channel --
+ *
+ *	This procedure is invoked to process the "unstack" TCL command.
+ *	See the user documentation for details on what it does.
+ *
+ * Returns:
+ *	TCL_OK or TCL_ERROR
+ *
+ * Side effects:
+ *	Removes transform from channel or sets result to error message.
+ *
+ *----------------------------------------------------------------------
+ */
+static int
+UnstackObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
+    Tcl_Channel chan;
+    int mode; /* OR-ed combination of TCL_READABLE and TCL_WRITABLE  */
+
+    if (objc != 2) {
+	Tcl_WrongNumArgs(interp, 1, objv, "channel");
+	return TCL_ERROR;
+    }
+
+    /* Get channel */
+    chan = Tcl_GetChannel(interp, Tcl_GetStringFromObj(objv[1], NULL), &mode);
+    if (chan == (Tcl_Channel) NULL) {
+	return TCL_ERROR;
+    }
+
+    /* Make sure to operate on the topmost channel */
+    chan = Tcl_GetTopChannel(chan);
+
+    /* Check if digest channel */
+    if (Tcl_GetChannelType(chan) != &digestChannelType) {
+	Tcl_AppendResult(interp, "bad channel \"", Tcl_GetChannelName(chan),
+	    "\": not a digest channel", NULL);
+	Tcl_SetErrorCode(interp, "TLS", "UNSTACK", "CHANNEL", "INVALID", (char *) NULL);
+	return TCL_ERROR;
+    }
+
+    /* Pop transform from channel, leaves error info in interp result */
+    if (Tcl_UnstackChannel(interp, chan) == TCL_ERROR) {
+	return TCL_ERROR;
+    }
+    return TCL_OK;
+    	clientData = clientData;
+}
+
 /*******************************************************************/
 
 /*
@@ -888,6 +939,7 @@ int Tls_DigestCommands(Tcl_Interp *interp) {
     Tcl_CreateObjCommand(interp, "tls::md5", DigestMD5Cmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
     Tcl_CreateObjCommand(interp, "tls::sha1", DigestSHA1Cmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
     Tcl_CreateObjCommand(interp, "tls::sha256", DigestSHA256Cmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
+    Tcl_CreateObjCommand(interp, "tls::unstack", UnstackObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
     return TCL_OK;
 }
 
