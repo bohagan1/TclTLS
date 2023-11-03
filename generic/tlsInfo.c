@@ -259,6 +259,32 @@ int DigestsObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *
 /*
  *-------------------------------------------------------------------
  *
+ * MacsObjCmd -- 
+ *
+ *	Return a list of all valid message authentication codes (MAC).
+ *
+ * Results:
+ *	A standard Tcl list.
+ *
+ * Side effects:
+ *	None.
+ *
+ *-------------------------------------------------------------------
+ */
+int MacsObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
+    Tcl_Obj *objPtr = Tcl_NewListObj(0, NULL);
+    Tcl_ListObjAppendElement(interp, objPtr, Tcl_NewStringObj("cmac", -1));
+    Tcl_ListObjAppendElement(interp, objPtr, Tcl_NewStringObj("hmac", -1));
+    Tcl_SetObjResult(interp, objPtr);
+    return TCL_OK;
+	clientData = clientData;
+	objc = objc;
+	objv = objv;
+}
+
+/*
+ *-------------------------------------------------------------------
+ *
  * ProtocolsObjCmd --
  *
  *	Return a list of the available or supported SSL/TLS protocols.
@@ -358,6 +384,7 @@ int Tls_InfoCommands(Tcl_Interp *interp) {
     Tcl_CreateObjCommand(interp, "tls::ciphers", CiphersObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
     Tcl_CreateObjCommand(interp, "tls::digests", DigestsObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
     Tcl_CreateObjCommand(interp, "tls::protocols", ProtocolsObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
+    Tcl_CreateObjCommand(interp, "tls::macs", MacsObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
     Tcl_CreateObjCommand(interp, "tls::version", VersionObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
     return TCL_OK;
 }

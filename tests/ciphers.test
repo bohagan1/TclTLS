@@ -23,7 +23,7 @@ proc lcompare {list1 list2} {set m "";set u "";foreach i $list1 {if {$i ni $list
 proc exec_get {delim args} {return [split [exec openssl {*}$args] $delim]}
 proc exec_get_ciphers {} {set list [list];set data [exec openssl list -cipher-algorithms];foreach line [split $data "\n"] {foreach {cipher null alias} [split [string trim $line]] {lappend list [string tolower $cipher]}};return [lsort -unique $list]}
 proc exec_get_digests {} {set list [list];set data [exec openssl dgst -list];foreach line [split $data "\n"] {foreach digest $line {if {[string match "-*" $digest]} {lappend list [string trimleft $digest "-"]}}};return [lsort $list]}
-proc list_tolower {list} {set result [list];foreach element $list {lappend result [string tolower $element]};return $result}
+command,proc exec_get_macs {} {return [list cmac hmac]},,,,,,,,,
 proc read_chan {md filename args} {set ch [open $filename rb];fconfigure $ch -translation binary;set new [tls::digest $md {*}$args -chan $ch];while {![eof $new]} {set result [read $new]};close $new;return $result}
 # Test list ciphers
 
@@ -233,20 +233,26 @@ test Digest_HMAC-10.3 {channel} -constraints {knownBug} -body {
 test Digest_HMAC-10.4 {data bin} -body {
 	string toupper [binary encode hex [tls::digest md5 -bin -key "Example key" -data "Example string for message digest tests."]]
     } -result {901DA6E6976A71650C77443C37FF9C7F}
+# Test list MACs
+
+
+test MAC_List-11.1 {All} -body {
+	lcompare [exec_get_macs] [tls::macs]
+    } -result {missing {} unexpected {}}
 # Test list protocols
 
 
-test Protocols-11.1 {All} -body {
+test Protocols-12.1 {All} -body {
 	lcompare $protocols [::tls::protocols]
     } -result {missing {ssl2 ssl3} unexpected {}}
 # Test show version
 
 
-test Version-12.1 {All} -body {
+test Version-13.1 {All} -body {
 	::tls::version
     } -match {glob} -result {*}
 
-test Version-12.2 {OpenSSL} -constraints {OpenSSL} -body {
+test Version-13.2 {OpenSSL} -constraints {OpenSSL} -body {
 	::tls::version
     } -match {glob} -result {OpenSSL*}
 
