@@ -1,6 +1,7 @@
-
 /*
- * Digest Command and Stacked Transform Channel
+ * Message Digests Module
+ *
+ * Provides commands to calculate a message digest using a specified hash algorithm.
  *
  * Copyright (C) 2023 Brian O'Hagan
  *
@@ -15,7 +16,8 @@
 
 /* Constants */
 const char *hex = "0123456789ABCDEF";
-#define REASON()	ERR_reason_error_string(ERR_get_error())
+
+/* Macros */
 #define BUFFER_SIZE 65536
 #define BIN_FORMAT 0
 #define HEX_FORMAT 1

@@ -163,7 +163,7 @@ int Tls_WaitForConnect(State *statePtr, int *errorCodePtr, int handshakeFailureI
 	rc = SSL_get_error(statePtr->ssl, err);
 
 	dprintf("Got error: %i (rc = %i)", err, rc);
-	dprintf("Got error: %s", ERR_reason_error_string(ERR_get_error()));
+	dprintf("Got error: %s", REASON());
 
 	bioShouldRetry = 0;
 	if (err <= 0) {
@@ -234,7 +234,7 @@ int Tls_WaitForConnect(State *statePtr, int *errorCodePtr, int handshakeFailureI
 
 	case SSL_ERROR_SSL:
 	    dprintf("Got permanent fatal SSL error, aborting immediately");
-	    Tls_Error(statePtr, (char *)ERR_reason_error_string(ERR_get_error()));
+	    Tls_Error(statePtr, (char *)REASON());
 	    statePtr->flags |= TLS_TCL_HANDSHAKE_FAILED;
 	    *errorCodePtr = ECONNABORTED;
 	    return(-1);
