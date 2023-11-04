@@ -83,7 +83,7 @@ Digest Chan,md5 hex,,,read_chan md5 md_data.dat -hex,,,CCB1BE2E11D8183E843FF73DA
 command,# Test HMAC,,,,,,,,,
 Digest HMAC,data,,,"tls::digest md5 -key ""Example key"" -data ""Example string for message digest tests.""",,,901DA6E6976A71650C77443C37FF9C7F,,,
 Digest HMAC,file,,,"tls::digest md5 -key ""Example key"" -file md_data.dat",,,901DA6E6976A71650C77443C37FF9C7F,,,
-Digest HMAC,channel,knownBug,,"read_chan md5 md_data.dat -key ""Example key""",,,901DA6E6976A71650C77443C37FF9C7F,,,
+Digest HMAC,channel,,,"read_chan md5 md_data.dat -key ""Example key""",,,901DA6E6976A71650C77443C37FF9C7F,,,
 Digest HMAC,data bin,,,"string toupper [binary encode hex [tls::digest md5 -bin -key ""Example key"" -data ""Example string for message digest tests.""]]",,,901DA6E6976A71650C77443C37FF9C7F,,,
 ,,,,,,,,,,
 command,# Test list MACs,,,,,,,,,

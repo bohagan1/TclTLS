@@ -226,7 +226,7 @@ test Digest_HMAC-10.2 {file} -body {
 	tls::digest md5 -key "Example key" -file md_data.dat
     } -result {901DA6E6976A71650C77443C37FF9C7F}
 
-test Digest_HMAC-10.3 {channel} -constraints {knownBug} -body {
+test Digest_HMAC-10.3 {channel} -body {
 	read_chan md5 md_data.dat -key "Example key"
     } -result {901DA6E6976A71650C77443C37FF9C7F}
 

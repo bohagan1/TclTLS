@@ -38,7 +38,35 @@ typedef struct DigestState {
 
 	Tcl_Interp *interp;	/* Current interpreter */
 	EVP_MD_CTX *ctx;	/* MD Context */
+	HMAC_CTX *hctx;		/* HMAC Context */
 } DigestState;
+
+/*
+ *-------------------------------------------------------------------
+ *
+ * DigestFree --
+ *
+ *	This procedure removes a digest state structure
+ *
+ * Returns:
+ *	Nothing
+ *
+ * Side effects:
+ *	Removes structure
+ *
+ *-------------------------------------------------------------------
+ */
+void DigestFree (DigestState *statePtr) {
+    if (statePtr == (DigestState *) NULL) return;
+
+    if (statePtr->ctx != (EVP_MD_CTX *) NULL) {
+	EVP_MD_CTX_free(statePtr->ctx);
+    }
+    if (statePtr->hctx != (HMAC_CTX *) NULL) {
+	HMAC_CTX_free(statePtr->hctx);
+    }
+    ckfree(statePtr);
+}
 
 /*******************************************************************/
 
@@ -108,14 +136,17 @@ int DigestFile(Tcl_Interp *interp, Tcl_Obj *filename, const EVP_MD *md, int form
     /* Read file data and update hash function */
     while (!Tcl_Eof(chan)) {
 	int len = Tcl_ReadRaw(chan, (char *) buf, BUFFER_SIZE);
-	if (keyObj == NULL) {
-	    res = EVP_DigestUpdate(ctx, &buf, (size_t) len);
-	} else {
-	    res = HMAC_Update(hctx, &buf[0], (size_t) len);
-	}
-	if (len > 0 && !res) {
-	    Tcl_AppendResult(interp, "Update digest failed: ", REASON(), NULL);
-	    goto error;
+	if (len > 0) {
+	    if (keyObj == NULL) {
+		res = EVP_DigestUpdate(ctx, &buf, (size_t) len);
+	    } else {
+		res = HMAC_Update(hctx, &buf[0], (size_t) len);
+	    }
+	    if (!res) {
+		Tcl_AppendResult(interp, "Update digest failed: ", REASON(), NULL);
+		res = TCL_ERROR;
+		goto error;
+	    }
 	}
     }
 
@@ -203,30 +234,6 @@ static int DigestBlockModeProc(ClientData clientData, int mode) {
 /*
  *-------------------------------------------------------------------
  *
- * DigestFree --
- *
- *	This procedure removes a digest state structure
- *
- * Returns:
- *	Nothing
- *
- * Side effects:
- *	Removes structure
- *
- *-------------------------------------------------------------------
- */
-void DigestFree (DigestState *statePtr) {
-    if (statePtr == (DigestState *) NULL) return;
-    
-    if (statePtr->ctx != NULL) {
-	EVP_MD_CTX_free(statePtr->ctx);
-    }
-    ckfree(statePtr);
-}
-
-/*
- *-------------------------------------------------------------------
- *
  * DigestCloseProc --
  *
  *	This procedure is invoked by the generic IO level to perform
@@ -284,7 +291,7 @@ static int DigestClose2Proc(ClientData instanceData, Tcl_Interp *interp, int fla
 int DigestInputProc(ClientData clientData, char *buf, int toRead, int *errorCodePtr) {
     DigestState *statePtr = (DigestState *) clientData;
     Tcl_Channel parent;
-    int read;
+    int read, res;
     *errorCodePtr = 0;
 
     if (toRead <= 0 || statePtr->self == (Tcl_Channel) NULL) {
@@ -297,8 +304,12 @@ int DigestInputProc(ClientData clientData, char *buf, int toRead, int *errorCode
 
     /* Add to message digest */
     if (read > 0) {
-	/* OK */
-	if (!EVP_DigestUpdate(statePtr->ctx, buf, read)) {
+	if (statePtr->ctx != NULL) {
+	    res = EVP_DigestUpdate(statePtr->ctx, buf, (size_t) read);
+	} else {
+	    res = HMAC_Update(statePtr->hctx, buf, (size_t) read);
+	}
+	if (!res) {
 	    Tcl_SetChannelError(statePtr->self, Tcl_ObjPrintf("Digest update failed: %s", REASON()));
 	    *errorCodePtr = EINVAL;
 	    return -1;
@@ -316,8 +327,13 @@ int DigestInputProc(ClientData clientData, char *buf, int toRead, int *errorCode
 	unsigned char md_buf[EVP_MAX_MD_SIZE];
 	unsigned int md_len = 0;
 
-	/* Get message digest */
-	if (!EVP_DigestFinal_ex(statePtr->ctx, md_buf, &md_len)) {
+	/* Finalize hash function and calculate message digest */
+	if (statePtr->ctx != NULL) {
+	    res = EVP_DigestFinal_ex(statePtr->ctx, md_buf, &md_len);
+	} else {
+	    res = HMAC_Final(statePtr->hctx, md_buf, &md_len);
+	}
+	if (!res) {
 	    *errorCodePtr = EINVAL;
 
 	/* Write message digest to output channel as byte array or hex string */
@@ -611,11 +627,13 @@ static const Tcl_ChannelType digestChannelType = {
  *----------------------------------------------------------------------
  */
 static int
-DigestChannel(Tcl_Interp *interp, const char *channel, const EVP_MD *md, int format) {
-    int mode; /* OR-ed combination of TCL_READABLE and TCL_WRITABLE */
+DigestChannel(Tcl_Interp *interp, const char *channel, const EVP_MD *md, int format,
+	Tcl_Obj *keyObj) {
+    int res, mode; /* OR-ed combination of TCL_READABLE and TCL_WRITABLE */
     Tcl_Channel chan;
-    EVP_MD_CTX *ctx;
     DigestState *statePtr;
+    EVP_MD_CTX *ctx = (EVP_MD_CTX *) NULL;
+    HMAC_CTX *hctx = (HMAC_CTX *) NULL;
 
     /* Validate args */
     if (channel == (const char *) NULL || md == (const EVP_MD *) NULL) {
@@ -630,10 +648,9 @@ DigestChannel(Tcl_Interp *interp, const char *channel, const EVP_MD *md, int for
     /* Make sure to operate on the topmost channel */
     chan = Tcl_GetTopChannel(chan);
 
-    /* Create internal storage structures */
-    ctx = EVP_MD_CTX_new();
+    /* Create internal storage structure */
     statePtr = (DigestState *) ckalloc((unsigned) sizeof(DigestState));
-    if (ctx != NULL && statePtr != NULL) {
+    if (statePtr != NULL) {
 	memset(statePtr, 0, sizeof(DigestState));
 	statePtr->self	= chan;		/* This socket channel */
 	statePtr->timer = (Tcl_TimerToken) NULL;	/* Timer to flush data */
@@ -642,23 +659,39 @@ DigestChannel(Tcl_Interp *interp, const char *channel, const EVP_MD *md, int for
 	statePtr->mode	= mode;		/* Current mode of parent channel */
 	statePtr->format = format;	/* Output format */
 	statePtr->interp = interp;	/* Current interpreter */
-	statePtr->ctx = ctx;		/* SSL Context */
+	statePtr->ctx = ctx;		/* MD Context */
+	statePtr->hctx = hctx;		/* HMAC Context */
+	statePtr->mac = NULL;		/* MAC Context */
     } else {
 	Tcl_AppendResult(interp, "Initialize digest error: memory allocation failure", (char *) NULL);
-	EVP_MD_CTX_free(ctx);
+	return TCL_ERROR;
+    }
+
+    /* Create message digest context */
+    if (keyObj == NULL) {
+	ctx = EVP_MD_CTX_new();
+    } else {
+	hctx = HMAC_CTX_new();
+    }
+    if (ctx != NULL || hctx != NULL) {
+	statePtr->ctx = ctx;
+	statePtr->hctx = hctx;
+    } else {
+	Tcl_AppendResult(interp, "Create digest context failed: ", REASON(), NULL);
 	DigestFree(statePtr);
 	return TCL_ERROR;
     }
 
-    /* Initialize digest */
-#if OPENSSL_VERSION_NUMBER < 0x30000000L
-    if (!EVP_DigestInit_ex(ctx, md, NULL))
-#else
-    if (!EVP_DigestInit_ex2(ctx, md, NULL))
-#endif
-    {
-	Tcl_AppendResult(interp, "Initialize digest error: ", REASON(), (char *) NULL);
-	EVP_MD_CTX_free(ctx);
+    /* Initialize hash function */
+    if (keyObj == NULL) {
+	res = EVP_DigestInit_ex(ctx, md, NULL);
+    } else {
+	int key_len;
+	unsigned char *key = Tcl_GetByteArrayFromObj(keyObj, &key_len);
+	res = HMAC_Init_ex(hctx, (const void *) key, key_len, md, NULL);
+    }
+    if (!res) {
+	Tcl_AppendResult(interp, "Initialize digest failed: ", REASON(), (char *) NULL);
 	DigestFree(statePtr);
 	return TCL_ERROR;
     }
@@ -672,7 +705,6 @@ DigestChannel(Tcl_Interp *interp, const char *channel, const EVP_MD *md, int for
     /* Stack channel */
     statePtr->self = Tcl_StackChannel(interp, &digestChannelType, (ClientData) statePtr, mode, chan);
     if (statePtr->self == (Tcl_Channel) NULL) {
-	EVP_MD_CTX_free(ctx);
 	DigestFree(statePtr);
 	return TCL_ERROR;
     }
@@ -770,10 +802,10 @@ DigestHashFunction(Tcl_Interp *interp, int objc, Tcl_Obj *const objv[],
     }
 
     /* Calculate digest based on hash function */
-    if (keyObj == NULL) {
+    if (keyObj == (Tcl_Obj *) NULL) {
 	res = EVP_Digest(data, (size_t) len, md_buf, &md_len, md, NULL);
     } else {
-	unsigned char *key, *hmac;
+	unsigned char *key, *hmac = NULL;
 	int key_len;
 
 	key = Tcl_GetByteArrayFromObj(keyObj, &key_len);
@@ -822,7 +854,7 @@ DigestHashFunction(Tcl_Interp *interp, int objc, Tcl_Obj *const objv[],
  */
 static int
 DigestObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
-    int idx, len, format = HEX_FORMAT, key_len = 0, data_len = 0;
+    int idx, len, format = HEX_FORMAT, key_len = 0, data_len = 0, res = TCL_OK;
     const char *digestname, *channel = NULL;
     Tcl_Obj *dataObj = NULL, *fileObj = NULL, *keyObj = NULL;
     unsigned char *key = NULL;
@@ -876,18 +908,16 @@ DigestObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const
 
     /* Calc digest on file, stacked channel, or data blob */
     if (fileObj != NULL) {
-	return DigestFile(interp, fileObj, md, format, keyObj);
+	res = DigestFile(interp, fileObj, md, format, keyObj);
     } else if (channel != NULL) {
-	return DigestChannel(interp, channel, md, format);
+	res = DigestChannel(interp, channel, md, format, keyObj);
     } else if (dataObj != NULL) {
 	Tcl_Obj *objs[2];
 	objs[0] = NULL;
 	objs[1] = dataObj;
-	return DigestHashFunction(interp, 2, objs, md, format, keyObj);
+	res = DigestHashFunction(interp, 2, objs, md, format, keyObj);
     }
-
-    Tcl_AppendResult(interp, "No data specified.", NULL);
-    return TCL_ERROR;
+    return res;
 }
 
 /*
