@@ -133,6 +133,10 @@ test Digest_Cmds-6.3 {sha1 cmd} -body {
 test Digest_Cmds-6.4 {sha256 cmd} -body {
 	tls::sha256 "Example string for message digest tests."
     } -result {B7DFDDEB0314A74FF56A8AC1E3DC57DF09BB52A96DA50F6549EB62CA61A0A491}
+
+test Digest_Cmds-6.5 {sha512 cmd} -body {
+	tls::sha512 "Example string for message digest tests."
+    } -result {B56EC55E33193E17B61D669FB7B04AD2483DE93FE847C411BBEAE6440ECEA6C7CFDD2E6F35A06CB189FC62D799E785CDB7A23178323789D001BC8E44A0B5907F}
 # Test digest command for data
 
 
@@ -152,15 +156,19 @@ test Digest_Data-7.4 {sha256} -body {
 	tls::digest sha256 "Example string for message digest tests."
     } -result {B7DFDDEB0314A74FF56A8AC1E3DC57DF09BB52A96DA50F6549EB62CA61A0A491}
 
-test Digest_Data-7.5 {md5 bin} -body {
+test Digest_Data-7.5 {sha512} -body {
+	tls::digest sha512 "Example string for message digest tests."
+    } -result {B56EC55E33193E17B61D669FB7B04AD2483DE93FE847C411BBEAE6440ECEA6C7CFDD2E6F35A06CB189FC62D799E785CDB7A23178323789D001BC8E44A0B5907F}
+
+test Digest_Data-7.6 {md5 bin} -body {
 	string toupper [binary encode hex [tls::digest md5 -bin "Example string for message digest tests."]]
     } -result {CCB1BE2E11D8183E843FF73DA8C6D206}
 
-test Digest_Data-7.6 {md5 hex} -body {
+test Digest_Data-7.7 {md5 hex} -body {
 	tls::digest md5 -hex "Example string for message digest tests."
     } -result {CCB1BE2E11D8183E843FF73DA8C6D206}
 
-test Digest_Data-7.7 {md5 with arg} -body {
+test Digest_Data-7.8 {md5 with arg} -body {
 	tls::digest md5 -data "Example string for message digest tests."
     } -result {CCB1BE2E11D8183E843FF73DA8C6D206}
 # Test digest command for files
@@ -182,11 +190,15 @@ test Digest_File-8.4 {sha256} -body {
 	tls::digest sha256 -file md_data.dat
     } -result {B7DFDDEB0314A74FF56A8AC1E3DC57DF09BB52A96DA50F6549EB62CA61A0A491}
 
-test Digest_File-8.5 {md5 bin} -body {
+test Digest_File-8.5 {sha512} -body {
+	tls::digest sha512 -file md_data.dat
+    } -result {B56EC55E33193E17B61D669FB7B04AD2483DE93FE847C411BBEAE6440ECEA6C7CFDD2E6F35A06CB189FC62D799E785CDB7A23178323789D001BC8E44A0B5907F}
+
+test Digest_File-8.6 {md5 bin} -body {
 	string toupper [binary encode hex [tls::digest md5 -bin -file md_data.dat]]
     } -result {CCB1BE2E11D8183E843FF73DA8C6D206}
 
-test Digest_File-8.6 {md5 hex} -body {
+test Digest_File-8.7 {md5 hex} -body {
 	tls::digest md5 -hex -file md_data.dat
     } -result {CCB1BE2E11D8183E843FF73DA8C6D206}
 # Test digest command for channel
@@ -208,11 +220,15 @@ test Digest_Chan-9.4 {sha256} -body {
 	read_chan sha256 md_data.dat
     } -result {B7DFDDEB0314A74FF56A8AC1E3DC57DF09BB52A96DA50F6549EB62CA61A0A491}
 
-test Digest_Chan-9.5 {md5 bin} -body {
+test Digest_Chan-9.5 {sha512} -body {
+	read_chan sha512 md_data.dat
+    } -result {B56EC55E33193E17B61D669FB7B04AD2483DE93FE847C411BBEAE6440ECEA6C7CFDD2E6F35A06CB189FC62D799E785CDB7A23178323789D001BC8E44A0B5907F}
+
+test Digest_Chan-9.6 {md5 bin} -body {
 	string toupper [binary encode hex [read_chan md5 md_data.dat -bin]]
     } -result {CCB1BE2E11D8183E843FF73DA8C6D206}
 
-test Digest_Chan-9.6 {md5 hex} -body {
+test Digest_Chan-9.7 {md5 hex} -body {
 	read_chan md5 md_data.dat -hex
     } -result {CCB1BE2E11D8183E843FF73DA8C6D206}
 # Test HMAC

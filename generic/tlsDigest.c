@@ -951,6 +951,10 @@ int DigestSHA256Cmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj
     return DigestHashFunction(interp, objc, objv, EVP_sha256(), HEX_FORMAT, NULL);
 }
 
+int DigestSHA512Cmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
+    return DigestHashFunction(interp, objc, objv, EVP_sha512(), HEX_FORMAT, NULL);
+}
+
 /*
  *-------------------------------------------------------------------
  *
@@ -972,6 +976,7 @@ int Tls_DigestCommands(Tcl_Interp *interp) {
     Tcl_CreateObjCommand(interp, "tls::md5", DigestMD5Cmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
     Tcl_CreateObjCommand(interp, "tls::sha1", DigestSHA1Cmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
     Tcl_CreateObjCommand(interp, "tls::sha256", DigestSHA256Cmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
+    Tcl_CreateObjCommand(interp, "tls::sha512", DigestSHA512Cmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
     Tcl_CreateObjCommand(interp, "tls::unstack", UnstackObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
     return TCL_OK;
 }
