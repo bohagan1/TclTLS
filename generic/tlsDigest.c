@@ -21,6 +21,7 @@ const char *hex = "0123456789ABCDEF";
 #define BUFFER_SIZE 65536
 #define BIN_FORMAT 0
 #define HEX_FORMAT 1
+#define CHAN_EOF 0x10
 
 /*
  * This structure describes the per-instance state of an SSL channel.
@@ -237,19 +238,20 @@ static int DigestBlockModeProc(ClientData clientData, int mode) {
  * DigestCloseProc --
  *
  *	This procedure is invoked by the generic IO level to perform
- *	channel-type-specific cleanup when digest channel is closed.
+ *	channel-type-specific cleanup when channel is closed. All
+ *	queued output is flushed prior to calling this function.
  *
  * Returns:
- *	TCL_OK or TCL_ERROR
+ *	0 if successful or POSIX error code if failed.
  *
  * Side effects:
- *	Writes digest to output and closes the channel.
+ *	Writes digest to output and closes the channel. Stores error
+ *	messages in interp result.
  *
  *-------------------------------------------------------------------
  */
 int DigestCloseProc(ClientData clientData, Tcl_Interp *interp) {
     DigestState *statePtr = (DigestState *) clientData;
-    int result = 0;
 
     /* Cancel active timer, if any */
     if (statePtr->timer != (Tcl_TimerToken) NULL) {
@@ -259,7 +261,7 @@ int DigestCloseProc(ClientData clientData, Tcl_Interp *interp) {
 
     /* Clean-up */
     DigestFree(statePtr);
-    return result;
+    return 0;
 }
 
 /*
@@ -278,10 +280,12 @@ static int DigestClose2Proc(ClientData instanceData, Tcl_Interp *interp, int fla
  *
  * DigestInputProc --
  *
- *	Called by the generic IO system to read data from transform.
+ *	Called by the generic IO system to read data from transform and
+ *	place in buf.
  *
  * Returns:
- *	Total bytes read
+ *	Total bytes read or -1 for an error along with a POSIX error
+ *	code in errorCodePtr. Use EAGAIN for nonblocking and no data.
  *
  * Side effects:
  *	Read data from transform and write to buf
@@ -314,14 +318,15 @@ int DigestInputProc(ClientData clientData, char *buf, int toRead, int *errorCode
 	    *errorCodePtr = EINVAL;
 	    return -1;
 	}
-	*errorCodePtr = EAGAIN;
+	/* This is correct */
 	read = -1;
+	*errorCodePtr = EAGAIN;
 	    
     } else if (read < 0) {
 	/* Error */
 	*errorCodePtr = Tcl_GetErrno();
 
-    } else if (!(statePtr->flags & 0x10)) {
+    } else if (!(statePtr->flags & CHAN_EOF)) {
 	/* EOF */
 	*errorCodePtr = 0;
 	unsigned char md_buf[EVP_MAX_MD_SIZE];
@@ -354,7 +359,7 @@ int DigestInputProc(ClientData clientData, char *buf, int toRead, int *errorCode
 		memcpy(buf, hex_buf, read);
 	    }
 	}
-	statePtr->flags |= 0x10;
+	statePtr->flags |= CHAN_EOF;
     }
     return read;
 }
@@ -364,10 +369,11 @@ int DigestInputProc(ClientData clientData, char *buf, int toRead, int *errorCode
  *
  * DigestOutputProc --
  *
- *	Called by the generic IO system to write data to transform.
+ *	Called by the generic IO system to write data in buf to transform.
  *
  * Returns:
- *	Total bytes written
+ *	Total bytes written or -1 for an error along with a POSIX error
+ *	code in errorCodePtr. Use EAGAIN for nonblocking and can't write data.
  *
  * Side effects:
  *	Get data from buf and update digest
@@ -377,9 +383,22 @@ int DigestInputProc(ClientData clientData, char *buf, int toRead, int *errorCode
  int DigestOutputProc(ClientData clientData, const char *buf, int toWrite, int *errorCodePtr) {
     DigestState *statePtr = (DigestState *) clientData;
     *errorCodePtr = 0;
+    int res;
 
     if (toWrite <= 0 || statePtr->self == (Tcl_Channel) NULL) {
 	return 0;
+    }
+
+    /* Add to message digest */
+    if (statePtr->ctx != NULL) {
+	res = EVP_DigestUpdate(statePtr->ctx, buf, (size_t) toWrite);
+    } else {
+	res = HMAC_Update(statePtr->hctx, buf, (size_t) toWrite);
+    }
+    if (!res) {
+	Tcl_SetChannelError(statePtr->self, Tcl_ObjPrintf("Digest update failed: %s", REASON()));
+	*errorCodePtr = EINVAL;
+	return -1;
     }
     return toWrite;
 }
@@ -389,10 +408,11 @@ int DigestInputProc(ClientData clientData, char *buf, int toRead, int *errorCode
  *
  * DigestSetOptionProc --
  *
- *	Called by the generic IO system to set channel option to value.
+ *	Called by the generic IO system to set channel option name to value.
  *
  * Returns:
- *	TCL_OK if successful or TCL_ERROR if failed.
+ *	TCL_OK if successful or TCL_ERROR if failed along with an error
+ *	message in interp and Tcl_SetErrno.
  *
  * Side effects:
  *	Updates channel option to new value.
@@ -415,7 +435,8 @@ static int DigestSetOptionProc(ClientData clientData, Tcl_Interp *interp, const 
     if (setOptionProc != NULL) {
 	return (*setOptionProc)(Tcl_GetChannelInstanceData(parent), interp, optionName, optionValue);
     } else {
-	return TCL_ERROR;
+	Tcl_SetErrno(EINVAL);
+	return Tcl_BadChannelOption(interp, optionName, NULL);
     }
 }
 
@@ -424,10 +445,11 @@ static int DigestSetOptionProc(ClientData clientData, Tcl_Interp *interp, const 
  *
  * DigestGetOptionProc --
  *
- *	Called by the generic IO system to get channel option's value.
+ *	Called by the generic IO system to get channel option name's value.
  *
  * Returns:
- *	TCL_OK if successful or TCL_ERROR if failed.
+ *	TCL_OK if successful or TCL_ERROR if failed along with an error
+ *	message in interp and Tcl_SetErrno.
  *
  * Side effects:
  *	Sets result to option's value
@@ -452,10 +474,10 @@ static int DigestGetOptionProc(ClientData clientData, Tcl_Interp *interp, const 
     } else if (optionName == (char*) NULL) {
 	/* Request is query for all options, this is ok. */
 	return TCL_OK;
+    } else {
+	Tcl_SetErrno(EINVAL);
+	return Tcl_BadChannelOption(interp, optionName, NULL);
     }
-
-    /* Request for a specific option has to fail, we don't have any. */
-    return Tcl_BadChannelOption(interp, optionName, "");
 }
 
 /*
@@ -543,8 +565,9 @@ void DigestWatchProc(ClientData clientData, int mask) {
  *	from inside this channel. Not used for transformations?
  *
  * Returns:
- *	If direction is TCL_READABLE return the handle used for input, or if
- *	TCL_WRITABLE return the handle used for output.
+ *	TCL_OK for success or TCL_ERROR for error or if not supported. If
+ *	direction is TCL_READABLE, sets handlePtr to the handle used for
+ *	input, or if TCL_WRITABLE sets to the handle used for output.
  *
  * Side effects:
  *	None

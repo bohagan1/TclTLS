@@ -24,7 +24,7 @@ proc exec_get {delim args} {return [split [exec openssl {*}$args] $delim]}
 proc exec_get_ciphers {} {set list [list];set data [exec openssl list -cipher-algorithms];foreach line [split $data "\n"] {foreach {cipher null alias} [split [string trim $line]] {lappend list [string tolower $cipher]}};return [lsort -unique $list]}
 proc exec_get_digests {} {set list [list];set data [exec openssl dgst -list];foreach line [split $data "\n"] {foreach digest $line {if {[string match "-*" $digest]} {lappend list [string trimleft $digest "-"]}}};return [lsort $list]}
 command,proc exec_get_macs {} {return [list cmac hmac]},,,,,,,,,
-proc read_chan {md filename args} {set ch [open $filename rb];fconfigure $ch -translation binary;set new [tls::digest $md {*}$args -chan $ch];while {![eof $new]} {set result [read $new]};close $new;return $result}
+proc read_chan {md filename args} {set ch [open $filename rb];fconfigure $ch -translation binary;set bsize [fconfigure $ch -buffersize];set new [tls::digest $md {*}$args -chan $ch];while {![eof $new]} {set result [read $new $bsize]};close $new;return $result}
 # Test list ciphers
 
 

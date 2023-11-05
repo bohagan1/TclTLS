@@ -17,7 +17,7 @@ command,"proc exec_get_ciphers {} {set list [list];set data [exec openssl list -
 command,"proc exec_get_digests {} {set list [list];set data [exec openssl dgst -list];foreach line [split $data ""\n""] {foreach digest $line {if {[string match ""-*"" $digest]} {lappend list [string trimleft $digest ""-""]}}};return [lsort $list]}",,,,,,,,,
 command,proc exec_get_macs {} {return [list cmac hmac]},,,,,,,,,
 command,proc list_tolower {list} {set result [list];foreach element $list {lappend result [string tolower $element]};return $result},,,,,,,,,
-command,proc read_chan {md filename args} {set ch [open $filename rb];fconfigure $ch -translation binary;set new [tls::digest $md {*}$args -chan $ch];while {![eof $new]} {set result [read $new]};close $new;return $result},,,,,,,,,
+command,proc read_chan {md filename args} {set ch [open $filename rb];fconfigure $ch -translation binary;set bsize [fconfigure $ch -buffersize];set new [tls::digest $md {*}$args -chan $ch];while {![eof $new]} {set result [read $new $bsize]};close $new;return $result},,,,,,,,,
 ,,,,,,,,,,
 command,# Test list ciphers,,,,,,,,,
 Ciphers List,All,,,lcompare [lsort [exec_get_ciphers]] [list_tolower [lsort [::tls::ciphers]]],,,missing {rc5 rc5-cbc rc5-cfb rc5-ecb rc5-ofb} unexpected {aes-128-ccm aes-128-gcm aes-192-ccm aes-192-gcm aes-256-ccm aes-256-gcm},,,
