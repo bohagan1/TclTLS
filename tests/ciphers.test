@@ -25,6 +25,7 @@ proc exec_get_ciphers {} {set list [list];set data [exec openssl list -cipher-al
 proc exec_get_digests {} {set list [list];set data [exec openssl dgst -list];foreach line [split $data "\n"] {foreach digest $line {if {[string match "-*" $digest]} {lappend list [string trimleft $digest "-"]}}};return [lsort $list]}
 command,proc exec_get_macs {} {return [list cmac hmac]},,,,,,,,,
 proc read_chan {md filename args} {set ch [open $filename rb];fconfigure $ch -translation binary;set bsize [fconfigure $ch -buffersize];set new [tls::digest $md {*}$args -chan $ch];while {![eof $new]} {set result [read $new $bsize]};close $new;return $result}
+proc accumulate {md string args} {set cmd [tls::digest $md {*}$args -command dcmd];$cmd update [string range $string 0 20];$cmd update [string range $string 21 end];return [$cmd finalize]}
 # Test list ciphers
 
 
@@ -231,44 +232,74 @@ test Digest_Chan-9.6 {md5 bin} -body {
 test Digest_Chan-9.7 {md5 hex} -body {
 	read_chan md5 md_data.dat -hex
     } -result {CCB1BE2E11D8183E843FF73DA8C6D206}
+# Test digest command for accumulator command
+
+
+test Digest_Command-10.1 {md4} -body {
+	accumulate md4 "Example string for message digest tests."
+    } -result {181CDCF9DB9B6FA8FC0A3BF9C34E29D9}
+
+test Digest_Command-10.2 {md5} -body {
+	accumulate md5 "Example string for message digest tests."
+    } -result {CCB1BE2E11D8183E843FF73DA8C6D206}
+
+test Digest_Command-10.3 {sha1} -body {
+	accumulate sha1 "Example string for message digest tests."
+    } -result {3AEFE840CA492C387E903F15ED6019E7AD833B47}
+
+test Digest_Command-10.4 {sha256} -body {
+	accumulate sha256 "Example string for message digest tests."
+    } -result {B7DFDDEB0314A74FF56A8AC1E3DC57DF09BB52A96DA50F6549EB62CA61A0A491}
+
+test Digest_Command-10.5 {sha512} -body {
+	accumulate sha512 "Example string for message digest tests."
+    } -result {B56EC55E33193E17B61D669FB7B04AD2483DE93FE847C411BBEAE6440ECEA6C7CFDD2E6F35A06CB189FC62D799E785CDB7A23178323789D001BC8E44A0B5907F}
+
+test Digest_Command-10.6 {md5 bin} -body {
+	string toupper [binary encode hex [accumulate md5 "Example string for message digest tests." -bin]]
+    } -result {CCB1BE2E11D8183E843FF73DA8C6D206}
+
+test Digest_Command-10.7 {md5 hex} -body {
+	accumulate md5 "Example string for message digest tests." -hex
+    } -result {CCB1BE2E11D8183E843FF73DA8C6D206}
 # Test HMAC
 
 
-test Digest_HMAC-10.1 {data} -body {
+test Digest_HMAC-11.1 {data} -body {
 	tls::digest md5 -key "Example key" -data "Example string for message digest tests."
     } -result {901DA6E6976A71650C77443C37FF9C7F}
 
-test Digest_HMAC-10.2 {file} -body {
+test Digest_HMAC-11.2 {file} -body {
 	tls::digest md5 -key "Example key" -file md_data.dat
     } -result {901DA6E6976A71650C77443C37FF9C7F}
 
-test Digest_HMAC-10.3 {channel} -body {
+test Digest_HMAC-11.3 {channel} -body {
 	read_chan md5 md_data.dat -key "Example key"
     } -result {901DA6E6976A71650C77443C37FF9C7F}
 
-test Digest_HMAC-10.4 {data bin} -body {
+test Digest_HMAC-11.4 {data bin} -body {
 	string toupper [binary encode hex [tls::digest md5 -bin -key "Example key" -data "Example string for message digest tests."]]
     } -result {901DA6E6976A71650C77443C37FF9C7F}
 # Test list MACs
 
 
-test MAC_List-11.1 {All} -body {
+test MAC_List-12.1 {All} -body {
 	lcompare [exec_get_macs] [tls::macs]
     } -result {missing {} unexpected {}}
 # Test list protocols
 
 
-test Protocols-12.1 {All} -body {
+test Protocols-13.1 {All} -body {
 	lcompare $protocols [::tls::protocols]
     } -result {missing {ssl2 ssl3} unexpected {}}
 # Test show version
 
 
-test Version-13.1 {All} -body {
+test Version-14.1 {All} -body {
 	::tls::version
     } -match {glob} -result {*}
 
-test Version-13.2 {OpenSSL} -constraints {OpenSSL} -body {
+test Version-14.2 {OpenSSL} -constraints {OpenSSL} -body {
 	::tls::version
     } -match {glob} -result {OpenSSL*}
 
