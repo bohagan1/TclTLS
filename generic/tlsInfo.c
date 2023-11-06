@@ -41,6 +41,8 @@ enum protocol {
  */
 void NamesCallback(const OBJ_NAME *obj, void *arg) {
     Tcl_Obj *objPtr = (Tcl_Obj *) arg;
+
+    /* Fields: (int) type and alias, (const char*) name and data */
     if (1 || !obj->alias) {
 	/* Filter out signed digests (a.k.a signature algorithms) */
 	if (strstr(obj->name, "rsa") == NULL && strstr(obj->name, "RSA") == NULL) {

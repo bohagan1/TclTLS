@@ -1,7 +1,7 @@
 /*
  * Message Digests Module
  *
- * Provides commands to calculate a message digest using a specified hash algorithm.
+ * Provides commands to calculate a message digest using a specified hash function.
  *
  * Copyright (C) 2023 Brian O'Hagan
  *
@@ -24,9 +24,7 @@ const char *hex = "0123456789ABCDEF";
 #define CHAN_EOF 0x10
 
 /*
- * This structure describes the per-instance state of an SSL channel.
- *
- * The SSL processing context is maintained here, in the ClientData
+ * This structure defines the per-instance state of a digest operation.
  */
 typedef struct DigestState {
 	Tcl_Channel self;	/* This socket channel */
@@ -59,7 +57,7 @@ typedef struct DigestState {
  *-------------------------------------------------------------------
  */
 DigestState *Tls_DigestNew(Tcl_Interp *interp, int format) {
-    DigestState *statePtr = NULL;
+    DigestState *statePtr;
 
     statePtr = (DigestState *) ckalloc((unsigned) sizeof(DigestState));
     if (statePtr != NULL) {
@@ -93,7 +91,9 @@ DigestState *Tls_DigestNew(Tcl_Interp *interp, int format) {
  *-------------------------------------------------------------------
  */
 void Tls_DigestFree(DigestState *statePtr) {
-    if (statePtr == (DigestState *) NULL) return;
+    if (statePtr == (DigestState *) NULL) {
+	return;
+    }
 
     if (statePtr->ctx != (EVP_MD_CTX *) NULL) {
 	EVP_MD_CTX_free(statePtr->ctx);
@@ -262,13 +262,12 @@ int Tls_DigestFile(Tcl_Interp *interp, Tcl_Obj *filename, const EVP_MD *md, int 
     }
 
     /* Configure channel */
-    if (Tcl_SetChannelOption(interp, chan, "-translation", "binary") == TCL_ERROR) {
-	res = TCL_ERROR;
+    if ((res = Tcl_SetChannelOption(interp, chan, "-translation", "binary")) == TCL_ERROR) {
 	goto done;
     }
     Tcl_SetChannelBufferSize(chan, BUFFER_SIZE);
 
-    /* Create struct */
+    /* Create state data struct */
     if ((statePtr = Tls_DigestNew(interp, format)) == NULL) {
 	res = TCL_ERROR;
 	goto done;
@@ -297,9 +296,7 @@ int Tls_DigestFile(Tcl_Interp *interp, Tcl_Obj *filename, const EVP_MD *md, int 
 done:
     /* Close channel */
     if (Tcl_Close(interp, chan) == TCL_ERROR) {
-	chan = (Tcl_Channel) NULL;
 	res = TCL_ERROR;
-	goto done;
     }
 
     /* Clean-up */
@@ -351,7 +348,7 @@ static int DigestBlockModeProc(ClientData clientData, int mode) {
  *
  * Side effects:
  *	Writes digest to output and closes the channel. Stores error
- *	messages in interp result.
+ *	messages in interp result using Tcl_GetChannelErrorInterp.
  *
  *-------------------------------------------------------------------
  */
@@ -403,6 +400,7 @@ int DigestInputProc(ClientData clientData, char *buf, int toRead, int *errorCode
     int read, res;
     *errorCodePtr = 0;
 
+    /* Abort if nothing to process */
     if (toRead <= 0 || statePtr->self == (Tcl_Channel) NULL) {
 	return 0;
     }
@@ -428,7 +426,6 @@ int DigestInputProc(ClientData clientData, char *buf, int toRead, int *errorCode
 
     } else if (!(statePtr->flags & CHAN_EOF)) {
 	/* EOF */
-	*errorCodePtr = 0;
 	unsigned char md_buf[EVP_MAX_MD_SIZE];
 	unsigned int md_len = 0;
 
@@ -439,6 +436,7 @@ int DigestInputProc(ClientData clientData, char *buf, int toRead, int *errorCode
 	    res = HMAC_Final(statePtr->hctx, md_buf, &md_len);
 	}
 	if (!res) {
+	    Tcl_SetChannelError(statePtr->self, Tcl_ObjPrintf("Digest finalize failed: %s", REASON()));
 	    *errorCodePtr = EINVAL;
 
 	/* Write message digest to output channel as byte array or hex string */
@@ -484,6 +482,7 @@ int DigestInputProc(ClientData clientData, char *buf, int toRead, int *errorCode
     DigestState *statePtr = (DigestState *) clientData;
     *errorCodePtr = 0;
 
+    /* Abort if nothing to process */
     if (toWrite <= 0 || statePtr->self == (Tcl_Channel) NULL) {
 	return 0;
     }
@@ -519,6 +518,7 @@ static int DigestSetOptionProc(ClientData clientData, Tcl_Interp *interp, const 
     Tcl_Channel parent;
     Tcl_DriverSetOptionProc *setOptionProc;
 
+    /* Abort if no channel */
     if (statePtr->self == (Tcl_Channel) NULL) {
 	return TCL_ERROR;
     }
@@ -556,6 +556,7 @@ static int DigestGetOptionProc(ClientData clientData, Tcl_Interp *interp, const 
     Tcl_Channel parent;
     Tcl_DriverGetOptionProc *getOptionProc;
 
+    /* Abort if no channel */
     if (statePtr->self == (Tcl_Channel) NULL) {
 	return TCL_ERROR;
     }
@@ -592,6 +593,7 @@ static int DigestGetOptionProc(ClientData clientData, Tcl_Interp *interp, const 
 static void DigestTimerHandler(ClientData clientData) {
     DigestState *statePtr = (DigestState *) clientData;
 
+    /* Abort if no channel */
     if (statePtr->self == (Tcl_Channel) NULL) {
 	return;
     }
@@ -613,7 +615,7 @@ static void DigestTimerHandler(ClientData clientData) {
  *	Initialize the notifier to watch for events from this channel.
  *
  * Returns:
- *	Nothing
+ *	Nothing (can't return error messages)
  *
  * Side effects:
  *	Configure notifier so future events on the channel will be seen by Tcl.
@@ -626,6 +628,7 @@ void DigestWatchProc(ClientData clientData, int mask) {
     Tcl_Channel parent;
     Tcl_DriverWatchProc *watchProc;
 
+    /* Abort if no channel */
     if (statePtr->self == (Tcl_Channel) NULL) {
 	return;
     }
@@ -670,11 +673,15 @@ void DigestWatchProc(ClientData clientData, int mask) {
  */
 int DigestGetHandleProc(ClientData clientData, int direction, ClientData *handlePtr) {
     DigestState *statePtr = (DigestState *) clientData;
+    Tcl_Channel parent;
 
+    /* Abort if no channel */
     if (statePtr->self == (Tcl_Channel) NULL) {
 	return TCL_ERROR;
     }
-    return Tcl_GetChannelHandle(Tcl_GetStackedChannel(statePtr->self), direction, handlePtr);
+
+    parent = Tcl_GetStackedChannel(statePtr->self);
+    return Tcl_GetChannelHandle(parent, direction, handlePtr);
 }
 
 /*
@@ -739,7 +746,7 @@ static const Tcl_ChannelType digestChannelType = {
  *	TCL_OK or TCL_ERROR
  *
  * Side effects:
- *	Adds transform to channel and sets result to channel name or error message.
+ *	Adds transform to channel and sets result to channel id or error message.
  *
  *----------------------------------------------------------------------
  */
@@ -749,14 +756,13 @@ Tls_DigestChannel(Tcl_Interp *interp, const char *channel, const EVP_MD *md, int
     int mode; /* OR-ed combination of TCL_READABLE and TCL_WRITABLE */
     Tcl_Channel chan;
     DigestState *statePtr;
-    EVP_MD_CTX *ctx = (EVP_MD_CTX *) NULL;
-    HMAC_CTX *hctx = (HMAC_CTX *) NULL;
 
     /* Validate args */
     if (channel == (const char *) NULL || md == (const EVP_MD *) NULL) {
 	return TCL_ERROR;
     }
 
+    /* Get channel Id */
     chan = Tcl_GetChannel(interp, channel, &mode);
     if (chan == (Tcl_Channel) NULL) {
 	return TCL_ERROR;
@@ -765,7 +771,7 @@ Tls_DigestChannel(Tcl_Interp *interp, const char *channel, const EVP_MD *md, int
     /* Make sure to operate on the topmost channel */
     chan = Tcl_GetTopChannel(chan);
 
-    /* Create struct */
+    /* Create state data struct */
     if ((statePtr = Tls_DigestNew(interp, format)) == NULL) {
 	Tcl_AppendResult(interp, "Initialize digest error: memory allocation failure", (char *) NULL);
 	return TCL_ERROR;
@@ -791,6 +797,7 @@ Tls_DigestChannel(Tcl_Interp *interp, const char *channel, const EVP_MD *md, int
 	return TCL_ERROR;
     }
 
+    /* Set result to channel Id */
     Tcl_SetResult(interp, (char *) Tcl_GetChannelName(chan), TCL_VOLATILE);
     return TCL_OK;
 }
@@ -800,8 +807,8 @@ Tls_DigestChannel(Tcl_Interp *interp, const char *channel, const EVP_MD *md, int
  *
  * Unstack Channel --
  *
- *	This function is invoked to process the "unstack" TCL command.
- *	See the user documentation for details on what it does.
+ *	This function removes the stacked channel from the top of the
+ *	channel stack if it is a digest channel.
  *
  * Returns:
  *	TCL_OK or TCL_ERROR
@@ -816,6 +823,7 @@ UnstackObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *cons
     Tcl_Channel chan;
     int mode; /* OR-ed combination of TCL_READABLE and TCL_WRITABLE  */
 
+    /* Validate arg count */
     if (objc != 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "channel");
 	return TCL_ERROR;
@@ -838,11 +846,8 @@ UnstackObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *cons
 	return TCL_ERROR;
     }
 
-    /* Pop transform from channel, leaves error info in interp result */
-    if (Tcl_UnstackChannel(interp, chan) == TCL_ERROR) {
-	return TCL_ERROR;
-    }
-    return TCL_OK;
+    /* Pop transform from channel */
+    return Tcl_UnstackChannel(interp, chan);
     	clientData = clientData;
 }
 
@@ -855,7 +860,8 @@ static const char *instance_fns [] = { "finalize", "update", NULL };
  *
  * InstanceObjCmd --
  *
- *	 Handler for digest accumulator command instances.
+ *	Handler for digest command instances. Used to add data to hash
+ *	function or retrieve message digest.
  *
  * Returns:
  *	TCL_OK or TCL_ERROR
@@ -870,19 +876,20 @@ int InstanceObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj 
     int fn, len = 0;
     char *buf = NULL;
 
+    /* Validate arg count */
     if (objc < 2 || objc > 3) {
 	Tcl_WrongNumArgs(interp, 1, objv, "function ?data?");
 	return TCL_ERROR;
     }
 
-    /* Function */
+    /* Get function */
     if (Tcl_GetIndexFromObj(interp, objv[1], instance_fns, "function", 0, &fn) != TCL_OK) {
 	return TCL_ERROR;
     }
 
     /* Do function */
     if (fn) {
-	/* Update hash function */
+	/* Get data or return error if none */
 	if (objc == 3) {
 	    buf = Tcl_GetByteArrayFromObj(objv[2], &len);
 	} else {
@@ -890,6 +897,7 @@ int InstanceObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj 
 	    return TCL_ERROR;
 	}
 
+	/* Update hash function */
 	if (!Tls_DigestUpdate(statePtr, buf, (size_t) len)) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf("Digest update failed: %s", REASON()));
 	    return TCL_ERROR;
@@ -949,7 +957,7 @@ int Tls_DigestInstance(Tcl_Interp *interp, Tcl_Obj *cmdObj, const EVP_MD *md, in
     DigestState *statePtr;
     char *cmdName = Tcl_GetStringFromObj(cmdObj, NULL);
 
-    /* Create struct */
+    /* Create state data struct */
     if ((statePtr = Tls_DigestNew(interp, format)) == NULL) {
 	Tcl_AppendResult(interp, "Initialize digest error: memory allocation failure", (char *) NULL);
 	return TCL_ERROR;
@@ -977,7 +985,7 @@ int Tls_DigestInstance(Tcl_Interp *interp, Tcl_Obj *cmdObj, const EVP_MD *md, in
  *
  * Tls_DigestData --
  *
- *	 Calculate message digest using hash function.
+ *	Return message digest for data using user specified hash function.
  *
  * Returns:
  *	TCL_OK or TCL_ERROR
@@ -995,6 +1003,7 @@ Tls_DigestData(Tcl_Interp *interp, int objc, Tcl_Obj *const objv[],
     unsigned int md_len;
     unsigned char md_buf[EVP_MAX_MD_SIZE];
 
+    /* Validate arg count */
     if (objc != 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "data");
 	return TCL_ERROR;
@@ -1063,14 +1072,15 @@ Tls_DigestData(Tcl_Interp *interp, int objc, Tcl_Obj *const objv[],
  */
 static int
 DigestObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
-    int idx, len, format = HEX_FORMAT, key_len = 0, data_len = 0, res = TCL_ERROR;
+    int idx, len, format = HEX_FORMAT, res = TCL_OK;
     const char *digestname, *channel = NULL;
     Tcl_Obj *cmdObj = NULL, *dataObj = NULL, *fileObj = NULL, *keyObj = NULL;
-    unsigned char *key = NULL;
     const EVP_MD *md;
 
+    /* Clear interp result */
     Tcl_ResetResult(interp);
 
+    /* Validate arg count */
     if (objc < 3 || objc > 7) {
 	Tcl_WrongNumArgs(interp, 1, objv, "type ?-bin|-hex? ?-key hmac_key? [-channel chan | -command cmdName | -file filename | ?-data? data]");
 	return TCL_ERROR;
@@ -1092,17 +1102,18 @@ DigestObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const
     for (idx = 2; idx < objc-1; idx++) {
 	char *opt = Tcl_GetStringFromObj(objv[idx], NULL);
 
-	if (opt[0] != '-')
+	if (opt[0] != '-') {
 	    break;
+	}
 
 	OPTFLAG("-bin", format, BIN_FORMAT);
 	OPTFLAG("-binary", format, BIN_FORMAT);
 	OPTFLAG("-hex", format, HEX_FORMAT);
 	OPTFLAG("-hexadecimal", format, HEX_FORMAT);
-	OPTOBJ("-data", dataObj);
 	OPTSTR("-chan", channel);
 	OPTSTR("-channel", channel);
 	OPTOBJ("-command", cmdObj);
+	OPTOBJ("-data", dataObj);
 	OPTOBJ("-file", fileObj);
 	OPTOBJ("-filename", fileObj);
 	OPTOBJ("-key", keyObj);
@@ -1116,7 +1127,7 @@ DigestObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const
 	dataObj = objv[idx];
     }
 
-    /* Calc digest on file, stacked channel, or data blob */
+    /* Calc digest on file, stacked channel, using instance command, or data blob */
     if (fileObj != NULL) {
 	res = Tls_DigestFile(interp, fileObj, md, format, keyObj);
     } else if (channel != NULL) {
