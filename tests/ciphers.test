@@ -110,198 +110,268 @@ test Ciphers_Protocol_Specific-4.5 {TLS1.2} -constraints {tls1.2} -body {
 test Ciphers_Protocol_Specific-4.6 {TLS1.3} -constraints {tls1.3} -body {
 	lcompare [concat [exec_get ":" ciphers -tls1_3 -s] [exec_get ":" ciphers -tls1_2 -s]] [::tls::ciphers tls1.3 0 1]
     } -result {missing {} unexpected {}}
+# Ciphers Error Cases
+
+
+test Ciphers_Errors-5.1 {Too many args} -body {
+	::tls::ciphers too many args to pass
+    } -result {wrong # args: should be "tls::ciphers ?protocol? ?verbose? ?supported?"} -returnCodes {1}
+
+test Ciphers_Errors-5.2 {Invalid protocol} -body {
+	::tls::ciphers bogus
+    } -result {bad protocol "bogus": must be ssl2, ssl3, tls1, tls1.1, tls1.2, or tls1.3} -returnCodes {1}
+
+test Ciphers_Errors-5.3 {Invalid verbose} -body {
+	::tls::ciphers tls1.3 bogus
+    } -result {expected boolean value but got "bogus"} -returnCodes {1}
+
+test Ciphers_Errors-5.4 {Invalid supported} -body {
+	::tls::ciphers tls1_3 1 bogus
+    } -result {expected boolean value but got "bogus"} -returnCodes {1}
+
+test Ciphers_Errors-5.5 {SSL2} -constraints {!ssl2} -body {
+	::tls::ciphers ssl2
+    } -result {ssl2: protocol not supported} -returnCodes {1}
+
+test Ciphers_Errors-5.6 {SSL3} -constraints {!ssl3} -body {
+	::tls::ciphers ssl3
+    } -result {ssl3: protocol not supported} -returnCodes {1}
 # Test list digests
 
 
-test Digest_List-5.1 {All} -body {
+test Digests_List-6.1 {All} -body {
 	lcompare [lsort [exec_get_digests]] [lsort [tls::digests]]
     } -result {missing {} unexpected {}}
 # Test digest commands
 
 
-test Digest_Cmds-6.1 {md4 cmd} -body {
+test Digest_Cmds-7.1 {md4 cmd} -body {
 	tls::md4 "Example string for message digest tests."
     } -result {181CDCF9DB9B6FA8FC0A3BF9C34E29D9}
 
-test Digest_Cmds-6.2 {md5 cmd} -body {
+test Digest_Cmds-7.2 {md5 cmd} -body {
 	tls::md5 "Example string for message digest tests."
     } -result {CCB1BE2E11D8183E843FF73DA8C6D206}
 
-test Digest_Cmds-6.3 {sha1 cmd} -body {
+test Digest_Cmds-7.3 {sha1 cmd} -body {
 	tls::sha1 "Example string for message digest tests."
     } -result {3AEFE840CA492C387E903F15ED6019E7AD833B47}
 
-test Digest_Cmds-6.4 {sha256 cmd} -body {
+test Digest_Cmds-7.4 {sha256 cmd} -body {
 	tls::sha256 "Example string for message digest tests."
     } -result {B7DFDDEB0314A74FF56A8AC1E3DC57DF09BB52A96DA50F6549EB62CA61A0A491}
 
-test Digest_Cmds-6.5 {sha512 cmd} -body {
+test Digest_Cmds-7.5 {sha512 cmd} -body {
 	tls::sha512 "Example string for message digest tests."
     } -result {B56EC55E33193E17B61D669FB7B04AD2483DE93FE847C411BBEAE6440ECEA6C7CFDD2E6F35A06CB189FC62D799E785CDB7A23178323789D001BC8E44A0B5907F}
 # Test digest command for data
 
 
-test Digest_Data-7.1 {md4} -body {
+test Digest_Data-8.1 {md4} -body {
 	tls::digest md4 "Example string for message digest tests."
     } -result {181CDCF9DB9B6FA8FC0A3BF9C34E29D9}
 
-test Digest_Data-7.2 {md5} -body {
+test Digest_Data-8.2 {md5} -body {
 	tls::digest md5 "Example string for message digest tests."
     } -result {CCB1BE2E11D8183E843FF73DA8C6D206}
 
-test Digest_Data-7.3 {sha1} -body {
+test Digest_Data-8.3 {sha1} -body {
 	tls::digest sha1 "Example string for message digest tests."
     } -result {3AEFE840CA492C387E903F15ED6019E7AD833B47}
 
-test Digest_Data-7.4 {sha256} -body {
+test Digest_Data-8.4 {sha256} -body {
 	tls::digest sha256 "Example string for message digest tests."
     } -result {B7DFDDEB0314A74FF56A8AC1E3DC57DF09BB52A96DA50F6549EB62CA61A0A491}
 
-test Digest_Data-7.5 {sha512} -body {
+test Digest_Data-8.5 {sha512} -body {
 	tls::digest sha512 "Example string for message digest tests."
     } -result {B56EC55E33193E17B61D669FB7B04AD2483DE93FE847C411BBEAE6440ECEA6C7CFDD2E6F35A06CB189FC62D799E785CDB7A23178323789D001BC8E44A0B5907F}
 
-test Digest_Data-7.6 {md5 bin} -body {
+test Digest_Data-8.6 {md5 bin} -body {
 	string toupper [binary encode hex [tls::digest md5 -bin "Example string for message digest tests."]]
     } -result {CCB1BE2E11D8183E843FF73DA8C6D206}
 
-test Digest_Data-7.7 {md5 hex} -body {
+test Digest_Data-8.7 {md5 hex} -body {
 	tls::digest md5 -hex "Example string for message digest tests."
     } -result {CCB1BE2E11D8183E843FF73DA8C6D206}
 
-test Digest_Data-7.8 {md5 with arg} -body {
+test Digest_Data-8.8 {md5 with arg} -body {
 	tls::digest md5 -data "Example string for message digest tests."
     } -result {CCB1BE2E11D8183E843FF73DA8C6D206}
 # Test digest command for files
 
 
-test Digest_File-8.1 {md4} -body {
+test Digest_File-9.1 {md4} -body {
 	tls::digest md4 -file md_data.dat
     } -result {181CDCF9DB9B6FA8FC0A3BF9C34E29D9}
 
-test Digest_File-8.2 {md5} -body {
+test Digest_File-9.2 {md5} -body {
 	tls::digest md5 -file md_data.dat
     } -result {CCB1BE2E11D8183E843FF73DA8C6D206}
 
-test Digest_File-8.3 {sha1} -body {
+test Digest_File-9.3 {sha1} -body {
 	tls::digest sha1 -file md_data.dat
     } -result {3AEFE840CA492C387E903F15ED6019E7AD833B47}
 
-test Digest_File-8.4 {sha256} -body {
+test Digest_File-9.4 {sha256} -body {
 	tls::digest sha256 -file md_data.dat
     } -result {B7DFDDEB0314A74FF56A8AC1E3DC57DF09BB52A96DA50F6549EB62CA61A0A491}
 
-test Digest_File-8.5 {sha512} -body {
+test Digest_File-9.5 {sha512} -body {
 	tls::digest sha512 -file md_data.dat
     } -result {B56EC55E33193E17B61D669FB7B04AD2483DE93FE847C411BBEAE6440ECEA6C7CFDD2E6F35A06CB189FC62D799E785CDB7A23178323789D001BC8E44A0B5907F}
 
-test Digest_File-8.6 {md5 bin} -body {
+test Digest_File-9.6 {md5 bin} -body {
 	string toupper [binary encode hex [tls::digest md5 -bin -file md_data.dat]]
     } -result {CCB1BE2E11D8183E843FF73DA8C6D206}
 
-test Digest_File-8.7 {md5 hex} -body {
+test Digest_File-9.7 {md5 hex} -body {
 	tls::digest md5 -hex -file md_data.dat
     } -result {CCB1BE2E11D8183E843FF73DA8C6D206}
 # Test digest command for channel
 
 
-test Digest_Chan-9.1 {md4} -body {
+test Digest_Chan-10.1 {md4} -body {
 	read_chan md4 md_data.dat
     } -result {181CDCF9DB9B6FA8FC0A3BF9C34E29D9}
 
-test Digest_Chan-9.2 {md5} -body {
+test Digest_Chan-10.2 {md5} -body {
 	read_chan md5 md_data.dat
     } -result {CCB1BE2E11D8183E843FF73DA8C6D206}
 
-test Digest_Chan-9.3 {sha1} -body {
+test Digest_Chan-10.3 {sha1} -body {
 	read_chan sha1 md_data.dat
     } -result {3AEFE840CA492C387E903F15ED6019E7AD833B47}
 
-test Digest_Chan-9.4 {sha256} -body {
+test Digest_Chan-10.4 {sha256} -body {
 	read_chan sha256 md_data.dat
     } -result {B7DFDDEB0314A74FF56A8AC1E3DC57DF09BB52A96DA50F6549EB62CA61A0A491}
 
-test Digest_Chan-9.5 {sha512} -body {
+test Digest_Chan-10.5 {sha512} -body {
 	read_chan sha512 md_data.dat
     } -result {B56EC55E33193E17B61D669FB7B04AD2483DE93FE847C411BBEAE6440ECEA6C7CFDD2E6F35A06CB189FC62D799E785CDB7A23178323789D001BC8E44A0B5907F}
 
-test Digest_Chan-9.6 {md5 bin} -body {
+test Digest_Chan-10.6 {md5 bin} -body {
 	string toupper [binary encode hex [read_chan md5 md_data.dat -bin]]
     } -result {CCB1BE2E11D8183E843FF73DA8C6D206}
 
-test Digest_Chan-9.7 {md5 hex} -body {
+test Digest_Chan-10.7 {md5 hex} -body {
 	read_chan md5 md_data.dat -hex
     } -result {CCB1BE2E11D8183E843FF73DA8C6D206}
 # Test digest command for accumulator command
 
 
-test Digest_Command-10.1 {md4} -body {
+test Digest_Command-11.1 {md4} -body {
 	accumulate md4 "Example string for message digest tests."
     } -result {181CDCF9DB9B6FA8FC0A3BF9C34E29D9}
 
-test Digest_Command-10.2 {md5} -body {
+test Digest_Command-11.2 {md5} -body {
 	accumulate md5 "Example string for message digest tests."
     } -result {CCB1BE2E11D8183E843FF73DA8C6D206}
 
-test Digest_Command-10.3 {sha1} -body {
+test Digest_Command-11.3 {sha1} -body {
 	accumulate sha1 "Example string for message digest tests."
     } -result {3AEFE840CA492C387E903F15ED6019E7AD833B47}
 
-test Digest_Command-10.4 {sha256} -body {
+test Digest_Command-11.4 {sha256} -body {
 	accumulate sha256 "Example string for message digest tests."
     } -result {B7DFDDEB0314A74FF56A8AC1E3DC57DF09BB52A96DA50F6549EB62CA61A0A491}
 
-test Digest_Command-10.5 {sha512} -body {
+test Digest_Command-11.5 {sha512} -body {
 	accumulate sha512 "Example string for message digest tests."
     } -result {B56EC55E33193E17B61D669FB7B04AD2483DE93FE847C411BBEAE6440ECEA6C7CFDD2E6F35A06CB189FC62D799E785CDB7A23178323789D001BC8E44A0B5907F}
 
-test Digest_Command-10.6 {md5 bin} -body {
+test Digest_Command-11.6 {md5 bin} -body {
 	string toupper [binary encode hex [accumulate md5 "Example string for message digest tests." -bin]]
     } -result {CCB1BE2E11D8183E843FF73DA8C6D206}
 
-test Digest_Command-10.7 {md5 hex} -body {
+test Digest_Command-11.7 {md5 hex} -body {
 	accumulate md5 "Example string for message digest tests." -hex
     } -result {CCB1BE2E11D8183E843FF73DA8C6D206}
 # Test HMAC
 
 
-test Digest_HMAC-11.1 {data} -body {
+test Digest_HMAC-12.1 {data} -body {
 	tls::digest md5 -key "Example key" -data "Example string for message digest tests."
     } -result {901DA6E6976A71650C77443C37FF9C7F}
 
-test Digest_HMAC-11.2 {file} -body {
+test Digest_HMAC-12.2 {file} -body {
 	tls::digest md5 -key "Example key" -file md_data.dat
     } -result {901DA6E6976A71650C77443C37FF9C7F}
 
-test Digest_HMAC-11.3 {channel} -body {
+test Digest_HMAC-12.3 {channel} -body {
 	read_chan md5 md_data.dat -key "Example key"
     } -result {901DA6E6976A71650C77443C37FF9C7F}
 
-test Digest_HMAC-11.4 {data bin} -body {
+test Digest_HMAC-12.4 {data bin} -body {
 	string toupper [binary encode hex [tls::digest md5 -bin -key "Example key" -data "Example string for message digest tests."]]
     } -result {901DA6E6976A71650C77443C37FF9C7F}
+# Digest Error Cases
+
+
+test Digest_Errors-13.1 {Too few args} -body {
+	::tls::digest
+    } -result {wrong # args: should be "::tls::digest type ?-bin|-hex? ?-key hmac_key? [-channel chan | -file filename | ?-data? data]"} -returnCodes {1}
+
+test Digest_Errors-13.2 {Too many args} -body {
+	::tls::digest too many args to pass the test without an error
+    } -result {wrong # args: should be "::tls::digest type ?-bin|-hex? ?-key hmac_key? [-channel chan | -file filename | ?-data? data]"} -returnCodes {1}
+
+test Digest_Errors-13.3 {Invalid digest} -body {
+	::tls::digest bogus data
+    } -result {Invalid digest type "bogus"} -returnCodes {1}
+
+test Digest_Errors-13.4 {Invalid option} -body {
+	::tls::digest sha256 -bogus value
+    } -result {bad option "-bogus": must be -bin, -data, -file, -filename, -hex, or -key} -returnCodes {1}
+
+test Digest_Errors-13.5 {Invalid file} -body {
+	::tls::digest sha256 -file bogus
+    } -result {couldn't open "bogus": no such file or directory} -returnCodes {1}
+
+test Digest_Errors-13.6 {Invalid channel} -body {
+	::tls::digest sha256 -channel bogus
+    } -result {can not find channel named "bogus"} -returnCodes {1}
 # Test list MACs
 
 
-test MAC_List-12.1 {All} -body {
+test MAC_List-14.1 {All} -body {
 	lcompare [exec_get_macs] [tls::macs]
     } -result {missing {} unexpected {}}
 # Test list protocols
 
 
-test Protocols-13.1 {All} -body {
+test Protocols-15.1 {All} -body {
 	lcompare $protocols [::tls::protocols]
     } -result {missing {ssl2 ssl3} unexpected {}}
 # Test show version
 
 
-test Version-14.1 {All} -body {
+test Version-16.1 {All} -body {
 	::tls::version
     } -match {glob} -result {*}
 
-test Version-14.2 {OpenSSL} -constraints {OpenSSL} -body {
+test Version-16.2 {OpenSSL} -constraints {OpenSSL} -body {
 	::tls::version
     } -match {glob} -result {OpenSSL*}
+# Error Cases
+
+
+test Error_Cases-17.1 {Digests Too many args} -body {
+	::tls::digests too many args
+    } -result {wrong # args: should be "::tls::digests"} -returnCodes {1}
+
+test Error_Cases-17.2 {MACs Too many args} -body {
+	::tls::macs too many args
+    } -result {wrong # args: should be "::tls::macs"} -returnCodes {1}
+
+test Error_Cases-17.3 {Protocols Too many args} -body {
+	::tls::protocols too many args
+    } -result {wrong # args: should be "::tls::protocols"} -returnCodes {1}
+
+test Error_Cases-17.4 {Version Too many args} -body {
+	::tls::version too many args
+    } -result {wrong # args: should be "::tls::version"} -returnCodes {1}
 
 # Cleanup
 ::tcltest::cleanupTests
