@@ -21,12 +21,14 @@ const char *hex = "0123456789ABCDEF";
 
 /* Macros */
 #define BUFFER_SIZE 65536
-#define BIN_FORMAT 0
-#define HEX_FORMAT 1
 #define CHAN_EOF 0x10
-#define TYPE_MD    0x20
-#define TYPE_HMAC  0x40
-#define TYPE_CMAC  0x80
+
+/* Digest format and operation */
+#define BIN_FORMAT 0x01
+#define HEX_FORMAT 0x02
+#define TYPE_MD    0x10
+#define TYPE_HMAC  0x20
+#define TYPE_CMAC  0x40
 
 /*
  * This structure defines the per-instance state of a digest operation.
@@ -1043,9 +1045,10 @@ Tls_DigestData(Tcl_Interp *interp, int objc, Tcl_Obj *const objv[],
     }
 
     /* Calculate digest based on hash function */
-    if (keyObj == (Tcl_Obj *) NULL) {
+    if (format & TYPE_MD) {
 	res = EVP_Digest(data, (size_t) len, md_buf, &md_len, md, NULL);
-    } else {
+
+    } else if (format & TYPE_HMAC) {
 	unsigned char *key, *hmac = NULL;
 	int key_len;
 
@@ -1053,6 +1056,22 @@ Tls_DigestData(Tcl_Interp *interp, int objc, Tcl_Obj *const objv[],
 	hmac = HMAC(md, (const void *) key, key_len, (const unsigned char *) data,
 	    (size_t) len, md_buf, &md_len);
 	res = (hmac != NULL);
+
+    } else if (format & TYPE_CMAC) {
+	DigestState *statePtr;
+
+	if ((statePtr = Tls_DigestNew(interp, format)) == NULL) {
+	    Tcl_AppendResult(interp, "Memory allocation error", (char *) NULL);
+	    return TCL_ERROR;
+	}
+	if (Tls_DigestInit(interp, statePtr, md, cipher, keyObj) != TCL_OK ||
+	    Tls_DigestUpdate(statePtr, data, (size_t) len) == 0 ||
+	    Tls_DigestFinialize(interp, statePtr) != TCL_OK) {
+	    Tls_DigestFree(statePtr);
+	    return TCL_ERROR;
+	}
+	Tls_DigestFree(statePtr);
+	return TCL_OK;
     }
 
     /* Output digest to result per format (bin or hex) */
@@ -1096,14 +1115,13 @@ Tls_DigestData(Tcl_Interp *interp, int objc, Tcl_Obj *const objv[],
  *
  *-------------------------------------------------------------------
  */
-static int
-DigestObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
+static int DigestMain(int type, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
     int idx, len, format = HEX_FORMAT, res = TCL_OK, flags = 0;
-    const char *digestname, *channel = NULL;
+    const char *digestName, *channel = NULL;
     Tcl_Obj *cmdObj = NULL, *dataObj = NULL, *fileObj = NULL, *keyObj = NULL;
     unsigned char *cipherName = NULL;
     const EVP_MD *md;
-    const EVP_CIPHER *cipher;
+    const EVP_CIPHER *cipher = NULL;
 
     /* Clear interp result */
     Tcl_ResetResult(interp);
@@ -1115,9 +1133,9 @@ DigestObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const
     }
 
     /* Get digest */
-    digestname = Tcl_GetStringFromObj(objv[1], &len);
-    if (digestname == NULL || (md = EVP_get_digestbyname(digestname)) == NULL) {
-	Tcl_AppendResult(interp, "Invalid digest \"", digestname, "\"", NULL);
+    digestName = Tcl_GetStringFromObj(objv[1], &len);
+    if (digestName == NULL || (md = EVP_get_digestbyname(digestName)) == NULL) {
+	Tcl_AppendResult(interp, "Invalid digest \"", digestName, "\"", NULL);
 	return TCL_ERROR;
     }
 
@@ -1159,43 +1177,68 @@ DigestObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const
     /* Get cipher */
     if (cipherName != NULL) {
 	cipher = EVP_get_cipherbyname(cipherName);
+	type = TYPE_CMAC;
 	if (cipher == NULL) {
 	    Tcl_AppendResult(interp, "Invalid cipher \"", cipherName, "\"", NULL);
 	    return TCL_ERROR;
 	}
+
+    } else if (type == TYPE_CMAC) {
+	Tcl_AppendResult(interp, "No cipher specified", NULL);
+	return TCL_ERROR;
     }
 
-    /* Define operation to perform */
-    if (cipher != NULL) {
-	format |= TYPE_CMAC;
-    } else if (keyObj != NULL) {
-	format |= TYPE_HMAC;
-    } else {
-	format |= TYPE_MD;
+    /* Get key */
+    if (keyObj != NULL) {
+	if (type == TYPE_MD) {
+	    type = TYPE_HMAC;
+	}
+    } else if (type != TYPE_MD) {
+	Tcl_AppendResult(interp, "No key specified", NULL);
+	return TCL_ERROR;
     }
 
     /* Calc digest on file, stacked channel, using instance command, or data blob */
     if (fileObj != NULL) {
-	res = Tls_DigestFile(interp, fileObj, md, cipher, format, keyObj);
+	res = Tls_DigestFile(interp, fileObj, md, cipher, format | type, keyObj);
     } else if (channel != NULL) {
-	res = Tls_DigestChannel(interp, channel, md, cipher, format, keyObj);
+	res = Tls_DigestChannel(interp, channel, md, cipher, format | type, keyObj);
     } else if (cmdObj != NULL) {
-	res = Tls_DigestInstance(interp, cmdObj, md, cipher, format, keyObj);
+	res = Tls_DigestInstance(interp, cmdObj, md, cipher, format | type, keyObj);
     } else if (dataObj != NULL) {
 	Tcl_Obj *objs[2];
 	objs[0] = NULL;
 	objs[1] = dataObj;
-	res = Tls_DigestData(interp, 2, objs, md, cipher, format, keyObj);
+	res = Tls_DigestData(interp, 2, objs, md, cipher, format | type, keyObj);
     }
     return res;
 }
 
-int CMACObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
-    return DigestObjCmd(clientData, interp, objc, objv);
+/*
+ *-------------------------------------------------------------------
+ *
+ * Message Digest and Message Authentication Code Commands --
+ *
+ *	Return Message Digest (MD) or Message Authentication Code (MAC).
+ *
+ * Returns:
+ *	TCL_OK or TCL_ERROR
+ *
+ * Side effects:
+ *	Sets result to message digest or error message
+ *
+ *-------------------------------------------------------------------
+ */
+static int DigestObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
+    return DigestMain(TYPE_MD, interp, objc, objv);
 }
 
-int HMACObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
-    return DigestObjCmd(clientData, interp, objc, objv);
+static int CMACObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
+    return DigestMain(TYPE_CMAC, interp, objc, objv);
+}
+
+static int HMACObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
+    return DigestMain(TYPE_HMAC, interp, objc, objv);
 }
 
 /*
@@ -1203,7 +1246,7 @@ int HMACObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *con
  *
  * Message Digest Convenience Commands --
  *
- *	Convenience commands for message digests.
+ *	Convenience commands for select message digests.
  *
  * Returns:
  *	TCL_OK or TCL_ERROR
@@ -1214,23 +1257,23 @@ int HMACObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *con
  *-------------------------------------------------------------------
  */
 int DigestMD4Cmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
-    return Tls_DigestData(interp, objc, objv, EVP_md4(), NULL, HEX_FORMAT, NULL);
+    return Tls_DigestData(interp, objc, objv, EVP_md4(), NULL, HEX_FORMAT | TYPE_MD, NULL);
 }
 
 int DigestMD5Cmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
-    return Tls_DigestData(interp, objc, objv, EVP_md5(), NULL, HEX_FORMAT, NULL);
+    return Tls_DigestData(interp, objc, objv, EVP_md5(), NULL, HEX_FORMAT | TYPE_MD, NULL);
 }
 
 int DigestSHA1Cmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
-    return Tls_DigestData(interp, objc, objv, EVP_sha1(), NULL, HEX_FORMAT, NULL);
+    return Tls_DigestData(interp, objc, objv, EVP_sha1(), NULL, HEX_FORMAT | TYPE_MD, NULL);
 }
 
 int DigestSHA256Cmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
-    return Tls_DigestData(interp, objc, objv, EVP_sha256(), NULL, HEX_FORMAT, NULL);
+    return Tls_DigestData(interp, objc, objv, EVP_sha256(), NULL, HEX_FORMAT | TYPE_MD, NULL);
 }
 
 int DigestSHA512Cmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
-    return Tls_DigestData(interp, objc, objv, EVP_sha512(), NULL, HEX_FORMAT, NULL);
+    return Tls_DigestData(interp, objc, objv, EVP_sha512(), NULL, HEX_FORMAT | TYPE_MD, NULL);
 }
 
 /*
