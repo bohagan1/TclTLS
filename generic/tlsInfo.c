@@ -72,6 +72,7 @@ static int CiphersObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tc
     SSL *ssl = NULL;
     STACK_OF(SSL_CIPHER) *sk = NULL;
     int index, verbose = 0, use_supported = 0;
+    int min_version, max_version;
 
     dprintf("Called");
 
