@@ -17,7 +17,7 @@
 #include <openssl/hmac.h>
 
 /* Constants */
-const char *hex = "0123456789ABCDEF";
+const char *hex = "0123456789abcdef";
 
 /* Macros */
 #define BUFFER_SIZE 65536

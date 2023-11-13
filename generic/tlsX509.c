@@ -24,7 +24,7 @@ int String_to_Hex(unsigned char* input, int ilen, unsigned char *output, int ole
     int count = 0;
     unsigned char *iptr = input;
     unsigned char *optr = &output[0];
-    const char *hex = "0123456789ABCDEF";
+    const char *hex = "0123456789abcdef";
 
     for (int i = 0; i < ilen && count < olen - 1; i++, count += 2) {
         *optr++ = hex[(*iptr>>4)&0xF];
