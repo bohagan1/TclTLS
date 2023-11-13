@@ -45,13 +45,13 @@ Ciphers Protocol Specific,SSL3,ssl3,,"lcompare [exec_get "":"" ciphers -ssl3 -s]
 Ciphers Protocol Specific,TLS1,tls1,,"lcompare [exec_get "":"" ciphers -tls1 -s] [::tls::ciphers tls1 0 1]",,,missing {} unexpected {},,,
 Ciphers Protocol Specific,TLS1.1,tls1.1,,"lcompare [exec_get "":"" ciphers -tls1_1 -s] [::tls::ciphers tls1.1 0 1]",,,missing {} unexpected {},,,
 Ciphers Protocol Specific,TLS1.2,tls1.2,,"lcompare [exec_get "":"" ciphers -tls1_2 -s] [::tls::ciphers tls1.2 0 1]",,,missing {} unexpected {},,,
-Ciphers Protocol Specific,TLS1.3,tls1.3,,"lcompare [concat [exec_get "":"" ciphers -tls1_3 -s] [exec_get "":"" ciphers -tls1_2 -s]] [::tls::ciphers tls1.3 0 1]",,,missing {} unexpected {},,,
+Ciphers Protocol Specific,TLS1.3,tls1.3,,"lcompare [exec_get "":"" ciphers -tls1_3 -s] [::tls::ciphers tls1.3 0 1]",,,missing {} unexpected {},,,
 ,,,,,,,,,,
 command,# Ciphers Error Cases,,,,,,,,,
-Ciphers Errors,Too many args,,,::tls::ciphers too many args to pass,,,"wrong # args: should be ""tls::ciphers ?protocol? ?verbose? ?supported?""",,,1
+Ciphers Errors,Too many args,,,::tls::ciphers too many args to pass,,,"wrong # args: should be ""::tls::ciphers ?protocol? ?verbose? ?supported?""",,,1
 Ciphers Errors,Invalid protocol,,,::tls::ciphers bogus,,,"bad protocol ""bogus"": must be ssl2, ssl3, tls1, tls1.1, tls1.2, or tls1.3",,,1
 Ciphers Errors,Invalid verbose,,,::tls::ciphers tls1.3 bogus,,,"expected boolean value but got ""bogus""",,,1
-Ciphers Errors,Invalid supported,,,::tls::ciphers tls1_3 1 bogus,,,"expected boolean value but got ""bogus""",,,1
+Ciphers Errors,Invalid supported,,,::tls::ciphers tls1.3 1 bogus,,,"expected boolean value but got ""bogus""",,,1
 Ciphers Errors,SSL2,!ssl2,,::tls::ciphers ssl2,,,ssl2: protocol not supported,,,1
 Ciphers Errors,SSL3,!ssl3,,::tls::ciphers ssl3,,,ssl3: protocol not supported,,,1
 ,,,,,,,,,,
@@ -109,10 +109,10 @@ Digest HMAC,channel,,,"read_chan md5 md_data.dat -key ""Example key""",,,901DA6E
 Digest HMAC,data bin,,,"string toupper [binary encode hex [tls::digest md5 -bin -key ""Example key"" -data ""Example string for message digest tests.""]]",,,901DA6E6976A71650C77443C37FF9C7F,,,
 ,,,,,,,,,,
 command,# Digest Error Cases,,,,,,,,,
-Digest Errors,Too few args,,,::tls::digest,,,"wrong # args: should be ""::tls::digest type ?-bin|-hex? ?-key hmac_key? [-channel chan | -file filename | ?-data? data]""",,,1
-Digest Errors,Too many args,,,::tls::digest too many args to pass the test without an error,,,"wrong # args: should be ""::tls::digest type ?-bin|-hex? ?-key hmac_key? [-channel chan | -file filename | ?-data? data]""",,,1
-Digest Errors,Invalid digest,,,::tls::digest bogus data,,,"Invalid digest type ""bogus""",,,1
-Digest Errors,Invalid option,,,::tls::digest sha256 -bogus value,,,"bad option ""-bogus"": must be -bin, -data, -file, -filename, -hex, or -key",,,1
+Digest Errors,Too few args,,,::tls::digest,,,"wrong # args: should be ""::tls::digest digest ?-bin|-hex? ?-cipher name? ?-key hmac_key? [-channel chan | -command cmdName | -file filename | ?-data? data]""",,,1
+Digest Errors,Too many args,,,::tls::digest too many args to pass the test without an error,,,"wrong # args: should be ""::tls::digest digest ?-bin|-hex? ?-cipher name? ?-key hmac_key? [-channel chan | -command cmdName | -file filename | ?-data? data]""",,,1
+Digest Errors,Invalid digest,,,::tls::digest bogus data,,,"Invalid digest ""bogus""",,,1
+Digest Errors,Invalid option,,,::tls::digest sha256 -bogus value,,,"bad option ""-bogus"": must be -bin, -channel, -cipher, -command, -data, -file, -filename, -hex, or -key",,,1
 Digest Errors,Invalid file,,,::tls::digest sha256 -file bogus,,,"couldn't open ""bogus"": no such file or directory",,,1
 Digest Errors,Invalid channel,,,::tls::digest sha256 -channel bogus,,,"can not find channel named ""bogus""",,,1
 ,,,,,,,,,,

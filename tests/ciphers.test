@@ -108,14 +108,14 @@ test Ciphers_Protocol_Specific-4.5 {TLS1.2} -constraints {tls1.2} -body {
     } -result {missing {} unexpected {}}
 
 test Ciphers_Protocol_Specific-4.6 {TLS1.3} -constraints {tls1.3} -body {
-	lcompare [concat [exec_get ":" ciphers -tls1_3 -s] [exec_get ":" ciphers -tls1_2 -s]] [::tls::ciphers tls1.3 0 1]
+	lcompare [exec_get ":" ciphers -tls1_3 -s] [::tls::ciphers tls1.3 0 1]
     } -result {missing {} unexpected {}}
 # Ciphers Error Cases
 
 
 test Ciphers_Errors-5.1 {Too many args} -body {
 	::tls::ciphers too many args to pass
-    } -result {wrong # args: should be "tls::ciphers ?protocol? ?verbose? ?supported?"} -returnCodes {1}
+    } -result {wrong # args: should be "::tls::ciphers ?protocol? ?verbose? ?supported?"} -returnCodes {1}
 
 test Ciphers_Errors-5.2 {Invalid protocol} -body {
 	::tls::ciphers bogus
@@ -126,7 +126,7 @@ test Ciphers_Errors-5.3 {Invalid verbose} -body {
     } -result {expected boolean value but got "bogus"} -returnCodes {1}
 
 test Ciphers_Errors-5.4 {Invalid supported} -body {
-	::tls::ciphers tls1_3 1 bogus
+	::tls::ciphers tls1.3 1 bogus
     } -result {expected boolean value but got "bogus"} -returnCodes {1}
 
 test Ciphers_Errors-5.5 {SSL2} -constraints {!ssl2} -body {
@@ -311,19 +311,19 @@ test Digest_HMAC-12.4 {data bin} -body {
 
 test Digest_Errors-13.1 {Too few args} -body {
 	::tls::digest
-    } -result {wrong # args: should be "::tls::digest type ?-bin|-hex? ?-key hmac_key? [-channel chan | -file filename | ?-data? data]"} -returnCodes {1}
+    } -result {wrong # args: should be "::tls::digest digest ?-bin|-hex? ?-cipher name? ?-key hmac_key? [-channel chan | -command cmdName | -file filename | ?-data? data]"} -returnCodes {1}
 
 test Digest_Errors-13.2 {Too many args} -body {
 	::tls::digest too many args to pass the test without an error
-    } -result {wrong # args: should be "::tls::digest type ?-bin|-hex? ?-key hmac_key? [-channel chan | -file filename | ?-data? data]"} -returnCodes {1}
+    } -result {wrong # args: should be "::tls::digest digest ?-bin|-hex? ?-cipher name? ?-key hmac_key? [-channel chan | -command cmdName | -file filename | ?-data? data]"} -returnCodes {1}
 
 test Digest_Errors-13.3 {Invalid digest} -body {
 	::tls::digest bogus data
-    } -result {Invalid digest type "bogus"} -returnCodes {1}
+    } -result {Invalid digest "bogus"} -returnCodes {1}
 
 test Digest_Errors-13.4 {Invalid option} -body {
 	::tls::digest sha256 -bogus value
-    } -result {bad option "-bogus": must be -bin, -data, -file, -filename, -hex, or -key} -returnCodes {1}
+    } -result {bad option "-bogus": must be -bin, -channel, -cipher, -command, -data, -file, -filename, -hex, or -key} -returnCodes {1}
 
 test Digest_Errors-13.5 {Invalid file} -body {
 	::tls::digest sha256 -file bogus
