@@ -1,0 +1,74 @@
+# Group,Name,Constraints,Setup,Body,Cleanup,Match,Result,Output,Error Output,Return Codes
+command,package require tls,,,,,,,,,
+,,,,,,,,,,
+command,# Make sure path includes location of OpenSSL executable,,,,,,,,,
+command,"if {[info exists ::env(OPENSSL)]} {set ::env(path) [string cat [file join $::env(OPENSSL) bin] "";"" $::env(path)]}",,,,,,,,,
+,,,,,,,,,,
+command,# Constraints,,,,,,,,,
+command,source common.tcl,,,,,,,,,
+,,,,,,,,,,
+command,# Helper functions,,,,,,,,,
+command,"proc lcompare {list1 list2} {set m """";set u """";foreach i $list1 {if {$i ni $list2} {lappend m $i}};foreach i $list2 {if {$i ni $list1} {lappend u $i}};return [list ""missing"" $m ""unexpected"" $u]}",,,,,,,,,
+command,proc exec_get {delim args} {return [split [exec openssl {*}$args] $delim]},,,,,,,,,
+command,"proc exec_get_ciphers {} {set list [list];set data [exec openssl list -cipher-algorithms];foreach line [split $data ""\n""] {foreach {cipher null alias} [split [string trim $line]] {lappend list [string tolower $cipher]}};return [lsort -unique $list]}",,,,,,,,,
+command,"proc exec_get_digests {} {set list [list];set data [exec openssl dgst -list];foreach line [split $data ""\n""] {foreach digest $line {if {[string match ""-*"" $digest]} {lappend list [string trimleft $digest ""-""]}}};return [lsort $list]}",,,,,,,,,
+command,proc exec_get_macs {} {return [list cmac hmac]},,,,,,,,,
+command,proc list_tolower {list} {set result [list];foreach element $list {lappend result [string tolower $element]};return $result},,,,,,,,,
+,,,,,,,,,,
+command,# Test list ciphers,,,,,,,,,
+Ciphers List,All,,,lcompare [lsort [exec_get_ciphers]] [list_tolower [lsort [::tls::ciphers]]],,,missing {rc5 rc5-cbc rc5-cfb rc5-ecb rc5-ofb} unexpected {aes-128-ccm aes-128-gcm aes-192-ccm aes-192-gcm aes-256-ccm aes-256-gcm},,,
+,,,,,,,,,,
+command,# Test list ciphers for protocols,,,,,,,,,
+Ciphers By Protocol,SSL2,ssl2,,"lcompare [exec_get "":"" ciphers -ssl2] [::tls::ciphers ssl2]",,,missing {} unexpected {},,,
+Ciphers By Protocol,SSL3,ssl3,,"lcompare [exec_get "":"" ciphers -ssl3] [::tls::ciphers ssl3]",,,missing {} unexpected {},,,
+Ciphers By Protocol,TLS1.0,tls1,,"lcompare [exec_get "":"" ciphers -tls1] [::tls::ciphers tls1]",,,missing {} unexpected {},,,
+Ciphers By Protocol,TLS1.1,tls1.1,,"lcompare [exec_get "":"" ciphers -tls1_1] [::tls::ciphers tls1.1]",,,missing {} unexpected {},,,
+Ciphers By Protocol,TLS1.2,tls1.2,,"lcompare [exec_get "":"" ciphers -tls1_2] [::tls::ciphers tls1.2]",,,missing {} unexpected {},,,
+Ciphers By Protocol,TLS1.3,tls1.3,,"lcompare [exec_get "":"" ciphers -tls1_3] [::tls::ciphers tls1.3]",,,missing {} unexpected {},,,
+,,,,,,,,,,
+command,# Test cipher descriptions,,,,,,,,,
+Ciphers With Descriptions,SSL2,ssl2,,"lcompare [exec_get ""\r\n"" ciphers -ssl2 -v] [split [string trim [::tls::ciphers ssl2 1]] \n]",,,missing {} unexpected {},,,
+Ciphers With Descriptions,SSL3,ssl3,,"lcompare [exec_get ""\r\n"" ciphers -ssl3 -v] [split [string trim [::tls::ciphers ssl3 1]] \n]",,,missing {} unexpected {},,,
+Ciphers With Descriptions,TLS1.0,tls1,,"lcompare [exec_get ""\r\n"" ciphers -tls1 -v] [split [string trim [::tls::ciphers tls1 1]] \n]",,,missing {} unexpected {},,,
+Ciphers With Descriptions,TLS1.1,tls1.1,,"lcompare [exec_get ""\r\n"" ciphers -tls1_1 -v] [split [string trim [::tls::ciphers tls1.1 1]] \n]",,,missing {} unexpected {},,,
+Ciphers With Descriptions,TLS1.2,tls1.2,,"lcompare [exec_get ""\r\n"" ciphers -tls1_2 -v] [split [string trim [::tls::ciphers tls1.2 1]] \n]",,,missing {} unexpected {},,,
+Ciphers With Descriptions,TLS1.3,tls1.3,,"lcompare [exec_get ""\r\n"" ciphers -tls1_3 -v] [split [string trim [::tls::ciphers tls1.3 1]] \n]",,,missing {} unexpected {},,,
+,,,,,,,,,,
+command,# Test protocol specific ciphers,,,,,,,,,
+Ciphers Protocol Specific,SSL2,ssl2,,"lcompare [exec_get "":"" ciphers -ssl2 -s] [::tls::ciphers ssl2 0 1]",,,missing {} unexpected {},,,
+Ciphers Protocol Specific,SSL3,ssl3,,"lcompare [exec_get "":"" ciphers -ssl3 -s] [::tls::ciphers ssl3 0 1]",,,missing {} unexpected {},,,
+Ciphers Protocol Specific,TLS1.0,tls1,,"lcompare [exec_get "":"" ciphers -tls1 -s] [::tls::ciphers tls1 0 1]",,,missing {} unexpected {},,,
+Ciphers Protocol Specific,TLS1.1,tls1.1,,"lcompare [exec_get "":"" ciphers -tls1_1 -s] [::tls::ciphers tls1.1 0 1]",,,missing {} unexpected {},,,
+Ciphers Protocol Specific,TLS1.2,tls1.2,,"lcompare [exec_get "":"" ciphers -tls1_2 -s] [::tls::ciphers tls1.2 0 1]",,,missing {} unexpected {},,,
+Ciphers Protocol Specific,TLS1.3,tls1.3,,"lcompare [exec_get "":"" ciphers -tls1_3 -s] [::tls::ciphers tls1.3 0 1]",,,missing {} unexpected {},,,
+,,,,,,,,,,
+command,# Ciphers Error Cases,,,,,,,,,
+Ciphers Errors,Too many args,,,::tls::ciphers too many args to pass,,,"wrong # args: should be ""::tls::ciphers ?protocol? ?verbose? ?supported?""",,,1
+Ciphers Errors,Invalid protocol,,,::tls::ciphers bogus,,,"bad protocol ""bogus"": must be ssl2, ssl3, tls1, tls1.1, tls1.2, or tls1.3",,,1
+Ciphers Errors,Invalid verbose,,,::tls::ciphers tls1.3 bogus,,,"expected boolean value but got ""bogus""",,,1
+Ciphers Errors,Invalid supported,,,::tls::ciphers tls1.3 1 bogus,,,"expected boolean value but got ""bogus""",,,1
+Ciphers Errors,SSL2,!ssl2,,::tls::ciphers ssl2,,,ssl2: protocol not supported,,,1
+Ciphers Errors,SSL3,!ssl3,,::tls::ciphers ssl3,,,ssl3: protocol not supported,,,1
+Ciphers Errors,TLS1.0,!tls1,,::tls::ciphers tls1,,,tls1: protocol not supported,,,1
+Ciphers Errors,TLS1.1,!tls1.1,,::tls::ciphers tls1.1,,,tls1.0: protocol not supported,,,1
+Ciphers Errors,TLS1.2,!tls1.2,,::tls::ciphers tls1.2,,,tls1.1: protocol not supported,,,1
+Ciphers Errors,TLS1.3,!tls1.3,,::tls::ciphers tls1.3,,,tls1.3: protocol not supported,,,1
+,,,,,,,,,,
+command,# Test list digests,,,,,,,,,
+Digests List,All,,,lcompare [lsort [exec_get_digests]] [lsort [tls::digests]],,,missing {} unexpected {},,,
+,,,,,,,,,,
+command,# Test list MACs,,,,,,,,,
+MAC List,All,,,lcompare [exec_get_macs] [tls::macs],,,missing {} unexpected {},,,
+,,,,,,,,,,
+command,# Test list protocols,,,,,,,,,
+Protocols,All,,,lcompare $::protocols [::tls::protocols],,,missing {ssl2 ssl3} unexpected {},,,
+,,,,,,,,,,
+command,# Test show version,,,,,,,,,
+Version,All,,,::tls::version,,glob,*,,,
+Version,OpenSSL,OpenSSL,,::tls::version,,glob,OpenSSL*,,,
+,,,,,,,,,,
+command,# Error Cases,,,,,,,,,
+Error Cases,Digests Too many args,,,::tls::digests too many args,,,"wrong # args: should be ""::tls::digests""",,,1
+Error Cases,MACs Too many args,,,::tls::macs too many args,,,"wrong # args: should be ""::tls::macs""",,,1
+Error Cases,Protocols Too many args,,,::tls::protocols too many args,,,"wrong # args: should be ""::tls::protocols""",,,1
+Error Cases,Version Too many args,,,::tls::version too many args,,,"wrong # args: should be ""::tls::version""",,,1

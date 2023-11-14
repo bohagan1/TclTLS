@@ -14,9 +14,7 @@ package require tls
 if {[info exists ::env(SSL_CERT_FILE)]} {set ::cafile $::env(SSL_CERT_FILE)} else {set ::cafile [file normalize {C:\Users\Brian\Documents\Source\Build\SSL-1.1\certs\cacert.pem}]}
 
 # Constraints
-set protocols [list ssl2 ssl3 tls1 tls1.1 tls1.2 tls1.3]
-foreach protocol $protocols {::tcltest::testConstraint $protocol 0}
-foreach protocol [::tls::protocols] {::tcltest::testConstraint $protocol 1}
+source common.tcl
 
 # Helper functions
 proc badssl {url} {set port 443;lassign [split $url ":"] url port;if {$port eq ""} {set port 443};set ch [tls::socket -autoservername 1 -require 1 -cafile $::cafile $url $port];if {[catch {tls::handshake $ch} err]} {close $ch;return -code error $err} else {close $ch}}

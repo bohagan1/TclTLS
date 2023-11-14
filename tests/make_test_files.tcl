@@ -103,6 +103,7 @@ proc process_config_file {filename} {
 
 	    } else {
 		# Empty line
+		puts $out ""
 	    }
 	    break
 	}
