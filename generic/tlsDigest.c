@@ -137,7 +137,7 @@ void Tls_DigestFree(DigestState *statePtr) {
  */
 int Tls_DigestInit(Tcl_Interp *interp, DigestState *statePtr, const EVP_MD *md,
 	const EVP_CIPHER *cipher, Tcl_Obj *keyObj) {
-    int key_len, res = 0;
+    int key_len = 0, res = 0;
     const unsigned char *key;
 
     /* Create message digest context */
@@ -152,7 +152,7 @@ int Tls_DigestInit(Tcl_Interp *interp, DigestState *statePtr, const EVP_MD *md,
 	res = (statePtr->cctx != NULL);
     }
     if (!res) {
-	Tcl_AppendResult(interp, "Create digest context failed: ", REASON(), NULL);
+	Tcl_AppendResult(interp, "Create context failed: ", REASON(), NULL);
 	return TCL_ERROR;
     }
 
@@ -167,7 +167,7 @@ int Tls_DigestInit(Tcl_Interp *interp, DigestState *statePtr, const EVP_MD *md,
 	res = CMAC_Init(statePtr->cctx, (const void *) key, key_len, cipher, NULL);
     }
     if (!res) {
-	Tcl_AppendResult(interp, "Initialize digest failed: ", REASON(), NULL);
+	Tcl_AppendResult(interp, "Initialize failed: ", REASON(), NULL);
 	return TCL_ERROR;
     }
     return TCL_OK;
@@ -188,7 +188,7 @@ int Tls_DigestInit(Tcl_Interp *interp, DigestState *statePtr, const EVP_MD *md,
  *
  *-------------------------------------------------------------------
  */
-int Tls_DigestUpdate(DigestState *statePtr, char *buf, size_t read) {
+int Tls_DigestUpdate(DigestState *statePtr, char *buf, size_t read, int show) {
     int res = 0;
 
     if (statePtr->format & TYPE_MD) {
@@ -197,6 +197,10 @@ int Tls_DigestUpdate(DigestState *statePtr, char *buf, size_t read) {
 	res = HMAC_Update(statePtr->hctx, buf, read);
     } else if (statePtr->format & TYPE_CMAC) {
 	res = CMAC_Update(statePtr->cctx, buf, read);
+    }
+    if (!res && show) {
+	Tcl_AppendResult(statePtr->interp, "Update failed: ", REASON(), NULL);
+	return TCL_ERROR;
     }
     return res;
 }
@@ -234,7 +238,7 @@ int Tls_DigestFinialize(Tcl_Interp *interp, DigestState *statePtr) {
 	md_len = (unsigned int) len;
     }
     if (!res) {
-	Tcl_AppendResult(interp, "Finalize digest failed: ", REASON(), NULL);
+	Tcl_AppendResult(interp, "Finalize failed: ", REASON(), NULL);
 	return TCL_ERROR;
     }
 
@@ -293,6 +297,7 @@ int Tls_DigestFile(Tcl_Interp *interp, Tcl_Obj *filename, const EVP_MD *md,
 
     /* Create state data struct */
     if ((statePtr = Tls_DigestNew(interp, format)) == NULL) {
+	Tcl_AppendResult(interp, "Memory allocation error", (char *) NULL);
 	res = TCL_ERROR;
 	goto done;
     }
@@ -306,8 +311,7 @@ int Tls_DigestFile(Tcl_Interp *interp, Tcl_Obj *filename, const EVP_MD *md,
     while (!Tcl_Eof(chan)) {
 	len = Tcl_ReadRaw(chan, (char *) buf, BUFFER_SIZE);
 	if (len > 0) {
-	    if (!Tls_DigestUpdate(statePtr, &buf[0], (size_t) len)) {
-		Tcl_AppendResult(interp, "Update digest failed: ", REASON(), NULL);
+	    if (!Tls_DigestUpdate(statePtr, &buf[0], (size_t) len, 1)) {
 		res = TCL_ERROR;
 		goto done;
 	    }
@@ -435,8 +439,8 @@ int DigestInputProc(ClientData clientData, char *buf, int toRead, int *errorCode
 
     /* Update hash function */
     if (read > 0) {
-	if (!Tls_DigestUpdate(statePtr, buf, (size_t) read)) {
-	    Tcl_SetChannelError(statePtr->self, Tcl_ObjPrintf("Digest update failed: %s", REASON()));
+	if (!Tls_DigestUpdate(statePtr, buf, (size_t) read, 0)) {
+	    Tcl_SetChannelError(statePtr->self, Tcl_ObjPrintf("Update failed: %s", REASON()));
 	    *errorCodePtr = EINVAL;
 	    return -1;
 	}
@@ -464,7 +468,7 @@ int DigestInputProc(ClientData clientData, char *buf, int toRead, int *errorCode
 	    md_len = (unsigned int) len;
 	}
 	if (!res) {
-	    Tcl_SetChannelError(statePtr->self, Tcl_ObjPrintf("Digest finalize failed: %s", REASON()));
+	    Tcl_SetChannelError(statePtr->self, Tcl_ObjPrintf("Finalize failed: %s", REASON()));
 	    *errorCodePtr = EINVAL;
 
 	/* Write message digest to output channel as byte array or hex string */
@@ -516,8 +520,8 @@ int DigestInputProc(ClientData clientData, char *buf, int toRead, int *errorCode
     }
 
     /* Update hash function */
-    if (toWrite > 0 && !Tls_DigestUpdate(statePtr, buf, (size_t) toWrite)) {
-	Tcl_SetChannelError(statePtr->self, Tcl_ObjPrintf("Digest update failed: %s", REASON()));
+    if (toWrite > 0 && !Tls_DigestUpdate(statePtr, buf, (size_t) toWrite, 0)) {
+	Tcl_SetChannelError(statePtr->self, Tcl_ObjPrintf("Update failed: %s", REASON()));
 	*errorCodePtr = EINVAL;
 	return -1;
     }
@@ -801,7 +805,7 @@ Tls_DigestChannel(Tcl_Interp *interp, const char *channel, const EVP_MD *md,
 
     /* Create state data struct */
     if ((statePtr = Tls_DigestNew(interp, format)) == NULL) {
-	Tcl_AppendResult(interp, "Initialize digest error: memory allocation failure", (char *) NULL);
+	Tcl_AppendResult(interp, "Memory allocation error", (char *) NULL);
 	return TCL_ERROR;
     }
     statePtr->self = chan;
@@ -926,15 +930,13 @@ int InstanceObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj 
 	}
 
 	/* Update hash function */
-	if (!Tls_DigestUpdate(statePtr, buf, (size_t) len)) {
-	    Tcl_SetObjResult(interp, Tcl_ObjPrintf("Digest update failed: %s", REASON()));
+	if (!Tls_DigestUpdate(statePtr, buf, (size_t) len, 1)) {
 	    return TCL_ERROR;
 	}
 
     } else {
 	/* Finalize hash function and calculate message digest */
 	if (Tls_DigestFinialize(interp, statePtr) != TCL_OK) {
-	    Tcl_SetObjResult(interp, Tcl_ObjPrintf("Digest finalize failed: %s", REASON()));
 	    return TCL_ERROR;
 	}
 
@@ -987,7 +989,7 @@ int Tls_DigestInstance(Tcl_Interp *interp, Tcl_Obj *cmdObj, const EVP_MD *md,
 
     /* Create state data struct */
     if ((statePtr = Tls_DigestNew(interp, format)) == NULL) {
-	Tcl_AppendResult(interp, "Initialize digest error: memory allocation failure", (char *) NULL);
+	Tcl_AppendResult(interp, "Memory allocation error", (char *) NULL);
 	return TCL_ERROR;
     }
 
@@ -1065,7 +1067,7 @@ Tls_DigestData(Tcl_Interp *interp, int objc, Tcl_Obj *const objv[],
 	    return TCL_ERROR;
 	}
 	if (Tls_DigestInit(interp, statePtr, md, cipher, keyObj) != TCL_OK ||
-	    Tls_DigestUpdate(statePtr, data, (size_t) len) == 0 ||
+	    Tls_DigestUpdate(statePtr, data, (size_t) len, 1) == 0 ||
 	    Tls_DigestFinialize(interp, statePtr) != TCL_OK) {
 	    Tls_DigestFree(statePtr);
 	    return TCL_ERROR;

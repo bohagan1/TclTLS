@@ -434,13 +434,13 @@ Tls_NewX509Obj(Tcl_Interp *interp, X509 *cert) {
 
     /* SHA1 Digest (Fingerprint) of cert - DER representation */
     if (X509_digest(cert, EVP_sha1(), md, &len)) {
-    len = String_to_Hex(md, len, buffer, BUFSIZ);
+	len = String_to_Hex(md, len, buffer, BUFSIZ);
 	LAPPEND_STR(interp, certPtr, "sha1_hash", buffer, len);
     }
 
     /* SHA256 Digest (Fingerprint) of cert - DER representation */
     if (X509_digest(cert, EVP_sha256(), md, &len)) {
-    len = String_to_Hex(md, len, buffer, BUFSIZ);
+	len = String_to_Hex(md, len, buffer, BUFSIZ);
 	LAPPEND_STR(interp, certPtr, "sha256_hash", buffer, len);
     }
 
@@ -480,7 +480,7 @@ Tls_NewX509Obj(Tcl_Interp *interp, X509 *cert) {
     xflags = X509_get_extension_flags(cert);
     LAPPEND_INT(interp, certPtr, "extFlags", xflags);
 
-	/* Check if cert was issued by CA cert issuer or self signed */
+    /* Check if cert was issued by CA cert issuer or self signed */
     LAPPEND_BOOL(interp, certPtr, "selfIssued", xflags & EXFLAG_SI);
     LAPPEND_BOOL(interp, certPtr, "selfSigned", xflags & EXFLAG_SS);
     LAPPEND_BOOL(interp, certPtr, "isProxyCert", xflags & EXFLAG_PROXY);
@@ -491,7 +491,7 @@ Tls_NewX509Obj(Tcl_Interp *interp, X509 *cert) {
 	and/or issuer names over time. RFC 5280 section 4.1.2.8 */
     {
 	const ASN1_BIT_STRING *iuid, *suid;
-        X509_get0_uids(cert, &iuid, &suid);
+	X509_get0_uids(cert, &iuid, &suid);
 
 	Tcl_ListObjAppendElement(interp, certPtr, Tcl_NewStringObj("issuerUniqueId", -1));
 	if (iuid != NULL) {
@@ -516,7 +516,7 @@ Tls_NewX509Obj(Tcl_Interp *interp, X509 *cert) {
 	its signer (the CA). RFC 5280 section 4.2.1.1, NID_authority_key_identifier */
     LAPPEND_OBJ(interp, certPtr, "authorityKeyIdentifier",
 	Tls_x509Identifier(X509_get0_authority_key_id(cert)));
-
+ 
     /* Subject Key Identifier (SKI) is used to identify certificates that contain
 	a particular public key. RFC 5280 section 4.2.1.2, NID_subject_key_identifier */
     LAPPEND_OBJ(interp, certPtr, "subjectKeyIdentifier",
