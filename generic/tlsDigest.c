@@ -1,7 +1,8 @@
 /*
- * Message Digests Module
+ * Message Digests (MD) and Message Authentication Code (MAC) Module
  *
- * Provides commands to calculate a message digest using a specified hash function.
+ * Provides commands to calculate a message digest (MD) or message
+ * authentication code (MAC) using a specified hash function and/or cipher.
  *
  * Copyright (C) 2023 Brian O'Hagan
  *
@@ -20,15 +21,16 @@
 const char *hex = "0123456789abcdef";
 
 /* Macros */
-#define BUFFER_SIZE 65536
-#define CHAN_EOF 0x10
+#define BUFFER_SIZE	65536
+#define CHAN_EOF	0x10
+#define READ_DELAY	5
 
 /* Digest format and operation */
-#define BIN_FORMAT 0x01
-#define HEX_FORMAT 0x02
-#define TYPE_MD    0x10
-#define TYPE_HMAC  0x20
-#define TYPE_CMAC  0x40
+#define BIN_FORMAT	0x01
+#define HEX_FORMAT	0x02
+#define TYPE_MD		0x10
+#define TYPE_HMAC	0x20
+#define TYPE_CMAC	0x40
 
 /*
  * This structure defines the per-instance state of a digest operation.
@@ -188,7 +190,7 @@ int Tls_DigestInit(Tcl_Interp *interp, DigestState *statePtr, const EVP_MD *md,
  *
  *-------------------------------------------------------------------
  */
-int Tls_DigestUpdate(DigestState *statePtr, char *buf, size_t read, int show) {
+int Tls_DigestUpdate(DigestState *statePtr, char *buf, size_t read, int do_result) {
     int res = 0;
 
     if (statePtr->format & TYPE_MD) {
@@ -198,7 +200,7 @@ int Tls_DigestUpdate(DigestState *statePtr, char *buf, size_t read, int show) {
     } else if (statePtr->format & TYPE_CMAC) {
 	res = CMAC_Update(statePtr->cctx, buf, read);
     }
-    if (!res && show) {
+    if (!res && do_result) {
 	Tcl_AppendResult(statePtr->interp, "Update failed: ", REASON(), NULL);
 	return TCL_ERROR;
     }
@@ -580,7 +582,6 @@ static void DigestTimerHandler(ClientData clientData) {
  *
  *----------------------------------------------------------------------
  */
-#define READ_DELAY	5
 void DigestWatchProc(ClientData clientData, int mask) {
     DigestState *statePtr = (DigestState *) clientData;
     Tcl_Channel parent;
@@ -952,76 +953,33 @@ int Tls_DigestInstance(Tcl_Interp *interp, Tcl_Obj *cmdObj, const EVP_MD *md,
  *-------------------------------------------------------------------
  */
 int
-Tls_DigestData(Tcl_Interp *interp, int objc, Tcl_Obj *const objv[],
-	const EVP_MD *md, const EVP_CIPHER *cipher, int format, Tcl_Obj *keyObj) {
+Tls_DigestData(Tcl_Interp *interp, Tcl_Obj *dataObj, const EVP_MD *md,
+	const EVP_CIPHER *cipher, int format, Tcl_Obj *keyObj) {
     char *data;
-    int data_len, res;
-    unsigned int md_len;
-    unsigned char md_buf[EVP_MAX_MD_SIZE];
-
-    /* Validate arg count */
-    if (objc != 2) {
-	Tcl_WrongNumArgs(interp, 1, objv, "data");
-	return TCL_ERROR;
-    }
+    int data_len;
+    DigestState *statePtr;
 
     /* Get data */
-    data = Tcl_GetByteArrayFromObj(objv[1], &data_len);
+    data = Tcl_GetByteArrayFromObj(dataObj, &data_len);
     if (data == NULL || data_len == 0) {
 	Tcl_SetResult(interp, "No data", NULL);
 	return TCL_ERROR;
     }
 
-    /* Calculate digest based on hash function */
-    if (format & TYPE_MD) {
-	res = EVP_Digest(data, (size_t) data_len, md_buf, &md_len, md, NULL);
-
-    } else if (format & TYPE_HMAC) {
-	unsigned char *key, *hmac = NULL;
-	int key_len;
-
-	key = Tcl_GetByteArrayFromObj(keyObj, &key_len);
-	hmac = HMAC(md, (const void *) key, key_len, (const unsigned char *) data,
-	    (size_t) data_len, md_buf, &md_len);
-	res = (hmac != NULL);
-
-    } else if (format & TYPE_CMAC) {
-	DigestState *statePtr;
-
-	if ((statePtr = Tls_DigestNew(interp, format)) == NULL) {
-	    Tcl_AppendResult(interp, "Memory allocation error", (char *) NULL);
-	    return TCL_ERROR;
-	}
-	if (Tls_DigestInit(interp, statePtr, md, cipher, keyObj) != TCL_OK ||
-	    Tls_DigestUpdate(statePtr, data, (size_t) len, 1) == 0 ||
-	    Tls_DigestFinialize(interp, statePtr) != TCL_OK) {
-	    Tls_DigestFree(statePtr);
-	    return TCL_ERROR;
-	}
-	Tls_DigestFree(statePtr);
-	return TCL_OK;
-    }
-
-    /* Output digest to result per format (bin or hex) */
-    if (res) {
-	if (format & BIN_FORMAT) {
-	    Tcl_SetObjResult(interp, Tcl_NewByteArrayObj(md_buf, md_len));
-
-	} else {
-	    Tcl_Obj *resultObj = Tcl_NewObj();
-	    unsigned char *ptr = Tcl_SetByteArrayLength(resultObj, md_len*2);
-
-	    for (unsigned int i = 0; i < md_len; i++) {
-		*ptr++ = hex[(md_buf[i] >> 4) & 0x0F];
-		*ptr++ = hex[md_buf[i] & 0x0F];
-	    }
-	    Tcl_SetObjResult(interp, resultObj);
-	}
-
-    } else {
-	Tcl_AppendResult(interp, "Hash calculation error:", REASON(), (char *) NULL);
+    /* Create state struct */
+    if ((statePtr = Tls_DigestNew(interp, format)) == NULL) {
+	Tcl_AppendResult(interp, "Memory allocation error", (char *) NULL);
 	return TCL_ERROR;
     }
+
+    /* Calc Digest */
+    if (Tls_DigestInit(interp, statePtr, md, cipher, keyObj) != TCL_OK ||
+	Tls_DigestUpdate(statePtr, data, (size_t) len, 1) == 0 ||
+	Tls_DigestFinialize(interp, statePtr) != TCL_OK) {
+	Tls_DigestFree(statePtr);
+	return TCL_ERROR;
+    }
+    Tls_DigestFree(statePtr);
     return TCL_OK;
 }
 
@@ -1049,9 +1007,16 @@ int Tls_DigestFile(Tcl_Interp *interp, Tcl_Obj *filename, const EVP_MD *md,
     unsigned char buf[BUFFER_SIZE];
     int res = TCL_OK, len;
 
+    /* Create state data struct */
+    if ((statePtr = Tls_DigestNew(interp, format)) == NULL) {
+	Tcl_AppendResult(interp, "Memory allocation error", (char *) NULL);
+	return TCL_ERROR;
+    }
+
     /* Open file channel */
     chan = Tcl_FSOpenFileChannel(interp, filename, "rb", 0444);
     if (chan == (Tcl_Channel) NULL) {
+	Tls_DigestFree(statePtr);
 	return TCL_ERROR;
     }
 
@@ -1060,13 +1025,6 @@ int Tls_DigestFile(Tcl_Interp *interp, Tcl_Obj *filename, const EVP_MD *md,
 	goto done;
     }
     Tcl_SetChannelBufferSize(chan, BUFFER_SIZE);
-
-    /* Create state data struct */
-    if ((statePtr = Tls_DigestNew(interp, format)) == NULL) {
-	Tcl_AppendResult(interp, "Memory allocation error", (char *) NULL);
-	res = TCL_ERROR;
-	goto done;
-    }
 
     /* Initialize hash function */
     if ((res = Tls_DigestInit(interp, statePtr, md, cipher, keyObj)) != TCL_OK) {
@@ -1103,9 +1061,10 @@ done:
 /*
  *-------------------------------------------------------------------
  *
- * DigestObjCmd --
+ * DigestMain --
  *
- *	Return message digest using user specified hash function.
+ *	Return message digest or Message Authentication Code (MAC) of
+ *	data using user specified hash function.
  *
  * Returns:
  *	TCL_OK or TCL_ERROR
@@ -1136,7 +1095,7 @@ static int DigestMain(int type, Tcl_Interp *interp, int objc, Tcl_Obj *const obj
     if (objc == 3 && type == TYPE_MD) {
 	digestName = Tcl_GetStringFromObj(objv[1],NULL);
 	if ((md = EVP_get_digestbyname(digestName)) != NULL) {
-	    return Tls_DigestData(interp, --objc, ++objv, md, NULL, HEX_FORMAT | TYPE_MD, NULL);
+	    return Tls_DigestData(interp, objv[2], md, NULL, HEX_FORMAT | TYPE_MD, NULL);
 	} else {
 	    Tcl_AppendResult(interp, "Invalid digest \"", digestName, "\"", NULL);
 	    return TCL_ERROR;
@@ -1218,10 +1177,7 @@ static int DigestMain(int type, Tcl_Interp *interp, int objc, Tcl_Obj *const obj
     } else if (cmdObj != NULL) {
 	res = Tls_DigestInstance(interp, cmdObj, md, cipher, format | type, keyObj);
     } else if (dataObj != NULL) {
-	Tcl_Obj *objs[2];
-	objs[0] = NULL;
-	objs[1] = dataObj;
-	res = Tls_DigestData(interp, 2, objs, md, cipher, format | type, keyObj);
+	res = Tls_DigestData(interp, dataObj, md, cipher, format | type, keyObj);
     }
     return res;
 }
@@ -1269,23 +1225,43 @@ static int HMACObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_O
  *-------------------------------------------------------------------
  */
 int DigestMD4Cmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
-    return Tls_DigestData(interp, objc, objv, EVP_md4(), NULL, HEX_FORMAT | TYPE_MD, NULL);
+    if (objc != 2) {
+	Tcl_WrongNumArgs(interp, 1, objv, "data");
+	return TCL_ERROR;
+    }
+    return Tls_DigestData(interp, objv[1], EVP_md4(), NULL, HEX_FORMAT | TYPE_MD, NULL);
 }
 
 int DigestMD5Cmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
-    return Tls_DigestData(interp, objc, objv, EVP_md5(), NULL, HEX_FORMAT | TYPE_MD, NULL);
+    if (objc != 2) {
+	Tcl_WrongNumArgs(interp, 1, objv, "data");
+	return TCL_ERROR;
+    }
+    return Tls_DigestData(interp, objv[1], EVP_md5(), NULL, HEX_FORMAT | TYPE_MD, NULL);
 }
 
 int DigestSHA1Cmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
-    return Tls_DigestData(interp, objc, objv, EVP_sha1(), NULL, HEX_FORMAT | TYPE_MD, NULL);
+    if (objc != 2) {
+	Tcl_WrongNumArgs(interp, 1, objv, "data");
+	return TCL_ERROR;
+    }
+    return Tls_DigestData(interp, objv[1], EVP_sha1(), NULL, HEX_FORMAT | TYPE_MD, NULL);
 }
 
 int DigestSHA256Cmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
-    return Tls_DigestData(interp, objc, objv, EVP_sha256(), NULL, HEX_FORMAT | TYPE_MD, NULL);
+    if (objc != 2) {
+	Tcl_WrongNumArgs(interp, 1, objv, "data");
+	return TCL_ERROR;
+    }
+    return Tls_DigestData(interp, objv[1], EVP_sha256(), NULL, HEX_FORMAT | TYPE_MD, NULL);
 }
 
 int DigestSHA512Cmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
-    return Tls_DigestData(interp, objc, objv, EVP_sha512(), NULL, HEX_FORMAT | TYPE_MD, NULL);
+    if (objc != 2) {
+	Tcl_WrongNumArgs(interp, 1, objv, "data");
+	return TCL_ERROR;
+    }
+    return Tls_DigestData(interp, objv[1], EVP_sha512(), NULL, HEX_FORMAT | TYPE_MD, NULL);
 }
 
 /*
