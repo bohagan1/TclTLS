@@ -1355,6 +1355,7 @@ ImportObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const
      * SSL Callbacks
      */
     SSL_set_app_data(statePtr->ssl, (void *)statePtr);	/* point back to us */
+
     SSL_set_verify(statePtr->ssl, verify, VerifyCallback);
     SSL_set_info_callback(statePtr->ssl, InfoCallback);
 
@@ -1875,6 +1876,7 @@ StatusObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const
     } else {
 	peer = SSL_get_certificate(statePtr->ssl);
     }
+
     /* Get X509 certificate info */
     if (peer) {
 	objPtr = Tls_NewX509Obj(interp, peer);
@@ -2165,6 +2167,7 @@ static int ConnectionInfoObjCmd(ClientData clientData, Tcl_Interp *interp, int o
     STACK_OF(X509_NAME) *ca_list;
     if ((ca_list = SSL_get_client_CA_list(ssl)) != NULL) {
 	char buffer[BUFSIZ];
+
 	for (int i = 0; i < sk_X509_NAME_num(ca_list); i++) {
 	    X509_NAME *name = sk_X509_NAME_value(ca_list, i);
 	    if (name) {
@@ -2175,6 +2178,7 @@ static int ConnectionInfoObjCmd(ClientData clientData, Tcl_Interp *interp, int o
     }
     LAPPEND_OBJ(interp, objPtr, "caList", listPtr);
     LAPPEND_INT(interp, objPtr, "caListCount", sk_X509_NAME_num(ca_list));
+
 
     Tcl_SetObjResult(interp, objPtr);
     return TCL_OK;
