@@ -37,9 +37,9 @@ content="text/html; charset=iso-8859-1">
 	    <dd><b>tls::protocols</b></dd>
 	    <dd><b>tls::version</b></dd>
 	    <dt>&nbsp;</dt>
-	    <dd><b>tls::digest</b> <em>type ?options?</em></dd>
-	    <dd><b>tls::cmac</b> <em>type</em> <b>-cipher</b> <em>name ?options?</em></dd>
-	    <dd><b>tls::hmac</b> <em>type</em> <b>-key</b> <em>key ?options?</em></dd>
+	    <dd><b>tls::digest</b> <b>-digest</b> <em>name ?options?</em></dd>
+	    <dd><b>tls::cmac</b> <b>-cipher</b> <em>name</em> <b>-key</b> <em>key ?options?</em></dd>
+	    <dd><b>tls::hmac</b> <b>-digest</b> <em>name</em> <b>-key</b> <em>key ?options?</em></dd>
 	    <dd><b>tls::md4</b> <em>data</em></dd>
 	    <dd><b>tls::md5</b> <em>data</em></dd>
 	    <dd><b>tls::sha1</b> <em>data</em></dd>
@@ -81,9 +81,9 @@ toolkit.</p>
 <a href="#tls::protocols"><b>tls::protocols</b></a><br>
 <a href="#tls::version"><b>tls::version</b></a><br>
 <br>
-<a href="#tls::digest"><b>tls::digest</b> <i>type ?options?</i></a><br>
-<a href="#tls::cmac"><b>tls::cmac</b> <i>type</i> <b>-cipher</b> <i>name ?options?</i></a><br>
-<a href="#tls::hmac"><b>tls::hmac</b> <i>type</i> <b>-key</b> <i>key ?options?</i></a><br>
+<a href="#tls::digest"><b>tls::digest</b> <b>-digest</b> <i>name ?options?</i></a><br>
+<a href="#tls::cmac"><b>tls::cmac</b> <b>-cipher</b> <i>name</i> <b>-key</b> <i>key ?options?</i></a><br>
+<a href="#tls::hmac"><b>tls::hmac</b> <b>-digest</b> <i>name</i> <b>-key</b> <i>key ?options?</i></a><br>
 <a href="#tls::md4"><b>tls::md4</b> <i>data</i></a><br>
 <a href="#tls::md5"><b>tls::md5</b> <i>data</i></a><br>
 <a href="#tls::sha1"><b>tls::sha1</b> <i>data</i></a><br>
@@ -438,14 +438,13 @@ used directly.</p>
 
     <dt><a name="tls::ciphers"><strong>tls::ciphers</strong>
     <em>?protocol? ?verbose? ?supported?</em></a></dt>
-    <dd>Without any args, returns a list of all ciphers. With
-	<em>protocol</em>, only the ciphers supported for that protocol
-	are returned where <em>protocol</em> must be one of <b>ssl2, ssl3,
-	tls1, tls1.1, tls1.2,</b> or <b>tls1.3</b>. If <em>verbose</em> is
-	specified as true then a verbose, human readable list is returned
-	with additional information on the cipher. If <em>supported</em>
-	is specified as true, then only the ciphers supported for protocol
-	will be listed.</dd>
+    <dd>Without any args, returns a list of all ciphers. With <em>protocol</em>,
+	only the ciphers supported for that protocol are returned. See
+	<b>tls::protocols</b> command for the supported protocols. If
+	<em>verbose</em> is specified as true then a verbose, human readable
+	list is returned with additional information on the cipher. If
+	<em>supported</em> is specified as true, then only the ciphers
+	supported for protocol will be listed.</dd>
 
     <dt><a name="tls::digests"><strong>tls::digests</strong></a></dt>
     <dd>Returns a list of the hash algorithms for <b>tls::digest</b> command.</dd>
@@ -464,11 +463,12 @@ used directly.</p>
     <dd>Returns the OpenSSL version string.</dd>
 
     <br>
-    <dt><a name="tls::digest"><strong>tls::digest</strong> <em>digest ?-bin|-hex?
-	[-file filename | -command cmdName | -chan channelId | ?-data? data]</em></a></dt>
+    <dt><a name="tls::digest"><strong>tls::digest</strong> <b>-digest</b>
+	<em>name ?-bin|-hex? [-file filename | -command cmdName |
+	-chan channelId | -data data]</em></a></dt>
     <dd>Calculate the message digest for data using <em>digest</em> hash
 	function. Returns value as a hex string (default) or as a binary value
-	with <b>-bin</b> option. Argument <em>digest</em> can be any OpenSSL
+	with <b>-bin</b> or <b>-binary</b> option. Digest can be any OpenSSL
 	supported hash function including: <b>md4</b>, <b>md5</b>, <b>sha1</b>,
 	<b>sha256</b>, <b>sha512</b>, <b>sha3-256</b>, etc. See
 	<b>tls::digests</b> command for a full list.
@@ -476,14 +476,15 @@ used directly.</p>
 	Using the <b>-data</b> option will immediately return the message
 	digest for <em>data</em> in the specified format.
 	<br>
-	Using the <b>-file</b> option will open file <em>filename</em>, read
-	the file data, close the file, and return the message digest in the
-	specified format. This uses the TCL APIs, so VFS files are supported.
+	Using the <b>-file</b> or <b>-filename</b> option will open file
+	<em>filename</em>, read the file data, close the file, and return the
+	message digest in the specified format. This uses the TCL APIs, so VFS
+	files are supported.
 	<br>
-	Using the <b>-chan</b> option, a stacked channel is created for
-	<em>channelId</em> and data read from the channel is used to calculate
-	a message digest with the result returned with the last read operation
-	before EOF. Channel is automatically set to binary mode.
+	Using the <b>-chan</b> or <b>-channel</b> option, a stacked channel is
+	created for <em>channelId</em> and data read from the channel is used
+	to calculate a message digest with the result returned with the last
+	read operation before EOF. Channel is automatically set to binary mode.
 	<br>
 	Using the <b>-command</b> option, a new command <em>cmdName</em> is
 	created and returned. To add data to the hash function, call
@@ -492,16 +493,16 @@ used directly.</p>
 	to return the message digest.
 	</dd>
 
-    <dt><a name="tls::cmac"><strong>tls::cmac</strong> <em>digest</em>
-	<strong>-cipher</strong> <em>name</em> ?-bin|-hex? [-file filename |
-	-command cmdName | -chan channelId | ?-data? data]</em></a></dt>
+    <dt><a name="tls::cmac"><strong>tls::cmac</strong> <b>-cipher</b> <em>name</em>
+	<b>-key</b> <em>key ?-bin|-hex? [-file filename | -command cmdName |
+	-chan channelId | -data data]</em></a></dt>
     <dd>Calculate the Cipher-based Message Authentication Code (CMAC). Same arguments
 	as <b>tls::digest</b> with additional option <b>-cipher</b> to specify the
 	cipher to use and for certain ciphers, <b>-key</b> to specify the key.</dd>
 
-    <dt><a name="tls::hmac"><strong>tls::hmac</strong> <em>digest</em>
-	<strong>-key</strong> <em>key</em> ?-bin|-hex? [-file filename |
-	-command cmdName | -chan channelId | ?-data? data]</em></a></dt>
+    <dt><a name="tls::hmac"><strong>tls::hmac</strong> <b>-digest</b> <em>name</em>
+	<b>-key</b> <em>key ?-bin|-hex? [-file filename | -command cmdName |
+	-chan channelId | -data data]</em></a></dt>
     <dd>Calculate the Hashed Message Authentication Code (HMAC). Same arguments
 	as <b>tls::digest</b> with additional option <b>-key</b> to specify the
 	key to use. To salt a password, append or prepend the salt
