@@ -14,7 +14,7 @@ package require tls
 source common.tcl
 
 # Helper functions
-proc read_chan {cmd md filename args} {set ch [open $filename rb];fconfigure $ch -translation binary;set bsize [fconfigure $ch -buffersize];set new [$cmd $md {*}$args -chan $ch];while {![eof $new]} {set result [read $new $bsize]};close $new;return $result}
+proc read_chan {cmd filename args} {set ch [open $filename rb];fconfigure $ch -translation binary;set bsize [fconfigure $ch -buffersize];set new [$cmd {*}$args -chan $ch];while {![eof $new]} {set result [read $new $bsize]};close $new;return $result}
 proc accumulate {string args} {set cmd [{*}$args -command dcmd];$cmd update [string range $string 0 20];$cmd update [string range $string 21 end];return [$cmd finalize]}
 
 set test_data "Example string for message digest tests.\n"
@@ -22,7 +22,7 @@ set test_file "md_data.dat"
 set test_key "Example key"
 ::tcltest::makeFile $test_data $test_file
 
-# Test digest commands
+# Test digest short-cut commands
 
 
 test Digest_Cmds-1.1 {md4 cmd} -body {
@@ -49,65 +49,65 @@ test Digest_Cmds-1.5 {sha512 cmd} -body {
 
 
 test Digest_Chan-2.1 {md4} -body {
-	read_chan ::tls::digest md4 $test_file
+	read_chan ::tls::digest $test_file -digest md4
     } -result {793399f792eca2752c6af3234ba70858}
 
 test Digest_Chan-2.2 {md5} -body {
-	read_chan ::tls::digest md5 $test_file
+	read_chan ::tls::digest $test_file -digest md5
     } -result {962bf0803b4232ec23bd8427bb94ea09}
 
 test Digest_Chan-2.3 {sha1} -body {
-	read_chan ::tls::digest sha1 $test_file
+	read_chan ::tls::digest $test_file -digest sha1
     } -result {4fe03b7f2568551dfafb98ca6004e65c4b71aa7d}
 
 test Digest_Chan-2.4 {sha256} -body {
-	read_chan ::tls::digest sha256 $test_file
+	read_chan ::tls::digest $test_file -digest sha256
     } -result {9d3578fc138205cf0ee4b4cef35fe101bb4ecac7b1614c18e6fa48b5c7f95e19}
 
 test Digest_Chan-2.5 {sha512} -body {
-	read_chan ::tls::digest sha512 $test_file
+	read_chan ::tls::digest $test_file -digest sha512
     } -result {d178e759dc59127071588d2fad173c06238d87e800a6403c0a30daa4faaf05d0e7ce04916afaa6a58a30cbeb597dacb01c62f9fb9d89bab9da630c699e4816f1}
 
 test Digest_Chan-2.6 {md5 bin} -body {
-	binary encode hex [read_chan ::tls::digest md5 $test_file -bin]
+	binary encode hex [read_chan ::tls::digest $test_file -bin -digest md5]
     } -result {962bf0803b4232ec23bd8427bb94ea09}
 
 test Digest_Chan-2.7 {md5 hex} -body {
-	read_chan ::tls::digest md5 $test_file -hex
+	read_chan ::tls::digest $test_file -hex -digest md5
     } -result {962bf0803b4232ec23bd8427bb94ea09}
 
 # Test digest command for object command
 
 
 test Digest_Command-3.1 {md4} -body {
-	accumulate $test_data ::tls::digest md4
+	accumulate $test_data ::tls::digest -digest md4
     } -result {793399f792eca2752c6af3234ba70858}
 
 test Digest_Command-3.2 {md5} -body {
-	accumulate $test_data ::tls::digest md5
+	accumulate $test_data ::tls::digest -digest md5
     } -result {962bf0803b4232ec23bd8427bb94ea09}
 
 test Digest_Command-3.3 {sha1} -body {
-	accumulate $test_data ::tls::digest sha1
+	accumulate $test_data ::tls::digest -digest sha1
     } -result {4fe03b7f2568551dfafb98ca6004e65c4b71aa7d}
 
 test Digest_Command-3.4 {sha256} -body {
-	accumulate $test_data ::tls::digest sha256
+	accumulate $test_data ::tls::digest -digest sha256
     } -result {9d3578fc138205cf0ee4b4cef35fe101bb4ecac7b1614c18e6fa48b5c7f95e19}
 
 test Digest_Command-3.5 {sha512} -body {
-	accumulate $test_data ::tls::digest sha512
+	accumulate $test_data ::tls::digest -digest sha512
     } -result {d178e759dc59127071588d2fad173c06238d87e800a6403c0a30daa4faaf05d0e7ce04916afaa6a58a30cbeb597dacb01c62f9fb9d89bab9da630c699e4816f1}
 
 test Digest_Command-3.6 {md5 bin} -body {
-	binary encode hex [accumulate $test_data ::tls::digest md5 -bin]
+	binary encode hex [accumulate $test_data ::tls::digest -digest md5 -bin]
     } -result {962bf0803b4232ec23bd8427bb94ea09}
 
 test Digest_Command-3.7 {md5 hex} -body {
-	accumulate $test_data ::tls::digest md5 -hex
+	accumulate $test_data ::tls::digest -digest md5 -hex
     } -result {962bf0803b4232ec23bd8427bb94ea09}
 
-# Test digest command for data
+# Test digest command for data shortcut
 
 
 test Digest_Data-4.1 {md4} -body {
@@ -130,89 +130,111 @@ test Digest_Data-4.5 {sha512} -body {
 	::tls::digest sha512 $test_data
     } -result {d178e759dc59127071588d2fad173c06238d87e800a6403c0a30daa4faaf05d0e7ce04916afaa6a58a30cbeb597dacb01c62f9fb9d89bab9da630c699e4816f1}
 
-test Digest_Data-4.6 {md5 bin} -body {
-	binary encode hex [::tls::digest md5 -bin $test_data]
+# Test digest command for data
+
+test Digest_Data-4.6 {md4} -body {
+	::tls::digest -digest md4 -data $test_data
+    } -result {793399f792eca2752c6af3234ba70858}
+
+test Digest_Data-4.7 {md5} -body {
+	::tls::digest -digest md5 -data $test_data
     } -result {962bf0803b4232ec23bd8427bb94ea09}
 
-test Digest_Data-4.7 {md5 hex} -body {
-	::tls::digest md5 -hex $test_data
+test Digest_Data-4.8 {sha1} -body {
+	::tls::digest -digest sha1 -data $test_data
+    } -result {4fe03b7f2568551dfafb98ca6004e65c4b71aa7d}
+
+test Digest_Data-4.9 {sha256} -body {
+	::tls::digest -digest sha256 -data $test_data
+    } -result {9d3578fc138205cf0ee4b4cef35fe101bb4ecac7b1614c18e6fa48b5c7f95e19}
+
+test Digest_Data-4.10 {sha512} -body {
+	::tls::digest -digest sha512 -data $test_data
+    } -result {d178e759dc59127071588d2fad173c06238d87e800a6403c0a30daa4faaf05d0e7ce04916afaa6a58a30cbeb597dacb01c62f9fb9d89bab9da630c699e4816f1}
+
+test Digest_Data-4.11 {md5 bin} -body {
+	binary encode hex [::tls::digest -digest md5 -data $test_data -bin]
     } -result {962bf0803b4232ec23bd8427bb94ea09}
 
-test Digest_Data-4.8 {md5 with arg} -body {
-	::tls::digest md5 -data $test_data
+test Digest_Data-4.12 {md5 hex} -body {
+	::tls::digest -digest md5 -data $test_data -hex
     } -result {962bf0803b4232ec23bd8427bb94ea09}
 
 # Test digest command for file
 
 
 test Digest_File-5.1 {md4} -body {
-	::tls::digest md4 -file $test_file
+	::tls::digest -digest md4 -file $test_file
     } -result {793399f792eca2752c6af3234ba70858}
 
 test Digest_File-5.2 {md5} -body {
-	::tls::digest md5 -file $test_file
+	::tls::digest -digest md5 -file $test_file
     } -result {962bf0803b4232ec23bd8427bb94ea09}
 
 test Digest_File-5.3 {sha1} -body {
-	::tls::digest sha1 -file $test_file
+	::tls::digest -digest sha1 -file $test_file
     } -result {4fe03b7f2568551dfafb98ca6004e65c4b71aa7d}
 
 test Digest_File-5.4 {sha256} -body {
-	::tls::digest sha256 -file $test_file
+	::tls::digest -digest sha256 -file $test_file
     } -result {9d3578fc138205cf0ee4b4cef35fe101bb4ecac7b1614c18e6fa48b5c7f95e19}
 
 test Digest_File-5.5 {sha512} -body {
-	::tls::digest sha512 -file $test_file
+	::tls::digest -digest sha512 -file $test_file
     } -result {d178e759dc59127071588d2fad173c06238d87e800a6403c0a30daa4faaf05d0e7ce04916afaa6a58a30cbeb597dacb01c62f9fb9d89bab9da630c699e4816f1}
 
 test Digest_File-5.6 {md5 bin} -body {
-	binary encode hex [::tls::digest md5 -bin -file $test_file]
+	binary encode hex [::tls::digest -digest md5 -file $test_file -bin]
     } -result {962bf0803b4232ec23bd8427bb94ea09}
 
 test Digest_File-5.7 {md5 hex} -body {
-	::tls::digest md5 -hex -file $test_file
+	::tls::digest -digest md5 -file $test_file -hex
     } -result {962bf0803b4232ec23bd8427bb94ea09}
-
-# Test Digest HMAC
-
-
-test Digest_HMAC-6.1 {data} -body {
-	::tls::digest md5 -key $test_key -data $test_data
-    } -result {f98327ef3e20ab6d388f676c6a79d93d}
-
-test Digest_HMAC-6.2 {file} -body {
-	::tls::digest md5 -key $test_key -file $test_file
-    } -result {f98327ef3e20ab6d388f676c6a79d93d}
-
-test Digest_HMAC-6.3 {channel} -body {
-	read_chan ::tls::digest md5 $test_file -key $test_key
-    } -result {f98327ef3e20ab6d388f676c6a79d93d}
-
-test Digest_HMAC-6.4 {data bin} -body {
-	binary encode hex [::tls::digest md5 -bin -key $test_key -data $test_data]
-    } -result {f98327ef3e20ab6d388f676c6a79d93d}
 
 # Test HMAC command
 
 
-test HMAC-7.1 {data} -body {
-	::tls::hmac md5 -key $test_key -data $test_data
+test HMAC-6.1 {data} -body {
+	::tls::hmac -digest md5 -key $test_key -data $test_data
     } -result {f98327ef3e20ab6d388f676c6a79d93d}
 
-test HMAC-7.2 {file} -body {
-	::tls::hmac md5 -key $test_key -file $test_file
+test HMAC-6.2 {file} -body {
+	::tls::hmac -digest md5 -key $test_key -file $test_file
     } -result {f98327ef3e20ab6d388f676c6a79d93d}
 
-test HMAC-7.3 {channel} -body {
-	read_chan ::tls::hmac md5 $test_file -key $test_key
+test HMAC-6.3 {channel} -body {
+	read_chan ::tls::hmac $test_file -digest md5 -key $test_key
     } -result {f98327ef3e20ab6d388f676c6a79d93d}
 
-test HMAC-7.4 {command} -body {
-	accumulate $test_data ::tls::hmac md5 -key $test_key
+test HMAC-6.4 {command} -body {
+	accumulate $test_data ::tls::hmac -digest md5 -key $test_key
     } -result {f98327ef3e20ab6d388f676c6a79d93d}
 
-test HMAC-7.5 {data bin} -body {
-	binary encode hex [::tls::hmac md5 -bin -key $test_key -data $test_data]
+test HMAC-6.5 {data bin} -body {
+	binary encode hex [::tls::hmac -digest md5 -bin -key $test_key -data $test_data]
+    } -result {f98327ef3e20ab6d388f676c6a79d93d}
+
+# Test Digest HMAC
+
+
+test Digest_HMAC-7.1 {data} -body {
+	::tls::digest -digest md5 -key $test_key -data $test_data
+    } -result {f98327ef3e20ab6d388f676c6a79d93d}
+
+test Digest_HMAC-7.2 {file} -body {
+	::tls::digest -digest md5 -key $test_key -file $test_file
+    } -result {f98327ef3e20ab6d388f676c6a79d93d}
+
+test Digest_HMAC-7.3 {channel} -body {
+	read_chan ::tls::digest $test_file -digest md5 -key $test_key
+    } -result {f98327ef3e20ab6d388f676c6a79d93d}
+
+test Digest_HMAC-7.4 {command} -body {
+	accumulate $test_data ::tls::digest -digest md5 -key $test_key
+    } -result {f98327ef3e20ab6d388f676c6a79d93d}
+
+test Digest_HMAC-7.5 {data bin} -body {
+	binary encode hex [::tls::digest -digest md5 -bin -key $test_key -data $test_data]
     } -result {f98327ef3e20ab6d388f676c6a79d93d}
 
 # Test CMAC command
@@ -221,82 +243,158 @@ set test_key "Example key 1234"
 
 
 test CMAC-8.1 {data} -body {
-	::tls::cmac sha256 -cipher $test_cipher -key $test_key -data $test_data
+	::tls::cmac -cipher $test_cipher -key $test_key -data $test_data
     } -result {baf5c20f9973e2d606b14c7efdfe52fa}
 
 test CMAC-8.2 {file} -body {
-	::tls::cmac sha256 -cipher $test_cipher -key $test_key -file $test_file
+	::tls::cmac -cipher $test_cipher -key $test_key -file $test_file
     } -result {baf5c20f9973e2d606b14c7efdfe52fa}
 
 test CMAC-8.3 {channel} -body {
-	read_chan ::tls::cmac sha256 $test_file -cipher $test_cipher -key $test_key
+	read_chan ::tls::cmac $test_file -cipher $test_cipher -key $test_key
     } -result {baf5c20f9973e2d606b14c7efdfe52fa}
 
 test CMAC-8.4 {command} -body {
-	accumulate $test_data ::tls::cmac sha256 -cipher $test_cipher -key $test_key
+	accumulate $test_data ::tls::cmac -cipher $test_cipher -key $test_key
     } -result {baf5c20f9973e2d606b14c7efdfe52fa}
 
 test CMAC-8.5 {data bin} -body {
-	binary encode hex [::tls::cmac sha256 -bin -cipher $test_cipher -key $test_key -data $test_data]
+	binary encode hex [::tls::cmac -bin -cipher $test_cipher -key $test_key -data $test_data]
+    } -result {baf5c20f9973e2d606b14c7efdfe52fa}
+
+# Test Digest CMAC
+
+
+test Digest_CMAC-9.1 {data} -body {
+	::tls::digest -cipher $test_cipher -key $test_key -data $test_data
+    } -result {baf5c20f9973e2d606b14c7efdfe52fa}
+
+test Digest_CMAC-9.2 {file} -body {
+	::tls::digest -cipher $test_cipher -key $test_key -file $test_file
+    } -result {baf5c20f9973e2d606b14c7efdfe52fa}
+
+test Digest_CMAC-9.3 {channel} -body {
+	read_chan ::tls::digest $test_file -cipher $test_cipher -key $test_key
+    } -result {baf5c20f9973e2d606b14c7efdfe52fa}
+
+test Digest_CMAC-9.4 {command} -body {
+	accumulate $test_data ::tls::digest -cipher $test_cipher -key $test_key
+    } -result {baf5c20f9973e2d606b14c7efdfe52fa}
+
+test Digest_CMAC-9.5 {data bin} -body {
+	binary encode hex [::tls::digest -bin -cipher $test_cipher -key $test_key -data $test_data]
     } -result {baf5c20f9973e2d606b14c7efdfe52fa}
 
 # Test MAC command
 
 
-test MAC-9.1 {HMAC} -constraints {new_api} -body {
+test MAC-10.1 {HMAC} -constraints {new_api} -body {
 	::tls::mac -digest sha256 -mac hmac -key $test_key -data $test_data
     } -result {498ef5ef71424f81da7499b2eeae1d0a348dd40b841ea27bdde494f6bc9046ff}
 
-test MAC-9.2 {CMAC} -constraints {new_api} -body {
+test MAC-10.2 {CMAC} -constraints {new_api} -body {
 	::tls::mac -cipher $test_cipher -digest sha256 -mac cmac -key $test_key -data $test_data
     } -result {498ef5ef71424f81da7499b2eeae1d0a348dd40b841ea27bdde494f6bc9046ff}
 
 # Digest Error Cases
 
 
-test Digest_Errors-10.1 {Too few args} -body {
+test Digest_Errors-11.1 {Too few args} -body {
 	::tls::digest
-    } -result {wrong # args: should be "::tls::digest digest ?-bin|-hex? ?-cipher name? ?-key key? ?-mac name? [-channel chan | -command cmdName | -file filename | ?-data? data]"} -returnCodes {1}
+    } -result {wrong # args: should be "::tls::digest ?-bin|-hex? ?-cipher name? ?-digest name? ?-key key? ?-mac name? [-channel chan | -command cmdName | -file filename | ?-data? data]"} -returnCodes {1}
 
-test Digest_Errors-10.2 {Too many args} -body {
+test Digest_Errors-11.2 {Too many args} -body {
 	::tls::digest too many command line args to pass the test without an error or failing
-    } -result {wrong # args: should be "::tls::digest digest ?-bin|-hex? ?-cipher name? ?-key key? ?-mac name? [-channel chan | -command cmdName | -file filename | ?-data? data]"} -returnCodes {1}
+    } -result {wrong # args: should be "::tls::digest ?-bin|-hex? ?-cipher name? ?-digest name? ?-key key? ?-mac name? [-channel chan | -command cmdName | -file filename | ?-data? data]"} -returnCodes {1}
 
-test Digest_Errors-10.3 {Invalid digest} -body {
+test Digest_Errors-11.3 {Invalid digest} -body {
 	::tls::digest bogus data
     } -result {Invalid digest "bogus"} -returnCodes {1}
 
-test Digest_Errors-10.4 {Invalid option} -body {
-	::tls::digest sha256 -bogus value
-    } -result {bad option "-bogus": must be -bin, -channel, -cipher, -command, -data, -file, -filename, -hex, -key, or -mac} -returnCodes {1}
+test Digest_Errors-11.4 {Invalid digest Arg} -body {
+	::tls::digest -digest bogus -data data
+    } -result {Invalid digest "bogus"} -returnCodes {1}
 
-test Digest_Errors-10.5 {Invalid file} -body {
-	::tls::digest sha256 -file bogus
+test Digest_Errors-11.5 {No digest} -body {
+	::tls::digest -hex -data value
+    } -result {No digest specified} -returnCodes {1}
+
+test Digest_Errors-11.6 {Invalid option} -body {
+	::tls::digest -digest sha256 -bogus value
+    } -result {bad option "-bogus": must be -bin, -channel, -cipher, -command, -data, -digest, -file, -filename, -hex, -key, or -mac} -returnCodes {1}
+
+test Digest_Errors-11.7 {Invalid file} -body {
+	::tls::digest -digest sha256 -file bogus
     } -result {couldn't open "bogus": no such file or directory} -returnCodes {1}
 
-test Digest_Errors-10.6 {Invalid channel} -body {
-	::tls::digest sha256 -channel bogus
+test Digest_Errors-11.8 {Invalid channel} -body {
+	::tls::digest -digest sha256 -channel bogus
     } -result {can not find channel named "bogus"} -returnCodes {1}
+
+# CMAC Error Cases
+
+
+test CMAC_Errors-12.1 {Too few args} -body {
+	::tls::cmac
+    } -result {wrong # args: should be "::tls::cmac ?-bin|-hex? ?-cipher name? ?-digest name? ?-key key? ?-mac name? [-channel chan | -command cmdName | -file filename | ?-data? data]"} -returnCodes {1}
+
+test CMAC_Errors-12.2 {No cipher} -body {
+	::tls::cmac -hex -data value
+    } -result {No cipher specified} -returnCodes {1}
+
+test CMAC_Errors-12.3 {No key} -body {
+	::tls::cmac -cipher $test_cipher -data value
+    } -result {No key specified} -returnCodes {1}
+
+test CMAC_Errors-12.4 {Invalid cipher} -body {
+	::tls::cmac -cipher bogus -data value
+    } -result {Invalid cipher "bogus"} -returnCodes {1}
+
+# HMAC Error Cases
+
+
+test HMAC_Errors-13.1 {Too few args} -body {
+	::tls::hmac
+    } -result {wrong # args: should be "::tls::hmac ?-bin|-hex? ?-cipher name? ?-digest name? ?-key key? ?-mac name? [-channel chan | -command cmdName | -file filename | ?-data? data]"} -returnCodes {1}
+
+test HMAC_Errors-13.2 {No digest} -body {
+	::tls::hmac -hex -data value
+    } -result {No digest specified} -returnCodes {1}
+
+test HMAC_Errors-13.3 {No key} -body {
+	::tls::hmac -digest sha256 -data value
+    } -result {No key specified} -returnCodes {1}
+
+# MAC Error Cases
+
+
+test MAC_Errors-14.1 {Too few args} -constraints {new_api} -body {
+	::tls::mmac
+    } -result {wrong # args: should be "::tls::mac ?-bin|-hex? ?-cipher name? ?-digest name? ?-key key? ?-mac name? [-channel chan | -command cmdName | -file filename | ?-data? data]"} -returnCodes {1}
+
+test MAC_Errors-14.2 {No key} -constraints {new_api} -body {
+	::tls::mac -digest sha256 -data value
+    } -result {No key specified} -returnCodes {1}
 
 # RFC 4231 HMAC Examples Test Case #1
 set key [binary decode hex [string repeat "0b" 20]]
 set data "Hi There"
 
 
-test RFC4231_TC1-11.1 {sha224} -body {
-	::tls::hmac sha224 -key $key -data $data
+test RFC4231_TC1-15.1 {sha224} -body {
+	::tls::hmac -digest sha224 -key $key -data $data
     } -result {896fb1128abbdf196832107cd49df33f47b4b1169912ba4f53684b22}
 
-test RFC4231_TC1-11.2 {sha256} -body {
-	::tls::hmac sha256 -key $key -data $data
+test RFC4231_TC1-15.2 {sha256} -body {
+	::tls::hmac -digest sha256 -key $key -data $data
     } -result {b0344c61d8db38535ca8afceaf0bf12b881dc200c9833da726e9376c2e32cff7}
 
-test RFC4231_TC1-11.3 {sha384} -body {
-	::tls::hmac sha384 -key $key -data $data
+test RFC4231_TC1-15.3 {sha384} -body {
+	::tls::hmac -digest sha384 -key $key -data $data
     } -result {afd03944d84895626b0825f4ab46907f15f9dadbe4101ec682aa034c7cebc59cfaea9ea9076ede7f4af152e8b2fa9cb6}
 
-test RFC4231_TC1-11.4 {sha512} -body {
-	::tls::hmac sha512 -key $key -data $data
+test RFC4231_TC1-15.4 {sha512} -body {
+	::tls::hmac -digest sha512 -key $key -data $data
     } -result {87aa7cdea5ef619d4ff0b4241a1d6cb02379f4e2ce4ec2787ad0b30545e17cdedaa833b7d6b8a702038b274eaea3f4e4be9d914eeb61f1702e696c203a126854}
 
 # RFC 4231 HMAC Examples Test Case #2 - Test with a key shorter than the length of the HMAC output.
@@ -304,20 +402,20 @@ set key "Jefe"
 set data "what do ya want for nothing?"
 
 
-test RFC4231_TC2-12.1 {sha224} -body {
-	::tls::hmac sha224 -key $key -data $data
+test RFC4231_TC2-16.1 {sha224} -body {
+	::tls::hmac -digest sha224 -key $key -data $data
     } -result {a30e01098bc6dbbf45690f3a7e9e6d0f8bbea2a39e6148008fd05e44}
 
-test RFC4231_TC2-12.2 {sha256} -body {
-	::tls::hmac sha256 -key $key -data $data
+test RFC4231_TC2-16.2 {sha256} -body {
+	::tls::hmac -digest sha256 -key $key -data $data
     } -result {5bdcc146bf60754e6a042426089575c75a003f089d2739839dec58b964ec3843}
 
-test RFC4231_TC2-12.3 {sha384} -body {
-	::tls::hmac sha384 -key $key -data $data
+test RFC4231_TC2-16.3 {sha384} -body {
+	::tls::hmac -digest sha384 -key $key -data $data
     } -result {af45d2e376484031617f78d2b58a6b1b9c7ef464f5a01b47e42ec3736322445e8e2240ca5e69e2c78b3239ecfab21649}
 
-test RFC4231_TC2-12.4 {sha512} -body {
-	::tls::hmac sha512 -key $key -data $data
+test RFC4231_TC2-16.4 {sha512} -body {
+	::tls::hmac -digest sha512 -key $key -data $data
     } -result {164b7a7bfcf819e2e395fbe73b56e0a387bd64222e831fd610270cd7ea2505549758bf75c05a994a6d034f65f8f0e6fdcaeab1a34d4a6b4b636e070a38bce737}
 
 # RFC 4231 HMAC Examples Test Case #3 - Test with a combined length of key and data that is larger than 64 bytes (= block-size of SHA-224 and SHA-256).
@@ -325,20 +423,20 @@ set key [binary decode hex [string repeat "aa" 20]]
 set data [binary decode hex [string repeat "dd" 50]]
 
 
-test RFC4231_TC3-13.1 {sha224} -body {
-	::tls::hmac sha224 -key $key -data $data
+test RFC4231_TC3-17.1 {sha224} -body {
+	::tls::hmac -digest sha224 -key $key -data $data
     } -result {7fb3cb3588c6c1f6ffa9694d7d6ad2649365b0c1f65d69d1ec8333ea}
 
-test RFC4231_TC3-13.2 {sha256} -body {
-	::tls::hmac sha256 -key $key -data $data
+test RFC4231_TC3-17.2 {sha256} -body {
+	::tls::hmac -digest sha256 -key $key -data $data
     } -result {773ea91e36800e46854db8ebd09181a72959098b3ef8c122d9635514ced565fe}
 
-test RFC4231_TC3-13.3 {sha384} -body {
-	::tls::hmac sha384 -key $key -data $data
+test RFC4231_TC3-17.3 {sha384} -body {
+	::tls::hmac -digest sha384 -key $key -data $data
     } -result {88062608d3e6ad8a0aa2ace014c8a86f0aa635d947ac9febe83ef4e55966144b2a5ab39dc13814b94e3ab6e101a34f27}
 
-test RFC4231_TC3-13.4 {sha512} -body {
-	::tls::hmac sha512 -key $key -data $data
+test RFC4231_TC3-17.4 {sha512} -body {
+	::tls::hmac -digest sha512 -key $key -data $data
     } -result {fa73b0089d56a284efb0f0756c890be9b1b5dbdd8ee81a3655f83e33b2279d39bf3e848279a722c806b485a47e67c807b946a337bee8942674278859e13292fb}
 
 # RFC 4231 HMAC Examples Test Case #4 - Test with a combined length of key and data that is larger than 64 bytes (= block-size of SHA-224 and SHA-256).
@@ -346,20 +444,20 @@ set key [binary decode hex "0102030405060708090a0b0c0d0e0f10111213141516171819"]
 set data [binary decode hex [string repeat "cd" 50]]
 
 
-test RFC4231_TC4-14.1 {sha224} -body {
-	::tls::hmac sha224 -key $key -data $data
+test RFC4231_TC4-18.1 {sha224} -body {
+	::tls::hmac -digest sha224 -key $key -data $data
     } -result {6c11506874013cac6a2abc1bb382627cec6a90d86efc012de7afec5a}
 
-test RFC4231_TC4-14.2 {sha256} -body {
-	::tls::hmac sha256 -key $key -data $data
+test RFC4231_TC4-18.2 {sha256} -body {
+	::tls::hmac -digest sha256 -key $key -data $data
     } -result {82558a389a443c0ea4cc819899f2083a85f0faa3e578f8077a2e3ff46729665b}
 
-test RFC4231_TC4-14.3 {sha384} -body {
-	::tls::hmac sha384 -key $key -data $data
+test RFC4231_TC4-18.3 {sha384} -body {
+	::tls::hmac -digest sha384 -key $key -data $data
     } -result {3e8a69b7783c25851933ab6290af6ca77a9981480850009cc5577c6e1f573b4e6801dd23c4a7d679ccf8a386c674cffb}
 
-test RFC4231_TC4-14.4 {sha512} -body {
-	::tls::hmac sha512 -key $key -data $data
+test RFC4231_TC4-18.4 {sha512} -body {
+	::tls::hmac -digest sha512 -key $key -data $data
     } -result {b0ba465637458c6990e5a8c5f61d4af7e576d97ff94b872de76f8050361ee3dba91ca5c11aa25eb4d679275cc5788063a5f19741120c4f2de2adebeb10a298dd}
 
 # RFC 4231 HMAC Examples Test Case #5 - Test with a truncation of output to 128 bits.
@@ -367,20 +465,20 @@ set key [binary decode hex [string repeat "0c" 20]]
 set data "Test With Truncation"
 
 
-test RFC4231_TC5-15.1 {sha224} -body {
-	string range [::tls::hmac sha224 -key $key -data $data] 0 31
+test RFC4231_TC5-19.1 {sha224} -body {
+	string range [::tls::hmac -digest sha224 -key $key -data $data] 0 31
     } -result {0e2aea68a90c8d37c988bcdb9fca6fa8}
 
-test RFC4231_TC5-15.2 {sha256} -body {
-	string range [::tls::hmac sha256 -key $key -data $data] 0 31
+test RFC4231_TC5-19.2 {sha256} -body {
+	string range [::tls::hmac -digest sha256 -key $key -data $data] 0 31
     } -result {a3b6167473100ee06e0c796c2955552b}
 
-test RFC4231_TC5-15.3 {sha384} -body {
-	string range [::tls::hmac sha384 -key $key -data $data] 0 31
+test RFC4231_TC5-19.3 {sha384} -body {
+	string range [::tls::hmac -digest sha384 -key $key -data $data] 0 31
     } -result {3abf34c3503b2a23a46efc619baef897}
 
-test RFC4231_TC5-15.4 {sha512} -body {
-	string range [::tls::hmac sha512 -key $key -data $data] 0 31
+test RFC4231_TC5-19.4 {sha512} -body {
+	string range [::tls::hmac -digest sha512 -key $key -data $data] 0 31
     } -result {415fad6271580a531d4179bc891d87a6}
 
 # RFC 4231 HMAC Examples Test Case #6 - Test with a key larger than 128 bytes (= block-size of SHA-384 and SHA-512).
@@ -388,20 +486,20 @@ set key [binary decode hex [string repeat "aa" 131]]
 set data "Test Using Larger Than Block-Size Key - Hash Key First"
 
 
-test RFC4231_TC6-16.1 {sha224} -body {
-	::tls::hmac sha224 -key $key -data $data
+test RFC4231_TC6-20.1 {sha224} -body {
+	::tls::hmac -digest sha224 -key $key -data $data
     } -result {95e9a0db962095adaebe9b2d6f0dbce2d499f112f2d2b7273fa6870e}
 
-test RFC4231_TC6-16.2 {sha256} -body {
-	::tls::hmac sha256 -key $key -data $data
+test RFC4231_TC6-20.2 {sha256} -body {
+	::tls::hmac -digest sha256 -key $key -data $data
     } -result {60e431591ee0b67f0d8a26aacbf5b77f8e0bc6213728c5140546040f0ee37f54}
 
-test RFC4231_TC6-16.3 {sha384} -body {
-	::tls::hmac sha384 -key $key -data $data
+test RFC4231_TC6-20.3 {sha384} -body {
+	::tls::hmac -digest sha384 -key $key -data $data
     } -result {4ece084485813e9088d2c63a041bc5b44f9ef1012a2b588f3cd11f05033ac4c60c2ef6ab4030fe8296248df163f44952}
 
-test RFC4231_TC6-16.4 {sha512} -body {
-	::tls::hmac sha512 -key $key -data $data
+test RFC4231_TC6-20.4 {sha512} -body {
+	::tls::hmac -digest sha512 -key $key -data $data
     } -result {80b24263c7c1a3ebb71493c1dd7be8b49b46d1f41b4aeec1121b013783f8f3526b56d037e05f2598bd0fd2215d6a1e5295e64f73f63f0aec8b915a985d786598}
 
 # RFC 4231 HMAC Examples Test Case #7 - Test with a key and data that is larger than 128 bytes (= block-size of SHA-384 and SHA-512).
@@ -409,20 +507,20 @@ set key [binary decode hex [string repeat "aa" 131]]
 set data "This is a test using a larger than block-size key and a larger than block-size data. The key needs to be hashed before being used by the HMAC algorithm."
 
 
-test RFC4231_TC7-17.1 {sha224} -body {
-	::tls::hmac sha224 -key $key -data $data
+test RFC4231_TC7-21.1 {sha224} -body {
+	::tls::hmac -digest sha224 -key $key -data $data
     } -result {3a854166ac5d9f023f54d517d0b39dbd946770db9c2b95c9f6f565d1}
 
-test RFC4231_TC7-17.2 {sha256} -body {
-	::tls::hmac sha256 -key $key -data $data
+test RFC4231_TC7-21.2 {sha256} -body {
+	::tls::hmac -digest sha256 -key $key -data $data
     } -result {9b09ffa71b942fcb27635fbcd5b0e944bfdc63644f0713938a7f51535c3a35e2}
 
-test RFC4231_TC7-17.3 {sha384} -body {
-	::tls::hmac sha384 -key $key -data $data
+test RFC4231_TC7-21.3 {sha384} -body {
+	::tls::hmac -digest sha384 -key $key -data $data
     } -result {6617178e941f020d351e2f254e8fd32c602420feb0b8fb9adccebb82461e99c5a678cc31e799176d3860e6110c46523e}
 
-test RFC4231_TC7-17.4 {sha512} -body {
-	::tls::hmac sha512 -key $key -data $data
+test RFC4231_TC7-21.4 {sha512} -body {
+	::tls::hmac -digest sha512 -key $key -data $data
     } -result {e37b6a775dc87dbaa4dfa9f96e5e3ffddebd71f8867289865df5a32d20cdc944b6022cac3c4982b10d5eeb55c3e4de15134676fb6de0446065c97440fa8c6a58}
 
 # Cleanup
