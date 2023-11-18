@@ -251,6 +251,56 @@ static int CiphersObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tc
 /*
  *-------------------------------------------------------------------
  *
+ * DigestInfo --
+ *
+ *	Return a list of properties and values for digestName.
+ *
+ * Results:
+ *	A standard Tcl list.
+ *
+ * Side effects:
+ *	None.
+ *
+ *-------------------------------------------------------------------
+ */
+int DigestInfo(Tcl_Interp *interp, char *digestName) {
+    Tcl_Obj *objPtr, *listPtr;
+    EVP_MD *md = EVP_get_digestbyname(digestName);
+    unsigned long flags;
+
+    if (md == NULL) {
+	Tcl_AppendResult(interp, "Invalid digest \"", digestName, "\"", NULL);
+	return TCL_ERROR;
+    }
+
+    /* Get properties */
+    objPtr = Tcl_NewListObj(0, NULL);
+    LAPPEND_STR(interp, objPtr, "name", EVP_MD_name(md), -1);
+    LAPPEND_STR(interp, objPtr, "description", "", -1);
+    LAPPEND_INT(interp, objPtr, "size", EVP_MD_size(md));
+    LAPPEND_INT(interp, objPtr, "block_size", EVP_MD_block_size(md));
+    LAPPEND_STR(interp, objPtr, "provider", "", -1);
+    LAPPEND_STR(interp, objPtr, "type", OBJ_nid2ln(EVP_MD_type(md)), -1);
+    LAPPEND_STR(interp, objPtr, "pkey_type", OBJ_nid2ln(EVP_MD_pkey_type(md)), -1);
+    flags = EVP_MD_flags(md);
+
+    /* Flags */
+    listPtr = Tcl_NewListObj(0, NULL);
+    LAPPEND_BOOL(interp, listPtr, "One-shot", flags & EVP_MD_FLAG_ONESHOT);
+    LAPPEND_BOOL(interp, listPtr, "XOF", flags & EVP_MD_FLAG_XOF);
+    LAPPEND_BOOL(interp, listPtr, "DigestAlgorithmId_NULL", flags & EVP_MD_FLAG_DIGALGID_NULL);
+    LAPPEND_BOOL(interp, listPtr, "DigestAlgorithmId_Abscent", flags & EVP_MD_FLAG_DIGALGID_ABSENT);
+    LAPPEND_BOOL(interp, listPtr, "DigestAlgorithmId_Custom", flags & EVP_MD_FLAG_DIGALGID_CUSTOM);
+    LAPPEND_BOOL(interp, listPtr, "FIPS", flags & EVP_MD_FLAG_FIPS);
+    LAPPEND_OBJ(interp, objPtr, "flags", listPtr);
+
+    Tcl_SetObjResult(interp, objPtr);
+    return TCL_OK;
+}
+
+/*
+ *-------------------------------------------------------------------
+ *
  * DigestsObjCmd --
  *
  *	Return a list of all valid hash algorithms or message digests.
@@ -273,8 +323,11 @@ int DigestsObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *
 #endif
 
     /* Validate arg count */
-    if (objc != 1) {
-	Tcl_WrongNumArgs(interp, 1, objv, NULL);
+    if (objc == 2) {
+	char *digestName = Tcl_GetStringFromObj(objv[1],NULL);
+	return DigestInfo(interp, digestName);
+    } else if (objc > 2) {
+	Tcl_WrongNumArgs(interp, 1, objv, "?name?");
 	return TCL_ERROR;
     }
 
