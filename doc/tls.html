@@ -31,6 +31,7 @@ content="text/html; charset=iso-8859-1">
 	    <dd><b>tls::import</b> <em>channel ?options?</em></dd>
 	    <dd><b>tls::unimport</b> <em>channel</em></dd>
 	    <dt>&nbsp;</dt>
+	    <dd><b>tls::cipher</b> <em>name</em></dd>
 	    <dd><b>tls::ciphers</b> <em>?protocol? ?verbose? ?supported?</em></dd>
 	    <dd><b>tls::digests</b> <em>?name?</em></dd>
 	    <dd><b>tls::macs</b></dd>
@@ -75,6 +76,7 @@ toolkit.</p>
 <a href="#tls::import"><b>tls::import</b> <i>channel ?options?</i></a><br>
 <a href="#tls::unimport"><b>tls::unimport</b> <i>channel</i></a><br>
 <br>
+<a href="#tls::cipher"><b>tls::cipher</b> <i>name</i></a><br>
 <a href="#tls::ciphers"><b>tls::ciphers</b> <i>?protocol? ?verbose? ?supported?</i></a><br>
 <a href="#tls::digests"><b>tls::digests</b> <i>?name?</i></a><br>
 <a href="#tls::macs"><b>tls::macs</b></a><br>
@@ -435,6 +437,11 @@ used directly.</p>
 	<dd>Server cache mode (client, server, or both).</dd>
     </dl>
 </blockquote>
+
+    <dt><a name="tls::cipher"><strong>tls::cipher</strong> <em>name</em></a></dt>
+    <dd>Return a list of property names and values describing cipher
+	<i>name</i>. Properties include name, description, block_size,
+	key_length, iv_length, type, and mode list.</dd>
 
     <dt><a name="tls::ciphers"><strong>tls::ciphers</strong>
     <em>?protocol? ?verbose? ?supported?</em></a></dt>

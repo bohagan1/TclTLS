@@ -50,7 +50,123 @@ void NamesCallback(const OBJ_NAME *obj, void *arg) {
 	}
     }
 }
-
+
+/*******************************************************************/
+
+/*
+ *-------------------------------------------------------------------
+ *
+ * CipherInfo --
+ *
+ *	Return a list of properties and values for cipherName.
+ *
+ * Results:
+ *	A standard Tcl list.
+ *
+ * Side effects:
+ *	None.
+ *
+ *-------------------------------------------------------------------
+ */
+static int CipherObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
+    Tcl_Obj *objPtr, *listPtr;
+    unsigned char *cipherName = NULL, *modeName = NULL;
+    const EVP_CIPHER *cipher;
+    unsigned long flags, mode;
+
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+    OpenSSL_add_all_ciphers(); /* Make sure they're loaded */
+#endif
+
+    /* Clear errors */
+    Tcl_ResetResult(interp);
+    ERR_clear_error();
+
+    /* Validate arg count */
+    if (objc != 2) {
+	Tcl_WrongNumArgs(interp, 1, objv, "name");
+	return TCL_ERROR;
+    }
+
+    /* Get cipher */
+    cipherName = Tcl_GetStringFromObj(objv[1], NULL);
+    cipher = EVP_get_cipherbyname(cipherName);
+
+    if (cipher == NULL) {
+	Tcl_AppendResult(interp, "Invalid cipher \"", cipherName, "\"", NULL);
+	return TCL_ERROR;
+    }
+
+    /* Get properties */
+    objPtr = Tcl_NewListObj(0, NULL);
+    LAPPEND_STR(interp, objPtr, "nid", OBJ_nid2ln(EVP_CIPHER_nid(cipher)), -1);
+    LAPPEND_STR(interp, objPtr, "name", EVP_CIPHER_name(cipher), -1);
+    LAPPEND_STR(interp, objPtr, "description", "", -1);
+    LAPPEND_INT(interp, objPtr, "block_size", EVP_CIPHER_block_size(cipher));
+    LAPPEND_INT(interp, objPtr, "key_length", EVP_CIPHER_key_length(cipher));
+    LAPPEND_INT(interp, objPtr, "iv_length", EVP_CIPHER_iv_length(cipher));
+    LAPPEND_STR(interp, objPtr, "type", OBJ_nid2ln(EVP_CIPHER_type(cipher)), -1);
+    LAPPEND_STR(interp, objPtr, "provider", "", -1);
+    flags = EVP_CIPHER_flags(cipher);
+    mode  = EVP_CIPHER_mode(cipher);
+
+    /* EVP_CIPHER_get_mode */
+    switch(mode) {
+	case EVP_CIPH_STREAM_CIPHER:
+	    modeName = "STREAM";
+	    break;
+	case EVP_CIPH_ECB_MODE:
+	    modeName = "ECB";
+	    break;
+	case EVP_CIPH_CBC_MODE:
+	    modeName = "CBC";
+	    break;
+	case EVP_CIPH_CFB_MODE:
+	    modeName = "CFB";
+	    break;
+	case EVP_CIPH_OFB_MODE:
+	    modeName = "OFB";
+	    break;
+	case EVP_CIPH_CTR_MODE:
+	    modeName = "CTR";
+	    break;
+	case EVP_CIPH_GCM_MODE:
+	    modeName = "GCM";
+	    break;
+	case EVP_CIPH_XTS_MODE:
+	    modeName = "XTS";
+	    break;
+	case EVP_CIPH_CCM_MODE:
+	    modeName = "CCM";
+	    break;
+	case EVP_CIPH_OCB_MODE:
+	    modeName = "OCB";
+	    break;
+	case EVP_CIPH_WRAP_MODE :
+	    modeName = "WRAP";
+	    break;
+	default:
+	    modeName = "unknown";
+	    break;
+    }
+    LAPPEND_STR(interp, objPtr, "mode", modeName, -1);
+
+    /* Flags */
+    listPtr = Tcl_NewListObj(0, NULL);
+    LAPPEND_BOOL(interp, listPtr, "Variable Length", flags & EVP_CIPH_VARIABLE_LENGTH);
+    LAPPEND_BOOL(interp, listPtr, "Always Call Init", flags & EVP_CIPH_ALWAYS_CALL_INIT);
+    LAPPEND_BOOL(interp, listPtr, "Custom IV", flags & EVP_CIPH_CUSTOM_IV);
+    LAPPEND_BOOL(interp, listPtr, "Control Init", flags & EVP_CIPH_CTRL_INIT);
+    LAPPEND_BOOL(interp, listPtr, "Custom Cipher", flags & EVP_CIPH_FLAG_CUSTOM_CIPHER);
+    LAPPEND_BOOL(interp, listPtr, "AEAD Cipher", flags & EVP_CIPH_FLAG_AEAD_CIPHER);
+    LAPPEND_BOOL(interp, listPtr, "Custom Copy", flags & EVP_CIPH_CUSTOM_COPY);
+    LAPPEND_BOOL(interp, listPtr, "Non FIPS Allow", flags & EVP_CIPH_FLAG_NON_FIPS_ALLOW);
+    LAPPEND_OBJ(interp, objPtr, "flags", listPtr);
+
+    Tcl_SetObjResult(interp, objPtr);
+    return TCL_OK;
+}
+
 /*
  *-------------------------------------------------------------------
  *
@@ -212,19 +328,8 @@ static int CiphersObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tc
 	    objPtr = Tcl_NewStringObj("",0);
 
 	    for (int i = 0; i < sk_SSL_CIPHER_num(sk); i++) {
-		/* uint32_t id;*/
 		const SSL_CIPHER *c = sk_SSL_CIPHER_value(sk, i);
 		if (c == NULL) continue;
-
-		/* Get OpenSSL-specific ID, not IANA ID */
-		/*id = SSL_CIPHER_get_id(c);*/
-
-		/* TLS protocol two-byte id */
-		/*id = SSL_CIPHER_get_protocol_id(c);*/
-
-		/* Standard RFC name of cipher or (NONE) */
-		/*const char *nm = SSL_CIPHER_standard_name(c);
-		if (nm == NULL) {nm = "UNKNOWN";}*/
 
 		/* textual description of the cipher */
 		if (SSL_CIPHER_description(c, buf, sizeof(buf)) != NULL) {
@@ -247,7 +352,9 @@ static int CiphersObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tc
     return TCL_OK;
 	clientData = clientData;
 }
-
+
+/*******************************************************************/
+
 /*
  *-------------------------------------------------------------------
  *
@@ -297,7 +404,7 @@ int DigestInfo(Tcl_Interp *interp, char *digestName) {
     Tcl_SetObjResult(interp, objPtr);
     return TCL_OK;
 }
-
+
 /*
  *-------------------------------------------------------------------
  *
@@ -338,7 +445,9 @@ int DigestsObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *
     return TCL_OK;
 	clientData = clientData;
 }
-
+
+/*******************************************************************/
+
 /*
  *-------------------------------------------------------------------
  *
@@ -373,7 +482,9 @@ int MacsObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *con
     return TCL_OK;
 	clientData = clientData;
 }
-
+
+/*******************************************************************/
+
 /*
  *-------------------------------------------------------------------
  *
@@ -425,7 +536,9 @@ ProtocolsObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *co
     return TCL_OK;
 	clientData = clientData;
 }
-
+
+/*******************************************************************/
+
 /*
  *-------------------------------------------------------------------
  *
@@ -458,7 +571,9 @@ VersionObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *cons
     return TCL_OK;
 	clientData = clientData;
 }
-
+
+/*******************************************************************/
+
 /*
  *-------------------------------------------------------------------
  *
@@ -475,6 +590,7 @@ VersionObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *cons
  *-------------------------------------------------------------------
  */
 int Tls_InfoCommands(Tcl_Interp *interp) {
+    Tcl_CreateObjCommand(interp, "tls::cipher", CipherObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
     Tcl_CreateObjCommand(interp, "tls::ciphers", CiphersObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
     Tcl_CreateObjCommand(interp, "tls::digests", DigestsObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
     Tcl_CreateObjCommand(interp, "tls::macs", MacsObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
