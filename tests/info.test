@@ -156,54 +156,68 @@ test Ciphers_Errors-5.10 {TLS1.3} -constraints {!tls1.3} -body {
 	::tls::ciphers tls1.3
     } -result {tls1.3: protocol not supported} -returnCodes {1}
 
+# Test Cipher Info
+
+
+test Cipher_Info-6.1 {AES-256-CCM} -body {
+	tls::cipher aes-256-ccm
+    } -result {nid aes-256-ccm name id-aes256-CCM description {} block_size 1 key_length 32 iv_length 12 type aes-256-ccm provider {} mode CCM flags {{Variable Length} 0 {Always Call Init} 1 {Custom IV} 1 {Control Init} 1 {Custom Cipher} 1 {AEAD Cipher} 1 {Custom Copy} 1 {Non FIPS Allow} 0}}
+
 # Test list digests
 
 
-test Digests_List-6.1 {All} -body {
+test Digests_List-7.1 {All} -body {
 	lcompare [lsort [exec_get_digests]] [lsort [tls::digests]]
     } -result {missing {} unexpected {}}
+
+# Test Digest Info
+
+
+test Digest_Info-8.1 {md5} -body {
+	tls::digests md5
+    } -result {name MD5 description {} size 16 block_size 64 provider {} type md5 pkey_type md5WithRSAEncryption flags {One-shot 0 XOF 0 DigestAlgorithmId_NULL 0 DigestAlgorithmId_Abscent 0 DigestAlgorithmId_Custom 0 FIPS 0}}
 
 # Test list MACs
 
 
-test MAC_List-7.1 {All} -body {
+test MAC_List-9.1 {All} -body {
 	lcompare [exec_get_macs] [tls::macs]
     } -result {missing {} unexpected {}}
 
 # Test list protocols
 
 
-test Protocols-8.1 {All} -body {
+test Protocols-10.1 {All} -body {
 	lcompare $::protocols [::tls::protocols]
     } -result {missing {ssl2 ssl3} unexpected {}}
 
 # Test show version
 
 
-test Version-9.1 {All} -body {
+test Version-11.1 {All} -body {
 	::tls::version
     } -match {glob} -result {*}
 
-test Version-9.2 {OpenSSL} -constraints {OpenSSL} -body {
+test Version-11.2 {OpenSSL} -constraints {OpenSSL} -body {
 	::tls::version
     } -match {glob} -result {OpenSSL*}
 
 # Error Cases
 
 
-test Error_Cases-10.1 {Digests Too many args} -body {
+test Error_Cases-12.1 {Digests Too many args} -body {
 	::tls::digests too many args
     } -result {wrong # args: should be "::tls::digests"} -returnCodes {1}
 
-test Error_Cases-10.2 {MACs Too many args} -body {
+test Error_Cases-12.2 {MACs Too many args} -body {
 	::tls::macs too many args
     } -result {wrong # args: should be "::tls::macs"} -returnCodes {1}
 
-test Error_Cases-10.3 {Protocols Too many args} -body {
+test Error_Cases-12.3 {Protocols Too many args} -body {
 	::tls::protocols too many args
     } -result {wrong # args: should be "::tls::protocols"} -returnCodes {1}
 
-test Error_Cases-10.4 {Version Too many args} -body {
+test Error_Cases-12.4 {Version Too many args} -body {
 	::tls::version too many args
     } -result {wrong # args: should be "::tls::version"} -returnCodes {1}
 

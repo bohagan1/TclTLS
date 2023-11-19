@@ -54,8 +54,14 @@ Ciphers Errors,TLS1.1,!tls1.1,,::tls::ciphers tls1.1,,,tls1.0: protocol not supp
 Ciphers Errors,TLS1.2,!tls1.2,,::tls::ciphers tls1.2,,,tls1.1: protocol not supported,,,1
 Ciphers Errors,TLS1.3,!tls1.3,,::tls::ciphers tls1.3,,,tls1.3: protocol not supported,,,1
 ,,,,,,,,,,
+command,# Test Cipher Info,,,,,,,,,
+Cipher Info,AES-256-CCM,,,tls::cipher aes-256-ccm,,,nid aes-256-ccm name id-aes256-CCM description {} block_size 1 key_length 32 iv_length 12 type aes-256-ccm provider {} mode CCM flags {{Variable Length} 0 {Always Call Init} 1 {Custom IV} 1 {Control Init} 1 {Custom Cipher} 1 {AEAD Cipher} 1 {Custom Copy} 1 {Non FIPS Allow} 0},,,
+,,,,,,,,,,
 command,# Test list digests,,,,,,,,,
 Digests List,All,,,lcompare [lsort [exec_get_digests]] [lsort [tls::digests]],,,missing {} unexpected {},,,
+,,,,,,,,,,
+command,# Test Digest Info,,,,,,,,,
+Digest Info,md5,,,tls::digests md5,,,name MD5 description {} size 16 block_size 64 provider {} type md5 pkey_type md5WithRSAEncryption flags {One-shot 0 XOF 0 DigestAlgorithmId_NULL 0 DigestAlgorithmId_Abscent 0 DigestAlgorithmId_Custom 0 FIPS 0},,,
 ,,,,,,,,,,
 command,# Test list MACs,,,,,,,,,
 MAC List,All,,,lcompare [exec_get_macs] [tls::macs],,,missing {} unexpected {},,,
