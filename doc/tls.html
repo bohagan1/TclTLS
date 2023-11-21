@@ -127,7 +127,7 @@ used directly.</p>
 	exactly the same as the native Tcl <strong>socket</strong>
 	command except that the options can include any of the
 	applicable <a href="#tls::import"><strong>tls:import</strong></a>
-	options with one additional option:
+	options with one additional option:</dd>
 <blockquote>
     <dl>
 	<dt><strong>-autoservername</strong> <em>bool</em></dt>
@@ -207,7 +207,7 @@ used directly.</p>
 	<dd>Require a valid certificate from peer during SSL handshake.
 	    If this is set to true, then <strong>-request</strong> must
 	    also be set to true. (default is <em>false</em>)</dd>
-	<dt><strong>-securitylevel</strong> <em>integer</em></dt>
+	<dt><strong>-security_level</strong> <em>integer</em></dt>
 	<dd>Set security level. Must be 0 to 5. The security level affects
 	    cipher suite encryption algorithms, supported ECC curves,
 	    supported signature algorithms, DH parameter sizes, certificate
@@ -256,11 +256,11 @@ used directly.</p>
 	this routine will throw an error.</dd>
     <dt>&nbsp;</dt>
     <dt><a name="tls::status"><strong>tls::status</strong>
-    <em>?-local? channel</em></a></dt>
+    <em>?</em><b>-local</b><em>? channel</em></a></dt>
     <dd>Returns the current status of the certificate for an SSL
 	channel. The result is a list of key-value pairs describing
-	the certificate. If the result is an empty list then the
-	SSL handshake has not yet completed. If <em>-local</em> is
+	the certificate. If the SSL handshake has not yet completed,
+	an empty list is returned. If <b>-local</b> is
 	specified, then the local certificate is used.</dd>
 <blockquote>
 	<b>SSL Status</b>
@@ -378,9 +378,9 @@ used directly.</p>
 	<dt><strong>protocol</strong> <em>version</em></dt>
 	<dd>The protocol version used for the connection:
 	    SSL2, SSL3, TLS1, TLS1.1, TLS1.2, TLS1.3, or unknown.</dd>
-	<dt><strong>renegotiation</strong> <em>boolean</em></dt>
+	<dt><strong>renegotiation_allowed</strong> <em>boolean</em></dt>
 	<dd>Whether protocol renegotiation is supported or not.</dd>
-	<dt><strong>securitylevel</strong> <em>level</em></dt>
+	<dt><strong>security_level</strong> <em>level</em></dt>
 	<dd>The security level used for selection of ciphers, key size, etc.</dd>
 	<dt><strong>session_reused</strong> <em>boolean</em></dt>
 	<dd>Whether the session has been reused or not.</dd>
@@ -390,6 +390,8 @@ used directly.</p>
 	<dd>Compression method.</dd>
 	<dt><strong>expansion</strong> <em>mode</em></dt>
 	<dd>Expansion method.</dd>
+	<dt><strong>caList</strong> <em>list</em></dt>
+	<dd>List of Certificate Authorities (CA) for X.509 certificate.</dd>
     </dl>
 </blockquote>
 <blockquote>
@@ -399,16 +401,21 @@ used directly.</p>
 	<dd>The current cipher in use for the connection.</dd>
 	<dt><strong>standard_name</strong> <em>name</em></dt>
 	<dd>The standard RFC name of cipher.</dd>
-	<dt><strong>bits</strong> <em>n</em></dt>
+	<dt><strong>algorithm_bits</strong> <em>n</em></dt>
 	<dd>The number of processed bits used for cipher.</dd>
 	<dt><strong>secret_bits</strong> <em>n</em></dt>
 	<dd>The number of secret bits used for cipher.</dd>
 	<dt><strong>min_version</strong> <em>version</em></dt>
 	<dd>The minimum protocol version for cipher.</dd>
-	<dt><strong>id</strong> <em>id</em></dt>
+	<dt><strong>cipher_is_aead</strong> <em>boolean</em></dt>
+	<dd>Whether the cipher is Authenticated encryption with associated
+	data (AEAD).</dd>
+	<dt><strong>cipher_id</strong> <em>id</em></dt>
 	<dd>The OpenSSL cipher id.</dd>
 	<dt><strong>description</strong> <em>string</em></dt>
 	<dd>A text description of the cipher.</dd>
+	<dt><strong>handshake_digest</strong> <em>boolean</em></dt>
+	<dd>Digest used during handshake.</dd>
     </dl>
 </blockquote>
 <blockquote>
@@ -474,49 +481,72 @@ used directly.</p>
 
     <br>
     <dt><a name="tls::digest"><strong>tls::digest</strong> <b>-digest</b>
-	<em>name ?-bin|-hex? [-file filename | -command cmdName |
-	-chan channelId | -data data]</em></a></dt>
-    <dd>Calculate the message digest for data using <em>digest</em> hash
-	function. Returns value as a hex string (default) or as a binary value
-	with <b>-bin</b> or <b>-binary</b> option. Digest can be any OpenSSL
-	supported hash function including: <b>md4</b>, <b>md5</b>, <b>sha1</b>,
+	<em>name ?</em><b>-bin</b>|<b>-hex</b><em>? [</em><b>-file</b> <em>filename | </em><b>-command</b> <em>cmdName |
+	</em><b>-chan</b> <em>channelId | </em><b>-data</b> <em>data]</em></a></dt>
+    <dd>Calculate the message digest (MD) of data using <em>name</em> hash
+	function and return the resulting hash value as a hex string (default)
+	or as a binary value with <b>-bin</b> or <b>-binary</b> option. MDs
+	are used to ensure the integrity of data. The hash function can be any
+	supported OpenSSL algorithm such as <b>md4</b>, <b>md5</b>, <b>sha1</b>,
 	<b>sha256</b>, <b>sha512</b>, <b>sha3-256</b>, etc. See
-	<b>tls::digests</b> command for a full list.
+	<b>tls::digests</b> command for a full list. In OpenSSL 3.0+, older
+	algorithms may reside in the legacy provider.
 	<br>
 	Using the <b>-data</b> option will immediately return the message
-	digest for <em>data</em> in the specified format.
-	<br>
+	digest for <em>data</em> in the specified format. Example code:
+<blockquote><code>
+		set md [::tls::digest sha256 "Some example data."]<br>
+</code></blockquote>
 	Using the <b>-file</b> or <b>-filename</b> option will open file
 	<em>filename</em>, read the file data, close the file, and return the
 	message digest in the specified format. This uses the TCL APIs, so VFS
-	files are supported.
-	<br>
+	files are supported. Example code:
+<blockquote><code>
+		set md [::tls::digest -digest sha256 -file test_file.txt]<br>
+</code></blockquote>
 	Using the <b>-chan</b> or <b>-channel</b> option, a stacked channel is
 	created for <em>channelId</em> and data read from the channel is used
 	to calculate a message digest with the result returned with the last
 	read operation before EOF. Channel is automatically set to binary mode.
-	<br>
+	Example code:
+<blockquote><code>
+		set ch [open test_file.txt r]<br>
+		::tls::digest -digest sha256 -chan $ch<br>
+		while {![eof $ch]} {set md [read $ch 4096]}<br>
+		close $ch
+</code></blockquote>
 	Using the <b>-command</b> option, a new command <em>cmdName</em> is
 	created and returned. To add data to the hash function, call
 	&quot;<em>cmdName</em> <b>update</b> <em>data</em>&quot;, where data is
 	the data to add. When done, call &quot;<em>cmdName</em> <b>finalize</b>&quot;
-	to return the message digest.
+	to return the message digest. Example code:
+<blockquote><code>
+		set cmd [::tls::digest -digest sha256 -command ::tls::temp]<br>
+		$cmd update "Some data. "<br>
+		$cmd update "More data."<br>
+		set md [$cmd finalize]
+</code></blockquote>
 	</dd>
 
     <dt><a name="tls::cmac"><strong>tls::cmac</strong> <b>-cipher</b> <em>name</em>
-	<b>-key</b> <em>key ?-bin|-hex? [-file filename | -command cmdName |
-	-chan channelId | -data data]</em></a></dt>
-    <dd>Calculate the Cipher-based Message Authentication Code (CMAC). Same arguments
-	as <b>tls::digest</b> with additional option <b>-cipher</b> to specify the
-	cipher to use and for certain ciphers, <b>-key</b> to specify the key.</dd>
+	<b>-key</b> <em>key ?</em><b>-bin</b>|<b>-hex</b><em>? [</em><b>-file</b> <em>filename | </em><b>-command</b> <em>cmdName |
+	</em><b>-chan</b> <em>channelId | </em><b>-data</b> <em>data]</em></a></dt>
+    <dd>Calculate the Cipher-based Message Authentication Code (CMAC). MACs
+	are used to ensure authenticity and the integrity of data. It uses the
+	same options as <b>tls::digest</b>, plus the additional option
+	<b>-cipher</b> to specify the cipher to use and for certain ciphers,
+	<b>-key</b> to specify the key.</dd>
 
     <dt><a name="tls::hmac"><strong>tls::hmac</strong> <b>-digest</b> <em>name</em>
-	<b>-key</b> <em>key ?-bin|-hex? [-file filename | -command cmdName |
-	-chan channelId | -data data]</em></a></dt>
-    <dd>Calculate the Hashed Message Authentication Code (HMAC). Same arguments
-	as <b>tls::digest</b> with additional option <b>-key</b> to specify the
-	key to use. To salt a password, append or prepend the salt
-	data to the password. </dd>
+	<b>-key</b> <em>key ?</em><b>-bin</b>|<b>-hex</b><em>? [</em><b>-file</b> <em>filename | </em><b>-command</b> <em>cmdName |
+	</em><b>-chan</b> <em>channelId | </em><b>-data</b> <em>data]</em></a></dt>
+    <dd>Calculate the Hash-based Message Authentication Code (HMAC). HMACs are
+	used to ensure the data integrity and authenticity of a message using a
+	shared secret key. The cryptographic strength depends upon the size of
+	the key and the security of the hash function used. It uses the same
+	options as <b>tls::digest</b>, plus additional option <b>-key</b> to
+	specify the key to use. To salt a password, append or prepend the salt
+	data to the password.</dd>
 
     <dt><a name="tls::md4"><strong>tls::md4</strong> <em>data</em></a></dt>
     <dd>Returns the MD4 message-digest for <em>data</em> as a hex string.</dd>

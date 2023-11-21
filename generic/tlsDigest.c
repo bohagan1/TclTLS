@@ -28,6 +28,7 @@ const char *hex = "0123456789abcdef";
 /* Digest format and operation */
 #define BIN_FORMAT	0x01
 #define HEX_FORMAT	0x02
+#define IS_XOF		0x08
 #define TYPE_MD		0x10
 #define TYPE_HMAC	0x20
 #define TYPE_CMAC	0x40
@@ -239,9 +240,15 @@ int Tls_DigestFinialize(Tcl_Interp *interp, DigestState *statePtr, Tcl_Obj **res
 
     /* Finalize hash function and calculate message digest */
     if (statePtr->format & TYPE_MD) {
-	res = EVP_DigestFinal_ex(statePtr->ctx, md_buf, &md_len);
+	if (!(statePtr->format & IS_XOF)) {
+	    res = EVP_DigestFinal_ex(statePtr->ctx, md_buf, &md_len);
+	} else {
+	    res = EVP_DigestFinalXOF(statePtr->ctx, md_buf, EVP_MAX_MD_SIZE);
+	}
+
     } else if (statePtr->format & TYPE_HMAC) {
 	res = HMAC_Final(statePtr->hctx, md_buf, &md_len);
+
     } else if (statePtr->format & TYPE_CMAC) {
 	size_t len;
 	res = CMAC_Final(statePtr->cctx, md_buf, &len);
@@ -897,7 +904,7 @@ int InstanceObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj 
  *	Nothing
  *
  * Side effects:
- *	Destroys struct
+ *	Destroys state info structure
  *
  *-------------------------------------------------------------------
  */
@@ -1164,6 +1171,8 @@ static int DigestMain(int type, Tcl_Interp *interp, int objc, Tcl_Obj *const obj
 	if (md == NULL) {
 	    Tcl_AppendResult(interp, "Invalid digest \"", digestName, "\"", NULL);
 	    return TCL_ERROR;
+	} else if (md == EVP_shake128() || md == EVP_shake256()) {
+	    format |= IS_XOF;
 	}
     } else if (type == TYPE_MD || type == TYPE_HMAC) {
 	Tcl_AppendResult(interp, "No digest specified", NULL);
