@@ -49,146 +49,146 @@ test Digest_Cmds-1.5 {sha512 cmd} -body {
 
 
 test Digest_Chan-2.1 {md4} -body {
-	read_chan ::tls::digest $test_file -digest md4
+	read_chan ::tls::md $test_file -digest md4
     } -result {793399f792eca2752c6af3234ba70858}
 
 test Digest_Chan-2.2 {md5} -body {
-	read_chan ::tls::digest $test_file -digest md5
+	read_chan ::tls::md $test_file -digest md5
     } -result {962bf0803b4232ec23bd8427bb94ea09}
 
 test Digest_Chan-2.3 {sha1} -body {
-	read_chan ::tls::digest $test_file -digest sha1
+	read_chan ::tls::md $test_file -digest sha1
     } -result {4fe03b7f2568551dfafb98ca6004e65c4b71aa7d}
 
 test Digest_Chan-2.4 {sha256} -body {
-	read_chan ::tls::digest $test_file -digest sha256
+	read_chan ::tls::md $test_file -digest sha256
     } -result {9d3578fc138205cf0ee4b4cef35fe101bb4ecac7b1614c18e6fa48b5c7f95e19}
 
 test Digest_Chan-2.5 {sha512} -body {
-	read_chan ::tls::digest $test_file -digest sha512
+	read_chan ::tls::md $test_file -digest sha512
     } -result {d178e759dc59127071588d2fad173c06238d87e800a6403c0a30daa4faaf05d0e7ce04916afaa6a58a30cbeb597dacb01c62f9fb9d89bab9da630c699e4816f1}
 
 test Digest_Chan-2.6 {md5 bin} -body {
-	binary encode hex [read_chan ::tls::digest $test_file -bin -digest md5]
+	binary encode hex [read_chan ::tls::md $test_file -bin -digest md5]
     } -result {962bf0803b4232ec23bd8427bb94ea09}
 
 test Digest_Chan-2.7 {md5 hex} -body {
-	read_chan ::tls::digest $test_file -hex -digest md5
+	read_chan ::tls::md $test_file -hex -digest md5
     } -result {962bf0803b4232ec23bd8427bb94ea09}
 
 # Test digest command for object command
 
 
 test Digest_Command-3.1 {md4} -body {
-	accumulate $test_data ::tls::digest -digest md4
+	accumulate $test_data ::tls::md -digest md4
     } -result {793399f792eca2752c6af3234ba70858}
 
 test Digest_Command-3.2 {md5} -body {
-	accumulate $test_data ::tls::digest -digest md5
+	accumulate $test_data ::tls::md -digest md5
     } -result {962bf0803b4232ec23bd8427bb94ea09}
 
 test Digest_Command-3.3 {sha1} -body {
-	accumulate $test_data ::tls::digest -digest sha1
+	accumulate $test_data ::tls::md -digest sha1
     } -result {4fe03b7f2568551dfafb98ca6004e65c4b71aa7d}
 
 test Digest_Command-3.4 {sha256} -body {
-	accumulate $test_data ::tls::digest -digest sha256
+	accumulate $test_data ::tls::md -digest sha256
     } -result {9d3578fc138205cf0ee4b4cef35fe101bb4ecac7b1614c18e6fa48b5c7f95e19}
 
 test Digest_Command-3.5 {sha512} -body {
-	accumulate $test_data ::tls::digest -digest sha512
+	accumulate $test_data ::tls::md -digest sha512
     } -result {d178e759dc59127071588d2fad173c06238d87e800a6403c0a30daa4faaf05d0e7ce04916afaa6a58a30cbeb597dacb01c62f9fb9d89bab9da630c699e4816f1}
 
 test Digest_Command-3.6 {md5 bin} -body {
-	binary encode hex [accumulate $test_data ::tls::digest -digest md5 -bin]
+	binary encode hex [accumulate $test_data ::tls::md -digest md5 -bin]
     } -result {962bf0803b4232ec23bd8427bb94ea09}
 
 test Digest_Command-3.7 {md5 hex} -body {
-	accumulate $test_data ::tls::digest -digest md5 -hex
+	accumulate $test_data ::tls::md -digest md5 -hex
     } -result {962bf0803b4232ec23bd8427bb94ea09}
 
 # Test digest command for data shortcut
 
 
 test Digest_Data-4.1 {md4} -body {
-	::tls::digest md4 $test_data
+	::tls::md md4 $test_data
     } -result {793399f792eca2752c6af3234ba70858}
 
 test Digest_Data-4.2 {md5} -body {
-	::tls::digest md5 $test_data
+	::tls::md md5 $test_data
     } -result {962bf0803b4232ec23bd8427bb94ea09}
 
 test Digest_Data-4.3 {sha1} -body {
-	::tls::digest sha1 $test_data
+	::tls::md sha1 $test_data
     } -result {4fe03b7f2568551dfafb98ca6004e65c4b71aa7d}
 
 test Digest_Data-4.4 {sha256} -body {
-	::tls::digest sha256 $test_data
+	::tls::md sha256 $test_data
     } -result {9d3578fc138205cf0ee4b4cef35fe101bb4ecac7b1614c18e6fa48b5c7f95e19}
 
 test Digest_Data-4.5 {sha512} -body {
-	::tls::digest sha512 $test_data
+	::tls::md sha512 $test_data
     } -result {d178e759dc59127071588d2fad173c06238d87e800a6403c0a30daa4faaf05d0e7ce04916afaa6a58a30cbeb597dacb01c62f9fb9d89bab9da630c699e4816f1}
 
 # Test digest command for data
 
 test Digest_Data-4.6 {md4} -body {
-	::tls::digest -digest md4 -data $test_data
+	::tls::md -digest md4 -data $test_data
     } -result {793399f792eca2752c6af3234ba70858}
 
 test Digest_Data-4.7 {md5} -body {
-	::tls::digest -digest md5 -data $test_data
+	::tls::md -digest md5 -data $test_data
     } -result {962bf0803b4232ec23bd8427bb94ea09}
 
 test Digest_Data-4.8 {sha1} -body {
-	::tls::digest -digest sha1 -data $test_data
+	::tls::md -digest sha1 -data $test_data
     } -result {4fe03b7f2568551dfafb98ca6004e65c4b71aa7d}
 
 test Digest_Data-4.9 {sha256} -body {
-	::tls::digest -digest sha256 -data $test_data
+	::tls::md -digest sha256 -data $test_data
     } -result {9d3578fc138205cf0ee4b4cef35fe101bb4ecac7b1614c18e6fa48b5c7f95e19}
 
 test Digest_Data-4.10 {sha512} -body {
-	::tls::digest -digest sha512 -data $test_data
+	::tls::md -digest sha512 -data $test_data
     } -result {d178e759dc59127071588d2fad173c06238d87e800a6403c0a30daa4faaf05d0e7ce04916afaa6a58a30cbeb597dacb01c62f9fb9d89bab9da630c699e4816f1}
 
 test Digest_Data-4.11 {md5 bin} -body {
-	binary encode hex [::tls::digest -digest md5 -data $test_data -bin]
+	binary encode hex [::tls::md -digest md5 -data $test_data -bin]
     } -result {962bf0803b4232ec23bd8427bb94ea09}
 
 test Digest_Data-4.12 {md5 hex} -body {
-	::tls::digest -digest md5 -data $test_data -hex
+	::tls::md -digest md5 -data $test_data -hex
     } -result {962bf0803b4232ec23bd8427bb94ea09}
 
 # Test digest command for file
 
 
 test Digest_File-5.1 {md4} -body {
-	::tls::digest -digest md4 -file $test_file
+	::tls::md -digest md4 -file $test_file
     } -result {793399f792eca2752c6af3234ba70858}
 
 test Digest_File-5.2 {md5} -body {
-	::tls::digest -digest md5 -file $test_file
+	::tls::md -digest md5 -file $test_file
     } -result {962bf0803b4232ec23bd8427bb94ea09}
 
 test Digest_File-5.3 {sha1} -body {
-	::tls::digest -digest sha1 -file $test_file
+	::tls::md -digest sha1 -file $test_file
     } -result {4fe03b7f2568551dfafb98ca6004e65c4b71aa7d}
 
 test Digest_File-5.4 {sha256} -body {
-	::tls::digest -digest sha256 -file $test_file
+	::tls::md -digest sha256 -file $test_file
     } -result {9d3578fc138205cf0ee4b4cef35fe101bb4ecac7b1614c18e6fa48b5c7f95e19}
 
 test Digest_File-5.5 {sha512} -body {
-	::tls::digest -digest sha512 -file $test_file
+	::tls::md -digest sha512 -file $test_file
     } -result {d178e759dc59127071588d2fad173c06238d87e800a6403c0a30daa4faaf05d0e7ce04916afaa6a58a30cbeb597dacb01c62f9fb9d89bab9da630c699e4816f1}
 
 test Digest_File-5.6 {md5 bin} -body {
-	binary encode hex [::tls::digest -digest md5 -file $test_file -bin]
+	binary encode hex [::tls::md -digest md5 -file $test_file -bin]
     } -result {962bf0803b4232ec23bd8427bb94ea09}
 
 test Digest_File-5.7 {md5 hex} -body {
-	::tls::digest -digest md5 -file $test_file -hex
+	::tls::md -digest md5 -file $test_file -hex
     } -result {962bf0803b4232ec23bd8427bb94ea09}
 
 # Test HMAC command
@@ -218,23 +218,23 @@ test HMAC-6.5 {data bin} -body {
 
 
 test Digest_HMAC-7.1 {data} -body {
-	::tls::digest -digest md5 -key $test_key -data $test_data
+	::tls::md -digest md5 -key $test_key -data $test_data
     } -result {f98327ef3e20ab6d388f676c6a79d93d}
 
 test Digest_HMAC-7.2 {file} -body {
-	::tls::digest -digest md5 -key $test_key -file $test_file
+	::tls::md -digest md5 -key $test_key -file $test_file
     } -result {f98327ef3e20ab6d388f676c6a79d93d}
 
 test Digest_HMAC-7.3 {channel} -body {
-	read_chan ::tls::digest $test_file -digest md5 -key $test_key
+	read_chan ::tls::md $test_file -digest md5 -key $test_key
     } -result {f98327ef3e20ab6d388f676c6a79d93d}
 
 test Digest_HMAC-7.4 {command} -body {
-	accumulate $test_data ::tls::digest -digest md5 -key $test_key
+	accumulate $test_data ::tls::md -digest md5 -key $test_key
     } -result {f98327ef3e20ab6d388f676c6a79d93d}
 
 test Digest_HMAC-7.5 {data bin} -body {
-	binary encode hex [::tls::digest -digest md5 -bin -key $test_key -data $test_data]
+	binary encode hex [::tls::md -digest md5 -bin -key $test_key -data $test_data]
     } -result {f98327ef3e20ab6d388f676c6a79d93d}
 
 # Test CMAC command
@@ -266,23 +266,23 @@ test CMAC-8.5 {data bin} -body {
 
 
 test Digest_CMAC-9.1 {data} -body {
-	::tls::digest -cipher $test_cipher -key $test_key -data $test_data
+	::tls::md -cipher $test_cipher -key $test_key -data $test_data
     } -result {baf5c20f9973e2d606b14c7efdfe52fa}
 
 test Digest_CMAC-9.2 {file} -body {
-	::tls::digest -cipher $test_cipher -key $test_key -file $test_file
+	::tls::md -cipher $test_cipher -key $test_key -file $test_file
     } -result {baf5c20f9973e2d606b14c7efdfe52fa}
 
 test Digest_CMAC-9.3 {channel} -body {
-	read_chan ::tls::digest $test_file -cipher $test_cipher -key $test_key
+	read_chan ::tls::md $test_file -cipher $test_cipher -key $test_key
     } -result {baf5c20f9973e2d606b14c7efdfe52fa}
 
 test Digest_CMAC-9.4 {command} -body {
-	accumulate $test_data ::tls::digest -cipher $test_cipher -key $test_key
+	accumulate $test_data ::tls::md -cipher $test_cipher -key $test_key
     } -result {baf5c20f9973e2d606b14c7efdfe52fa}
 
 test Digest_CMAC-9.5 {data bin} -body {
-	binary encode hex [::tls::digest -bin -cipher $test_cipher -key $test_key -data $test_data]
+	binary encode hex [::tls::md -bin -cipher $test_cipher -key $test_key -data $test_data]
     } -result {baf5c20f9973e2d606b14c7efdfe52fa}
 
 # Test MAC command
@@ -300,35 +300,35 @@ test MAC-10.2 {CMAC} -constraints {new_api} -body {
 
 
 test Digest_Errors-11.1 {Too few args} -body {
-	::tls::digest
-    } -result {wrong # args: should be "::tls::digest ?-bin|-hex? ?-cipher name? ?-digest name? ?-key key? ?-mac name? [-channel chan | -command cmdName | -file filename | ?-data? data]"} -returnCodes {1}
+	::tls::md
+    } -result {wrong # args: should be "::tls::md ?-bin|-hex? ?-cipher name? ?-digest name? ?-key key? ?-mac name? [-channel chan | -command cmdName | -file filename | ?-data? data]"} -returnCodes {1}
 
 test Digest_Errors-11.2 {Too many args} -body {
-	::tls::digest too many command line args to pass the test without an error or failing
-    } -result {wrong # args: should be "::tls::digest ?-bin|-hex? ?-cipher name? ?-digest name? ?-key key? ?-mac name? [-channel chan | -command cmdName | -file filename | ?-data? data]"} -returnCodes {1}
+	::tls::md too many command line args to pass the test without an error or failing
+    } -result {wrong # args: should be "::tls::md ?-bin|-hex? ?-cipher name? ?-digest name? ?-key key? ?-mac name? [-channel chan | -command cmdName | -file filename | ?-data? data]"} -returnCodes {1}
 
 test Digest_Errors-11.3 {Invalid digest} -body {
-	::tls::digest bogus data
+	::tls::md bogus data
     } -result {Invalid digest "bogus"} -returnCodes {1}
 
 test Digest_Errors-11.4 {Invalid digest Arg} -body {
-	::tls::digest -digest bogus -data data
+	::tls::md -digest bogus -data data
     } -result {Invalid digest "bogus"} -returnCodes {1}
 
 test Digest_Errors-11.5 {No digest} -body {
-	::tls::digest -hex -data value
+	::tls::md -hex -data value
     } -result {No digest specified} -returnCodes {1}
 
 test Digest_Errors-11.6 {Invalid option} -body {
-	::tls::digest -digest sha256 -bogus value
+	::tls::md -digest sha256 -bogus value
     } -result {bad option "-bogus": must be -bin, -channel, -cipher, -command, -data, -digest, -file, -filename, -hex, -key, or -mac} -returnCodes {1}
 
 test Digest_Errors-11.7 {Invalid file} -body {
-	::tls::digest -digest sha256 -file bogus
+	::tls::md -digest sha256 -file bogus
     } -result {couldn't open "bogus": no such file or directory} -returnCodes {1}
 
 test Digest_Errors-11.8 {Invalid channel} -body {
-	::tls::digest -digest sha256 -channel bogus
+	::tls::md -digest sha256 -channel bogus
     } -result {can not find channel named "bogus"} -returnCodes {1}
 
 # CMAC Error Cases
