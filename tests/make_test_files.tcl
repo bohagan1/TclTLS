@@ -87,7 +87,7 @@ proc process_config_file {filename} {
 			} elseif {$opt in [list -output -errorOutput]} {
 			    append buffer " " $opt " {" $cmd \n "}"
 			} elseif {$opt in [list -result]} {
-			    if {[string index $cmd 0] in [list \[ \" \{]} {
+			    if {[string index $cmd 0] in [list \[ \" \{ \$]} {
 				append buffer " " $opt " " $cmd
 			    } elseif {[string match {*[\\$]*} $cmd]} {
 				append buffer " " $opt " \"" [string map [list \\\\\" \\\"] [string map [list \" \\\" ] $cmd]] "\""
