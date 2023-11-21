@@ -1098,10 +1098,9 @@ done:
  *-------------------------------------------------------------------
  */
 static int DigestMain(int type, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
-    int idx, format = HEX_FORMAT, res = TCL_OK, flags = 0;
-    const char *digestName, *channel = NULL;
+    int idx, start = 1, format = HEX_FORMAT, res = TCL_OK;
     Tcl_Obj *cmdObj = NULL, *dataObj = NULL, *fileObj = NULL, *keyObj = NULL;
-    unsigned char *cipherName = NULL;
+    const char *digestName = NULL, *cipherName = NULL, *channel = NULL, *opt;
     const EVP_MD *md = NULL;
     const EVP_CIPHER *cipher = NULL;
 
@@ -1123,10 +1122,25 @@ static int DigestMain(int type, Tcl_Interp *interp, int objc, Tcl_Obj *const obj
 	    Tcl_AppendResult(interp, "Invalid digest \"", digestName, "\"", NULL);
 	    return TCL_ERROR;
 	}
+    } else {
+	/* Special case if first arg is digest, cipher, or mac */
+	opt = Tcl_GetStringFromObj(objv[start], NULL);
+	if (opt[0] != '-') {
+	    if (type == TYPE_MD || type == TYPE_HMAC) {
+		digestName = opt;
+		start++;
+	    } else if (type == TYPE_CMAC) {
+		cipherName = opt;
+		start++;
+	    } else if (type == TYPE_MAC) {
+		macName = opt;
+		start++;
+	    }
+	}
     }
 
     /* Get options */
-    for (idx = 1; idx < objc; idx++) {
+    for (idx = start; idx < objc; idx++) {
 	char *opt = Tcl_GetStringFromObj(objv[idx], NULL);
 
 	if (opt[0] != '-') {
@@ -1198,6 +1212,9 @@ static int DigestMain(int type, Tcl_Interp *interp, int objc, Tcl_Obj *const obj
 	res = DigestCommandHandler(interp, cmdObj, md, cipher, format | type, keyObj);
     } else if (dataObj != NULL) {
 	res = DigestDataHandler(interp, dataObj, md, cipher, format | type, keyObj);
+    } else {
+	Tcl_AppendResult(interp, "No operation specified: Use -channel, -command, -data, or -file option", NULL);
+	res = TCL_ERROR;
     }
     return res;
 }
