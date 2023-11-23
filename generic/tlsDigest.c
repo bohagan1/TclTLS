@@ -1101,7 +1101,7 @@ done:
 static int DigestMain(int type, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
     int idx, start = 1, format = HEX_FORMAT, res = TCL_OK;
     Tcl_Obj *cmdObj = NULL, *dataObj = NULL, *fileObj = NULL, *keyObj = NULL;
-    const char *digestName = NULL, *cipherName = NULL, *channel = NULL, *opt;
+    const char *digestName = NULL, *cipherName = NULL, *macName = NULL, *channel = NULL, *opt;
     const EVP_MD *md = NULL;
     const EVP_CIPHER *cipher = NULL;
 
@@ -1110,39 +1110,28 @@ static int DigestMain(int type, Tcl_Interp *interp, int objc, Tcl_Obj *const obj
 
     /* Validate arg count */
     if (objc < 3 || objc > 12) {
-	Tcl_WrongNumArgs(interp, 1, objv, "?-bin|-hex? ?-cipher name? ?-digest name? ?-key key? [-channel chan | -command cmdName | -file filename | ?-data? data]");
+	Tcl_WrongNumArgs(interp, 1, objv, "?-bin|-hex? ?-cipher name? ?-digest name? ?-key key? ?-mac name? [-channel chan | -command cmdName | -file filename | ?-data? data]");
 	return TCL_ERROR;
     }
 
-    /* Optimal case for a digest and blob of data */
-    if (objc == 3 && type == TYPE_MD) {
-	digestName = Tcl_GetStringFromObj(objv[1],NULL);
-	if ((md = EVP_get_digestbyname(digestName)) != NULL) {
-	    return DigestDataHandler(interp, objv[2], md, NULL, HEX_FORMAT | TYPE_MD, NULL);
-	} else {
-	    Tcl_AppendResult(interp, "Invalid digest \"", digestName, "\"", NULL);
-	    return TCL_ERROR;
-	}
-    } else {
-	/* Special case if first arg is digest, cipher, or mac */
-	opt = Tcl_GetStringFromObj(objv[start], NULL);
-	if (opt[0] != '-') {
-	    if (type == TYPE_MD || type == TYPE_HMAC) {
-		digestName = opt;
-		start++;
-	    } else if (type == TYPE_CMAC) {
-		cipherName = opt;
-		start++;
-	    } else if (type == TYPE_MAC) {
-		macName = opt;
-		start++;
-	    }
+    /* Special case of first arg is digest, cipher, or mac */
+    opt = Tcl_GetStringFromObj(objv[start], NULL);
+    if (opt[0] != '-') {
+	if (type == TYPE_MD || type == TYPE_HMAC) {
+	    digestName = opt;
+	    start++;
+	} else if (type == TYPE_CMAC) {
+	    cipherName = opt;
+	    start++;
+	} else if (type == TYPE_MAC) {
+	    macName = opt;
+	    start++;
 	}
     }
 
     /* Get options */
     for (idx = start; idx < objc; idx++) {
-	*opt = Tcl_GetStringFromObj(objv[idx], NULL);
+	opt = Tcl_GetStringFromObj(objv[idx], NULL);
 
 	if (opt[0] != '-') {
 	    break;
@@ -1161,9 +1150,15 @@ static int DigestMain(int type, Tcl_Interp *interp, int objc, Tcl_Obj *const obj
 	OPTOBJ("-file", fileObj);
 	OPTOBJ("-filename", fileObj);
 	OPTOBJ("-key", keyObj);
+	OPTSTR("-mac", macName);
 
-	OPTBAD("option", "-bin, -channel, -cipher, -command, -data, -digest, -file, -filename, -hex, or -key");
+	OPTBAD("option", "-bin, -channel, -cipher, -command, -data, -digest, -file, -filename, -hex, -key, or -mac");
 	return TCL_ERROR;
+    }
+
+    /* If only 1 arg left, it's the data */
+    if (idx < objc && dataObj == NULL) {
+	dataObj = objv[idx];
     }
 
     /* Get cipher */
@@ -1180,7 +1175,7 @@ static int DigestMain(int type, Tcl_Interp *interp, int objc, Tcl_Obj *const obj
 	return TCL_ERROR;
     }
 
-    /* Get digest */
+    /* Get message digest */
     if (digestName != NULL) {
 	md = EVP_get_digestbyname(digestName);
 	if (md == NULL) {
@@ -1199,8 +1194,24 @@ static int DigestMain(int type, Tcl_Interp *interp, int objc, Tcl_Obj *const obj
 	if (type == TYPE_MD) {
 	    type = TYPE_HMAC;
 	}
+
     } else if (type != TYPE_MD) {
 	Tcl_AppendResult(interp, "No key specified", NULL);
+	return TCL_ERROR;
+    }
+
+    /* Get MAC */
+    if (macName != NULL) {
+	if (strcmp(macName, "cmac") == 0) {
+	    type = TYPE_CMAC;
+	} else if (strcmp(macName, "hmac") == 0) {
+	    type = TYPE_HMAC;
+	} else {
+	    Tcl_AppendResult(interp, "Invalid MAC \"", macName, "\"", NULL);
+	    return TCL_ERROR;
+	}
+    } else if (type == TYPE_MAC) {
+	Tcl_AppendResult(interp, "No MAC specified", NULL);
 	return TCL_ERROR;
     }
 
@@ -1245,6 +1256,10 @@ static int CMACObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_O
 
 static int HMACObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
     return DigestMain(TYPE_HMAC, interp, objc, objv);
+}
+
+static int MACObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
+    return DigestMain(TYPE_MAC, interp, objc, objv);
 }
 
 /*
@@ -1314,6 +1329,7 @@ int Tls_DigestCommands(Tcl_Interp *interp) {
     Tcl_CreateObjCommand(interp, "tls::md", MdObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
     Tcl_CreateObjCommand(interp, "tls::cmac", CMACObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
     Tcl_CreateObjCommand(interp, "tls::hmac", HMACObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
+    Tcl_CreateObjCommand(interp, "tls::mac", MACObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
     Tcl_CreateObjCommand(interp, "tls::md4", MD4ObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
     Tcl_CreateObjCommand(interp, "tls::md5", MD5ObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
     Tcl_CreateObjCommand(interp, "tls::sha1", SHA1ObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);

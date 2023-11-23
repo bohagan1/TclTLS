@@ -548,6 +548,16 @@ used directly.</p>
 	specify the key to use. To salt a password, append or prepend the salt
 	data to the password.</dd>
 
+    <dt><a name="tls::mac"><strong>tls::mac</strong> <b>-cipher</b> <em>name</em>
+	<b>-digest</b> <em>name</em> <b>-key</b> <em>key ?</em><b>-bin</b>|<b>-hex</b><em>?
+	[</em><b>-file</b> <em>filename | </em><b>-command</b> <em>cmdName |
+	</em><b>-chan</b> <em>channelId | </em><b>-data</b> <em>data]</em></a></dt>
+    <dd>(OpenSSL 3.0+) Calculate the Message Authentication Code (MAC). MACs
+	are used to ensure authenticity and the integrity of data. It uses the
+	same options as <b>tls::digest</b>, plus the additional options
+	<b>-cipher</b> to specify the cipher to use, <b>-digest</b> to specify
+	the digest, and for certain ciphers, <b>-key</b> to specify the key.</dd>
+
     <dt><a name="tls::md4"><strong>tls::md4</strong> <em>data</em></a></dt>
     <dd>Returns the MD4 message-digest for <em>data</em> as a hex string.</dd>
 
