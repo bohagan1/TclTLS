@@ -43,7 +43,7 @@ set test_alt_file "md_alt_data.dat"
 set test_key "Example key"
 ::tcltest::makeFile $test_data $test_file
 
-# Test digest short-cut commands
+# Test short-cut commands
 
 
 test Digest_Cmds-1.1 {md4 cmd} -body {
@@ -66,7 +66,7 @@ test Digest_Cmds-1.5 {sha512 cmd} -body {
 	::tls::sha512 $test_data
     } -result {d178e759dc59127071588d2fad173c06238d87e800a6403c0a30daa4faaf05d0e7ce04916afaa6a58a30cbeb597dacb01c62f9fb9d89bab9da630c699e4816f1}
 
-# Test digest command for read channel
+# Test MD command for read channel
 
 
 test Digest_Chan_Read-2.1 {md4} -body {
@@ -97,7 +97,7 @@ test Digest_Chan_Read-2.7 {md5 hex} -body {
 	digest_read_chan ::tls::md $test_file -hex -digest md5
     } -result {962bf0803b4232ec23bd8427bb94ea09}
 
-# Test digest command for write channel
+# Test MD command for write channel
 
 
 test Digest_Chan_Write-3.1 {md4} -body {
@@ -128,7 +128,7 @@ test Digest_Chan_Write-3.7 {md5 hex} -body {
 	digest_write_chan ::tls::md $test_alt_file $test_data -hex -digest md5
     } -result {962bf0803b4232ec23bd8427bb94ea09}
 
-# Test digest command for object command
+# Test MD command for object command
 
 
 test Digest_Command-4.1 {md4} -body {
@@ -159,7 +159,7 @@ test Digest_Command-4.7 {md5 hex} -body {
 	digest_accumulate $test_data ::tls::md -digest md5 -hex
     } -result {962bf0803b4232ec23bd8427bb94ea09}
 
-# Test digest command for data shortcut
+# Test MD command for data shortcut
 
 
 test Digest_Data-5.1 {md4} -body {
@@ -182,7 +182,7 @@ test Digest_Data-5.5 {sha512} -body {
 	::tls::md sha512 $test_data
     } -result {d178e759dc59127071588d2fad173c06238d87e800a6403c0a30daa4faaf05d0e7ce04916afaa6a58a30cbeb597dacb01c62f9fb9d89bab9da630c699e4816f1}
 
-# Test digest command for data
+# Test MD command for data
 
 test Digest_Data-5.6 {md4} -body {
 	::tls::md -digest md4 -data $test_data
@@ -212,7 +212,7 @@ test Digest_Data-5.12 {md5 hex} -body {
 	::tls::md -digest md5 -data $test_data -hex
     } -result {962bf0803b4232ec23bd8427bb94ea09}
 
-# Test digest command for file
+# Test MD command for file
 
 
 test Digest_File-6.1 {md4} -body {
@@ -348,7 +348,7 @@ test MAC-11.2 {CMAC} -constraints {new_api} -body {
 	::tls::mac -cipher $test_cipher -digest sha256 -mac cmac -key $test_key -data $test_data
     } -result {498ef5ef71424f81da7499b2eeae1d0a348dd40b841ea27bdde494f6bc9046ff}
 
-# Digest Error Cases
+# MD Error Cases
 
 
 test Digest_Errors-12.1 {Too few args} -body {
@@ -382,6 +382,10 @@ test Digest_Errors-12.7 {Invalid file} -body {
 test Digest_Errors-12.8 {Invalid channel} -body {
 	::tls::md -digest sha256 -channel bogus
     } -result {can not find channel named "bogus"} -returnCodes {1}
+
+test Digest_Errors-12.9 {No operation} -body {
+	::tls::md -digest sha256 -bin
+    } -result {No operation specified: Use -channel, -command, -data, or -file option} -returnCodes {1}
 
 # CMAC Error Cases
 
@@ -424,28 +428,129 @@ test MAC_Errors-15.1 {Too few args} -constraints {new_api} -body {
 	::tls::mmac
     } -result {wrong # args: should be "::tls::mac ?-bin|-hex? ?-cipher name? ?-digest name? ?-key key? ?-mac name? [-channel chan | -command cmdName | -file filename | ?-data? data]"} -returnCodes {1}
 
-test MAC_Errors-15.2 {No key} -constraints {new_api} -body {
+test MAC_Errors-15.2 {No mac} -constraints {new_api} -body {
+	::tls::mac -hex -data value
+    } -result {No MAC specified} -returnCodes {1}
+
+test MAC_Errors-15.3 {No key} -constraints {new_api} -body {
 	::tls::mac -digest sha256 -data value
     } -result {No key specified} -returnCodes {1}
+
+test MAC_Errors-15.4 {Too many args} -constraints {new_api} -body {
+	::tls::mac too many command line args to pass the test without an error or failing
+    } -result {wrong # args: should be "::tls::mac ?-bin|-hex? ?-cipher name? ?-digest name? ?-key key? ?-mac name? [-channel chan | -command cmdName | -file filename | ?-data? data]"} -returnCodes {1}
+
+# RFC 1321 Message Digest 5
+
+
+test RFC1321-MD5-16.1 {TC1} -body {
+	::tls::md -digest md5 -data ""
+    } -result {d41d8cd98f00b204e9800998ecf8427e}
+
+test RFC1321-MD5-16.2 {TC2} -body {
+	::tls::md -digest md5 -data "a"
+    } -result {0cc175b9c0f1b6a831c399e269772661}
+
+test RFC1321-MD5-16.3 {TC3} -body {
+	::tls::md -digest md5 -data "abc"
+    } -result {900150983cd24fb0d6963f7d28e17f72}
+
+test RFC1321-MD5-16.4 {TC4} -body {
+	::tls::md -digest md5 -data "message digest"
+    } -result {f96b697d7cb7938d525a2f31aaf161d0}
+
+test RFC1321-MD5-16.5 {TC5} -body {
+	::tls::md -digest md5 -data "abcdefghijklmnopqrstuvwxyz"
+    } -result {c3fcd3d76192e4007dfb496cca67e13b}
+
+test RFC1321-MD5-16.6 {TC6} -body {
+	::tls::md -digest md5 -data "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+    } -result {d174ab98d277d9f5a5611c2c9f419d9f}
+
+test RFC1321-MD5-16.7 {TC7} -body {
+	::tls::md -digest md5 -data [string repeat "1234567890" 8]
+    } -result {57edf4a22be3c955ac49da2e2107b67a}
+
+# RFC 6234 SHA1
+
+
+test RFC6234-MD-SHA1-17.1 {TC1} -body {
+	::tls::md -digest sha1 -data "abc"
+    } -result {a9993e364706816aba3e25717850c26c9cd0d89d}
+
+test RFC6234-MD-SHA1-17.2 {TC2_1} -body {
+	::tls::md -digest sha1 -data "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq"
+    } -result {84983e441c3bd26ebaae4aa1f95129e5e54670f1}
+
+test RFC6234-MD-SHA1-17.3 {TC3} -body {
+	::tls::md -digest sha1 -data [string repeat "a" 1000000]
+    } -result {34aa973cd4c4daa4f61eeb2bdbad27316534016f}
+
+test RFC6234-MD-SHA1-17.4 {TC4} -body {
+	::tls::md -digest sha1 -data [string repeat "01234567" 80]
+    } -result {dea356a2cddd90c7a7ecedc5ebb563934f460452}
+
+test RFC6234-MD-SHA1-17.5 {TC6} -body {
+	::tls::md -digest sha1 -data "\x5e"
+    } -result {5e6f80a34a9798cafc6a5db96cc57ba4c4db59c2}
+
+test RFC6234-MD-SHA1-17.6 {TC8_1} -body {
+	::tls::md -digest sha1 -data "\x9a\x7d\xfd\xf1\xec\xea\xd0\x6e\xd6\x46\xaa\x55\xfe\x75\x71\x46"
+    } -result {82abff6605dbe1c17def12a394fa22a82b544a35}
+
+test RFC6234-MD-SHA1-17.7 {TC10_1} -body {
+	::tls::md -digest sha1 -data "\xf7\x8f\x92\x14\x1b\xcd\x17\x0a\xe8\x9b\x4f\xba\x15\xa1\xd5\x9f\x3f\xd8\x4d\x22\x3c\x92\x51\xbd\xac\xbb\xae\x61\xd0\x5e\xd1\x15\xa0\x6a\x7c\xe1\x17\xb7\xbe\xea\xd2\x44\x21\xde\xd9\xc3\x25\x92\xbd\x57\xed\xea\xe3\x9c\x39\xfa\x1f\xe8\x94\x6a\x84\xd0\xcf\x1f\x7b\xee\xad\x17\x13\xe2\xe0\x95\x98\x97\x34\x7f\x67\xc8\x0b\x04\x00\xc2\x09\x81\x5d\x6b\x10\xa6\x83\x83\x6f\xd5\x56\x2a\x56\xca\xb1\xa2\x8e\x81\xb6\x57\x66\x54\x63\x1c\xf1\x65\x66\xb8\x6e\x3b\x33\xa1\x08\xb0\x53\x07\xc0\x0a\xff\x14\xa7\x68\xed\x73\x50\x60\x6a\x0f\x85\xe6\xa9\x1d\x39\x6f\x5b\x5c\xbe\x57\x7f\x9b\x38\x80\x7c\x7d\x52\x3d\x6d\x79\x2f\x6e\xbc\x24\xa4\xec\xf2\xb3\xa4\x27\xcd\xbb\xfb"
+    } -result {cb0082c8f197d260991ba6a460e76e202bad27b3}
+
+# RFC 6234 SHA256
+
+
+test RFC6234-MD-SHA256-18.1 {TC1} -body {
+	::tls::md -digest sha256 -data "abc"
+    } -result {ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad}
+
+test RFC6234-MD-SHA256-18.2 {TC2_1} -body {
+	::tls::md -digest sha256 -data "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq"
+    } -result {248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1}
+
+test RFC6234-MD-SHA256-18.3 {TC3} -body {
+	::tls::md -digest sha256 -data [string repeat "a" 1000000]
+    } -result {cdc76e5c9914fb9281a1c7e284d73e67f1809a48a497200e046d39ccc7112cd0}
+
+test RFC6234-MD-SHA256-18.4 {TC4} -body {
+	::tls::md -digest sha256 -data [string repeat "01234567" 80]
+    } -result {594847328451bdfa85056225462cc1d867d877fb388df0ce35f25ab5562bfbb5}
+
+test RFC6234-MD-SHA256-18.5 {TC6} -body {
+	::tls::md -digest sha256 -data "\x19"
+    } -result {68aa2e2ee5dff96e3355e6c7ee373e3d6a4e17f75f9518d843709c0c9bc3e3d4}
+
+test RFC6234-MD-SHA256-18.6 {TC8_256} -body {
+	::tls::md -digest sha256 -data "\xe3\xd7\x25\x70\xdc\xdd\x78\x7c\xe3\x88\x7a\xb2\xcd\x68\x46\x52"
+    } -result {175ee69b02ba9b58e2b0a5fd13819cea573f3940a94f825128cf4209beabb4e8}
+
+test RFC6234-MD-SHA256-18.7 {TC10_256} -body {
+	::tls::md -digest sha256 -data "\x83\x26\x75\x4e\x22\x77\x37\x2f\x4f\xc1\x2b\x20\x52\x7a\xfe\xf0\x4d\x8a\x05\x69\x71\xb1\x1a\xd5\x71\x23\xa7\xc1\x37\x76\x00\x00\xd7\xbe\xf6\xf3\xc1\xf7\xa9\x08\x3a\xa3\x9d\x81\x0d\xb3\x10\x77\x7d\xab\x8b\x1e\x7f\x02\xb8\x4a\x26\xc7\x73\x32\x5f\x8b\x23\x74\xde\x7a\x4b\x5a\x58\xcb\x5c\x5c\xf3\x5b\xce\xe6\xfb\x94\x6e\x5b\xd6\x94\xfa\x59\x3a\x8b\xeb\x3f\x9d\x65\x92\xec\xed\xaa\x66\xca\x82\xa2\x9d\x0c\x51\xbc\xf9\x33\x62\x30\xe5\xd7\x84\xe4\xc0\xa4\x3f\x8d\x79\xa3\x0a\x16\x5c\xba\xbe\x45\x2b\x77\x4b\x9c\x71\x09\xa9\x7d\x13\x8f\x12\x92\x28\x96\x6f\x6c\x0a\xdc\x10\x6a\xad\x5a\x9f\xdd\x30\x82\x57\x69\xb2\xc6\x71\xaf\x67\x59\xdf\x28\xeb\x39\x3d\x54\xd6"
+    } -result {97dbca7df46d62c8a422c941dd7e835b8ad3361763f7e9b2d95f4f0da6e1ccbc}
 
 # RFC 4231 HMAC Examples Test Case #1
 set key [binary decode hex [string repeat "0b" 20]]
 set data "Hi There"
 
 
-test RFC4231_TC1-16.1 {sha224} -body {
+test RFC4231_HMAC_TC1-19.1 {sha224} -body {
 	::tls::hmac -digest sha224 -key $key -data $data
     } -result {896fb1128abbdf196832107cd49df33f47b4b1169912ba4f53684b22}
 
-test RFC4231_TC1-16.2 {sha256} -body {
+test RFC4231_HMAC_TC1-19.2 {sha256} -body {
 	::tls::hmac -digest sha256 -key $key -data $data
     } -result {b0344c61d8db38535ca8afceaf0bf12b881dc200c9833da726e9376c2e32cff7}
 
-test RFC4231_TC1-16.3 {sha384} -body {
+test RFC4231_HMAC_TC1-19.3 {sha384} -body {
 	::tls::hmac -digest sha384 -key $key -data $data
     } -result {afd03944d84895626b0825f4ab46907f15f9dadbe4101ec682aa034c7cebc59cfaea9ea9076ede7f4af152e8b2fa9cb6}
 
-test RFC4231_TC1-16.4 {sha512} -body {
+test RFC4231_HMAC_TC1-19.4 {sha512} -body {
 	::tls::hmac -digest sha512 -key $key -data $data
     } -result {87aa7cdea5ef619d4ff0b4241a1d6cb02379f4e2ce4ec2787ad0b30545e17cdedaa833b7d6b8a702038b274eaea3f4e4be9d914eeb61f1702e696c203a126854}
 
@@ -454,19 +559,19 @@ set key "Jefe"
 set data "what do ya want for nothing?"
 
 
-test RFC4231_TC2-17.1 {sha224} -body {
+test RFC4231_HMAC_TC2-20.1 {sha224} -body {
 	::tls::hmac -digest sha224 -key $key -data $data
     } -result {a30e01098bc6dbbf45690f3a7e9e6d0f8bbea2a39e6148008fd05e44}
 
-test RFC4231_TC2-17.2 {sha256} -body {
+test RFC4231_HMAC_TC2-20.2 {sha256} -body {
 	::tls::hmac -digest sha256 -key $key -data $data
     } -result {5bdcc146bf60754e6a042426089575c75a003f089d2739839dec58b964ec3843}
 
-test RFC4231_TC2-17.3 {sha384} -body {
+test RFC4231_HMAC_TC2-20.3 {sha384} -body {
 	::tls::hmac -digest sha384 -key $key -data $data
     } -result {af45d2e376484031617f78d2b58a6b1b9c7ef464f5a01b47e42ec3736322445e8e2240ca5e69e2c78b3239ecfab21649}
 
-test RFC4231_TC2-17.4 {sha512} -body {
+test RFC4231_HMAC_TC2-20.4 {sha512} -body {
 	::tls::hmac -digest sha512 -key $key -data $data
     } -result {164b7a7bfcf819e2e395fbe73b56e0a387bd64222e831fd610270cd7ea2505549758bf75c05a994a6d034f65f8f0e6fdcaeab1a34d4a6b4b636e070a38bce737}
 
@@ -475,19 +580,19 @@ set key [binary decode hex [string repeat "aa" 20]]
 set data [binary decode hex [string repeat "dd" 50]]
 
 
-test RFC4231_TC3-18.1 {sha224} -body {
+test RFC4231_HMAC_TC3-21.1 {sha224} -body {
 	::tls::hmac -digest sha224 -key $key -data $data
     } -result {7fb3cb3588c6c1f6ffa9694d7d6ad2649365b0c1f65d69d1ec8333ea}
 
-test RFC4231_TC3-18.2 {sha256} -body {
+test RFC4231_HMAC_TC3-21.2 {sha256} -body {
 	::tls::hmac -digest sha256 -key $key -data $data
     } -result {773ea91e36800e46854db8ebd09181a72959098b3ef8c122d9635514ced565fe}
 
-test RFC4231_TC3-18.3 {sha384} -body {
+test RFC4231_HMAC_TC3-21.3 {sha384} -body {
 	::tls::hmac -digest sha384 -key $key -data $data
     } -result {88062608d3e6ad8a0aa2ace014c8a86f0aa635d947ac9febe83ef4e55966144b2a5ab39dc13814b94e3ab6e101a34f27}
 
-test RFC4231_TC3-18.4 {sha512} -body {
+test RFC4231_HMAC_TC3-21.4 {sha512} -body {
 	::tls::hmac -digest sha512 -key $key -data $data
     } -result {fa73b0089d56a284efb0f0756c890be9b1b5dbdd8ee81a3655f83e33b2279d39bf3e848279a722c806b485a47e67c807b946a337bee8942674278859e13292fb}
 
@@ -496,19 +601,19 @@ set key [binary decode hex "0102030405060708090a0b0c0d0e0f10111213141516171819"]
 set data [binary decode hex [string repeat "cd" 50]]
 
 
-test RFC4231_TC4-19.1 {sha224} -body {
+test RFC4231_HMAC_TC4-22.1 {sha224} -body {
 	::tls::hmac -digest sha224 -key $key -data $data
     } -result {6c11506874013cac6a2abc1bb382627cec6a90d86efc012de7afec5a}
 
-test RFC4231_TC4-19.2 {sha256} -body {
+test RFC4231_HMAC_TC4-22.2 {sha256} -body {
 	::tls::hmac -digest sha256 -key $key -data $data
     } -result {82558a389a443c0ea4cc819899f2083a85f0faa3e578f8077a2e3ff46729665b}
 
-test RFC4231_TC4-19.3 {sha384} -body {
+test RFC4231_HMAC_TC4-22.3 {sha384} -body {
 	::tls::hmac -digest sha384 -key $key -data $data
     } -result {3e8a69b7783c25851933ab6290af6ca77a9981480850009cc5577c6e1f573b4e6801dd23c4a7d679ccf8a386c674cffb}
 
-test RFC4231_TC4-19.4 {sha512} -body {
+test RFC4231_HMAC_TC4-22.4 {sha512} -body {
 	::tls::hmac -digest sha512 -key $key -data $data
     } -result {b0ba465637458c6990e5a8c5f61d4af7e576d97ff94b872de76f8050361ee3dba91ca5c11aa25eb4d679275cc5788063a5f19741120c4f2de2adebeb10a298dd}
 
@@ -517,19 +622,19 @@ set key [binary decode hex [string repeat "0c" 20]]
 set data "Test With Truncation"
 
 
-test RFC4231_TC5-20.1 {sha224} -body {
+test RFC4231_HMAC_TC5-23.1 {sha224} -body {
 	string range [::tls::hmac -digest sha224 -key $key -data $data] 0 31
     } -result {0e2aea68a90c8d37c988bcdb9fca6fa8}
 
-test RFC4231_TC5-20.2 {sha256} -body {
+test RFC4231_HMAC_TC5-23.2 {sha256} -body {
 	string range [::tls::hmac -digest sha256 -key $key -data $data] 0 31
     } -result {a3b6167473100ee06e0c796c2955552b}
 
-test RFC4231_TC5-20.3 {sha384} -body {
+test RFC4231_HMAC_TC5-23.3 {sha384} -body {
 	string range [::tls::hmac -digest sha384 -key $key -data $data] 0 31
     } -result {3abf34c3503b2a23a46efc619baef897}
 
-test RFC4231_TC5-20.4 {sha512} -body {
+test RFC4231_HMAC_TC5-23.4 {sha512} -body {
 	string range [::tls::hmac -digest sha512 -key $key -data $data] 0 31
     } -result {415fad6271580a531d4179bc891d87a6}
 
@@ -538,19 +643,19 @@ set key [binary decode hex [string repeat "aa" 131]]
 set data "Test Using Larger Than Block-Size Key - Hash Key First"
 
 
-test RFC4231_TC6-21.1 {sha224} -body {
+test RFC4231_HMAC_TC6-24.1 {sha224} -body {
 	::tls::hmac -digest sha224 -key $key -data $data
     } -result {95e9a0db962095adaebe9b2d6f0dbce2d499f112f2d2b7273fa6870e}
 
-test RFC4231_TC6-21.2 {sha256} -body {
+test RFC4231_HMAC_TC6-24.2 {sha256} -body {
 	::tls::hmac -digest sha256 -key $key -data $data
     } -result {60e431591ee0b67f0d8a26aacbf5b77f8e0bc6213728c5140546040f0ee37f54}
 
-test RFC4231_TC6-21.3 {sha384} -body {
+test RFC4231_HMAC_TC6-24.3 {sha384} -body {
 	::tls::hmac -digest sha384 -key $key -data $data
     } -result {4ece084485813e9088d2c63a041bc5b44f9ef1012a2b588f3cd11f05033ac4c60c2ef6ab4030fe8296248df163f44952}
 
-test RFC4231_TC6-21.4 {sha512} -body {
+test RFC4231_HMAC_TC6-24.4 {sha512} -body {
 	::tls::hmac -digest sha512 -key $key -data $data
     } -result {80b24263c7c1a3ebb71493c1dd7be8b49b46d1f41b4aeec1121b013783f8f3526b56d037e05f2598bd0fd2215d6a1e5295e64f73f63f0aec8b915a985d786598}
 
@@ -559,82 +664,95 @@ set key [binary decode hex [string repeat "aa" 131]]
 set data "This is a test using a larger than block-size key and a larger than block-size data. The key needs to be hashed before being used by the HMAC algorithm."
 
 
-test RFC4231_TC7-22.1 {sha224} -body {
+test RFC4231_HMAC_TC7-25.1 {sha224} -body {
 	::tls::hmac -digest sha224 -key $key -data $data
     } -result {3a854166ac5d9f023f54d517d0b39dbd946770db9c2b95c9f6f565d1}
 
-test RFC4231_TC7-22.2 {sha256} -body {
+test RFC4231_HMAC_TC7-25.2 {sha256} -body {
 	::tls::hmac -digest sha256 -key $key -data $data
     } -result {9b09ffa71b942fcb27635fbcd5b0e944bfdc63644f0713938a7f51535c3a35e2}
 
-test RFC4231_TC7-22.3 {sha384} -body {
+test RFC4231_HMAC_TC7-25.3 {sha384} -body {
 	::tls::hmac -digest sha384 -key $key -data $data
     } -result {6617178e941f020d351e2f254e8fd32c602420feb0b8fb9adccebb82461e99c5a678cc31e799176d3860e6110c46523e}
 
-test RFC4231_TC7-22.4 {sha512} -body {
+test RFC4231_HMAC_TC7-25.4 {sha512} -body {
 	::tls::hmac -digest sha512 -key $key -data $data
     } -result {e37b6a775dc87dbaa4dfa9f96e5e3ffddebd71f8867289865df5a32d20cdc944b6022cac3c4982b10d5eeb55c3e4de15134676fb6de0446065c97440fa8c6a58}
 
 # NIST 800-38b Recommendation for Block Cipher Modes of Operation: The CMAC Mode for Authentication
 # AES-128
 set key [binary decode hex "2b7e151628aed2a6abf7158809cf4f3c"]
+
+
+test NIST800-38b-AES128-26.1 {len=0} -body {
+	::tls::cmac -cipher aes-128-cbc -key $key -data ""
+    } -result {bb1d6929e95937287fa37d129b756746}
 set data [binary decode hex "6bc1bee22e409f96e93d7e117393172a"]
 
-
-test NIST800-38b-AES128-23.1 {len=128} -body {
+test NIST800-38b-AES128-26.2 {len=128} -body {
 	::tls::cmac -cipher aes-128-cbc -key $key -data $data
     } -result {070a16b46b4d4144f79bdd9dd04a287c}
 set data [binary decode hex "6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e5130c81c46a35ce411"]
 
-test NIST800-38b-AES128-23.2 {len=320} -body {
+test NIST800-38b-AES128-26.3 {len=320} -body {
 	::tls::cmac -cipher aes-128-cbc -key $key -data $data
     } -result {dfa66747de9ae63030ca32611497c827}
 set data [binary decode hex "6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e5130c81c46a35ce411e5fbc1191a0a52eff69f2445df4f9b17ad2b417be66c3710"]
 
-test NIST800-38b-AES128-23.3 {len=512} -body {
+test NIST800-38b-AES128-26.4 {len=512} -body {
 	::tls::cmac -cipher aes-128-cbc -key $key -data $data
     } -result {51f0bebf7e3b9d92fc49741779363cfe}
 
 # AES-192
 set key [binary decode hex "8e73b0f7da0e6452c810f32b809079e562f8ead2522c6b7b"]
+
+
+test NIST800-38b-AES-192-27.1 {len=0} -body {
+	::tls::cmac -cipher aes-192-cbc -key $key -data ""
+    } -result {d17ddf46adaacde531cac483de7a9367}
 set data [binary decode hex "6bc1bee22e409f96e93d7e117393172a"]
 
-
-test NIST800-38b-AES-192-24.1 {len=128} -body {
+test NIST800-38b-AES-192-27.2 {len=128} -body {
 	::tls::cmac -cipher aes-192-cbc -key $key -data $data
     } -result {9e99a7bf31e710900662f65e617c5184}
 set data [binary decode hex "6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e5130c81c46a35ce411"]
 
-test NIST800-38b-AES-192-24.2 {len=320} -body {
+test NIST800-38b-AES-192-27.3 {len=320} -body {
 	::tls::cmac -cipher aes-192-cbc -key $key -data $data
     } -result {8a1de5be2eb31aad089a82e6ee908b0e}
 set data [binary decode hex "6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e5130c81c46a35ce411e5fbc1191a0a52eff69f2445df4f9b17ad2b417be66c3710"]
 
-test NIST800-38b-AES-192-24.3 {len=512} -body {
+test NIST800-38b-AES-192-27.4 {len=512} -body {
 	::tls::cmac -cipher aes-192-cbc -key $key -data $data
     } -result {a1d5df0eed790f794d77589659f39a11}
 
 # AES-256
 set key [binary decode hex "603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4"]
+
+
+test NIST800-38b-AES-256-28.1 {len=0} -body {
+	::tls::cmac -cipher aes-256-cbc -key $key -data ""
+    } -result {028962f61b7bf89efc6b551f4667d983}
 set data [binary decode hex "6bc1bee22e409f96e93d7e117393172a"]
 
-
-test NIST800-38b-AES-256-25.1 {len=128} -body {
+test NIST800-38b-AES-256-28.2 {len=128} -body {
 	::tls::cmac -cipher aes-256-cbc -key $key -data $data
     } -result {28a7023f452e8f82bd4bf28d8c37c35c}
 set data [binary decode hex "6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e5130c81c46a35ce411"]
 
-test NIST800-38b-AES-256-25.2 {len=320} -body {
+test NIST800-38b-AES-256-28.3 {len=320} -body {
 	::tls::cmac -cipher aes-256-cbc -key $key -data $data
     } -result {aaf3d8f1de5640c232f5b169b9c911e6}
 set data [binary decode hex "6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e5130c81c46a35ce411e5fbc1191a0a52eff69f2445df4f9b17ad2b417be66c3710"]
 
-test NIST800-38b-AES-256-25.3 {len=512} -body {
+test NIST800-38b-AES-256-28.4 {len=512} -body {
 	::tls::cmac -cipher aes-256-cbc -key $key -data $data
     } -result {e1992190549f6ed5696a2c056c315410}
 
 # Cleanup
-::tcltest::removeFile $test_file $test_alt_file
+::tcltest::removeFile $test_file
+::tcltest::removeFile $test_alt_file
 
 # Cleanup
 ::tcltest::cleanupTests

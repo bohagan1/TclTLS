@@ -32,6 +32,7 @@ const char *hex = "0123456789abcdef";
 #define TYPE_MD		0x10
 #define TYPE_HMAC	0x20
 #define TYPE_CMAC	0x40
+#define TYPE_MAC	0x80
 
 /*
  * This structure defines the per-instance state of a digest operation.
@@ -982,7 +983,7 @@ DigestDataHandler(Tcl_Interp *interp, Tcl_Obj *dataObj, const EVP_MD *md,
 
     /* Get data */
     data = Tcl_GetByteArrayFromObj(dataObj, &data_len);
-    if (data == NULL || data_len == 0) {
+    if (data == NULL) {
 	Tcl_SetResult(interp, "No data", NULL);
 	return TCL_ERROR;
     }
@@ -1141,7 +1142,7 @@ static int DigestMain(int type, Tcl_Interp *interp, int objc, Tcl_Obj *const obj
 
     /* Get options */
     for (idx = start; idx < objc; idx++) {
-	char *opt = Tcl_GetStringFromObj(objv[idx], NULL);
+	*opt = Tcl_GetStringFromObj(objv[idx], NULL);
 
 	if (opt[0] != '-') {
 	    break;

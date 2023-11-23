@@ -74,7 +74,9 @@ Version,All,,,::tls::version,,glob,*,,,
 Version,OpenSSL,OpenSSL,,::tls::version,,glob,OpenSSL*,,,
 ,,,,,,,,,,
 command,# Error Cases,,,,,,,,,
-Error Cases,Digests Too many args,,,::tls::digests too many args,,,"wrong # args: should be ""::tls::digests""",,,1
+Error Cases,Cipher Too few args,,,::tls::cipher,,,"wrong # args: should be ""::tls::cipher name""",,,1
+Error Cases,Cipher Too many args,,,::tls::cipher too many args,,,"wrong # args: should be ""::tls::cipher name""",,,1
+Error Cases,Digests Too many args,,,::tls::digests too many args,,,"wrong # args: should be ""::tls::digests ?name?""",,,1
 Error Cases,MACs Too many args,,,::tls::macs too many args,,,"wrong # args: should be ""::tls::macs""",,,1
 Error Cases,Protocols Too many args,,,::tls::protocols too many args,,,"wrong # args: should be ""::tls::protocols""",,,1
 Error Cases,Version Too many args,,,::tls::version too many args,,,"wrong # args: should be ""::tls::version""",,,1
