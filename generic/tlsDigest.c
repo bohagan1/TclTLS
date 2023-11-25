@@ -34,6 +34,10 @@ const char *hex = "0123456789abcdef";
 #define TYPE_CMAC	0x40
 #define TYPE_MAC	0x80
 
+#if OPENSSL_VERSION_NUMBER <= 0x30000000L
+#define EVP_MAC void
+#endif
+
 /*
  * This structure defines the per-instance state of a digest operation.
  */
@@ -146,7 +150,7 @@ void DigestStateFree(DigestState *statePtr) {
  *-------------------------------------------------------------------
  */
 int DigestInitialize(Tcl_Interp *interp, DigestState *statePtr, const EVP_MD *md,
-	const EVP_CIPHER *cipher, Tcl_Obj *keyObj) {
+	const EVP_CIPHER *cipher, Tcl_Obj *keyObj, EVP_MAC *mac) {
     int key_len = 0, res = 0;
     const unsigned char *key = NULL;
 
@@ -733,7 +737,7 @@ static const Tcl_ChannelType digestChannelType = {
  */
 static int
 DigestChannelHandler(Tcl_Interp *interp, const char *channel, const EVP_MD *md,
-	const EVP_CIPHER *cipher, int format, Tcl_Obj *keyObj) {
+	const EVP_CIPHER *cipher, int format, Tcl_Obj *keyObj, EVP_MAC *mac) {
     int mode; /* OR-ed combination of TCL_READABLE and TCL_WRITABLE */
     Tcl_Channel chan;
     DigestState *statePtr;
@@ -761,7 +765,7 @@ DigestChannelHandler(Tcl_Interp *interp, const char *channel, const EVP_MD *md,
     statePtr->mode = mode;
 
     /* Initialize hash function */
-    if (DigestInitialize(interp, statePtr, md, cipher, keyObj) != TCL_OK) {
+    if (DigestInitialize(interp, statePtr, md, cipher, keyObj, mac) != TCL_OK) {
 	return TCL_ERROR;
     }
 
@@ -806,7 +810,7 @@ DigestUnstackObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj
 
     /* Validate arg count */
     if (objc != 2) {
-	Tcl_WrongNumArgs(interp, 1, objv, "channel");
+	Tcl_WrongNumArgs(interp, 1, objv, "channelId");
 	return TCL_ERROR;
     }
 
@@ -834,8 +838,6 @@ DigestUnstackObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj
 
 /*******************************************************************/
 
-static const char *instance_fns [] = { "finalize", "update", NULL };
-
 /*
  *-------------------------------------------------------------------
  *
@@ -856,6 +858,7 @@ int DigestInstanceObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tc
     DigestState *statePtr = (DigestState *) clientData;
     int fn, len = 0;
     char *buf = NULL;
+    static const char *instance_fns [] = { "finalize", "update", NULL };
 
     /* Validate arg count */
     if (objc < 2 || objc > 3) {
@@ -932,7 +935,7 @@ void DigestCommandDeleteHandler(ClientData clientData) {
  *-------------------------------------------------------------------
  */
 int DigestCommandHandler(Tcl_Interp *interp, Tcl_Obj *cmdObj, const EVP_MD *md,
-	const EVP_CIPHER *cipher, int format, Tcl_Obj *keyObj) {
+	const EVP_CIPHER *cipher, int format, Tcl_Obj *keyObj, EVP_MAC *mac) {
     DigestState *statePtr;
     char *cmdName = Tcl_GetStringFromObj(cmdObj, NULL);
 
@@ -943,7 +946,7 @@ int DigestCommandHandler(Tcl_Interp *interp, Tcl_Obj *cmdObj, const EVP_MD *md,
     }
 
     /* Initialize hash function */
-    if (DigestInitialize(interp, statePtr, md, cipher, keyObj) != TCL_OK) {
+    if (DigestInitialize(interp, statePtr, md, cipher, keyObj, mac) != TCL_OK) {
 	return TCL_ERROR;
     }
 
@@ -976,7 +979,7 @@ int DigestCommandHandler(Tcl_Interp *interp, Tcl_Obj *cmdObj, const EVP_MD *md,
  */
 int
 DigestDataHandler(Tcl_Interp *interp, Tcl_Obj *dataObj, const EVP_MD *md,
-	const EVP_CIPHER *cipher, int format, Tcl_Obj *keyObj) {
+	const EVP_CIPHER *cipher, int format, Tcl_Obj *keyObj, EVP_MAC *mac) {
     char *data;
     int data_len;
     DigestState *statePtr;
@@ -995,7 +998,7 @@ DigestDataHandler(Tcl_Interp *interp, Tcl_Obj *dataObj, const EVP_MD *md,
     }
 
     /* Calc Digest, abort for error */
-    if (DigestInitialize(interp, statePtr, md, cipher, keyObj) != TCL_OK ||
+    if (DigestInitialize(interp, statePtr, md, cipher, keyObj, mac) != TCL_OK ||
 	DigestUpdate(statePtr, data, (size_t) data_len, 1) == 0 ||
 	DigestFinalize(interp, statePtr, NULL) != TCL_OK) {
 	DigestStateFree(statePtr);
@@ -1025,7 +1028,7 @@ DigestDataHandler(Tcl_Interp *interp, Tcl_Obj *dataObj, const EVP_MD *md,
  *-------------------------------------------------------------------
  */
 int DigestFileHandler(Tcl_Interp *interp, Tcl_Obj *filename, const EVP_MD *md,
-	const EVP_CIPHER *cipher, int format, Tcl_Obj *keyObj) {
+	const EVP_CIPHER *cipher, int format, Tcl_Obj *keyObj, EVP_MAC *mac) {
     DigestState *statePtr;
     Tcl_Channel chan = NULL;
     unsigned char buf[BUFFER_SIZE];
@@ -1051,7 +1054,7 @@ int DigestFileHandler(Tcl_Interp *interp, Tcl_Obj *filename, const EVP_MD *md,
     Tcl_SetChannelBufferSize(chan, BUFFER_SIZE);
 
     /* Initialize hash function */
-    if ((res = DigestInitialize(interp, statePtr, md, cipher, keyObj)) != TCL_OK) {
+    if ((res = DigestInitialize(interp, statePtr, md, cipher, keyObj, mac)) != TCL_OK) {
 	goto done;
     }
 
@@ -1085,6 +1088,119 @@ done:
 /*
  *-------------------------------------------------------------------
  *
+ * GetDigest -- Get message digest
+ *
+ * Returns:
+ *	EVP_MD * or NULL
+ *
+ *-------------------------------------------------------------------
+ */
+EVP_MD *GetDigest(Tcl_Interp *interp, Tcl_Obj *objPtr, int *format) {
+    const EVP_MD *md = NULL;
+    char *digestName = Tcl_GetStringFromObj(objPtr, NULL);
+
+    if (digestName != NULL) {
+	md = EVP_get_digestbyname(digestName);
+	if (md == NULL) {
+	    Tcl_AppendResult(interp, "Invalid digest \"", digestName, "\"", NULL);
+	    return NULL;
+	} else if (md == EVP_shake128() || md == EVP_shake256()) {
+	    *format |= IS_XOF;
+	}
+    } else {
+	Tcl_AppendResult(interp, "No digest specified", NULL);
+	return NULL;
+    }
+    return md;
+}
+
+/*
+ *-------------------------------------------------------------------
+ *
+ * GetCipher -- Get cipher
+ *
+ * Returns:
+ *	EVP_CIPHER * or NULL
+ *
+ *-------------------------------------------------------------------
+ */
+EVP_CIPHER *GetCipher(Tcl_Interp *interp, Tcl_Obj *objPtr, int *type) {
+    const EVP_CIPHER *cipher = NULL;
+    char *cipherName = Tcl_GetStringFromObj(objPtr, NULL);
+
+    if (cipherName != NULL) {
+	cipher = EVP_get_cipherbyname(cipherName);
+	*type = TYPE_CMAC;
+	if (cipher == NULL) {
+	    Tcl_AppendResult(interp, "Invalid cipher \"", cipherName, "\"", NULL);
+	    return NULL;
+	}
+    } else {
+	Tcl_AppendResult(interp, "No cipher specified", NULL);
+	return NULL;
+    }
+    return cipher;
+}
+
+/*
+ *-------------------------------------------------------------------
+ *
+ * GetKey -- Get key
+ *
+ * Returns:
+ *	unsigned char * or NULL
+ *
+ *-------------------------------------------------------------------
+ */
+unsigned char *GetKey(Tcl_Interp *interp, Tcl_Obj *objPtr, int *type) {
+    unsigned char *key = Tcl_GetByteArrayFromObj(objPtr, NULL);
+
+    if (key == NULL) {
+	Tcl_AppendResult(interp, "No key specified", NULL);
+	return NULL;
+    }
+    if (*type == TYPE_MD) {
+	*type = TYPE_HMAC;
+    }
+    return key;
+}
+
+/*
+ *-------------------------------------------------------------------
+ *
+ * GetMAC -- Get MAC
+ *
+ * Returns:
+ *	EVP_MAC * or NULL
+ *
+ *-------------------------------------------------------------------
+ */
+EVP_MAC *GetMAC(Tcl_Interp *interp, Tcl_Obj *objPtr, int *type) {
+    EVP_MAC *mac = NULL;
+    char *macName = Tcl_GetStringFromObj(objPtr, NULL);
+
+    if (macName != NULL) {
+	if (strcmp(macName, "cmac") == 0) {
+	    *type = TYPE_CMAC;
+	} else if (strcmp(macName, "hmac") == 0) {
+	    *type = TYPE_HMAC;
+	} else {
+	    Tcl_AppendResult(interp, "Invalid MAC \"", macName, "\"", NULL);
+	    return NULL;
+	}
+	mac = (void *) macName;
+    } else {
+	Tcl_AppendResult(interp, "No MAC specified", NULL);
+	return NULL;
+    }
+    return mac;
+}
+
+/*******************************************************************/
+
+/*
+ *-------------------------------------------------------------------
+ *
  * DigestMain --
  *
  *	Return message digest or Message Authentication Code (MAC) of
@@ -1100,10 +1216,12 @@ done:
  */
 static int DigestMain(int type, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
     int idx, start = 1, format = HEX_FORMAT, res = TCL_OK;
-    Tcl_Obj *cmdObj = NULL, *dataObj = NULL, *fileObj = NULL, *keyObj = NULL;
-    const char *digestName = NULL, *cipherName = NULL, *macName = NULL, *channel = NULL, *opt;
+    Tcl_Obj *cipherObj = NULL, *cmdObj = NULL, *dataObj = NULL, *digestObj = NULL;
+    Tcl_Obj *fileObj = NULL, *keyObj = NULL, *macObj = NULL;
+    const char *channel = NULL, *opt;
     const EVP_MD *md = NULL;
     const EVP_CIPHER *cipher = NULL;
+    EVP_MAC *mac = NULL;
 
     /* Clear interp result */
     Tcl_ResetResult(interp);
@@ -1118,13 +1236,13 @@ static int DigestMain(int type, Tcl_Interp *interp, int objc, Tcl_Obj *const obj
     opt = Tcl_GetStringFromObj(objv[start], NULL);
     if (opt[0] != '-') {
 	if (type == TYPE_MD || type == TYPE_HMAC) {
-	    digestName = opt;
+	    digestObj = objv[start];
 	    start++;
 	} else if (type == TYPE_CMAC) {
-	    cipherName = opt;
+	    cipherObj = objv[start];
 	    start++;
 	} else if (type == TYPE_MAC) {
-	    macName = opt;
+	    macObj = objv[start];
 	    start++;
 	}
     }
@@ -1143,14 +1261,14 @@ static int DigestMain(int type, Tcl_Interp *interp, int objc, Tcl_Obj *const obj
 	OPTFLAG("-hexadecimal", format, HEX_FORMAT);
 	OPTSTR("-chan", channel);
 	OPTSTR("-channel", channel);
-	OPTSTR("-cipher", cipherName);
+	OPTOBJ("-cipher", cipherObj);
 	OPTOBJ("-command", cmdObj);
 	OPTOBJ("-data", dataObj);
-	OPTSTR("-digest", digestName);
+	OPTOBJ("-digest", digestObj);
 	OPTOBJ("-file", fileObj);
 	OPTOBJ("-filename", fileObj);
 	OPTOBJ("-key", keyObj);
-	OPTSTR("-mac", macName);
+	OPTOBJ("-mac", macObj);
 
 	OPTBAD("option", "-bin, -channel, -cipher, -command, -data, -digest, -file, -filename, -hex, -key, or -mac");
 	return TCL_ERROR;
@@ -1162,27 +1280,19 @@ static int DigestMain(int type, Tcl_Interp *interp, int objc, Tcl_Obj *const obj
     }
 
     /* Get cipher */
-    if (cipherName != NULL) {
-	cipher = EVP_get_cipherbyname(cipherName);
-	type = TYPE_CMAC;
-	if (cipher == NULL) {
-	    Tcl_AppendResult(interp, "Invalid cipher \"", cipherName, "\"", NULL);
+    if (cipherObj != NULL) {
+	if ((cipher = GetCipher(interp, cipherObj, &type)) == NULL) {
 	    return TCL_ERROR;
 	}
-
     } else if (type == TYPE_CMAC) {
 	Tcl_AppendResult(interp, "No cipher specified", NULL);
 	return TCL_ERROR;
     }
 
     /* Get message digest */
-    if (digestName != NULL) {
-	md = EVP_get_digestbyname(digestName);
-	if (md == NULL) {
-	    Tcl_AppendResult(interp, "Invalid digest \"", digestName, "\"", NULL);
+    if (digestObj != NULL) {
+	if ((md = GetDigest(interp, digestObj, &format)) == NULL) {
 	    return TCL_ERROR;
-	} else if (md == EVP_shake128() || md == EVP_shake256()) {
-	    format |= IS_XOF;
 	}
     } else if (type == TYPE_MD || type == TYPE_HMAC) {
 	Tcl_AppendResult(interp, "No digest specified", NULL);
@@ -1191,23 +1301,17 @@ static int DigestMain(int type, Tcl_Interp *interp, int objc, Tcl_Obj *const obj
 
     /* Get key */
     if (keyObj != NULL) {
-	if (type == TYPE_MD) {
-	    type = TYPE_HMAC;
+	if (GetKey(interp, keyObj, &type) == NULL) {
+	    return TCL_ERROR;	
 	}
-
     } else if (type != TYPE_MD) {
 	Tcl_AppendResult(interp, "No key specified", NULL);
 	return TCL_ERROR;
     }
 
     /* Get MAC */
-    if (macName != NULL) {
-	if (strcmp(macName, "cmac") == 0) {
-	    type = TYPE_CMAC;
-	} else if (strcmp(macName, "hmac") == 0) {
-	    type = TYPE_HMAC;
-	} else {
-	    Tcl_AppendResult(interp, "Invalid MAC \"", macName, "\"", NULL);
+    if (macObj != NULL) {
+	if ((mac = GetMAC(interp, macObj, &type)) == NULL) {
 	    return TCL_ERROR;
 	}
     } else if (type == TYPE_MAC) {
@@ -1217,13 +1321,13 @@ static int DigestMain(int type, Tcl_Interp *interp, int objc, Tcl_Obj *const obj
 
     /* Calc digest on file, stacked channel, using instance command, or data blob */
     if (fileObj != NULL) {
-	res = DigestFileHandler(interp, fileObj, md, cipher, format | type, keyObj);
+	res = DigestFileHandler(interp, fileObj, md, cipher, format | type, keyObj, mac);
     } else if (channel != NULL) {
-	res = DigestChannelHandler(interp, channel, md, cipher, format | type, keyObj);
+	res = DigestChannelHandler(interp, channel, md, cipher, format | type, keyObj, mac);
     } else if (cmdObj != NULL) {
-	res = DigestCommandHandler(interp, cmdObj, md, cipher, format | type, keyObj);
+	res = DigestCommandHandler(interp, cmdObj, md, cipher, format | type, keyObj, mac);
     } else if (dataObj != NULL) {
-	res = DigestDataHandler(interp, dataObj, md, cipher, format | type, keyObj);
+	res = DigestDataHandler(interp, dataObj, md, cipher, format | type, keyObj, mac);
     } else {
 	Tcl_AppendResult(interp, "No operation specified: Use -channel, -command, -data, or -file option", NULL);
 	res = TCL_ERROR;
@@ -1286,27 +1390,27 @@ static int MACObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Ob
  
 int MD4ObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
     validate_argc(objc, objv);
-    return DigestDataHandler(interp, objv[1], EVP_md4(), NULL, HEX_FORMAT | TYPE_MD, NULL);
+    return DigestDataHandler(interp, objv[1], EVP_md4(), NULL, HEX_FORMAT | TYPE_MD, NULL, NULL);
 }
 
 int MD5ObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
     validate_argc(objc, objv);
-    return DigestDataHandler(interp, objv[1], EVP_md5(), NULL, HEX_FORMAT | TYPE_MD, NULL);
+    return DigestDataHandler(interp, objv[1], EVP_md5(), NULL, HEX_FORMAT | TYPE_MD, NULL, NULL);
 }
 
 int SHA1ObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
     validate_argc(objc, objv);
-    return DigestDataHandler(interp, objv[1], EVP_sha1(), NULL, HEX_FORMAT | TYPE_MD, NULL);
+    return DigestDataHandler(interp, objv[1], EVP_sha1(), NULL, HEX_FORMAT | TYPE_MD, NULL, NULL);
 }
 
 int SHA256ObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
     validate_argc(objc, objv);
-    return DigestDataHandler(interp, objv[1], EVP_sha256(), NULL, HEX_FORMAT | TYPE_MD, NULL);
+    return DigestDataHandler(interp, objv[1], EVP_sha256(), NULL, HEX_FORMAT | TYPE_MD, NULL, NULL);
 }
 
 int SHA512ObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
     validate_argc(objc, objv);
-    return DigestDataHandler(interp, objv[1], EVP_sha512(), NULL, HEX_FORMAT | TYPE_MD, NULL);
+    return DigestDataHandler(interp, objv[1], EVP_sha512(), NULL, HEX_FORMAT | TYPE_MD, NULL, NULL);
 }
 
 /*
