@@ -1,51 +1,40 @@
-<!doctype html public "-//W3C//DTD HTML 4.0 Transitional//EN">
-
-<html>
-
+<!DOCTYPE html>
+<html lang="en">
 <head>
 <meta http-equiv="Content-Type"
 content="text/html; charset=iso-8859-1">
 <meta name="Copyright" content="1999 Matt Newman / 2004 Starfish Systems">
-<title>TLS (SSL) Tcl Commands</title>
+<title>TLS (SSL) TCL Commands</title>
+<link rel="stylesheet" href="docs.css" type="text/css" media="all">
 </head>
 
-<body bgcolor="#FFFFFF">
+<body class="vsc-initialized">
+
+<h2>Tcl Tls Extension Documentation</h2>
 
 <dl>
     <dd><a href="#NAME">NAME</a>
     <dl>
-	<dd><b>tls</b> - binding to <b>OpenSSL</b> toolkit.</dd>
+	<dd><b>tls</b> - binding to <b>OpenSSL</b> library
+	for socket and I/O channel communications.</dd>
     </dl>
     </dd>
     <dd><a href="#SYNOPSIS">SYNOPSIS</a> </dd>
     <dd><dl>
-	    <dd><b>package require Tcl</b> <em>?8.4?</em></dd>
+	    <dd><b>package require Tcl</b> <em>?8.5?</em></dd>
 	    <dd><b>package require tls</b></dd>
 	    <dt>&nbsp;</dt>
 	    <dd><b>tls::init</b> <em>?options?</em> </dd>
 	    <dd><b>tls::socket</b> <em>?options? host port</em></dd>
-	    <dd><b>tls::socket</b> <em> ?-server command? ?options? port</em></dd>
+	    <dd><b>tls::socket</b> <em>?-server command? ?options? port</em></dd>
 	    <dd><b>tls::handshake</b> <em> channel</em></dd>
-	    <dd><b>tls::status </b> <em>?-local? channel</em></dd>
-	    <dd><b>tls::connection </b> <em>channel</em></dd>
+	    <dd><b>tls::status</b> <em>?-local? channel</em></dd>
+	    <dd><b>tls::connection</b> <em>channel</em></dd>
 	    <dd><b>tls::import</b> <em>channel ?options?</em></dd>
 	    <dd><b>tls::unimport</b> <em>channel</em></dd>
 	    <dt>&nbsp;</dt>
-	    <dd><b>tls::cipher</b> <em>name</em></dd>
-	    <dd><b>tls::ciphers</b> <em>?protocol? ?verbose? ?supported?</em></dd>
-	    <dd><b>tls::digests</b> <em>?name?</em></dd>
-	    <dd><b>tls::macs</b></dd>
 	    <dd><b>tls::protocols</b></dd>
 	    <dd><b>tls::version</b></dd>
-	    <dt>&nbsp;</dt>
-	    <dd><b>tls::digest</b> <b>-digest</b> <em>name ?options?</em></dd>
-	    <dd><b>tls::cmac</b> <b>-cipher</b> <em>name</em> <b>-key</b> <em>key ?options?</em></dd>
-	    <dd><b>tls::hmac</b> <b>-digest</b> <em>name</em> <b>-key</b> <em>key ?options?</em></dd>
-	    <dd><b>tls::md4</b> <em>data</em></dd>
-	    <dd><b>tls::md5</b> <em>data</em></dd>
-	    <dd><b>tls::sha1</b> <em>data</em></dd>
-	    <dd><b>tls::sha256</b> <em>data</em></dd>
-	    <dd><b>tls::sha512</b> <em>data</em></dd>
 	</dl>
     </dd>
     <dd><a href="#COMMANDS">COMMANDS</a></dd>
@@ -59,8 +48,8 @@ content="text/html; charset=iso-8859-1">
 
 <h3><a name="NAME">NAME</a></h3>
 
-<p><strong>tls</strong> - binding to <strong>OpenSSL</strong>
-toolkit.</p>
+<p><strong>tls</strong> - binding to <strong>OpenSSL</strong> library
+for socket and I/O channel communications.</p>
 
 <h3><a name="SYNOPSIS">SYNOPSIS</a></h3>
 
@@ -76,21 +65,8 @@ toolkit.</p>
 <a href="#tls::import"><b>tls::import</b> <i>channel ?options?</i></a><br>
 <a href="#tls::unimport"><b>tls::unimport</b> <i>channel</i></a><br>
 <br>
-<a href="#tls::cipher"><b>tls::cipher</b> <i>name</i></a><br>
-<a href="#tls::ciphers"><b>tls::ciphers</b> <i>?protocol? ?verbose? ?supported?</i></a><br>
-<a href="#tls::digests"><b>tls::digests</b> <i>?name?</i></a><br>
-<a href="#tls::macs"><b>tls::macs</b></a><br>
 <a href="#tls::protocols"><b>tls::protocols</b></a><br>
 <a href="#tls::version"><b>tls::version</b></a><br>
-<br>
-<a href="#tls::digest"><b>tls::digest</b> <b>-digest</b> <i>name ?options?</i></a><br>
-<a href="#tls::cmac"><b>tls::cmac</b> <b>-cipher</b> <i>name</i> <b>-key</b> <i>key ?options?</i></a><br>
-<a href="#tls::hmac"><b>tls::hmac</b> <b>-digest</b> <i>name</i> <b>-key</b> <i>key ?options?</i></a><br>
-<a href="#tls::md4"><b>tls::md4</b> <i>data</i></a><br>
-<a href="#tls::md5"><b>tls::md5</b> <i>data</i></a><br>
-<a href="#tls::sha1"><b>tls::sha1</b> <i>data</i></a><br>
-<a href="#tls::sha256"><b>tls::sha256</b> <i>data</i></a><br>
-<a href="#tls::sha512"><b>tls::sha512</b> <i>data</i></a><br>
 </p>
 
 <h3><a name="DESCRIPTION">DESCRIPTION</a></h3>
@@ -125,22 +101,22 @@ used directly.</p>
     <dd>This is a helper function that utilizes the underlying
 	commands (<strong>tls::import</strong>). It behaves
 	exactly the same as the native Tcl <strong>socket</strong>
-	command except that the options can include any of the
+	command except the options can also include any of the
 	applicable <a href="#tls::import"><strong>tls:import</strong></a>
 	options with one additional option:</dd>
 <blockquote>
     <dl>
 	<dt><strong>-autoservername</strong> <em>bool</em></dt>
-	<dd>Automatically send the -servername as the <em>host</em> argument
-	    (default is <em>false</em>)</dd>
+	<dd>Automatically set the -servername argument to the <em>host</em>
+	    argument (default is <em>false</em>).</dd>
     </dl>
 </blockquote>
 
     <dt><a name="tls::import"><b>tls::import </b><i>channel
 	?options?</i></a></dt>
-    <dd>SSL-enable a regular Tcl channel - it need not be a
-	socket, but must provide bi-directional flow. Also
-	setting session parameters for SSL handshake.</dd>
+    <dd>Add SSL/TLS encryption to a regular Tcl channel. It need
+	not be a socket, but must provide bi-directional flow. Also
+	set session parameters for SSL handshake.</dd>
 
 <blockquote>
     <dl>
@@ -163,7 +139,7 @@ used directly.</p>
 	    encoded binary value (X.509 DER).</dd>
 	<dt><strong>-cipher</strong> <em>string</em></dt>
 	<dd>List of ciphers to use. String is a colon (":") separated list
-	    of ciphers or cipher suites. Cipher suites can be combined
+	    of ciphers. Ciphers can be combined
 	    using the <b>+</b> character. Prefixes can be used to permanently
 	    remove ("!"), delete ("-"), or move a cypher to the end of
 	    the list ("+"). Keywords <b>@STRENGTH</b> (sort by algorithm
@@ -175,7 +151,7 @@ used directly.</p>
 	<dd>List of cipher suites to use. String is a colon (":")
 	    separated list of cipher suite names. (TLS 1.3 only)</dd>
 	<dt><strong>-command</strong> <em>callback</em></dt>
-	<dd>Callback to invoke at several points during the handshake.
+	<dd>Callback command to invoke at several points during the handshake.
 	    This is used to pass errors and tracing information, and
 	    it can allow Tcl scripts to perform their own certificate
 	    validation in place of the default validation provided by
@@ -193,8 +169,8 @@ used directly.</p>
 	    structure as the specified <em>channel</em>, and
 	    therefore share callbacks etc.</dd>
 	<dt><strong>-password</strong> <em>callback</em></dt>
-	<dd>Callback to invoke when OpenSSL needs to obtain a password,
-	    typically to unlock the private key of a certificate. The
+	<dd>Callback command to invoke when OpenSSL needs to obtain a password.
+	    Typically used to unlock the private key of a certificate. The
 	    callback should return a string which represents the password
 	    to be used. See <a href="#CALLBACK OPTIONS">CALLBACK OPTIONS</a>
 	    for further discussion.</dd>
@@ -206,22 +182,25 @@ used directly.</p>
 	<dt><strong>-require</strong> <em>bool</em></dt>
 	<dd>Require a valid certificate from peer during SSL handshake.
 	    If this is set to true, then <strong>-request</strong> must
-	    also be set to true. (default is <em>false</em>)</dd>
+	    also be set to true and a either a -cadir, -cafile, or platform
+	    default must be provided in order to validate against.
+	    (default is <em>false</em>)</dd>
 	<dt><strong>-security_level</strong> <em>integer</em></dt>
 	<dd>Set security level. Must be 0 to 5. The security level affects
-	    cipher suite encryption algorithms, supported ECC curves,
+	    the cipher suite encryption algorithms, supported ECC curves,
 	    supported signature algorithms, DH parameter sizes, certificate
 	    key sizes and signature algorithms. The default is 1.
 	    Level 3 and higher disable support for session tickets and only
 	    accept cipher suites that provide forward secrecy.</dd>
 	<dt><strong>-server</strong> <em>bool</em></dt>
-	<dd>Handshake as server if true, else handshake as
-	    client. (default is <em>false</em>)</dd>
+	<dd>Set to act as a server and respond with a server handshake when
+	    a client connects and provides a client handshake.
+	    (default is <em>false</em>)</dd>
 	<dt><strong>-servername</strong> <em>host</em></dt>
-	<dd>Specify server hostname. Only available if the OpenSSL library
-	    the package is linked against supports the TLS hostname extension
-	    for 'Server Name Indication' (SNI). Use to name the logical host
-	    we are talking to and expecting a certificate for.</dd>
+	<dd>Specify server's hostname. Used to set the TLS 'Server Name
+	    Indication' (SNI) extension. Set to the expected servername
+	    in the server's certificate or one of the subjectAltName
+	    alternates.</dd>
 	<dt><strong>-session_id</strong> <em>string</em></dt>
 	<dd>Session id to resume session.</dd>
 	<dt><strong>-ssl2</strong> <em>bool</em></dt>
@@ -237,7 +216,7 @@ used directly.</p>
 	<dt>-<strong>tls1.3</strong> <em>bool</em></dt>
 	<dd>Enable use of TLS v1.3 (default is <em>true</em>)</dd>
 	<dt><strong>-validatecommand</strong> <em>callback</em></dt>
-	<dd>Callback to invoke to verify or validate protocol config
+	<dd>Callback command to invoke to verify or validate protocol config
 	    parameters during the protocol negotiation phase. See
 	    <a href="#CALLBACK OPTIONS">CALLBACK OPTIONS</a>
 	    for further discussion.</dd>
@@ -246,10 +225,11 @@ used directly.</p>
 
     <dt><a name="tls::unimport"><b>tls::unimport </b><i>channel</i></a></dt>
     <dd>Provided for symmetry to <strong>tls::import</strong>, this
-      unstacks the SSL-enabling of a regular Tcl channel.  An error
+      unstacks the encryption of a regular Tcl channel. An error
       is thrown if TLS is not the top stacked channel type.</dd>
     <dt>&nbsp;</dt>
-    <dt><a name="tls::handshake"><strong>tls::handshake</strong> <em>channel</em></a></dt>
+    <dt><a name="tls::handshake"><strong>tls::handshake</strong>
+	<em>channel</em></a></dt>
     <dd>Forces handshake to take place, and returns 0 if
 	handshake is still in progress (non-blocking), or 1 if
 	the handshake was successful. If the handshake failed
@@ -257,11 +237,11 @@ used directly.</p>
     <dt>&nbsp;</dt>
     <dt><a name="tls::status"><strong>tls::status</strong>
     <em>?</em><b>-local</b><em>? channel</em></a></dt>
-    <dd>Returns the current status of the certificate for an SSL
-	channel. The result is a list of key-value pairs describing
-	the certificate. If the SSL handshake has not yet completed,
-	an empty list is returned. If <b>-local</b> is
-	specified, then the local certificate is used.</dd>
+    <dd>Returns the current status of an SSL channel. The result is a list
+	of key-value pairs describing the SSL, certificate, and certificate
+	verification status. If the SSL handshake has not yet completed,
+	an empty list is returned. If <b>-local</b> is specified, then the
+	local certificate is used.</dd>
 <blockquote>
 	<b>SSL Status</b>
     <dl>
@@ -269,8 +249,7 @@ used directly.</p>
 	<dd>The protocol selected after Application-Layer Protocol
 	    Negotiation (ALPN).</dd>
 	<dt><strong>cipher</strong> <em>cipher</em></dt>
-	<dd>The current cipher in use between the client and
-	    server channels.</dd>
+	<dd>The current cipher in use between for the channel.</dd>
 	<dt><strong>peername</strong> <em>name</em></dt>
 	<dd>The peername from the certificate.</dd>
 	<dt><strong>protocol</strong> <em>version</em></dt>
@@ -302,7 +281,7 @@ used directly.</p>
 	<dt><strong>version</strong> <em>value</em></dt>
 	<dd>The certificate version.</dd>
 	<dt><strong>serialNumber</strong> <em>n</em></dt>
-	<dd>The serial number of the certificate as hex string.</dd>
+	<dd>The serial number of the certificate as a hex string.</dd>
 	<dt><strong>signature</strong> <em>algorithm</em></dt>
 	<dd>Cipher algorithm used for certificate signature.</dd>
 	<dt><strong>issuer</strong> <em>dn</em></dt>
@@ -326,10 +305,10 @@ used directly.</p>
 	<dd>List of certificate extension names.</dd>
 	<dt><strong>authorityKeyIdentifier</strong> <em>string</em></dt>
 	<dd>(AKI) Key identifier of the Issuing CA certificate that signed
-	    the SSL certificate as hex string. This value matches the SKI
+	    the SSL certificate as a hex string. This value matches the SKI
 	    value of the Intermediate CA certificate.</dd>
 	<dt><strong>subjectKeyIdentifier</strong> <em>string</em></dt>
-	<dd>(SKI) Hash of the public key inside the certificate as hex
+	<dd>(SKI) Hash of the public key inside the certificate as a hex
 	   string. Used to identify certificates that contain a particular
 	   public key.</dd>
 	<dt><strong>subjectAltName</strong> <em>list</em></dt>
@@ -342,32 +321,31 @@ used directly.</p>
 	<dd>The PEM encoded certificate.</dd>
 
 	<dt><strong>signatureAlgorithm</strong> <em>algorithm</em></dt>
-	<dd>Cipher algorithm used for certificate signature.</dd>
+	<dd>Cipher algorithm used for the certificate signature.</dd>
 	<dt><strong>signatureValue</strong> <em>string</em></dt>
-	<dd>Certificate signature as hex string.</dd>
+	<dd>Certificate signature as a hex string.</dd>
 	<dt><strong>signatureDigest</strong> <em>version</em></dt>
-	<dd>Certificate signing digest.</dd>
+	<dd>Certificate signing digest as a hex string.</dd>
 	<dt><strong>publicKeyAlgorithm</strong> <em>algorithm</em></dt>
 	<dd>Certificate signature public key algorithm.</dd>
 	<dt><strong>publicKey</strong> <em>string</em></dt>
-	<dd>Certificate signature public key as hex string.</dd>
+	<dd>Certificate signature public key as a hex string.</dd>
 	<dt><strong>bits</strong> <em>n</em></dt>
-	<dd>Number of bits used for certificate signature key</dd>
+	<dd>Number of bits used for certificate signature key.</dd>
 	<dt><strong>self_signed</strong> <em>boolean</em></dt>
-	<dd>Is certificate signature self signed.</dd>
+	<dd>Whether the certificate signature is self signed.</dd>
 
 	<dt><strong>sha1_hash</strong> <em>hash</em></dt>
-	<dd>The SHA1 hash of the certificate as hex string.</dd>
+	<dd>The SHA1 hash of the certificate as a hex string.</dd>
 	<dt><strong>sha256_hash</strong> <em>hash</em></dt>
-	<dd>The SHA256 hash of the certificate as hex string.</dd>
+	<dd>The SHA256 hash of the certificate as a hex string.</dd>
     </dl>
 </blockquote>
 
     <dt><a name="tls::connection"><strong>tls::connection</strong>
     <em>channel</em></a></dt>
     <dd>Returns the current connection status of an SSL channel. The
-	result is a list of key-value pairs describing the
-	connected peer.</dd>
+	result is a list of key-value pairs describing the connection.</dd>
 <blockquote>
 	<b>SSL Status</b>
     <dl>
@@ -408,8 +386,8 @@ used directly.</p>
 	<dt><strong>min_version</strong> <em>version</em></dt>
 	<dd>The minimum protocol version for cipher.</dd>
 	<dt><strong>cipher_is_aead</strong> <em>boolean</em></dt>
-	<dd>Whether the cipher is Authenticated encryption with associated
-	data (AEAD).</dd>
+	<dd>Whether the cipher is Authenticated Encryption with
+	Associated Data (AEAD).</dd>
 	<dt><strong>cipher_id</strong> <em>id</em></dt>
 	<dd>The OpenSSL cipher id.</dd>
 	<dt><strong>description</strong> <em>string</em></dt>
@@ -425,7 +403,7 @@ used directly.</p>
 	<dd>The protocol selected after Application-Layer Protocol
 	    Negotiation (ALPN).</dd>
 	<dt><strong>resumable</strong> <em>boolean</em></dt>
-	<dd>Can the session be resumed or not.</dd>
+	<dd>Whether the session can be resumed or not.</dd>
 	<dt><strong>start_time</strong> <em>seconds</em></dt>
 	<dd>Time since session started in seconds since epoch.</dd>
 	<dt><strong>timeout</strong> <em>seconds</em></dt>
@@ -445,133 +423,14 @@ used directly.</p>
     </dl>
 </blockquote>
 
-    <dt><a name="tls::cipher"><strong>tls::cipher</strong> <em>name</em></a></dt>
-    <dd>Return a list of property names and values describing cipher
-	<i>name</i>. Properties include name, description, block_size,
-	key_length, iv_length, type, and mode list.</dd>
-
-    <dt><a name="tls::ciphers"><strong>tls::ciphers</strong>
-    <em>?protocol? ?verbose? ?supported?</em></a></dt>
-    <dd>Without any args, returns a list of all ciphers. With <em>protocol</em>,
-	only the ciphers supported for that protocol are returned. See
-	<b>tls::protocols</b> command for the supported protocols. If
-	<em>verbose</em> is specified as true then a verbose, human readable
-	list is returned with additional information on the cipher. If
-	<em>supported</em> is specified as true, then only the ciphers
-	supported for protocol will be listed.</dd>
-
-    <dt><a name="tls::digests"><strong>tls::digests</strong> <em>?name?</em></a></dt>
-    <dd>Without <em>name</em>, returns a list of the supported hash algorithms
-	for <b>tls::digest</b> command. With <em>name</em>, returns a list of
-	property names and values describing digest <i>name</i>. Properties
-	include name, description, size, block_size, type, and flags list.</dd>
-
-    <dt><a name="tls::macs"><strong>tls::macs</strong></a></dt>
-    <dd>Returns a list of the available Message Authentication Codes (MAC) for
-	the <b>tls::digest</b> command.</dd>
-
     <dt><a name="tls::protocols"><strong>tls::protocols</strong></a></dt>
-    <dd>Returns a list of supported protocols. Valid values are:
+    <dd>Returns a list of the supported protocols. Valid values are:
 	<b>ssl2</b>, <b>ssl3</b>, <b>tls1</b>, <b>tls1.1</b>, <b>tls1.2</b>,
 	and <b>tls1.3</b>. Exact list depends on OpenSSL version and
 	compile time flags.</dd>
 
     <dt><a name="tls::version"><strong>tls::version</strong></a></dt>
     <dd>Returns the OpenSSL version string.</dd>
-
-    <br>
-    <dt><a name="tls::digest"><strong>tls::digest</strong> <b>-digest</b>
-	<em>name ?</em><b>-bin</b>|<b>-hex</b><em>? [</em><b>-file</b> <em>filename | </em><b>-command</b> <em>cmdName |
-	</em><b>-chan</b> <em>channelId | </em><b>-data</b> <em>data]</em></a></dt>
-    <dd>Calculate the message digest (MD) of data using <em>name</em> hash
-	function and return the resulting hash value as a hex string (default)
-	or as a binary value with <b>-bin</b> or <b>-binary</b> option. MDs
-	are used to ensure the integrity of data. The hash function can be any
-	supported OpenSSL algorithm such as <b>md4</b>, <b>md5</b>, <b>sha1</b>,
-	<b>sha256</b>, <b>sha512</b>, <b>sha3-256</b>, etc. See
-	<b>tls::digests</b> command for a full list. In OpenSSL 3.0+, older
-	algorithms may reside in the legacy provider.
-	<br>
-	Using the <b>-data</b> option will immediately return the message
-	digest for <em>data</em> in the specified format. Example code:
-<blockquote><code>
-		set md [::tls::digest sha256 "Some example data."]<br>
-</code></blockquote>
-	Using the <b>-file</b> or <b>-filename</b> option will open file
-	<em>filename</em>, read the file data, close the file, and return the
-	message digest in the specified format. This uses the TCL APIs, so VFS
-	files are supported. Example code:
-<blockquote><code>
-		set md [::tls::digest -digest sha256 -file test_file.txt]<br>
-</code></blockquote>
-	Using the <b>-chan</b> or <b>-channel</b> option, a stacked channel is
-	created for <em>channelId</em> and data read from the channel is used
-	to calculate a message digest with the result returned with the last
-	read operation before EOF. Channel is automatically set to binary mode.
-	Example code:
-<blockquote><code>
-		set ch [open test_file.txt r]<br>
-		::tls::digest -digest sha256 -chan $ch<br>
-		while {![eof $ch]} {set md [read $ch 4096]}<br>
-		close $ch
-</code></blockquote>
-	Using the <b>-command</b> option, a new command <em>cmdName</em> is
-	created and returned. To add data to the hash function, call
-	&quot;<em>cmdName</em> <b>update</b> <em>data</em>&quot;, where data is
-	the data to add. When done, call &quot;<em>cmdName</em> <b>finalize</b>&quot;
-	to return the message digest. Example code:
-<blockquote><code>
-		set cmd [::tls::digest -digest sha256 -command ::tls::temp]<br>
-		$cmd update "Some data. "<br>
-		$cmd update "More data."<br>
-		set md [$cmd finalize]
-</code></blockquote>
-	</dd>
-
-    <dt><a name="tls::cmac"><strong>tls::cmac</strong> <b>-cipher</b> <em>name</em>
-	<b>-key</b> <em>key ?</em><b>-bin</b>|<b>-hex</b><em>? [</em><b>-file</b> <em>filename | </em><b>-command</b> <em>cmdName |
-	</em><b>-chan</b> <em>channelId | </em><b>-data</b> <em>data]</em></a></dt>
-    <dd>Calculate the Cipher-based Message Authentication Code (CMAC). MACs
-	are used to ensure authenticity and the integrity of data. It uses the
-	same options as <b>tls::digest</b>, plus the additional option
-	<b>-cipher</b> to specify the cipher to use and for certain ciphers,
-	<b>-key</b> to specify the key.</dd>
-
-    <dt><a name="tls::hmac"><strong>tls::hmac</strong> <b>-digest</b> <em>name</em>
-	<b>-key</b> <em>key ?</em><b>-bin</b>|<b>-hex</b><em>? [</em><b>-file</b> <em>filename | </em><b>-command</b> <em>cmdName |
-	</em><b>-chan</b> <em>channelId | </em><b>-data</b> <em>data]</em></a></dt>
-    <dd>Calculate the Hash-based Message Authentication Code (HMAC). HMACs are
-	used to ensure the data integrity and authenticity of a message using a
-	shared secret key. The cryptographic strength depends upon the size of
-	the key and the security of the hash function used. It uses the same
-	options as <b>tls::digest</b>, plus additional option <b>-key</b> to
-	specify the key to use. To salt a password, append or prepend the salt
-	data to the password.</dd>
-
-    <dt><a name="tls::mac"><strong>tls::mac</strong> <b>-cipher</b> <em>name</em>
-	<b>-digest</b> <em>name</em> <b>-key</b> <em>key ?</em><b>-bin</b>|<b>-hex</b><em>?
-	[</em><b>-file</b> <em>filename | </em><b>-command</b> <em>cmdName |
-	</em><b>-chan</b> <em>channelId | </em><b>-data</b> <em>data]</em></a></dt>
-    <dd>(OpenSSL 3.0+) Calculate the Message Authentication Code (MAC). MACs
-	are used to ensure authenticity and the integrity of data. It uses the
-	same options as <b>tls::digest</b>, plus the additional options
-	<b>-cipher</b> to specify the cipher to use, <b>-digest</b> to specify
-	the digest, and for certain ciphers, <b>-key</b> to specify the key.</dd>
-
-    <dt><a name="tls::md4"><strong>tls::md4</strong> <em>data</em></a></dt>
-    <dd>Returns the MD4 message-digest for <em>data</em> as a hex string.</dd>
-
-    <dt><a name="tls::md5"><strong>tls::md5</strong> <em>data</em></a></dt>
-    <dd>Returns the MD5 message-digest for <em>data</em> as a hex string.</dd>
-
-    <dt><a name="tls::sha1"><strong>tls::sha1</strong> <em>data</em></a></dt>
-    <dd>Returns the SHA1 secure hash algorithm digest for <em>data</em> as a hex string.</dd>
-
-    <dt><a name="tls::sha256"><strong>tls::sha256</strong> <em>data</em></a></dt>
-    <dd>Returns the SHA-2 SHA256 secure hash algorithm digest for <em>data</em> as a hex string.</dd>
-
-    <dt><a name="tls::sha512"><strong>tls::sha512</strong> <em>data</em></a></dt>
-    <dd>Returns the SHA-2 SHA512 secure hash algorithm digest for <em>data</em> as a hex string.</dd>
 </dl>
 
 <h3><a name="CALLBACK OPTIONS">CALLBACK OPTIONS</a></h3>
@@ -582,7 +441,7 @@ to handle intermediate processing by the OpenSSL library, using the
 <strong>-command</strong>, <strong>-password</strong>, and
 <strong>-validate_command</strong> options passed to either of
 <strong>tls::socket</strong> or <strong>tls::import</strong>.
-If the callback generates an error, the <b>bgerror</b> command with be
+If the callback generates an error, the <b>bgerror</b> command will be
 invoked with the error information.
 </p>
 
@@ -791,25 +650,10 @@ compatibility with earlier implementations.
 </p>
 
 <p>
-The <strong>tls::debug</strong> variable provides some additional
-control over these reference callbacks.  Its value is zero by default.
-Higher values produce more diagnostic output, and will also force the
-verify method in <strong>tls::callback</strong> to accept the
-certificate, even when it is invalid.
-</p>
-
-<p>
 <em>
 The use of the reference callbacks <strong>tls::callback</strong>,
 <strong>tls::password</strong>, and <strong>tls::validate_command</strong>
 is not recommended.  They may be removed from future releases.
-</em>
-</p>
-
-<p>
-<em>
-The use of the variable <strong>tls::debug</strong> is not recommended.
-It may be removed from future releases.
 </em>
 </p>
 
@@ -820,6 +664,21 @@ TLS key logging can be enabled by setting the environment variable
 key material is generated or received it will be logged to the file. This
 is useful for logging key data for network logging tools to use to
 decrypt the data.
+
+<p>
+The <strong>tls::debug</strong> variable provides some additional
+control over these reference callbacks.  Its value is zero by default.
+Higher values produce more diagnostic output, and will also force the
+verify method in <strong>tls::callback</strong> to accept the
+certificate, even when it is invalid.
+</p>
+
+<p>
+<em>
+The use of the variable <strong>tls::debug</strong> is not recommended.
+It may be removed from future releases.
+</em>
+</p>
 
 <h3><a name="HTTPS EXAMPLE">HTTPS EXAMPLE</a></h3>
 
@@ -837,11 +696,11 @@ set tok [http::geturl https://www.tcl.tk/]
 
 <h3><a name="SPECIAL CONSIDERATIONS">SPECIAL CONSIDERATIONS</a></h3>
 
-<p>The capabilities of this package can vary enormously based upon how your
-OpenSSL library was configured and built. New versions may obsolete older
-protocol versions, add or remove ciphers, change default values, etc. Use the
-<strong>tls::ciphers</strong> and <strong>tls::protocols</strong> commands to
-obtain the supported versions.</p>
+<p>The capabilities of this package can vary enormously based upon how the
+linked to OpenSSL library was configured and built. New versions may obsolete
+older protocol versions, add or remove ciphers, change default values, etc.
+Use the <strong>tls::protocols</strong> commands to obtain the supported
+protocol versions.</p>
 
 <h3><a name="SEE ALSO">SEE ALSO</a></h3>
 

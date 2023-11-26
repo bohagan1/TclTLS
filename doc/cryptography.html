@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="Copyright" content="2023 Brian O'Hagan">
+<title>The Tcl Cryptography Package</title>
+<link rel="stylesheet" href="docs.css" type="text/css" media="all">
+</head>
+
+<body class="vsc-initialized">
+
+<h2>Tcl Cryptography Documentation</h2>
+
+<dl>
+    <dd><a href="#NAME">NAME</a>
+	<dl><dd><b>tls</b> - binding to <b>OpenSSL</b> toolkit.</dd></dl>
+    </dd>
+    <dd><a href="#DESCRIPTION">DESCRIPTION</a> </dd>
+    <dd><a href="#SYNOPSIS">SYNOPSIS</a> </dd>
+    <dd><dl>
+	    <dd><b>package require Tcl</b> <em>?8.5-?</em></dd>
+	    <dd><b>package require tls</b></dd>
+	    <dt>&nbsp;</dt>
+	    <dd><b>tls::cipher</b> <em>name</em></dd>
+	    <dd><b>tls::ciphers</b> <em>?protocol? ?verbose? ?supported?</em></dd>
+	    <dd><b>tls::digests</b> <em>?name?</em></dd>
+	    <dd><b>tls::macs</b></dd>
+	    <dd><b>tls::protocols</b></dd>
+	    <dd><b>tls::version</b></dd>
+	    <dt>&nbsp;</dt>
+	    <dd><b>tls::cmac</b> <b>-cipher</b> <em>name</em> <b>-key</b> <em>key ?options?</em></dd>
+	    <dd><b>tls::hmac</b> <b>-digest</b> <em>name</em> <b>-key</b> <em>key ?options?</em></dd>
+	    <dd><b>tls::md</b> <b>-digest</b> <em>name ?options?</em></dd>
+	    <dd><b>tls::md4</b> <em>data</em></dd>
+	    <dd><b>tls::md5</b> <em>data</em></dd>
+	    <dd><b>tls::sha1</b> <em>data</em></dd>
+	    <dd><b>tls::sha256</b> <em>data</em></dd>
+	    <dd><b>tls::sha512</b> <em>data</em></dd>
+	    <dd><b>tls::unstack</b> <em>channelId</em></dd>
+	</dl>
+    </dd>
+    <dd><a href="#OPTIONS">OPTIONS</a></dd>
+    <dd><a href="#COMMANDS">COMMANDS</a></dd>
+    <dd><a href="#GLOSSARY">GLOSSARY</a> </dd>
+    <dd><a href="#EXAMPLES">EXAMPLES</a></dd>
+    <dd><a href="#SPECIAL">SPECIAL CONSIDERATIONS</a></dd>
+</dl>
+
+<br>
+
+<h3><a name="NAME">NAME</a></h3>
+
+<p><strong>tls</strong> - binding to <strong>OpenSSL</strong> toolkit.</p>
+
+<h3><a name="DESCRIPTION">DESCRIPTION</a></h3>
+
+<p>This extension provides a generic interface to the
+<a href="http://www.openssl.org/">OpenSSL</a> cryptography functions. The
+provided commands can be used to ensure the confidentiality, authenticity,
+and integrity of messages and data.</p>
+
+<br>
+<h3><a name="SYNOPSIS">SYNOPSIS</a></h3>
+
+<p><b>package require Tcl 8.5-</b><br>
+<b>package require tls</b><br>
+<br>
+<a href="#tls::cipher"><b>tls::cipher</b> <i>name</i></a><br>
+<a href="#tls::ciphers"><b>tls::ciphers</b> <i>?protocol? ?verbose? ?supported?</i></a><br>
+<a href="#tls::digests"><b>tls::digests</b> <i>?name?</i></a><br>
+<a href="#tls::macs"><b>tls::macs</b></a><br>
+<a href="#tls::protocols"><b>tls::protocols</b></a><br>
+<a href="#tls::version"><b>tls::version</b></a><br>
+<br>
+<a href="#tls::cmac"><b>tls::cmac</b> <b>-cipher</b> <i>name</i> <b>-key</b> <i>key ?options?</i></a><br>
+<a href="#tls::hmac"><b>tls::hmac</b> <b>-digest</b> <i>name</i> <b>-key</b> <i>key ?options?</i></a><br>
+<a href="#tls::md"><b>tls::md</b> <b>-digest</b> <i>name ?options?</i></a><br>
+<a href="#tls::md4"><b>tls::md4</b> <i>data</i></a><br>
+<a href="#tls::md5"><b>tls::md5</b> <i>data</i></a><br>
+<a href="#tls::sha1"><b>tls::sha1</b> <i>data</i></a><br>
+<a href="#tls::sha256"><b>tls::sha256</b> <i>data</i></a><br>
+<a href="#tls::sha512"><b>tls::sha512</b> <i>data</i></a><br>
+<a href="#tls::unstack"><b>tls::unstack</b> <i>channelId</i></a><br>
+</p>
+
+<br>
+<h3><a name="OPTIONS">OPTIONS</a></h3>
+
+<p>The following options are used by the cryptography commands.</p>
+<br>
+<h4>Cryptographic Options</h4>
+
+<dl>
+    <dt><a name="-cipher"><strong>-cipher</strong> <em>name</em></a></dt>
+    <dd>Name of cryptographic cipher to use. Used by the CMAC and GMAC hash
+    algorithms. For CMAC it must be one of AES-128-CBC, AES-192-CBC, AES-256-CBC
+    or DES-EDE3-CBC. For GMAC it should be a GCM mode cipher e.g. AES-128-GCM.
+    See <a href="#tls::ciphers"><b>tls::ciphers</b></a> for the valid values.</dd>
+</dl>
+
+<dl>
+    <dt><a name="-digest"><strong>-digest</strong> <em>name</em></a></dt>
+    <dd>Name of hash function (aka message digest) to use.
+    See <a href="#tls::digests"><b>tls::digests</b></a> for the valid values.</dd>
+</dl>
+
+<dl>
+    <dt><a name="-iterations"><strong>-iterations</strong> <em>count</em></a></dt>
+    <dd>Number (integer) of iterations on the password to use in deriving the
+    encryption key. Default is 10000. Some KDF implementations require an
+    iteration count.</dd>
+</dl>
+
+<dl>
+    <dt><a name="-iv"><strong>-iv</strong> <em>string</em></a></dt>
+    <dd>Initialization vector (IV). Required for GMAC. Cipher modes CBC, CFB, OFB and CTR all need an initialization vector (IV) while ECB mode does not. A new, random IV should be created for each use. Think of the IV as a nonce (number used once), it's public but random and unpredictable.</dd>
+</dl>
+
+<dl>
+    <dt><a name="-key"><strong>-key</strong> <em>string</em></a></dt>
+    <dd>Encryption key to use for cryptography function. Can be a binary or
+    text string. Longer keys provide
+    better protection. Used by HMAC, some CMAC, and some KDF implementations.
+    Some functions require key length must conform to <b>key_length</b> size.</dd>
+</dl>
+
+<dl>
+    <dt><a name="-mac"><strong>-mac</strong> <em>name</em></a></dt>
+    <dd>Name of Message Authentication Code (MAC) to use.
+    See <a href="#tls::mac"><b>tls::macs</b></a> for the valid values.</dd>
+</dl>
+
+<dl>
+    <dt><a name="-password"><strong>-password</strong> <em>string</em></a></dt>
+    <dd>Password to use for some KDF functions.</dd>
+</dl>
+
+<dl>
+    <dt><a name="-properties"><strong>-properties</strong> <em>list</em></a></dt>
+    <dd>List of additional properties to pass to cryptography function.</dd>
+</dl>
+
+<dl>
+    <dt><a name="-salt"><strong>-salt</strong> <em>string</em></a></dt>
+    <dd>Specifies salt value to use when encrypting data. Default is to use a
+    randomly generated value. This option is used by BLAKE2 MAC and some KDF
+    implementations use a non-secret unique cryptographic salt.</dd>
+</dl>
+
+<dl>
+    <dt><a name="-size"><strong>-size</strong> <em>number</em></a></dt>
+    <dd>Set the output hash size in bytes. Used by KMAC128 or KMAC256 to specify
+    an output length. The default sizes are 32 or 64 bytes respectively.</dd>
+</dl>
+
+<dl>
+    <dt><a name="-xof"><strong>-xof</strong> <em>boolean</em></a></dt>
+    <dd>Set whether to use XOF. This option is used by KMAC.</dd>
+</dl>
+
+<br>
+<h4>Input/Output Options</h4>
+
+<dl>
+    <dt><a name="-chan"><strong>-chan</strong> <em>channelId</em></a></dt>
+    <dt><a name="-chan"><strong>-channel</strong> <em>channelId</em></a></dt>
+    <dd>Add the cryptographic transformation on top of channel
+	<em>channelId</em>. Automatically sets channel to binary mode. Works
+	like <b>chan push</b> to create a stacked channel. If the command
+	<b>fileevent</b> is to be used for channel event monitoring, all
+	channels in the stack should be set to non-blocking mode. If not,
+	the system may hang while waiting for data. When done, use either the
+	close command or <a href="#tls::unstack"><strong>tls::unstack</strong></a>
+	to remove the transform from the channel. Additional transforms cannot
+	be added to channel. Example code:</dd></dl>
+    <blockquote><code>
+		set ch [open test_file.txt rb]<br>
+		::tls::digest -digest sha256 -chan $ch<br>
+		while {![eof $ch]} {set md [read $ch 4096]}<br>
+		close $ch<br>
+		puts $md
+    </code></blockquote>
+
+<dl>
+    <dt><a name="-command"><strong>-command</strong> <em>cmdName</em></a></dt>
+    <dd>Create and return <em>cmdName</em> which is used to incrementally add
+	data to a cryptographic function. To add data to the function, call
+	&quot;<em>cmdName</em> <b>update</b> <em>data</em>&quot;, where
+	<em>data</em> is the data to add. When done, call
+	&quot;<em>cmdName</em> <b>finalize</b>&quot; to return the resulting
+	value and delete <em>cmdName</em>. Example code:</dd></dl>
+    <blockquote><code>
+		set cmd [::tls::digest -digest sha256 -command ::tls::temp]<br>
+		$cmd update "Some data. "<br>
+		$cmd update "More data."<br>
+		set md [$cmd finalize]<br>
+		puts $md
+    </code></blockquote>
+
+<dl>
+    <dt><a name="-data"><strong>-data</strong> <em>string</em></a></dt>
+    <dd>Perform the cryptographic function on <em>data</em> and return the
+    result. Example code:</dd></dl>
+    <blockquote><code>
+		set md [::tls::digest sha256 "Some example data."]<br>
+		puts $md
+    </code></blockquote>
+
+<dl>
+    <dt><a name="-file"><strong>-file</strong> <em>filename</em></a></dt>
+    <dt><a name="-file"><strong>-filename</strong> <em>filename</em></a></dt>
+    <dd>Perform the cryptographic function on file <em>filename</em> and return
+    the result. This operation will open file, read the file data, close the
+    file, and return the result using the TCL APIs, so VFS files are
+    supported. Example code:</dd></dl>
+    <blockquote><code>
+		set md [::tls::digest -digest sha256 -file test_file.txt]<br>
+		puts $md
+    </code></blockquote>
+
+<dl>
+    <dt><a name="-infile"><strong>-infile</strong> <em>filename</em></a></dt>
+    <dd>Specifies the file to use as data input source.</dd></dl>
+
+<dl>
+    <dt><a name="-outfile"><strong>-outfile</strong> <em>filename</em></a></dt>
+    <dd>Specifies the file to send the results to.</dd></dl>
+
+<dl>
+    <dt><a name="-keyfile"><strong>-keyfile</strong> <em>filename</em></a></dt>
+    <dd>Specifies the file to get the encryption key from.</dd></dl>
+
+<br>
+
+<h4>Format Options</h4>
+
+<dl>
+    <dt><a name="-base64"><strong>-base64</strong></a></dt>
+    <dd>Base64 encode data after encryption or decode before decryption.</dd>
+</dl>
+
+<dl>
+    <dt><a name="-bin"><strong>-bin</strong></a></dt>
+    <dt><a name="-bin"><strong>-binary</strong></a></dt>
+    <dd>Output result of function as a binary string.</dd>
+</dl>
+
+<dl>
+    <dt><a name="-hex"><strong>-hex</strong></a></dt>
+    <dt><a name="-hex"><strong>-hexadecimal</strong></a></dt>
+    <dd>Output result of function as a hexadecimal string. This is the default
+	option unless otherwise specified.</dd>
+</dl>
+
+<br>
+<h3><a name="COMMANDS">COMMANDS</a></h3>
+
+<p>The following commands provide access to the OpenSSL cryptography functions.</p>
+
+<dl>
+
+<h4>Info Commands</h4>
+
+    <dt><a name="tls::cipher"><strong>tls::cipher</strong> <em>name</em></a></dt>
+    <dd>Return a list of property names and values describing cipher
+	<i>name</i>. Properties include name, description, block_size,
+	key_length, iv_length, type, and mode list.</dd>
+
+    <dt><a name="tls::ciphers"><strong>tls::ciphers</strong>
+    <em>?protocol? ?verbose? ?supported?</em></a></dt>
+    <dd>Without any args, returns a list of all symmetric ciphers for use with
+	the <a href="#-cipher"><b>-cipher</b></a> option. With <em>protocol</em>,
+	only the ciphers supported for that protocol are returned. See
+	<b>tls::protocols</b> command for the supported protocols. If
+	<em>verbose</em> is specified as true then a verbose, human readable
+	list is returned with additional information on the cipher. If
+	<em>supported</em> is specified as true, then only the ciphers
+	supported for protocol will be listed.</dd>
+
+    <dt><a name="tls::digests"><strong>tls::digests</strong> <em>?name?</em></a></dt>
+    <dd>Without <em>name</em>, returns a list of the supported message digests
+	(aka hash algorithms) for use with the <a href="#-digest"><b>-digest</b></a>
+	option. With <em>name</em>, returns a list of
+	property names and values describing message digest <i>name</i>. Properties
+	include name, description, size, block_size, type, and flags list.</dd>
+
+    <dt><a name="tls::kdfs"><strong>tls::kdfs</strong></a></dt>
+    <dd>Returns a list of the available Key Derivation Function (KDF)
+	algorithms.</dd>
+
+    <dt><a name="tls::macs"><strong>tls::macs</strong></a></dt>
+    <dd>Returns a list of the available Message Authentication Codes (MAC)
+	for use with the <a href="#-key"><b>-key</b></a> option.</dd>
+
+    <dt><a name="tls::protocols"><strong>tls::protocols</strong></a></dt>
+    <dd>Returns a list of supported protocols. Valid values are:
+	<b>ssl2</b>, <b>ssl3</b>, <b>tls1</b>, <b>tls1.1</b>, <b>tls1.2</b>,
+	and <b>tls1.3</b>. Exact list depends on OpenSSL version and
+	compile time flags.</dd>
+
+    <dt><a name="tls::version"><strong>tls::version</strong></a></dt>
+    <dd>Returns the OpenSSL version string.</dd>
+
+<br>
+
+<h4>Message Digest (MD) and Message Authentication Code (MAC) Commands</h4>
+
+    <dt><a name="tls::cmac"><strong>tls::cmac</strong>
+	<em>?</em><b>-cipher</b><em>? name</em>
+	<b>-key</b> <em>key ?</em><b>-bin</b>|<b>-hex</b><em>?
+	[</em><b>-file</b> <em>filename | </em><b>-command</b> <em>cmdName |
+	</em><b>-chan</b> <em>channelId | ?</em><b>-data</b><em>? data]</em></a></dt>
+    <dd>Calculate the Cipher-based Message Authentication Code (CMAC) where
+	<em>key</em> is a shared key and output the result per the I/O options
+	in the specified format. MACs are used to ensure authenticity and the
+	integrity of data. See <a href="#OPTIONS"><b>options</b></a> for usage
+	info. Option <b>-key</b> is only used for some ciphers.</dd>
+
+    <dt><a name="tls::hmac"><strong>tls::hmac</strong>
+	<em>?</em><b>-digest</b><em>? name</em>
+	<b>-key</b> <em>key ?</em><b>-bin</b>|<b>-hex</b><em>?
+	[</em><b>-file</b> <em>filename | </em><b>-command</b> <em>cmdName |
+	</em><b>-chan</b> <em>channelId | ?</em><b>-data</b><em>? data]</em></a></dt>
+    <dd>Calculate the Hash-based Message Authentication Code (HMAC) where
+	<em>key</em> is a shared secret key and output the result per the I/O
+	options in the specified format. The cryptographic strength depends
+	upon the size of the key and the security of the hash function used.
+	See <a href="#OPTIONS"><b>options</b></a> for usage info.</dd>
+
+    <dt><a name="tls::mac"><strong>tls::mac</strong>
+	<em>?</em><b>-mac</b><em>? name</em> <b>-cipher</b> <em>name</em>
+	<b>-digest</b> <em>name</em> <b>-key</b> <em>key ?</em>
+	<b>-bin</b>|<b>-hex</b><em>? [</em><b>-file</b>
+	<em>filename | </em><b>-command</b> <em>cmdName |
+	</em><b>-chan</b> <em>channelId | ?</em><b>-data</b><em>? data]</em></a></dt>
+    <dd>(OpenSSL 3.0+) Calculate the Message Authentication Code (MAC) where
+	<em>key</em> is a shared key and output the result per the I/O options
+	in the specified format. MACs are used to ensure authenticity and
+	the integrity of data. See <a href="#OPTIONS"><b>options</b></a>
+	for usage info.</dd>
+
+    <dt><a name="tls::md"><strong>tls::md</strong>
+	<em>?</em><b>-digest</b><em>? name ?</em><b>-bin</b>|<b>-hex</b><em>?
+	[</em><b>-file</b> <em>filename | </em><b>-command</b> <em>cmdName |
+	</em><b>-chan</b> <em>channelId | ?</em><b>-data</b><em>? data]</em></a></dt>
+    <dd>Calculate the message digest (MD) using hash function (aka message
+	digest) <em>name</em> and output the result per the I/O options in the
+	specified format. MDs are used to ensure the integrity of data. See
+	<a href="#OPTIONS"><b>options</b></a> for usage info.</dd>
+
+    <dt><a name="tls::md4"><strong>tls::md4</strong> <em>data</em></a></dt>
+    <dd>Returns the MD4 message-digest for <em>data</em> as a hex string.</dd>
+
+    <dt><a name="tls::md5"><strong>tls::md5</strong> <em>data</em></a></dt>
+    <dd>Returns the MD5 message-digest for <em>data</em> as a hex string.</dd>
+
+    <dt><a name="tls::sha1"><strong>tls::sha1</strong> <em>data</em></a></dt>
+    <dd>Returns the SHA1 secure hash algorithm digest for <em>data</em> as a hex string.</dd>
+
+    <dt><a name="tls::sha256"><strong>tls::sha256</strong> <em>data</em></a></dt>
+    <dd>Returns the SHA-2 SHA256 secure hash algorithm digest for <em>data</em> as a hex string.</dd>
+
+    <dt><a name="tls::sha512"><strong>tls::sha512</strong> <em>data</em></a></dt>
+    <dd>Returns the SHA-2 SHA512 secure hash algorithm digest for <em>data</em> as a hex string.</dd>
+
+    <dt><a name="tls::unstack"><strong>tls::unstack</strong> <em>channelId</em></a></dt>
+    <dd>Removes the top level cryptographic transform from channel <em>channelId</em>.</dd>
+</dl>
+
+<br>
+<h3><a name="GLOSSARY">GLOSSARY</a></h3>
+
+<p>The following is a list of the terminology used in this package along with
+brief definitions. For more details, please consult with the OpenSSL documentation.</p>
+
+
+<br>
+<h3><a name="EXAMPLES">EXAMPLES</a></h3>
+
+<p>TBS</p>
+
+<pre><code>
+package require http
+package require tls
+
+http::register https 443 [list ::tls::socket -autoservername true -require true -cadir /etc/ssl/certs]
+
+set tok [http::geturl https://www.tcl.tk/]
+</code></pre>
+
+<br>
+<h3><a name="SPECIAL">SPECIAL CONSIDERATIONS</a></h3>
+
+<p>The capabilities of this package can vary enormously based upon how your
+OpenSSL library was configured and built. New versions may obsolete older
+ciphers, digests, MACs, etc. or change default values. Use the
+info commands to obtain the supported values.</p>
+<br>
+
+<pre>
+Copyright &copy; 2023 Brian O'Hagan.
+</pre>
+</body>
+</html>
