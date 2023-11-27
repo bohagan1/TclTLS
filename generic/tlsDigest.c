@@ -52,8 +52,8 @@ typedef struct DigestState {
 
 	Tcl_Interp *interp;	/* Current interpreter */
 	EVP_MD_CTX *ctx;	/* MD Context */
-	HMAC_CTX *hctx;		/* HMAC Context */
-	CMAC_CTX *cctx;		/* CMAC Context */
+	HMAC_CTX *hctx;		/* HMAC context */
+	CMAC_CTX *cctx;		/* CMAC context */
 	Tcl_Command token;	/* Command token */
 } DigestState;
 
@@ -154,17 +154,22 @@ int DigestInitialize(Tcl_Interp *interp, DigestState *statePtr, const EVP_MD *md
     int key_len = 0, res = 0;
     const unsigned char *key = NULL;
 
-    /* Create message digest context */
-    if (statePtr->format & TYPE_MD) {
+    /* Create contexts */
+    switch(statePtr->format & 0xFF0) {
+    case TYPE_MD:
 	statePtr->ctx = EVP_MD_CTX_new();
 	res = (statePtr->ctx != NULL);
-    } else if (statePtr->format & TYPE_HMAC) {
+	break;
+    case TYPE_HMAC:
 	statePtr->hctx = HMAC_CTX_new();
 	res = (statePtr->hctx != NULL);
-    } else if (statePtr->format & TYPE_CMAC) {
+	break;
+    case TYPE_CMAC:
 	statePtr->cctx = CMAC_CTX_new();
 	res = (statePtr->cctx != NULL);
+	break;
     }
+
     if (!res) {
 	Tcl_AppendResult(interp, "Create context failed: ", REASON(), NULL);
 	return TCL_ERROR;
@@ -175,14 +180,19 @@ int DigestInitialize(Tcl_Interp *interp, DigestState *statePtr, const EVP_MD *md
 	key = Tcl_GetByteArrayFromObj(keyObj, &key_len);
     }
 
-    /* Initialize hash function */
-    if (statePtr->format & TYPE_MD) {
+    /* Initialize cryptography function */
+    switch(statePtr->format & 0xFF0) {
+    case TYPE_MD:
 	res = EVP_DigestInit_ex(statePtr->ctx, md, NULL);
-    } else if (statePtr->format & TYPE_HMAC) {
+	break;
+    case TYPE_HMAC:
 	res = HMAC_Init_ex(statePtr->hctx, (const void *) key, key_len, md, NULL);
-    } else if (statePtr->format & TYPE_CMAC) {
+	break;
+    case TYPE_CMAC:
 	res = CMAC_Init(statePtr->cctx, (const void *) key, key_len, cipher, NULL);
+	break;
     }
+
     if (!res) {
 	Tcl_AppendResult(interp, "Initialize failed: ", REASON(), NULL);
 	return TCL_ERROR;
@@ -208,13 +218,18 @@ int DigestInitialize(Tcl_Interp *interp, DigestState *statePtr, const EVP_MD *md
 int DigestUpdate(DigestState *statePtr, char *buf, size_t read, int do_result) {
     int res = 0;
 
-    if (statePtr->format & TYPE_MD) {
-	res = EVP_DigestUpdate(statePtr->ctx, buf, read);
-    } else if (statePtr->format & TYPE_HMAC) {
-	res = HMAC_Update(statePtr->hctx, buf, read);
-    } else if (statePtr->format & TYPE_CMAC) {
-	res = CMAC_Update(statePtr->cctx, buf, read);
+    switch(statePtr->format & 0xFF0) {
+    case TYPE_MD:
+        res = EVP_DigestUpdate(statePtr->ctx, buf, read);
+	break;
+    case TYPE_HMAC:
+        res = HMAC_Update(statePtr->hctx, buf, read);
+	break;
+    case TYPE_CMAC:
+        res = CMAC_Update(statePtr->cctx, buf, read);
+	break;
     }
+
     if (!res && do_result) {
 	Tcl_AppendResult(statePtr->interp, "Update failed: ", REASON(), NULL);
 	return TCL_ERROR;
@@ -240,24 +255,29 @@ int DigestUpdate(DigestState *statePtr, char *buf, size_t read, int do_result) {
  */
 int DigestFinalize(Tcl_Interp *interp, DigestState *statePtr, Tcl_Obj **resultObj) {
     unsigned char md_buf[EVP_MAX_MD_SIZE];
-    unsigned int md_len;
-    int res = 0;
+    unsigned int ulen;
+    int res = 0, md_len = 0;
 
-    /* Finalize hash function and calculate message digest */
-    if (statePtr->format & TYPE_MD) {
+    /* Finalize cryptography function and get result */
+    switch(statePtr->format & 0xFF0) {
+    case TYPE_MD:
 	if (!(statePtr->format & IS_XOF)) {
-	    res = EVP_DigestFinal_ex(statePtr->ctx, md_buf, &md_len);
+	    res = EVP_DigestFinal_ex(statePtr->ctx, md_buf, &ulen);
+	    md_len = (int) ulen;
 	} else {
-	    res = EVP_DigestFinalXOF(statePtr->ctx, md_buf, EVP_MAX_MD_SIZE);
+	    res = EVP_DigestFinalXOF(statePtr->ctx, md_buf, (size_t) EVP_MAX_MD_SIZE);
+	    md_len = EVP_MAX_MD_SIZE;
 	}
-
-    } else if (statePtr->format & TYPE_HMAC) {
-	res = HMAC_Final(statePtr->hctx, md_buf, &md_len);
-
-    } else if (statePtr->format & TYPE_CMAC) {
-	size_t len;
-	res = CMAC_Final(statePtr->cctx, md_buf, &len);
-	md_len = (unsigned int) len;
+	break;
+    case TYPE_HMAC:
+	res = HMAC_Final(statePtr->hctx, md_buf, &ulen);
+	md_len = (int) ulen;
+	break;
+    case TYPE_CMAC:
+	size_t size;
+	res = CMAC_Final(statePtr->cctx, md_buf, &size);
+	md_len = (int) size;
+	break;
     }
 
     if (!res) {
@@ -280,7 +300,7 @@ int DigestFinalize(Tcl_Interp *interp, DigestState *statePtr, Tcl_Obj **resultOb
 	Tcl_Obj *newObj = Tcl_NewObj();
 	unsigned char *ptr = Tcl_SetByteArrayLength(newObj, md_len*2);
 
-	for (unsigned int i = 0; i < md_len; i++) {
+	for (int i = 0; i < md_len; i++) {
 	    *ptr++ = hex[(md_buf[i] >> 4) & 0x0F];
 	    *ptr++ = hex[md_buf[i] & 0x0F];
 	}
