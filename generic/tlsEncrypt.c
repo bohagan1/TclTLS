@@ -30,6 +30,74 @@
 #define TYPE_SIGN	0x400
 #define TYPE_VERIFY	0x800
 
+/*******************************************************************/
+
+/*
+ * This structure defines the per-instance state of a encrypt operation.
+ */
+typedef struct EncryptState {
+	int type;		/* Operation type */
+
+	Tcl_Interp *interp;	/* Current interpreter */
+	EVP_CIPHER_CTX *ctx;	/* Cipher Context */
+	Tcl_Command token;	/* Command token */
+} EncryptState;
+
+
+/*
+ *-------------------------------------------------------------------
+ *
+ * EncryptStateNew --
+ *
+ *	This function creates a per-instance state data structure
+ *
+ * Returns:
+ *	State structure pointer
+ *
+ * Side effects:
+ *	Creates structure
+ *
+ *-------------------------------------------------------------------
+ */
+EncryptState *EncryptStateNew(Tcl_Interp *interp, int type) {
+    EncryptState *statePtr = (EncryptState *) ckalloc((unsigned) sizeof(EncryptState));
+
+    if (statePtr != NULL) {
+	memset(statePtr, 0, sizeof(EncryptState));
+	statePtr->type = type;		/* Operation type */
+	statePtr->interp = interp;	/* Current interpreter */
+	statePtr->ctx = NULL;		/* Cipher Context */
+	statePtr->token = NULL;		/* Command token */
+    }
+    return statePtr;
+}
+
+/*
+ *-------------------------------------------------------------------
+ *
+ * EncryptStateFree --
+ *
+ *	This function deletes a state data structure
+ *
+ * Returns:
+ *	Nothing
+ *
+ * Side effects:
+ *	Removes structure
+ *
+ *-------------------------------------------------------------------
+ */
+void EncryptStateFree(EncryptState *statePtr) {
+    if (statePtr == (EncryptState *) NULL) {
+	return;
+    }
+
+    /* Free context structures */
+    if (statePtr->ctx != (EVP_CIPHER_CTX *) NULL) {
+	EVP_CIPHER_CTX_free(statePtr->ctx);
+    }
+    ckfree(statePtr);
+}
 
 /*******************************************************************/
 
@@ -193,6 +261,154 @@ int EncryptFinalize(Tcl_Interp *interp, int type, EVP_CIPHER_CTX *ctx, unsigned 
 /*
  *-------------------------------------------------------------------
  *
+ * EncryptInstanceObjCmd --
+ *
+ *	Handler for encrypt/decrypt command instances. Used to update
+ *	and finalize data for encrypt/decrypt function.
+ *
+ * Returns:
+ *	TCL_OK or TCL_ERROR
+ *
+ * Side effects:
+ *	Adds data to encrypt/decrypt function
+ *
+ *-------------------------------------------------------------------
+ */
+int EncryptInstanceObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
+    EncryptState *statePtr = (EncryptState *) clientData;
+    int fn, data_len = 0, out_len;
+    char *data = NULL;
+    Tcl_Obj *resultObj;
+    unsigned char *outbuf;
+    static const char *instance_fns [] = { "finalize", "update", NULL };
+
+    dprintf("Called");
+
+    /* Validate arg count */
+    if (objc < 2 || objc > 3) {
+	Tcl_WrongNumArgs(interp, 1, objv, "function ?data?");
+	return TCL_ERROR;
+    }
+
+    /* Get function */
+    if (Tcl_GetIndexFromObj(interp, objv[1], instance_fns, "function", 0, &fn) != TCL_OK) {
+	return TCL_ERROR;
+    }
+
+    /* Allocate storage for result. Size should be data size + block size. */
+    resultObj = Tcl_NewObj();
+    outbuf = Tcl_SetByteArrayLength(resultObj, data_len+EVP_MAX_BLOCK_LENGTH);
+    if (resultObj == NULL || outbuf == NULL) {
+	Tcl_AppendResult(interp, "Memory allocation error", (char *) NULL);
+	Tcl_DecrRefCount(resultObj);
+	return TCL_ERROR;
+    }
+
+    /* Do function */
+    if (fn) {
+	/* Get data or return error if none */
+	if (objc == 3) {
+	    data = Tcl_GetByteArrayFromObj(objv[2], &data_len);
+	} else {
+	    Tcl_WrongNumArgs(interp, 1, objv, "update data");
+	    Tcl_DecrRefCount(resultObj);
+	    return TCL_ERROR;
+	}
+
+	/* Update function */
+	if (EncryptUpdate(interp, statePtr->type, statePtr->ctx, outbuf, &out_len, data, data_len) == TCL_OK) {
+	    outbuf = Tcl_SetByteArrayLength(resultObj, out_len);
+	    Tcl_SetObjResult(interp, resultObj);
+	} else {
+	    Tcl_DecrRefCount(resultObj);
+	    return TCL_ERROR;
+	}
+
+    } else {
+	/* Finalize function */
+	if (EncryptFinalize(interp, statePtr->type, statePtr->ctx, outbuf, &out_len) == TCL_OK) {
+	    outbuf = Tcl_SetByteArrayLength(resultObj, out_len);
+	    Tcl_SetObjResult(interp, resultObj);
+	} else {
+	    Tcl_DecrRefCount(resultObj);
+	    return TCL_ERROR;
+	}
+
+	/* Clean-up */
+	Tcl_DeleteCommandFromToken(interp, statePtr->token);
+    }
+    return TCL_OK;
+}
+
+/*
+ *-------------------------------------------------------------------
+ *
+ * EncryptCommandDeleteHandler --
+ *
+ *	 Callback to clean-up when encrypt/decrypt command is deleted.
+ *
+ * Returns:
+ *	Nothing
+ *
+ * Side effects:
+ *	Destroys state info structure
+ *
+ *-------------------------------------------------------------------
+ */
+void EncryptCommandDeleteHandler(ClientData clientData) {
+    EncryptState *statePtr = (EncryptState *) clientData;
+
+    /* Clean-up */
+    EncryptStateFree(statePtr);
+}
+
+/*
+ *-------------------------------------------------------------------
+ *
+ * EncryptCommandHandler --
+ *
+ *	 Create command to add data to encrypt/decrypt function.
+ *
+ * Returns:
+ *	TCL_OK or TCL_ERROR
+ *
+ * Side effects:
+ *	Creates command or error message
+ *
+ *-------------------------------------------------------------------
+ */
+int EncryptCommandHandler(Tcl_Interp *interp, int type, Tcl_Obj *cmdObj,
+	Tcl_Obj *cipherObj, Tcl_Obj *digestObj, Tcl_Obj *keyObj, Tcl_Obj *ivObj) {
+    EncryptState *statePtr;
+    char *cmdName = Tcl_GetStringFromObj(cmdObj, NULL);
+
+    dprintf("Called");
+
+    if ((statePtr = EncryptStateNew(interp, type)) == NULL) {
+	Tcl_AppendResult(interp, "Memory allocation error", (char *) NULL);
+	return TCL_ERROR;
+    }
+
+    /* Initialize function */
+    if (EncryptInitialize(interp, type, &statePtr->ctx, cipherObj, keyObj, ivObj) != TCL_OK) {
+	EncryptStateFree(statePtr);
+	return TCL_ERROR;
+    }
+
+    /* Create instance command */
+    statePtr->token = Tcl_CreateObjCommand(interp, cmdName, EncryptInstanceObjCmd,
+	(ClientData) statePtr, EncryptCommandDeleteHandler);
+
+    /* Return command name */
+    Tcl_SetObjResult(interp, cmdObj);
+    return TCL_OK;
+}
+
+/*******************************************************************/
+
+/*
+ *-------------------------------------------------------------------
+ *
  * EncryptDataHandler --
  *
  *	Perform encryption function on a block of data and return result.
@@ -222,9 +438,9 @@ int EncryptDataHandler(Tcl_Interp *interp, int type, Tcl_Obj *dataObj, Tcl_Obj *
 	return TCL_ERROR;
     }
 
-    /* Allocate storage for encrypted data. Size should be data size + block size. */
+    /* Allocate storage for result. Size should be data size + block size. */
     resultObj = Tcl_NewObj();
-    outbuf = Tcl_SetByteArrayLength(resultObj, data_len+1024);
+    outbuf = Tcl_SetByteArrayLength(resultObj, data_len+EVP_MAX_BLOCK_LENGTH);
     if (resultObj == NULL || outbuf == NULL) {
 	Tcl_AppendResult(interp, "Memory allocation error", (char *) NULL);
 	return TCL_ERROR;
@@ -280,7 +496,7 @@ int EncryptFileHandler(Tcl_Interp *interp, int type, Tcl_Obj *inFileObj, Tcl_Obj
     int total = 0, res, out_len = 0, len;
     Tcl_Channel in = NULL, out = NULL;
     unsigned char in_buf[BUFFER_SIZE];
-    unsigned char out_buf[BUFFER_SIZE+1024];
+    unsigned char out_buf[BUFFER_SIZE+EVP_MAX_BLOCK_LENGTH];
 
     dprintf("Called");
 
@@ -388,7 +604,7 @@ static int EncryptMain(int type, Tcl_Interp *interp, int objc, Tcl_Obj *const ob
 
     /* Validate arg count */
     if (objc < 3 || objc > 12) {
-	Tcl_WrongNumArgs(interp, 1, objv, "-cipher name ?-digest name? -key key ?-iv string? [-infile filename -outfile filename | -data data]");
+	Tcl_WrongNumArgs(interp, 1, objv, "-cipher name ?-digest name? -key key ?-iv string? [-command cmdName | -infile filename -outfile filename | -data data]");
 	return TCL_ERROR;
     }
 
@@ -401,6 +617,7 @@ static int EncryptMain(int type, Tcl_Interp *interp, int objc, Tcl_Obj *const ob
 	}
 
 	OPTOBJ("-cipher", cipherObj);
+	OPTOBJ("-command", cmdObj);
 	OPTOBJ("-data", dataObj);
 	OPTOBJ("-digest", digestObj);
 	OPTOBJ("-infile", inFileObj);
@@ -408,7 +625,7 @@ static int EncryptMain(int type, Tcl_Interp *interp, int objc, Tcl_Obj *const ob
 	OPTOBJ("-key", keyObj);
 	OPTOBJ("-iv", ivObj);
 
-	OPTBAD("option", "-cipher, -data, -digest, -infile, -key, -iv, -outfile");
+	OPTBAD("option", "-cipher, -command, -data, -digest, -infile, -key, -iv, -outfile");
 	return TCL_ERROR;
     }
 
@@ -423,10 +640,12 @@ static int EncryptMain(int type, Tcl_Interp *interp, int objc, Tcl_Obj *const ob
     /* Perform encryption function on file, stacked channel, using instance command, or data blob */
     if (inFileObj != NULL && outFileObj != NULL) {
 	res = EncryptFileHandler(interp, type, inFileObj, outFileObj, cipherObj, digestObj, keyObj, ivObj);
+    } else if (cmdObj != NULL) {
+	res = EncryptCommandHandler(interp, type, cmdObj, cipherObj, digestObj, keyObj, ivObj);
     } else if (dataObj != NULL) {
 	res = EncryptDataHandler(interp, type, dataObj, cipherObj, digestObj, keyObj, ivObj);
     } else {
-	Tcl_AppendResult(interp, "No operation specified: Use -data, -infile, or -outfile option", NULL);
+	Tcl_AppendResult(interp, "No operation specified: Use -command, -data, -infile, or -outfile option", NULL);
 	res = TCL_ERROR;
     }
     return res;

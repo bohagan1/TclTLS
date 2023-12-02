@@ -38,6 +38,8 @@ const char *hex = "0123456789abcdef";
 #define EVP_MAC void
 #endif
 
+/*******************************************************************/
+
 /*
  * This structure defines the per-instance state of a digest operation.
  */
@@ -885,8 +887,8 @@ static int DigestUnstackObjCmd(ClientData clientData, Tcl_Interp *interp, int ob
  */
 int DigestInstanceObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
     DigestState *statePtr = (DigestState *) clientData;
-    int fn, len = 0;
-    char *buf = NULL;
+    int fn, data_len = 0;
+    char *data = NULL;
     static const char *instance_fns [] = { "finalize", "update", NULL };
 
     dprintf("Called");
@@ -906,14 +908,14 @@ int DigestInstanceObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tc
     if (fn) {
 	/* Get data or return error if none */
 	if (objc == 3) {
-	    buf = Tcl_GetByteArrayFromObj(objv[2], &len);
+	    data = Tcl_GetByteArrayFromObj(objv[2], &data_len);
 	} else {
 	    Tcl_WrongNumArgs(interp, 1, objv, "update data");
 	    return TCL_ERROR;
 	}
 
 	/* Update hash function */
-	if (DigestUpdate(statePtr, buf, (size_t) len, 1) != TCL_OK) {
+	if (DigestUpdate(statePtr, data, (size_t) data_len, 1) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 
