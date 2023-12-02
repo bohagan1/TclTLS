@@ -17,6 +17,9 @@
 #include <openssl/params.h>
 #endif
 
+/* Macros */
+#define BUFFER_SIZE	32768
+
 /* Encryption functions */
 #define TYPE_MD		0x010
 #define TYPE_HMAC	0x020
@@ -141,7 +144,6 @@ int EncryptUpdate(Tcl_Interp *interp, int type, EVP_CIPHER_CTX *ctx, unsigned ch
     }
 
     if (res) {
-	*out_len += len;
 	return TCL_OK;
     } else {
 	Tcl_AppendResult(interp, "Update failed: ", REASON(), NULL);
@@ -179,7 +181,6 @@ int EncryptFinalize(Tcl_Interp *interp, int type, EVP_CIPHER_CTX *ctx, unsigned 
     }
 
     if (res) {
-	*out_len += len;
 	return TCL_OK;
     } else {
 	Tcl_AppendResult(interp, "Finalize failed: ", REASON(), NULL);
@@ -207,7 +208,7 @@ int EncryptFinalize(Tcl_Interp *interp, int type, EVP_CIPHER_CTX *ctx, unsigned 
 int EncryptDataHandler(Tcl_Interp *interp, int type, Tcl_Obj *dataObj, Tcl_Obj *cipherObj,
 	Tcl_Obj *digestObj, Tcl_Obj *keyObj, Tcl_Obj *ivObj) {
     EVP_CIPHER_CTX *ctx = NULL;
-    int data_len = 0, out_len = 0, res;
+    int data_len = 0, out_len = 0, len = 0, res = TCL_OK;
     unsigned char *data, *outbuf;
     Tcl_Obj *resultObj;
 
@@ -232,10 +233,11 @@ int EncryptDataHandler(Tcl_Interp *interp, int type, Tcl_Obj *dataObj, Tcl_Obj *
     /* Perform operation */
     if (EncryptInitialize(interp, type, &ctx, cipherObj, keyObj, ivObj) != TCL_OK ||
 	EncryptUpdate(interp, type, ctx, outbuf, &out_len, data, data_len) != TCL_OK ||
-	EncryptFinalize(interp, type, ctx, outbuf+out_len, &out_len) != TCL_OK) {
+	EncryptFinalize(interp, type, ctx, outbuf+out_len, &len) != TCL_OK) {
 	res = TCL_ERROR;
 	goto done;
     }
+    out_len += len;
 
 done:
     /* Set output result */
@@ -248,6 +250,106 @@ done:
     }
 
     /* Clean up */
+    if (ctx != NULL) {
+	EVP_CIPHER_CTX_free(ctx);
+    }
+    return res;
+}
+
+/*******************************************************************/
+
+/*
+ *-------------------------------------------------------------------
+ *
+ * EncryptFileHandler --
+ *
+ *	Perform encryption function on a block of data and return result.
+ *
+ * Returns:
+ *	TCL_OK or TCL_ERROR
+ *
+ * Side effects:
+ *	Encrypts or decrypts inFile data to outFile and sets result to
+ *	size of outFile, or an error message.
+ *
+ *-------------------------------------------------------------------
+ */
+int EncryptFileHandler(Tcl_Interp *interp, int type, Tcl_Obj *inFileObj, Tcl_Obj *outFileObj,
+	Tcl_Obj *cipherObj, Tcl_Obj *digestObj, Tcl_Obj *keyObj, Tcl_Obj *ivObj) {
+    EVP_CIPHER_CTX *ctx = NULL;
+    int total = 0, res, out_len = 0, len;
+    Tcl_Channel in = NULL, out = NULL;
+    unsigned char in_buf[BUFFER_SIZE];
+    unsigned char out_buf[BUFFER_SIZE+1024];
+
+    dprintf("Called");
+
+    /* Open input file */
+    if ((in = Tcl_FSOpenFileChannel(interp, inFileObj, "rb", 0444)) == (Tcl_Channel) NULL) {
+	return TCL_ERROR;
+    }
+
+    /* Open output file */
+    if ((out = Tcl_FSOpenFileChannel(interp, outFileObj, "wb", 0644)) == (Tcl_Channel) NULL) {
+	Tcl_Close(interp, in);
+	return TCL_ERROR;
+    }
+
+    /* Initialize operation */
+    if ((res = EncryptInitialize(interp, type, &ctx, cipherObj, keyObj, ivObj)) != TCL_OK) {
+	goto done;
+    }
+
+    /* Read file data from inFile, encrypt/decrypt it, then output to outFile */
+    while (!Tcl_Eof(in)) {
+	int read = Tcl_ReadRaw(in, (char *) in_buf, BUFFER_SIZE);
+	if (read > 0) {
+	    if ((res = EncryptUpdate(interp, type, ctx, out_buf, &out_len, in_buf, read)) == TCL_OK) {
+		if (out_len > 0) {
+		    len = Tcl_WriteRaw(out, (const char *) out_buf, out_len);
+		    if (len >= 0) {
+			total += len;
+		    } else {
+			Tcl_AppendResult(interp, "Write error: ", Tcl_ErrnoMsg(Tcl_GetErrno()), (char *) NULL);
+			res = TCL_ERROR;
+			goto done;
+		    }
+		}
+	    } else {
+		goto done;
+	    }
+	} else if (read < 0) {
+	    Tcl_AppendResult(interp, "Read error: ", Tcl_ErrnoMsg(Tcl_GetErrno()), (char *) NULL);
+	    res = TCL_ERROR;
+	    goto done;
+	}
+    }
+
+    /* Finalize data and write any remaining data in block */
+    if ((res = EncryptFinalize(interp, type, ctx, out_buf, &out_len)) == TCL_OK) {
+	if (out_len > 0) {
+	    len = Tcl_WriteRaw(out, (const char *) out_buf, out_len);
+	    if (len >= 0) {
+		total += len;
+	    } else {
+		Tcl_AppendResult(interp, "Write error: ", Tcl_ErrnoMsg(Tcl_GetErrno()), (char *) NULL);
+		res = TCL_ERROR;
+		goto done;
+	    }
+	}
+	Tcl_SetObjResult(interp, Tcl_NewIntObj(total));
+    } else {
+	goto done;
+    }
+
+done:
+    /* Clean up */
+    if (in != NULL) {
+	Tcl_Close(interp, in);
+    }
+    if (out != NULL) {
+	Tcl_Close(interp, out);
+    }
     if (ctx != NULL) {
 	EVP_CIPHER_CTX_free(ctx);
     }
@@ -286,7 +388,7 @@ static int EncryptMain(int type, Tcl_Interp *interp, int objc, Tcl_Obj *const ob
 
     /* Validate arg count */
     if (objc < 3 || objc > 12) {
-	Tcl_WrongNumArgs(interp, 1, objv, "-cipher name ?-digest name? ?-key key? ?-iv string? [-data data]");
+	Tcl_WrongNumArgs(interp, 1, objv, "-cipher name ?-digest name? -key key ?-iv string? [-infile filename -outfile filename | -data data]");
 	return TCL_ERROR;
     }
 
@@ -301,10 +403,12 @@ static int EncryptMain(int type, Tcl_Interp *interp, int objc, Tcl_Obj *const ob
 	OPTOBJ("-cipher", cipherObj);
 	OPTOBJ("-data", dataObj);
 	OPTOBJ("-digest", digestObj);
+	OPTOBJ("-infile", inFileObj);
+	OPTOBJ("-outfile", outFileObj);
 	OPTOBJ("-key", keyObj);
 	OPTOBJ("-iv", ivObj);
 
-	OPTBAD("option", "-cipher, -data, -digest, -key, or -iv");
+	OPTBAD("option", "-cipher, -data, -digest, -infile, -key, -iv, -outfile");
 	return TCL_ERROR;
     }
 
@@ -317,10 +421,12 @@ static int EncryptMain(int type, Tcl_Interp *interp, int objc, Tcl_Obj *const ob
     }
 
     /* Perform encryption function on file, stacked channel, using instance command, or data blob */
-    if (dataObj != NULL) {
+    if (inFileObj != NULL && outFileObj != NULL) {
+	res = EncryptFileHandler(interp, type, inFileObj, outFileObj, cipherObj, digestObj, keyObj, ivObj);
+    } else if (dataObj != NULL) {
 	res = EncryptDataHandler(interp, type, dataObj, cipherObj, digestObj, keyObj, ivObj);
     } else {
-	Tcl_AppendResult(interp, "No operation specified: Use -data option", NULL);
+	Tcl_AppendResult(interp, "No operation specified: Use -data, -infile, or -outfile option", NULL);
 	res = TCL_ERROR;
     }
     return res;

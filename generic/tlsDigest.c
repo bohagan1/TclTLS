@@ -154,6 +154,8 @@ int DigestInitialize(Tcl_Interp *interp, DigestState *statePtr, const EVP_MD *md
     int key_len = 0, res = 0;
     const unsigned char *key = NULL;
 
+    dprintf("Called");
+
     /* Create contexts */
     switch(statePtr->format & 0xFF0) {
     case TYPE_MD:
@@ -208,7 +210,8 @@ int DigestInitialize(Tcl_Interp *interp, DigestState *statePtr, const EVP_MD *md
  *	Update a hash function with data
  *
  * Returns:
- *	1 if successful or 0 for failure
+ *	TCL_OK if successful or TCL_ERROR for failure with result set
+ *	to error message if do_result is true.
  *
  * Side effects:
  *	Adds buf data to hash function or sets result to error message
@@ -217,6 +220,8 @@ int DigestInitialize(Tcl_Interp *interp, DigestState *statePtr, const EVP_MD *md
  */
 int DigestUpdate(DigestState *statePtr, char *buf, size_t read, int do_result) {
     int res = 0;
+
+    dprintf("Called");
 
     switch(statePtr->format & 0xFF0) {
     case TYPE_MD:
@@ -234,7 +239,7 @@ int DigestUpdate(DigestState *statePtr, char *buf, size_t read, int do_result) {
 	Tcl_AppendResult(statePtr->interp, "Update failed: ", REASON(), NULL);
 	return TCL_ERROR;
     }
-    return res;
+    return TCL_OK;
 }
 
 /*
@@ -257,6 +262,8 @@ int DigestFinalize(Tcl_Interp *interp, DigestState *statePtr, Tcl_Obj **resultOb
     unsigned char md_buf[EVP_MAX_MD_SIZE];
     unsigned int ulen;
     int res = 0, md_len = 0;
+
+    dprintf("Called");
 
     /* Finalize cryptography function and get result */
     switch(statePtr->format & 0xFF0) {
@@ -436,7 +443,7 @@ int DigestInputProc(ClientData clientData, char *buf, int toRead, int *errorCode
     /* Update hash function */
     if (read > 0) {
 	/* Have data */
-	if (!DigestUpdate(statePtr, buf, (size_t) read, 0)) {
+	if (DigestUpdate(statePtr, buf, (size_t) read, 0) != TCL_OK) {
 	    Tcl_SetChannelError(statePtr->self, Tcl_ObjPrintf("Update failed: %s", REASON()));
 	    *errorCodePtr = EINVAL;
 	    return 0;
@@ -494,7 +501,7 @@ int DigestInputProc(ClientData clientData, char *buf, int toRead, int *errorCode
     }
 
     /* Update hash function */
-    if (toWrite > 0 && !DigestUpdate(statePtr, buf, (size_t) toWrite, 0)) {
+    if (toWrite > 0 && DigestUpdate(statePtr, buf, (size_t) toWrite, 0) != TCL_OK) {
 	Tcl_SetChannelError(statePtr->self, Tcl_ObjPrintf("Update failed: %s", REASON()));
 	*errorCodePtr = EINVAL;
 	return 0;
@@ -755,12 +762,13 @@ static const Tcl_ChannelType digestChannelType = {
  *
  *----------------------------------------------------------------------
  */
-static int
-DigestChannelHandler(Tcl_Interp *interp, const char *channel, const EVP_MD *md,
+static int DigestChannelHandler(Tcl_Interp *interp, const char *channel, const EVP_MD *md,
 	const EVP_CIPHER *cipher, int format, Tcl_Obj *keyObj, EVP_MAC *mac) {
     int mode; /* OR-ed combination of TCL_READABLE and TCL_WRITABLE */
     Tcl_Channel chan;
     DigestState *statePtr;
+
+    dprintf("Called");
 
     /* Validate args */
     if (channel == (const char *) NULL) {
@@ -823,10 +831,11 @@ DigestChannelHandler(Tcl_Interp *interp, const char *channel, const EVP_MD *md,
  *
  *----------------------------------------------------------------------
  */
-static int
-DigestUnstackObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
+static int DigestUnstackObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
     Tcl_Channel chan;
     int mode; /* OR-ed combination of TCL_READABLE and TCL_WRITABLE  */
+
+    dprintf("Called");
 
     /* Validate arg count */
     if (objc != 2) {
@@ -880,6 +889,8 @@ int DigestInstanceObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tc
     char *buf = NULL;
     static const char *instance_fns [] = { "finalize", "update", NULL };
 
+    dprintf("Called");
+
     /* Validate arg count */
     if (objc < 2 || objc > 3) {
 	Tcl_WrongNumArgs(interp, 1, objv, "function ?data?");
@@ -902,7 +913,7 @@ int DigestInstanceObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tc
 	}
 
 	/* Update hash function */
-	if (!DigestUpdate(statePtr, buf, (size_t) len, 1)) {
+	if (DigestUpdate(statePtr, buf, (size_t) len, 1) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 
@@ -959,6 +970,8 @@ int DigestCommandHandler(Tcl_Interp *interp, Tcl_Obj *cmdObj, const EVP_MD *md,
     DigestState *statePtr;
     char *cmdName = Tcl_GetStringFromObj(cmdObj, NULL);
 
+    dprintf("Called");
+
     /* Create state data structure */
     if ((statePtr = DigestStateNew(interp, format)) == NULL) {
 	Tcl_AppendResult(interp, "Memory allocation error", (char *) NULL);
@@ -997,12 +1010,13 @@ int DigestCommandHandler(Tcl_Interp *interp, Tcl_Obj *cmdObj, const EVP_MD *md,
  *
  *-------------------------------------------------------------------
  */
-int
-DigestDataHandler(Tcl_Interp *interp, Tcl_Obj *dataObj, const EVP_MD *md,
+int DigestDataHandler(Tcl_Interp *interp, Tcl_Obj *dataObj, const EVP_MD *md,
 	const EVP_CIPHER *cipher, int format, Tcl_Obj *keyObj, EVP_MAC *mac) {
     char *data;
     int data_len;
     DigestState *statePtr;
+
+    dprintf("Called");
 
     /* Get data */
     data = Tcl_GetByteArrayFromObj(dataObj, &data_len);
@@ -1019,7 +1033,7 @@ DigestDataHandler(Tcl_Interp *interp, Tcl_Obj *dataObj, const EVP_MD *md,
 
     /* Calc Digest, abort for error */
     if (DigestInitialize(interp, statePtr, md, cipher, keyObj, mac) != TCL_OK ||
-	DigestUpdate(statePtr, data, (size_t) data_len, 1) == 0 ||
+	DigestUpdate(statePtr, data, (size_t) data_len, 1) != TCL_OK ||
 	DigestFinalize(interp, statePtr, NULL) != TCL_OK) {
 	DigestStateFree(statePtr);
 	return TCL_ERROR;
@@ -1047,12 +1061,14 @@ DigestDataHandler(Tcl_Interp *interp, Tcl_Obj *dataObj, const EVP_MD *md,
  *
  *-------------------------------------------------------------------
  */
-int DigestFileHandler(Tcl_Interp *interp, Tcl_Obj *filename, const EVP_MD *md,
+int DigestFileHandler(Tcl_Interp *interp, Tcl_Obj *inFileObj, const EVP_MD *md,
 	const EVP_CIPHER *cipher, int format, Tcl_Obj *keyObj, EVP_MAC *mac) {
     DigestState *statePtr;
     Tcl_Channel chan = NULL;
     unsigned char buf[BUFFER_SIZE];
     int res = TCL_OK, len;
+
+    dprintf("Called");
 
     /* Create state data structure */
     if ((statePtr = DigestStateNew(interp, format)) == NULL) {
@@ -1061,14 +1077,14 @@ int DigestFileHandler(Tcl_Interp *interp, Tcl_Obj *filename, const EVP_MD *md,
     }
 
     /* Open file channel, abort for error */
-    chan = Tcl_FSOpenFileChannel(interp, filename, "rb", 0444);
+    chan = Tcl_FSOpenFileChannel(interp, inFileObj, "rb", 0444);
     if (chan == (Tcl_Channel) NULL) {
 	DigestStateFree(statePtr);
 	return TCL_ERROR;
     }
 
     /* Configure channel */
-    if ((res = Tcl_SetChannelOption(interp, chan, "-translation", "binary")) == TCL_ERROR) {
+    if ((res = Tcl_SetChannelOption(interp, chan, "-translation", "binary")) != TCL_OK) {
 	goto done;
     }
     Tcl_SetChannelBufferSize(chan, BUFFER_SIZE);
@@ -1082,7 +1098,7 @@ int DigestFileHandler(Tcl_Interp *interp, Tcl_Obj *filename, const EVP_MD *md,
     while (!Tcl_Eof(chan)) {
 	len = Tcl_ReadRaw(chan, (char *) buf, BUFFER_SIZE);
 	if (len > 0) {
-	    if (!DigestUpdate(statePtr, &buf[0], (size_t) len, 1)) {
+	    if (DigestUpdate(statePtr, &buf[0], (size_t) len, 1) != TCL_OK) {
 		res = TCL_ERROR;
 		goto done;
 	    }
@@ -1242,6 +1258,8 @@ static int DigestMain(int type, Tcl_Interp *interp, int objc, Tcl_Obj *const obj
     const EVP_MD *md = NULL;
     const EVP_CIPHER *cipher = NULL;
     EVP_MAC *mac = NULL;
+
+    dprintf("Called");
 
     /* Clear interp result */
     Tcl_ResetResult(interp);
