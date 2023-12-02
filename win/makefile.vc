@@ -28,6 +28,7 @@ PROJECT=tls
 PRJ_OBJS = $(TMP_DIR)\tls.obj \
 	$(TMP_DIR)\tlsBIO.obj \
 	$(TMP_DIR)\tlsDigest.obj \
+	$(TMP_DIR)\tlsEncrypt.obj \
 	$(TMP_DIR)\tlsInfo.obj \
 	$(TMP_DIR)\tlsIO.obj \
 	$(TMP_DIR)\tlsX509.obj

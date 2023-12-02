@@ -2549,6 +2549,7 @@ DLLEXPORT int Tls_Init(Tcl_Interp *interp) {
     Tcl_CreateObjCommand(interp, "tls::status", StatusObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
 
     Tls_DigestCommands(interp);
+    Tls_EncryptCommands(interp);
     Tls_InfoCommands(interp);
 
     if (interp) {
