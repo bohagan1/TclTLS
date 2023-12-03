@@ -74,7 +74,11 @@ proc process_config_file {filename} {
 		}
 
 		# Test case
-		set buffer [format "\ntest %s-%d.%d {%s}" $group $test [incr cases($group)] $name]
+		if {[string index $name 0] ne {$}} {
+		    set buffer [format "\ntest %s-%d.%d {%s}" $group $test [incr cases($group)] $name]
+		} else {
+		    set buffer [format "\ntest %s-%d.%d %s" $group $test [incr cases($group)] $name]
+		}
 		foreach opt [list -constraints -setup -body -cleanup -match -result -output -errorOutput -returnCodes] {
 		    set cmd [string trim [set [string trimleft $opt "-"]]]
 		    if {$cmd ne ""} {

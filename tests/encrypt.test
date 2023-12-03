@@ -1,0 +1,99 @@
+# Auto generated test cases for encrypt.csv
+
+# Load Tcl Test package
+if {[lsearch [namespace children] ::tcltest] == -1} {
+	package require tcltest
+	namespace import ::tcltest::*
+}
+
+set auto_path [concat [list [file dirname [file dirname [info script]]]] $auto_path]
+
+package require tls
+
+# Constraints
+source common.tcl
+
+# Helper functions - See common.tcl
+proc read_chan {filename args} {set ch [open $filename rb];set bsize [fconfigure $ch -buffersize];set new [{*}$args -chan $ch];set dat "";while {![eof $new]} {append dat [read $new $bsize]};close $new;return $dat}
+proc write_chan {filename data args} {set ch [open $filename wb];set new [{*}$args -chan $ch];puts -nonewline $new $data;flush $new;close $new;set ch [open $filename rb];set dat [read $ch];close $ch;return $dat}
+proc accumulate {string args} {set cmd [{*}$args -command dcmd];set ::dat "";append ::dat [$cmd update [string range $string 0 20]];append ::dat [$cmd update [string range $string 21 end]];append ::dat [$cmd finalize]}
+proc get_file_hex {filename} {set ch [open $filename rb];set data [read $ch];close $ch;return [binary encode hex $data]}
+proc get_file_text {filename} {set ch [open $filename r];set data [read $ch];close $ch;return $data}
+
+set test_data "Example string for message digest tests.\n"
+set unencrypted_file "unencrypted_data.dat"
+set encrypted_file "encrypted_data.dat"
+set alt_file "result_data.dat"
+set test_key "Example key"
+set test_iv "Example iv"
+::tcltest::makeFile $test_data $unencrypted_file
+
+# Test encrypt data
+set cipher aes-128-cbc
+set hex_string "3cea034398de64507abbc7bcf6acba55c7011100c9015c22b3c9c331d18479fed5e542ce02a3b89a0f750daf8e2a494e"
+
+
+test Encrypt_Decrypt_Data-1.1 {Encrypt aes-138-cbc} -body {
+	binary encode hex [set data [tls::encrypt -cipher $cipher -key $test_key -iv $test_iv -data $test_data]]
+    } -result $hex_string
+
+test Encrypt_Decrypt_Data-1.2 {Decrypt aes-128-cbc} -body {
+	tls::decrypt -cipher $cipher -key $test_key -iv $test_iv -data $data
+    } -result $test_data
+
+# Test encrypt file
+
+
+test Encrypt_Decrypt_File-2.1 {Encrypt aes-138-cbc} -body {
+	tls::encrypt -cipher $cipher -key $test_key -iv $test_iv -infile $unencrypted_file -outfile $encrypted_file
+	get_file_hex $encrypted_file
+    } -result $hex_string
+
+test Encrypt_Decrypt_File-2.2 {Decrypt aes-128-cbc} -body {
+	tls::decrypt -cipher $cipher -key $test_key -iv $test_iv -infile $encrypted_file -outfile $alt_file
+	get_file_text $alt_file
+    } -result $test_data
+
+# Test encrypt using object command
+
+
+test Encrypt_Decrypt_Command-3.1 {Encrypt aes-138-cbc} -body {
+	accumulate $test_data tls::encrypt -cipher $cipher -key $test_key -iv $test_iv
+	binary encode hex $::dat
+    } -result $hex_string
+
+test Encrypt_Decrypt_Command-3.2 {Decrypt aes-128-cbc} -body {
+	accumulate $::dat tls::decrypt -cipher $cipher -key $test_key -iv $test_iv
+	set ::dat
+    } -result $test_data
+
+# Test encrypt using read channel
+
+
+test Encrypt_Decrypt_Channel_Read-4.1 {Encrypt aes-138-cbc} -body {
+	binary encode hex [read_chan $unencrypted_file tls::encrypt -cipher $cipher -key $test_key -iv $test_iv]
+    } -result $hex_string
+
+test Encrypt_Decrypt_Channel_Read-4.2 {Decrypt aes-138-cbc} -body {
+	read_chan $encrypted_file tls::decrypt -cipher $cipher -key $test_key -iv $test_iv
+    } -result $test_data
+
+# Test encrypt using write channel
+
+
+test Encrypt_Decrypt_Channel_Write-5.1 {Encrypt aes-138-cbc} -body {
+	binary encode hex [set data [write_chan $encrypted_file $test_data tls::encrypt -cipher $cipher -key $test_key -iv $test_iv]]
+    } -result $hex_string
+
+test Encrypt_Decrypt_Channel_Write-5.2 {Decrypt aes-138-cbc} -body {
+	write_chan $alt_file $data tls::decrypt -cipher $cipher -key $test_key -iv $test_iv
+    } -result $test_data
+
+# Cleanup
+::tcltest::removeFile $unencrypted_file
+::tcltest::removeFile $encrypted_file
+::tcltest::removeFile $alt_file
+
+# Cleanup
+::tcltest::cleanupTests
+return
