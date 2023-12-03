@@ -37,6 +37,9 @@
 	    <dd><b>tls::sha256</b> <em>data</em></dd>
 	    <dd><b>tls::sha512</b> <em>data</em></dd>
 	    <dd><b>tls::unstack</b> <em>channelId</em></dd>
+	    <dt>&nbsp;</dt>
+	    <dd><b>tls::encrypt</b> <b>-cipher</b> <em>name</em> <b>-key</b> <em>key ?options?</em></dd>
+	    <dd><b>tls::decrypt</b> <b>-cipher</b> <em>name</em> <b>-key</b> <em>key ?options?</em></dd>
 	</dl>
     </dd>
     <dd><a href="#OPTIONS">OPTIONS</a></dd>
@@ -81,6 +84,9 @@ and integrity of messages and data.</p>
 <a href="#tls::sha256"><b>tls::sha256</b> <i>data</i></a><br>
 <a href="#tls::sha512"><b>tls::sha512</b> <i>data</i></a><br>
 <a href="#tls::unstack"><b>tls::unstack</b> <i>channelId</i></a><br>
+<br>
+<a href="#tls::encrypt"><b>tls::encrypt</b> <b>-cipher</b> <i>name</i> <b>-key</b> <i>key ?options?</i></a><br>
+<a href="#tls::decrypt"><b>tls::decrypt</b> <b>-cipher</b> <i>name</i> <b>-key</b> <i>key ?options?</i></a><br>
 </p>
 
 <br>
@@ -92,10 +98,11 @@ and integrity of messages and data.</p>
 
 <dl>
     <dt><a name="-cipher"><strong>-cipher</strong> <em>name</em></a></dt>
-    <dd>Name of cryptographic cipher to use. Used by the CMAC and GMAC hash
-    algorithms. For CMAC it must be one of AES-128-CBC, AES-192-CBC, AES-256-CBC
-    or DES-EDE3-CBC. For GMAC it should be a GCM mode cipher e.g. AES-128-GCM.
-    See <a href="#tls::ciphers"><b>tls::ciphers</b></a> for the valid values.</dd>
+    <dd>Name of cryptographic cipher to use. Used by encrypt/decrypt command
+    and CMAC &amp; GMAC hash algorithms. For CMAC it must be one of AES-128-CBC,
+    AES-192-CBC, AES-256-CBC or DES-EDE3-CBC. For GMAC it should be a GCM mode
+    cipher e.g. AES-128-GCM. See <a href="#tls::ciphers"><b>tls::ciphers</b></a>
+    for the valid values.</dd>
 </dl>
 
 <dl>
@@ -113,15 +120,21 @@ and integrity of messages and data.</p>
 
 <dl>
     <dt><a name="-iv"><strong>-iv</strong> <em>string</em></a></dt>
-    <dd>Initialization vector (IV). Required for GMAC. Cipher modes CBC, CFB, OFB and CTR all need an initialization vector (IV) while ECB mode does not. A new, random IV should be created for each use. Think of the IV as a nonce (number used once), it's public but random and unpredictable.</dd>
+    <dd>Initialization vector (IV) to use. Required for some ciphers and GMAC.
+    Cipher modes CBC, CFB, OFB and CTR all need an IV while ECB mode does not.
+    A new, random IV should be created for each use. Think of the IV as a nonce
+    (number used once), it's public but random and unpredictable. See the
+   <a href="#tls::cipher"><b>tls::cipher</b></a> command for iv size and
+    when required.</dd>
 </dl>
 
 <dl>
     <dt><a name="-key"><strong>-key</strong> <em>string</em></a></dt>
     <dd>Encryption key to use for cryptography function. Can be a binary or
-    text string. Longer keys provide
-    better protection. Used by HMAC, some CMAC, and some KDF implementations.
-    Some functions require key length must conform to <b>key_length</b> size.</dd>
+    text string. Longer keys provide better protection. Used by ciphers, HMAC,
+    some CMAC, and some KDF implementations. Key lengths less than <b>key_length</b>
+    size may be padded or rejected. See the
+    <a href="#tls::cipher"><b>tls::cipher</b></a> command for key size.</dd>
 </dl>
 
 <dl>
@@ -176,9 +189,10 @@ and integrity of messages and data.</p>
     <blockquote><code>
 		set ch [open test_file.txt rb]<br>
 		::tls::digest -digest sha256 -chan $ch<br>
-		while {![eof $ch]} {set md [read $ch 4096]}<br>
+		set dat ""<br>
+		while {![eof $ch]} {append dat [read $ch 4096]}<br>
 		close $ch<br>
-		puts $md
+		puts $dat
     </code></blockquote>
 
 <dl>
@@ -191,10 +205,11 @@ and integrity of messages and data.</p>
 	value and delete <em>cmdName</em>. Example code:</dd></dl>
     <blockquote><code>
 		set cmd [::tls::digest -digest sha256 -command ::tls::temp]<br>
-		$cmd update "Some data. "<br>
-		$cmd update "More data."<br>
-		set md [$cmd finalize]<br>
-		puts $md
+		set dat ""<br>
+		append dat [$cmd update "Some data. "]<br>
+		append dat [$cmd update "More data."]<br>
+		append dat [$cmd finalize]<br>
+		puts $dat
     </code></blockquote>
 
 <dl>
@@ -211,7 +226,7 @@ and integrity of messages and data.</p>
     <dt><a name="-file"><strong>-filename</strong> <em>filename</em></a></dt>
     <dd>Perform the cryptographic function on file <em>filename</em> and return
     the result. This operation will open file, read the file data, close the
-    file, and return the result using the TCL APIs, so VFS files are
+    file, and return the result using the TCL file APIs, so VFS files are
     supported. Example code:</dd></dl>
     <blockquote><code>
 		set md [::tls::digest -digest sha256 -file test_file.txt]<br>
@@ -220,11 +235,21 @@ and integrity of messages and data.</p>
 
 <dl>
     <dt><a name="-infile"><strong>-infile</strong> <em>filename</em></a></dt>
-    <dd>Specifies the file to use as data input source.</dd></dl>
+    <dd>Specifies the file to use as data input source. This option uses the
+    TCL file APIs, so VFS files are supported. Example code:</dd></dl>
+    <blockquote><code>
+		::tls::encrypt -cipher aes-128-cbc -key "Test key"
+		-infile unencrypted.txt -outfile encrypted.dat
+    </code></blockquote>
 
 <dl>
     <dt><a name="-outfile"><strong>-outfile</strong> <em>filename</em></a></dt>
-    <dd>Specifies the file to send the results to.</dd></dl>
+    <dd>Specifies the file to output the encryption results to. This option
+    uses the TCL file APIs, so VFS files are supported. Example code:</dd></dl>
+    <blockquote><code>
+		::tls::decrypt -cipher aes-128-cbc -key "Test key"
+		-infile encrypted.dat -outfile unencrypted.txt
+    </code></blockquote>
 
 <dl>
     <dt><a name="-keyfile"><strong>-keyfile</strong> <em>filename</em></a></dt>
@@ -308,8 +333,8 @@ and integrity of messages and data.</p>
     <dt><a name="tls::cmac"><strong>tls::cmac</strong>
 	<em>?</em><b>-cipher</b><em>? name</em>
 	<b>-key</b> <em>key ?</em><b>-bin</b>|<b>-hex</b><em>?
-	[</em><b>-file</b> <em>filename | </em><b>-command</b> <em>cmdName |
-	</em><b>-chan</b> <em>channelId | ?</em><b>-data</b><em>? data]</em></a></dt>
+	[</em><b>-chan</b> <em>channelId |</em> <b>-command</b> <em>cmdName |</em>
+	<b>-file</b> <em>filename | ?</em><b>-data</b><em>? data]</em></a></dt>
     <dd>Calculate the Cipher-based Message Authentication Code (CMAC) where
 	<em>key</em> is a shared key and output the result per the I/O options
 	in the specified format. MACs are used to ensure authenticity and the
@@ -319,8 +344,8 @@ and integrity of messages and data.</p>
     <dt><a name="tls::hmac"><strong>tls::hmac</strong>
 	<em>?</em><b>-digest</b><em>? name</em>
 	<b>-key</b> <em>key ?</em><b>-bin</b>|<b>-hex</b><em>?
-	[</em><b>-file</b> <em>filename | </em><b>-command</b> <em>cmdName |
-	</em><b>-chan</b> <em>channelId | ?</em><b>-data</b><em>? data]</em></a></dt>
+	[</em><b>-chan</b> <em>channelId |</em> <b>-command</b> <em>cmdName |</em>
+	<b>-file</b> <em>filename | ?</em><b>-data</b><em>? data]</em></a></dt>
     <dd>Calculate the Hash-based Message Authentication Code (HMAC) where
 	<em>key</em> is a shared secret key and output the result per the I/O
 	options in the specified format. The cryptographic strength depends
@@ -330,9 +355,9 @@ and integrity of messages and data.</p>
     <dt><a name="tls::mac"><strong>tls::mac</strong>
 	<em>?</em><b>-mac</b><em>? name</em> <b>-cipher</b> <em>name</em>
 	<b>-digest</b> <em>name</em> <b>-key</b> <em>key ?</em>
-	<b>-bin</b>|<b>-hex</b><em>? [</em><b>-file</b>
-	<em>filename | </em><b>-command</b> <em>cmdName |
-	</em><b>-chan</b> <em>channelId | ?</em><b>-data</b><em>? data]</em></a></dt>
+	<b>-bin</b>|<b>-hex</b><em>?
+	[</em><b>-chan</b> <em>channelId |</em> <b>-command</b> <em>cmdName |</em>
+	<b>-file</b> <em>filename | ?</em><b>-data</b><em>? data]</em></a></dt>
     <dd>(OpenSSL 3.0+) Calculate the Message Authentication Code (MAC) where
 	<em>key</em> is a shared key and output the result per the I/O options
 	in the specified format. MACs are used to ensure authenticity and
@@ -341,11 +366,11 @@ and integrity of messages and data.</p>
 
     <dt><a name="tls::md"><strong>tls::md</strong>
 	<em>?</em><b>-digest</b><em>? name ?</em><b>-bin</b>|<b>-hex</b><em>?
-	[</em><b>-file</b> <em>filename | </em><b>-command</b> <em>cmdName |
-	</em><b>-chan</b> <em>channelId | ?</em><b>-data</b><em>? data]</em></a></dt>
-    <dd>Calculate the message digest (MD) using hash function (aka message
-	digest) <em>name</em> and output the result per the I/O options in the
-	specified format. MDs are used to ensure the integrity of data. See
+	[</em><b>-chan</b> <em>channelId |</em> <b>-command</b> <em>cmdName |</em>
+	<b>-file</b> <em>filename | ?</em><b>-data</b><em>? data]</em></a></dt>
+    <dd>Calculate the message digest (MD) using hash function <em>name</em>
+	and output the result per the I/O options in the specified format.
+	MDs are used to ensure the integrity of data. See
 	<a href="#OPTIONS"><b>options</b></a> for usage info.</dd>
 
     <dt><a name="tls::md4"><strong>tls::md4</strong> <em>data</em></a></dt>
@@ -365,6 +390,34 @@ and integrity of messages and data.</p>
 
     <dt><a name="tls::unstack"><strong>tls::unstack</strong> <em>channelId</em></a></dt>
     <dd>Removes the top level cryptographic transform from channel <em>channelId</em>.</dd>
+
+<br>
+
+<h4>Encryption and Decryption Commands</h4>
+
+    <dt><a name="tls::encrypt"><strong>tls::encrypt</strong>
+	<b>-cipher</b> <em>name</em> <b>-key</b> <em>key ?</em><b>-iv</b> <em>string?
+	[</em><b>-chan</b> <em>channelId |</em> <b>-command</b> <em>cmdName |</em>
+	<b>-infile</b> <em>filename</em> <b>-outfile</b> <em>filename |</em>
+	<b>-data</b><em> data]</em></a></dt>
+    <dd>Encrypt the data using cipher <em>cipher</em> and output the result per
+	the I/O options. Ciphers are used to create the cipher text from the
+	input data. See <a href="#OPTIONS"><b>options</b></a> for usage
+	info. Option <b>-iv</b> is only used for some ciphers. See the
+	&quot;<b>tls::cipher</b> <em>cipher</em>&quot; command for key and iv
+	sizes and when the iv is used (iv_length &gt; 0).</dd>
+
+    <dt><a name="tls::decrypt"><strong>tls::decrypt</strong>
+	<b>-cipher</b> <em>name</em> <b>-key</b> <em>key ?</em><b>-iv</b> <em>string?
+	[</em><b>-chan</b> <em>channelId |</em> <b>-command</b> <em>cmdName |</em>
+	<b>-infile</b> <em>filename</em> <b>-outfile</b> <em>filename |</em>
+	<b>-data</b><em> data]</em></a></dt>
+    <dd>Decrypt the data using cipher <em>cipher</em> and output the result per
+	the I/O options. This command is the opposite of the <b>tls::encrypt</b>
+	command. See <a href="#OPTIONS"><b>options</b></a> for usage
+	info. Option <b>-iv</b> is only used for some ciphers. See the
+	&quot;<b>tls::cipher</b> <em>cipher</em>&quot; command for key and iv
+	sizes and when the iv is used (iv_length &gt; 0).</dd>
 </dl>
 
 <br>
