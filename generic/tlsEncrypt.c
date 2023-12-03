@@ -19,6 +19,8 @@
 
 /* Macros */
 #define BUFFER_SIZE	32768
+#define CHAN_EOF	0x10
+#define READ_DELAY	5
 
 /* Encryption functions */
 #define TYPE_MD		0x010
@@ -36,6 +38,12 @@
  * This structure defines the per-instance state of a encrypt operation.
  */
 typedef struct EncryptState {
+	Tcl_Channel self;	/* This socket channel */
+	Tcl_TimerToken timer;	/* Timer for read events */
+
+	int flags;		/* Chan config flags */
+	int watchMask;		/* Current WatchProc mask */
+	int mode;		/* Current mode of parent channel */
 	int type;		/* Operation type */
 
 	Tcl_Interp *interp;	/* Current interpreter */
@@ -64,6 +72,11 @@ EncryptState *EncryptStateNew(Tcl_Interp *interp, int type) {
 
     if (statePtr != NULL) {
 	memset(statePtr, 0, sizeof(EncryptState));
+	statePtr->self	= NULL;		/* This socket channel */
+	statePtr->timer = NULL;		/* Timer to flush data */
+	statePtr->flags = 0;		/* Chan config flags */
+	statePtr->watchMask = 0;	/* Current WatchProc mask */
+	statePtr->mode	= 0;		/* Current mode of parent channel */
 	statePtr->type = type;		/* Operation type */
 	statePtr->interp = interp;	/* Current interpreter */
 	statePtr->ctx = NULL;		/* Cipher Context */
@@ -90,6 +103,11 @@ EncryptState *EncryptStateNew(Tcl_Interp *interp, int type) {
 void EncryptStateFree(EncryptState *statePtr) {
     if (statePtr == (EncryptState *) NULL) {
 	return;
+    }
+
+    /* Remove pending timer */
+    if (statePtr->timer != (Tcl_TimerToken) NULL) {
+	Tcl_DeleteTimerHandler(statePtr->timer);
     }
 
     /* Free context structures */
@@ -121,7 +139,7 @@ int EncryptInitialize(Tcl_Interp *interp, int type, EVP_CIPHER_CTX **ctx,
 	Tcl_Obj *cipherObj, Tcl_Obj *keyObj, Tcl_Obj *ivObj) {
     const EVP_CIPHER *cipher;
     char *cipherName =  NULL, *key = NULL, *iv = NULL;
-    int cipher_len = 0, data_len = 0, key_len = 0, iv_len = 0, res;
+    int cipher_len = 0, key_len = 0, iv_len = 0, res;
 
     dprintf("Called");
 
@@ -198,17 +216,17 @@ int EncryptInitialize(Tcl_Interp *interp, int type, EVP_CIPHER_CTX **ctx,
  *
  *-------------------------------------------------------------------
  */
-int EncryptUpdate(Tcl_Interp *interp, int type, EVP_CIPHER_CTX *ctx, unsigned char *outbuf,
+int EncryptUpdate(Tcl_Interp *interp, int type, EVP_CIPHER_CTX *ctx, unsigned char *out_buf,
 	int *out_len, unsigned char *data, int data_len) {
-    int res, len = 0;
+    int res;
 
     dprintf("Called");
 
     /* Encrypt/decrypt data */
     if (type == TYPE_ENCRYPT) {
-	res = EVP_EncryptUpdate(ctx, outbuf, out_len, data, data_len);
+	res = EVP_EncryptUpdate(ctx, out_buf, out_len, data, data_len);
     } else {
-	res = EVP_DecryptUpdate(ctx, outbuf, out_len, data, data_len);
+	res = EVP_DecryptUpdate(ctx, out_buf, out_len, data, data_len);
     }
 
     if (res) {
@@ -235,17 +253,17 @@ int EncryptUpdate(Tcl_Interp *interp, int type, EVP_CIPHER_CTX *ctx, unsigned ch
  *
  *-------------------------------------------------------------------
  */
-int EncryptFinalize(Tcl_Interp *interp, int type, EVP_CIPHER_CTX *ctx, unsigned char *outbuf,
+int EncryptFinalize(Tcl_Interp *interp, int type, EVP_CIPHER_CTX *ctx, unsigned char *out_buf,
 	int *out_len) {
-    int res, len = 0;
+    int res;
 
     dprintf("Called");
 
     /* Finalize data */
     if (type == TYPE_ENCRYPT) {
-	res = EVP_EncryptFinal_ex(ctx, outbuf, out_len);
+	res = EVP_EncryptFinal_ex(ctx, out_buf, out_len);
     } else {
-	res = EVP_DecryptFinal_ex(ctx, outbuf, out_len);
+	res = EVP_DecryptFinal_ex(ctx, out_buf, out_len);
     }
 
     if (res) {
@@ -254,6 +272,574 @@ int EncryptFinalize(Tcl_Interp *interp, int type, EVP_CIPHER_CTX *ctx, unsigned 
 	Tcl_AppendResult(interp, "Finalize failed: ", REASON(), NULL);
 	return TCL_ERROR;
     }
+}
+
+/*******************************************************************/
+
+/*
+ *-------------------------------------------------------------------
+ *
+ * EncryptBlockModeProc --
+ *
+ *	This function is invoked by the generic IO level
+ *	to set blocking and nonblocking modes.
+ *
+ * Returns:
+ *	0 if successful or POSIX error code if failed.
+ *
+ * Side effects:
+ *	Sets the device into blocking or nonblocking mode.
+ *	Can call Tcl_SetChannelError.
+ *
+ *-------------------------------------------------------------------
+ */
+static int EncryptBlockModeProc(ClientData clientData, int mode) {
+    EncryptState *statePtr = (EncryptState *) clientData;
+
+    if (mode == TCL_MODE_NONBLOCKING) {
+	statePtr->flags |= TLS_TCL_ASYNC;
+    } else {
+	statePtr->flags &= ~(TLS_TCL_ASYNC);
+    }
+    return 0;
+}
+
+/*
+ *-------------------------------------------------------------------
+ *
+ * EncryptCloseProc --
+ *
+ *	This function is invoked by the generic IO level to perform
+ *	channel-type specific cleanup when the channel is closed. All
+ *	queued output is flushed prior to calling this function.
+ *
+ * Returns:
+ *	0 if successful or POSIX error code if failed.
+ *
+ * Side effects:
+ *	Deletes stored state data.
+ *
+ *-------------------------------------------------------------------
+ */
+int EncryptCloseProc(ClientData clientData, Tcl_Interp *interp) {
+    EncryptState *statePtr = (EncryptState *) clientData;
+
+    /* Cancel active timer, if any */
+    if (statePtr->timer != (Tcl_TimerToken) NULL) {
+	Tcl_DeleteTimerHandler(statePtr->timer);
+	statePtr->timer = (Tcl_TimerToken) NULL;
+    }
+
+    /* Output remaining data, if any */
+    if (!(statePtr->flags & CHAN_EOF)) {
+	Tcl_Channel parent = Tcl_GetStackedChannel(statePtr->self);
+	int out_len;
+	unsigned char out_buf[EVP_MAX_BLOCK_LENGTH];
+
+	/* Finalize function */
+	if (EncryptFinalize(interp, statePtr->type, statePtr->ctx, out_buf, &out_len) == TCL_OK) {
+	    if (out_len > 0) {
+		int len = Tcl_WriteRaw(parent, (const char *) out_buf, out_len);
+		if (len < 0) {
+		    return Tcl_GetErrno();
+		}
+	    }
+	} else {
+	    /* Error */
+	}
+
+	statePtr->flags |= CHAN_EOF;
+    }
+
+    /* Clean-up */
+    EncryptStateFree(statePtr);
+    return 0;
+}
+
+/*
+ * Same as EncryptCloseProc but with individual read and write close control
+ */
+static int EncryptClose2Proc(ClientData instanceData, Tcl_Interp *interp, int flags) {
+    if ((flags & (TCL_CLOSE_READ | TCL_CLOSE_WRITE)) == 0) {
+	return EncryptCloseProc(instanceData, interp);
+    }
+    return EINVAL;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * EncryptInputProc --
+ *
+ *	Called by the generic IO system to read data from transform and
+ *	place in buf. Transform gets data from the underlying channel.
+ *
+ * Returns:
+ *	Total bytes read or -1 for an error along with a POSIX error
+ *	code in errorCodePtr. Use EAGAIN for nonblocking and no data.
+ *
+ * Side effects:
+ *	Read data from transform and write to buf
+ *
+ *----------------------------------------------------------------------
+ */
+int EncryptInputProc(ClientData clientData, char *buf, int toRead, int *errorCodePtr) {
+    EncryptState *statePtr = (EncryptState *) clientData;
+    Tcl_Channel parent;
+    int read, out_len;
+    *errorCodePtr = 0;
+    char *in_buf;
+    
+    /* Abort if nothing to process */
+    if (toRead <= 0 || statePtr->self == (Tcl_Channel) NULL) {
+	return 0;
+    }
+
+    /* Get bytes from underlying channel */
+    in_buf = Tcl_Alloc(toRead);
+    parent = Tcl_GetStackedChannel(statePtr->self);
+    read = Tcl_ReadRaw(parent, in_buf, toRead);
+
+    /* Update function */
+    if (read > 0) {
+	/* Have data - Update function */
+	if (EncryptUpdate(statePtr->interp, statePtr->type, statePtr->ctx, buf, &out_len, in_buf, read) == TCL_OK) {
+	    /* If have data, put in buf, otherwise tell TCL to try again */
+	    if (out_len > 0) {
+		read = out_len;
+	    } else {
+		*errorCodePtr = EAGAIN;
+		read = -1;
+	    }
+	} else {
+	    Tcl_SetChannelError(statePtr->self, Tcl_ObjPrintf("Update failed: %s", REASON()));
+	    *errorCodePtr = EINVAL;
+	    read = 0;
+	}
+
+    } else if (read < 0) {
+	/* Error */
+	*errorCodePtr = Tcl_GetErrno();
+
+    } else if (!(statePtr->flags & CHAN_EOF)) {
+	/* EOF - Finalize function and put any remaining data in buf */
+	if (EncryptFinalize(statePtr->interp, statePtr->type, statePtr->ctx, buf, &out_len) == TCL_OK) {
+	    read = out_len;
+	} else {
+	    Tcl_SetChannelError(statePtr->self, Tcl_ObjPrintf("Finalize failed: %s", REASON()));
+	    *errorCodePtr = EINVAL;
+	    read = 0;
+	}
+
+	statePtr->flags |= CHAN_EOF;
+    }
+    Tcl_Free(in_buf);
+    return read;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * EncryptOutputProc --
+ *
+ *	Called by the generic IO system to write data in buf to transform.
+ *	The transform writes the result to the underlying channel.
+ *
+ * Returns:
+ *	Total bytes written or -1 for an error along with a POSIX error
+ *	code in errorCodePtr. Use EAGAIN for nonblocking and can't write data.
+ *
+ * Side effects:
+ *	Get data from buf and update encryption
+ *
+ *----------------------------------------------------------------------
+ */
+ int EncryptOutputProc(ClientData clientData, const char *buf, int toWrite, int *errorCodePtr) {
+    EncryptState *statePtr = (EncryptState *) clientData;
+    int write = 0, out_len;
+    *errorCodePtr = 0;
+    char *out_buf;
+
+    /* Abort if nothing to process */
+    if (toWrite <= 0 || statePtr->self == (Tcl_Channel) NULL) {
+	return 0;
+    }
+
+    out_buf = Tcl_Alloc(toWrite+EVP_MAX_BLOCK_LENGTH);
+
+    /* Update function */
+    if (EncryptUpdate(statePtr->interp, statePtr->type, statePtr->ctx, out_buf, &out_len, buf, toWrite) == TCL_OK) {
+	/* If have data, output it, otherwise tell TCL to try again */
+	if (out_len > 0) {
+	    Tcl_Channel parent = Tcl_GetStackedChannel(statePtr->self);
+	    write = Tcl_WriteRaw(parent, (const char *) out_buf, out_len);
+	    write = toWrite;
+	} else {
+	    *errorCodePtr = EAGAIN;
+	    write = -1;
+	}
+
+    } else {
+	Tcl_SetChannelError(statePtr->self, Tcl_ObjPrintf("Update failed: %s", REASON()));
+	*errorCodePtr = EINVAL;
+	write = 0;
+    }
+    Tcl_Free(out_buf);
+    return write;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * EncryptSetOptionProc --
+ *
+ *	Called by the generic IO system to set channel option name to value.
+ *
+ * Returns:
+ *	TCL_OK if successful or TCL_ERROR if failed along with an error
+ *	message in interp and Tcl_SetErrno.
+ *
+ * Side effects:
+ *	Updates channel option to new value.
+ *
+ *----------------------------------------------------------------------
+ */
+static int EncryptSetOptionProc(ClientData clientData, Tcl_Interp *interp, const char *optionName,
+	const char *optionValue) {
+    EncryptState *statePtr = (EncryptState *) clientData;
+    Tcl_Channel parent;
+    Tcl_DriverSetOptionProc *setOptionProc;
+
+    /* Abort if no channel */
+    if (statePtr->self == (Tcl_Channel) NULL) {
+	return TCL_ERROR;
+    }
+
+    /* Delegate options downstream */
+    parent = Tcl_GetStackedChannel(statePtr->self);
+    setOptionProc = Tcl_ChannelSetOptionProc(Tcl_GetChannelType(parent));
+    if (setOptionProc != NULL) {
+	return (*setOptionProc)(Tcl_GetChannelInstanceData(parent), interp, optionName, optionValue);
+    } else {
+	Tcl_SetErrno(EINVAL);
+	return Tcl_BadChannelOption(interp, optionName, NULL);
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * EncryptGetOptionProc --
+ *
+ *	Called by the generic IO system to get channel option name's value.
+ *
+ * Returns:
+ *	TCL_OK if successful or TCL_ERROR if failed along with an error
+ *	message in interp and Tcl_SetErrno.
+ *
+ * Side effects:
+ *	Sets result to option's value
+ *
+ *----------------------------------------------------------------------
+ */
+static int EncryptGetOptionProc(ClientData clientData, Tcl_Interp *interp, const char *optionName,
+	Tcl_DString *optionValue) {
+    EncryptState *statePtr = (EncryptState *) clientData;
+    Tcl_Channel parent;
+    Tcl_DriverGetOptionProc *getOptionProc;
+
+    /* Abort if no channel */
+    if (statePtr->self == (Tcl_Channel) NULL) {
+	return TCL_ERROR;
+    }
+
+    /* Delegate options downstream */
+    parent = Tcl_GetStackedChannel(statePtr->self);
+    getOptionProc = Tcl_ChannelGetOptionProc(Tcl_GetChannelType(parent));
+    if (getOptionProc != NULL) {
+	return (*getOptionProc)(Tcl_GetChannelInstanceData(parent), interp, optionName, optionValue);
+    } else if (optionName == (char*) NULL) {
+	/* Request is query for all options, this is ok. */
+	return TCL_OK;
+    } else {
+	Tcl_SetErrno(EINVAL);
+	return Tcl_BadChannelOption(interp, optionName, NULL);
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * EncryptTimerHandler --
+ *
+ *	Called by the notifier via timer to flush out pending input data.
+ *
+ * Returns:
+ *	Nothing
+ *
+ * Side effects:
+ *	May call Tcl_NotifyChannel
+ *
+ *----------------------------------------------------------------------
+ */
+static void EncryptTimerHandler(ClientData clientData) {
+    EncryptState *statePtr = (EncryptState *) clientData;
+
+    /* Abort if no channel */
+    if (statePtr->self == (Tcl_Channel) NULL) {
+	return;
+    }
+
+    /* Clear timer token */
+    statePtr->timer = (Tcl_TimerToken) NULL;
+
+    /* Fire event if there is pending data, skip otherwise */
+    if ((statePtr->watchMask & TCL_READABLE) && (Tcl_InputBuffered(statePtr->self) > 0)) {
+	Tcl_NotifyChannel(statePtr->self, TCL_READABLE);
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * EncryptWatchProc --
+ *
+ *	Initialize the notifier to watch for events from this channel.
+ *
+ * Returns:
+ *	Nothing (can't return error messages)
+ *
+ * Side effects:
+ *	Configure notifier so future events on the channel will be seen by Tcl.
+ *
+ *----------------------------------------------------------------------
+ */
+void EncryptWatchProc(ClientData clientData, int mask) {
+    EncryptState *statePtr = (EncryptState *) clientData;
+    Tcl_Channel parent;
+    Tcl_DriverWatchProc *watchProc;
+
+    /* Abort if no channel */
+    if (statePtr->self == (Tcl_Channel) NULL) {
+	return;
+    }
+
+    /* Store OR-ed combination of TCL_READABLE, TCL_WRITABLE and TCL_EXCEPTION */
+    statePtr->watchMask = mask;
+
+    /* Propagate mask info to parent channel */
+    parent = Tcl_GetStackedChannel(statePtr->self);
+    watchProc = Tcl_ChannelWatchProc(Tcl_GetChannelType(parent));
+    watchProc(Tcl_GetChannelInstanceData(parent), mask);
+
+    /* Remove pending timer */
+    if (statePtr->timer != (Tcl_TimerToken) NULL) {
+	Tcl_DeleteTimerHandler(statePtr->timer);
+	statePtr->timer = (Tcl_TimerToken) NULL;
+    }
+
+    /* If there is data pending, set new timer to call Tcl_NotifyChannel */
+    if ((mask & TCL_READABLE) && (Tcl_InputBuffered(statePtr->self) > 0)) {
+	statePtr->timer = Tcl_CreateTimerHandler(READ_DELAY, EncryptTimerHandler, (ClientData) statePtr);
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * EncryptGetHandleProc --
+ *
+ *	Called from Tcl_GetChannelHandle to retrieve OS specific file handle
+ *	from inside this channel. Not used for transformations?
+ *
+ * Returns:
+ *	TCL_OK for success or TCL_ERROR for error or if not supported. If
+ *	direction is TCL_READABLE, sets handlePtr to the handle used for
+ *	input, or if TCL_WRITABLE sets to the handle used for output.
+ *
+ * Side effects:
+ *	None
+ *
+ *----------------------------------------------------------------------
+ */
+int EncryptGetHandleProc(ClientData clientData, int direction, ClientData *handlePtr) {
+    EncryptState *statePtr = (EncryptState *) clientData;
+    Tcl_Channel parent;
+
+    /* Abort if no channel */
+    if (statePtr->self == (Tcl_Channel) NULL) {
+	return TCL_ERROR;
+    }
+
+    parent = Tcl_GetStackedChannel(statePtr->self);
+    return Tcl_GetChannelHandle(parent, direction, handlePtr);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * EncryptNotifyProc --
+ *
+ *	Called by Tcl to inform us of activity on the underlying channel.
+ *
+ * Returns:
+ *	Unchanged interestMask which is an OR-ed combination of TCL_READABLE or TCL_WRITABLE
+ *
+ * Side effects:
+ *	Cancels any pending timer.
+ *
+ *----------------------------------------------------------------------
+ */
+int EncryptNotifyProc(ClientData clientData, int interestMask) {
+    EncryptState *statePtr = (EncryptState *) clientData;
+
+    /* Skip timer event as redundant */
+    if (statePtr->timer != (Tcl_TimerToken) NULL) {
+	Tcl_DeleteTimerHandler(statePtr->timer);
+	statePtr->timer = (Tcl_TimerToken) NULL;
+    }
+    return interestMask;
+}
+
+/*
+ *
+ * Channel type structure definition for encryption transformations.
+ *
+ */
+static const Tcl_ChannelType encryptChannelType = {
+    "encryption",		/* Type name */
+    TCL_CHANNEL_VERSION_5,	/* v5 channel */
+    EncryptCloseProc,		/* Close proc */
+    EncryptInputProc,		/* Input proc */
+    EncryptOutputProc,		/* Output proc */
+    NULL,			/* Seek proc */
+    EncryptSetOptionProc,	/* Set option proc */
+    EncryptGetOptionProc,	/* Get option proc */
+    EncryptWatchProc,		/* Initialize notifier */
+    EncryptGetHandleProc,	/* Get OS handles out of channel */
+    EncryptClose2Proc,		/* close2proc */
+    EncryptBlockModeProc,	/* Set blocking/nonblocking mode*/
+    NULL,			/* Flush proc */
+    EncryptNotifyProc,		/* Handling of events bubbling up */
+    NULL,			/* Wide seek proc */
+    NULL,			/* Thread action */
+    NULL			/* Truncate */
+};
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * EncryptChannelHandler --
+ *
+ *	Create a stacked channel for a message encryption transformation.
+ *
+ * Returns:
+ *	TCL_OK or TCL_ERROR
+ *
+ * Side effects:
+ *	Adds transform to channel and sets result to channel id or error message.
+ *
+ *----------------------------------------------------------------------
+ */
+static int EncryptChannelHandler(Tcl_Interp *interp, int type, const char *channel,
+	Tcl_Obj *cipherObj, Tcl_Obj *digestObj, Tcl_Obj *keyObj, Tcl_Obj *ivObj) {
+    int mode; /* OR-ed combination of TCL_READABLE and TCL_WRITABLE */
+    Tcl_Channel chan;
+    EncryptState *statePtr;
+
+    dprintf("Called");
+
+    /* Validate args */
+    if (channel == (const char *) NULL) {
+	return TCL_ERROR;
+    }
+
+    /* Get channel Id */
+    chan = Tcl_GetChannel(interp, channel, &mode);
+    if (chan == (Tcl_Channel) NULL) {
+	return TCL_ERROR;
+    }
+
+    /* Make sure to operate on the topmost channel */
+    chan = Tcl_GetTopChannel(chan);
+
+    /* Configure channel */
+    Tcl_SetChannelOption(interp, chan, "-translation", "binary");
+
+    /* Create state data structure */
+    if ((statePtr = EncryptStateNew(interp, type)) == NULL) {
+	Tcl_AppendResult(interp, "Memory allocation error", (char *) NULL);
+	return TCL_ERROR;
+    }
+    statePtr->self = chan;
+    statePtr->mode = mode;
+
+    /* Initialize function */
+    if (EncryptInitialize(interp, type, &statePtr->ctx, cipherObj, keyObj, ivObj) != TCL_OK) {
+	EncryptStateFree(statePtr);
+	return TCL_ERROR;
+    }
+
+    /* Stack channel */
+    statePtr->self = Tcl_StackChannel(interp, &encryptChannelType, (ClientData) statePtr, mode, chan);
+    if (statePtr->self == (Tcl_Channel) NULL) {
+	EncryptStateFree(statePtr);
+	return TCL_ERROR;
+    }
+
+    /* Set result to channel Id */
+    Tcl_SetResult(interp, (char *) Tcl_GetChannelName(chan), TCL_VOLATILE);
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Unstack Channel --
+ *
+ *	This function removes the stacked channel from the top of the
+ *	channel stack if it is a encryption channel.
+ *
+ * Returns:
+ *	TCL_OK or TCL_ERROR
+ *
+ * Side effects:
+ *	Removes transform from channel or sets result to error message.
+ *
+ *----------------------------------------------------------------------
+ */
+static int EncryptUnstackObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
+    Tcl_Channel chan;
+    int mode; /* OR-ed combination of TCL_READABLE and TCL_WRITABLE  */
+
+    dprintf("Called");
+
+    /* Validate arg count */
+    if (objc != 2) {
+	Tcl_WrongNumArgs(interp, 1, objv, "channelId");
+	return TCL_ERROR;
+    }
+
+    /* Get channel */
+    chan = Tcl_GetChannel(interp, Tcl_GetStringFromObj(objv[1], NULL), &mode);
+    if (chan == (Tcl_Channel) NULL) {
+	return TCL_ERROR;
+    }
+
+    /* Make sure to operate on the topmost channel */
+    chan = Tcl_GetTopChannel(chan);
+
+    /* Check if encryption channel */
+    if (Tcl_GetChannelType(chan) != &encryptChannelType) {
+	Tcl_AppendResult(interp, "bad channel \"", Tcl_GetChannelName(chan),
+	    "\": not a encryption channel", NULL);
+	Tcl_SetErrorCode(interp, "TLS", "UNSTACK", "CHANNEL", "INVALID", (char *) NULL);
+	return TCL_ERROR;
+    }
+
+    /* Pop transform from channel */
+    return Tcl_UnstackChannel(interp, chan);
+    	clientData = clientData;
 }
 
 /*******************************************************************/
@@ -279,7 +865,7 @@ int EncryptInstanceObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, T
     int fn, data_len = 0, out_len;
     char *data = NULL;
     Tcl_Obj *resultObj;
-    unsigned char *outbuf;
+    unsigned char *out_buf;
     static const char *instance_fns [] = { "finalize", "update", NULL };
 
     dprintf("Called");
@@ -297,8 +883,8 @@ int EncryptInstanceObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, T
 
     /* Allocate storage for result. Size should be data size + block size. */
     resultObj = Tcl_NewObj();
-    outbuf = Tcl_SetByteArrayLength(resultObj, data_len+EVP_MAX_BLOCK_LENGTH);
-    if (resultObj == NULL || outbuf == NULL) {
+    out_buf = Tcl_SetByteArrayLength(resultObj, data_len+EVP_MAX_BLOCK_LENGTH);
+    if (resultObj == NULL || out_buf == NULL) {
 	Tcl_AppendResult(interp, "Memory allocation error", (char *) NULL);
 	Tcl_DecrRefCount(resultObj);
 	return TCL_ERROR;
@@ -316,8 +902,8 @@ int EncryptInstanceObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, T
 	}
 
 	/* Update function */
-	if (EncryptUpdate(interp, statePtr->type, statePtr->ctx, outbuf, &out_len, data, data_len) == TCL_OK) {
-	    outbuf = Tcl_SetByteArrayLength(resultObj, out_len);
+	if (EncryptUpdate(interp, statePtr->type, statePtr->ctx, out_buf, &out_len, data, data_len) == TCL_OK) {
+	    out_buf = Tcl_SetByteArrayLength(resultObj, out_len);
 	    Tcl_SetObjResult(interp, resultObj);
 	} else {
 	    Tcl_DecrRefCount(resultObj);
@@ -326,8 +912,8 @@ int EncryptInstanceObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, T
 
     } else {
 	/* Finalize function */
-	if (EncryptFinalize(interp, statePtr->type, statePtr->ctx, outbuf, &out_len) == TCL_OK) {
-	    outbuf = Tcl_SetByteArrayLength(resultObj, out_len);
+	if (EncryptFinalize(interp, statePtr->type, statePtr->ctx, out_buf, &out_len) == TCL_OK) {
+	    out_buf = Tcl_SetByteArrayLength(resultObj, out_len);
 	    Tcl_SetObjResult(interp, resultObj);
 	} else {
 	    Tcl_DecrRefCount(resultObj);
@@ -425,7 +1011,7 @@ int EncryptDataHandler(Tcl_Interp *interp, int type, Tcl_Obj *dataObj, Tcl_Obj *
 	Tcl_Obj *digestObj, Tcl_Obj *keyObj, Tcl_Obj *ivObj) {
     EVP_CIPHER_CTX *ctx = NULL;
     int data_len = 0, out_len = 0, len = 0, res = TCL_OK;
-    unsigned char *data, *outbuf;
+    unsigned char *data, *out_buf;
     Tcl_Obj *resultObj;
 
     dprintf("Called");
@@ -440,16 +1026,16 @@ int EncryptDataHandler(Tcl_Interp *interp, int type, Tcl_Obj *dataObj, Tcl_Obj *
 
     /* Allocate storage for result. Size should be data size + block size. */
     resultObj = Tcl_NewObj();
-    outbuf = Tcl_SetByteArrayLength(resultObj, data_len+EVP_MAX_BLOCK_LENGTH);
-    if (resultObj == NULL || outbuf == NULL) {
+    out_buf = Tcl_SetByteArrayLength(resultObj, data_len+EVP_MAX_BLOCK_LENGTH);
+    if (resultObj == NULL || out_buf == NULL) {
 	Tcl_AppendResult(interp, "Memory allocation error", (char *) NULL);
 	return TCL_ERROR;
     }
 
     /* Perform operation */
     if (EncryptInitialize(interp, type, &ctx, cipherObj, keyObj, ivObj) != TCL_OK ||
-	EncryptUpdate(interp, type, ctx, outbuf, &out_len, data, data_len) != TCL_OK ||
-	EncryptFinalize(interp, type, ctx, outbuf+out_len, &len) != TCL_OK) {
+	EncryptUpdate(interp, type, ctx, out_buf, &out_len, data, data_len) != TCL_OK ||
+	EncryptFinalize(interp, type, ctx, out_buf+out_len, &len) != TCL_OK) {
 	res = TCL_ERROR;
 	goto done;
     }
@@ -458,7 +1044,7 @@ int EncryptDataHandler(Tcl_Interp *interp, int type, Tcl_Obj *dataObj, Tcl_Obj *
 done:
     /* Set output result */
     if (res == TCL_OK) {
-	outbuf = Tcl_SetByteArrayLength(resultObj, out_len);
+	out_buf = Tcl_SetByteArrayLength(resultObj, out_len);
 	Tcl_SetObjResult(interp, resultObj);
     } else {
 	Tcl_DecrRefCount(resultObj);
@@ -590,12 +1176,10 @@ done:
  *-------------------------------------------------------------------
  */
 static int EncryptMain(int type, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
-    int res = TCL_OK;
     Tcl_Obj *cipherObj = NULL, *cmdObj = NULL, *dataObj = NULL, *digestObj = NULL;
     Tcl_Obj *inFileObj = NULL, *outFileObj = NULL, *keyObj = NULL, *ivObj = NULL, *macObj = NULL;
     const char *channel = NULL, *opt;
-    const EVP_MD *md = NULL;
-    const EVP_CIPHER *cipher = NULL;
+    int res;
 
     dprintf("Called");
 
@@ -604,7 +1188,7 @@ static int EncryptMain(int type, Tcl_Interp *interp, int objc, Tcl_Obj *const ob
 
     /* Validate arg count */
     if (objc < 3 || objc > 12) {
-	Tcl_WrongNumArgs(interp, 1, objv, "-cipher name ?-digest name? -key key ?-iv string? [-command cmdName | -infile filename -outfile filename | -data data]");
+	Tcl_WrongNumArgs(interp, 1, objv, "-cipher name ?-digest name? -key key ?-iv string? ?-mac name? [-channel chan | -command cmdName | -infile filename -outfile filename | -data data]");
 	return TCL_ERROR;
     }
 
@@ -616,6 +1200,8 @@ static int EncryptMain(int type, Tcl_Interp *interp, int objc, Tcl_Obj *const ob
 	    break;
 	}
 
+	OPTSTR("-chan", channel);
+	OPTSTR("-channel", channel);
 	OPTOBJ("-cipher", cipherObj);
 	OPTOBJ("-command", cmdObj);
 	OPTOBJ("-data", dataObj);
@@ -624,8 +1210,9 @@ static int EncryptMain(int type, Tcl_Interp *interp, int objc, Tcl_Obj *const ob
 	OPTOBJ("-outfile", outFileObj);
 	OPTOBJ("-key", keyObj);
 	OPTOBJ("-iv", ivObj);
+	OPTOBJ("-mac", macObj);
 
-	OPTBAD("option", "-cipher, -command, -data, -digest, -infile, -key, -iv, -outfile");
+	OPTBAD("option", "-chan, -channel, -cipher, -command, -data, -digest, -infile, -key, -iv, -mac, -outfile");
 	return TCL_ERROR;
     }
 
@@ -640,12 +1227,14 @@ static int EncryptMain(int type, Tcl_Interp *interp, int objc, Tcl_Obj *const ob
     /* Perform encryption function on file, stacked channel, using instance command, or data blob */
     if (inFileObj != NULL && outFileObj != NULL) {
 	res = EncryptFileHandler(interp, type, inFileObj, outFileObj, cipherObj, digestObj, keyObj, ivObj);
+    } else if (channel != NULL) {
+	res = EncryptChannelHandler(interp, type, channel, cipherObj, digestObj, keyObj, ivObj);
     } else if (cmdObj != NULL) {
 	res = EncryptCommandHandler(interp, type, cmdObj, cipherObj, digestObj, keyObj, ivObj);
     } else if (dataObj != NULL) {
 	res = EncryptDataHandler(interp, type, dataObj, cipherObj, digestObj, keyObj, ivObj);
     } else {
-	Tcl_AppendResult(interp, "No operation specified: Use -command, -data, -infile, or -outfile option", NULL);
+	Tcl_AppendResult(interp, "No operation specified: Use -channel, -command, -data, -infile, or -outfile option", NULL);
 	res = TCL_ERROR;
     }
     return res;
@@ -692,6 +1281,7 @@ static int DecryptObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tc
 int Tls_EncryptCommands(Tcl_Interp *interp) {
     Tcl_CreateObjCommand(interp, "tls::encrypt", EncryptObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
     Tcl_CreateObjCommand(interp, "tls::decrypt", DecryptObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
+    Tcl_CreateObjCommand(interp, "tls::unstack2", EncryptUnstackObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
     return TCL_OK;
 }
 

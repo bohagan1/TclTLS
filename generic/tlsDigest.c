@@ -503,7 +503,7 @@ int DigestInputProc(ClientData clientData, char *buf, int toRead, int *errorCode
     }
 
     /* Update hash function */
-    if (toWrite > 0 && DigestUpdate(statePtr, buf, (size_t) toWrite, 0) != TCL_OK) {
+    if (DigestUpdate(statePtr, buf, (size_t) toWrite, 0) != TCL_OK) {
 	Tcl_SetChannelError(statePtr->self, Tcl_ObjPrintf("Update failed: %s", REASON()));
 	*errorCodePtr = EINVAL;
 	return 0;
@@ -786,6 +786,12 @@ static int DigestChannelHandler(Tcl_Interp *interp, const char *channel, const E
     /* Make sure to operate on the topmost channel */
     chan = Tcl_GetTopChannel(chan);
 
+    /* Configure channel */
+    Tcl_SetChannelOption(interp, chan, "-translation", "binary");
+    if (Tcl_GetChannelBufferSize(chan) < EVP_MAX_MD_SIZE * 2) {
+	Tcl_SetChannelBufferSize(chan, EVP_MAX_MD_SIZE * 2);
+    }
+
     /* Create state data structure */
     if ((statePtr = DigestStateNew(interp, format)) == NULL) {
 	Tcl_AppendResult(interp, "Memory allocation error", (char *) NULL);
@@ -799,13 +805,7 @@ static int DigestChannelHandler(Tcl_Interp *interp, const char *channel, const E
 	return TCL_ERROR;
     }
 
-    /* Configure channel */
-    Tcl_SetChannelOption(interp, chan, "-translation", "binary");
-    if (Tcl_GetChannelBufferSize(chan) < EVP_MAX_MD_SIZE * 2) {
-	Tcl_SetChannelBufferSize(chan, EVP_MAX_MD_SIZE * 2);
-    }
-
-    /* Stack channel, abort for error */
+    /* Stack channel */
     statePtr->self = Tcl_StackChannel(interp, &digestChannelType, (ClientData) statePtr, mode, chan);
     if (statePtr->self == (Tcl_Channel) NULL) {
 	DigestStateFree(statePtr);
@@ -1033,7 +1033,7 @@ int DigestDataHandler(Tcl_Interp *interp, Tcl_Obj *dataObj, const EVP_MD *md,
 	return TCL_ERROR;
     }
 
-    /* Calc Digest, abort for error */
+    /* Calc Digest */
     if (DigestInitialize(interp, statePtr, md, cipher, keyObj, mac) != TCL_OK ||
 	DigestUpdate(statePtr, data, (size_t) data_len, 1) != TCL_OK ||
 	DigestFinalize(interp, statePtr, NULL) != TCL_OK) {
@@ -1078,7 +1078,7 @@ int DigestFileHandler(Tcl_Interp *interp, Tcl_Obj *inFileObj, const EVP_MD *md,
 	return TCL_ERROR;
     }
 
-    /* Open file channel, abort for error */
+    /* Open file channel */
     chan = Tcl_FSOpenFileChannel(interp, inFileObj, "rb", 0444);
     if (chan == (Tcl_Channel) NULL) {
 	DigestStateFree(statePtr);
