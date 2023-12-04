@@ -138,20 +138,25 @@ void EncryptStateFree(EncryptState *statePtr) {
 int EncryptInitialize(Tcl_Interp *interp, int type, EVP_CIPHER_CTX **ctx,
 	Tcl_Obj *cipherObj, Tcl_Obj *keyObj, Tcl_Obj *ivObj) {
     const EVP_CIPHER *cipher;
-    char *cipherName =  NULL, *key = NULL, *iv = NULL;
-    int cipher_len = 0, key_len = 0, iv_len = 0, res;
+    char *cipherName =  NULL, *keyString = NULL, *ivString = NULL;
+    int cipher_len = 0, key_len = 0, iv_len = 0, res, max;
+    unsigned char key[EVP_MAX_KEY_LENGTH], iv[EVP_MAX_IV_LENGTH];
 
     dprintf("Called");
+
+    /* Init buffers */
+    memset(key, 0, EVP_MAX_KEY_LENGTH);
+    memset(iv, 0, EVP_MAX_IV_LENGTH);
 
     /* Get encryption parameters */
     if (cipherObj != NULL) {
 	cipherName = Tcl_GetStringFromObj(cipherObj, &cipher_len);
     }
     if (keyObj != NULL) {
-	key = Tcl_GetStringFromObj(keyObj, &key_len);
+	keyString = Tcl_GetByteArrayFromObj(keyObj, &key_len);
     }
     if (ivObj != NULL) {
-	iv = Tcl_GetStringFromObj(ivObj, &iv_len);
+	ivString = Tcl_GetByteArrayFromObj(ivObj, &iv_len);
     }
 
     /* Get cipher name */
@@ -163,6 +168,36 @@ int EncryptInitialize(Tcl_Interp *interp, int type, EVP_CIPHER_CTX **ctx,
     if (cipher == NULL) {
 	Tcl_AppendResult(interp, "Invalid cipher: \"", cipherName, "\"", NULL);
 	return TCL_ERROR;
+    }
+
+    if (key_len > 0) {
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
+	max = EVP_CIPHER_key_length(cipher);
+#else
+	max = EVP_CIPHER_get_key_length(cipher);
+#endif
+	if (max == 0) {
+	} else if (key_len <= max) {
+	    memcpy((void *) key, (const void *) keyString, (size_t) key_len);
+	} else {
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf("Key too long. Must be <= %d bytes", max));
+	    return TCL_ERROR;
+	}
+    }
+
+    if (iv_len > 0) {
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
+	max = EVP_CIPHER_iv_length(cipher);
+#else
+	max = EVP_CIPHER_get_iv_length(cipher);
+#endif
+	if (max == 0) {
+	} else if (iv_len <= max) {
+	    memcpy((void *) iv, (const void *) ivString, (size_t) iv_len);
+	} else {
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf("IV too long. Must be <= %d bytes", max));
+	    return TCL_ERROR;
+	}
     }
 
     /* Create and initialize the context */
@@ -1179,7 +1214,7 @@ static int EncryptMain(int type, Tcl_Interp *interp, int objc, Tcl_Obj *const ob
     Tcl_Obj *cipherObj = NULL, *cmdObj = NULL, *dataObj = NULL, *digestObj = NULL;
     Tcl_Obj *inFileObj = NULL, *outFileObj = NULL, *keyObj = NULL, *ivObj = NULL, *macObj = NULL;
     const char *channel = NULL, *opt;
-    int res;
+    int idx, res, start = 1;
 
     dprintf("Called");
 
@@ -1192,8 +1227,17 @@ static int EncryptMain(int type, Tcl_Interp *interp, int objc, Tcl_Obj *const ob
 	return TCL_ERROR;
     }
 
+    /* Special case of first arg is cipher */
+    opt = Tcl_GetStringFromObj(objv[start], NULL);
+    if (opt[0] != '-') {
+	if (type == TYPE_ENCRYPT || type == TYPE_DECRYPT) {
+	    cipherObj = objv[start];
+	    start++;
+	}
+    }
+
     /* Get options */
-    for (int idx = 1; idx < objc; idx++) {
+    for (idx = start; idx < objc; idx++) {
 	opt = Tcl_GetStringFromObj(objv[idx], NULL);
 
 	if (opt[0] != '-') {
@@ -1214,6 +1258,11 @@ static int EncryptMain(int type, Tcl_Interp *interp, int objc, Tcl_Obj *const ob
 
 	OPTBAD("option", "-chan, -channel, -cipher, -command, -data, -digest, -infile, -key, -iv, -mac, -outfile");
 	return TCL_ERROR;
+    }
+
+    /* If only 1 arg left, it's the data */
+    if (idx < objc && dataObj == NULL) {
+	dataObj = objv[idx];
     }
 
     /* Check for required options */
