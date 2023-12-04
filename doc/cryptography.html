@@ -124,17 +124,17 @@ and integrity of messages and data.</p>
     Cipher modes CBC, CFB, OFB and CTR all need an IV while ECB mode does not.
     A new, random IV should be created for each use. Think of the IV as a nonce
     (number used once), it's public but random and unpredictable. See the
-   <a href="#tls::cipher"><b>tls::cipher</b></a> command for iv size and
-    when required.</dd>
+   <a href="#tls::cipher"><b>tls::cipher</b></a> for iv_length and
+    when required (length > 0). If not set, it will default to \x00 fill data.</dd>
 </dl>
 
 <dl>
     <dt><a name="-key"><strong>-key</strong> <em>string</em></a></dt>
     <dd>Encryption key to use for cryptography function. Can be a binary or
     text string. Longer keys provide better protection. Used by ciphers, HMAC,
-    some CMAC, and some KDF implementations. Key lengths less than <b>key_length</b>
-    size may be padded or rejected. See the
-    <a href="#tls::cipher"><b>tls::cipher</b></a> command for key size.</dd>
+    some CMAC, and some KDF implementations. If the length of the key is &lt;
+    <b>key_length</b> it will be padded. If &gt; key_length, it will be rejected.
+    See the <a href="#tls::cipher"><b>tls::cipher</b></a> for key_length.</dd>
 </dl>
 
 <dl>
@@ -289,7 +289,8 @@ and integrity of messages and data.</p>
     <dt><a name="tls::cipher"><strong>tls::cipher</strong> <em>name</em></a></dt>
     <dd>Return a list of property names and values describing cipher
 	<i>name</i>. Properties include name, description, block_size,
-	key_length, iv_length, type, and mode list.</dd>
+	key_length, iv_length, type, and mode list. If block-size is 1,
+	then it's a stream cipher, otherwise it's a block cipher.</dd>
 
     <dt><a name="tls::ciphers"><strong>tls::ciphers</strong>
     <em>?protocol? ?verbose? ?supported?</em></a></dt>
@@ -396,7 +397,7 @@ and integrity of messages and data.</p>
 <h4>Encryption and Decryption Commands</h4>
 
     <dt><a name="tls::encrypt"><strong>tls::encrypt</strong>
-	<b>-cipher</b> <em>name</em> <b>-key</b> <em>key ?</em><b>-iv</b> <em>string?
+	<em>?</em><b>-cipher</b><em>? name</em> <b>-key</b> <em>key ?</em><b>-iv</b> <em>string?
 	[</em><b>-chan</b> <em>channelId |</em> <b>-command</b> <em>cmdName |</em>
 	<b>-infile</b> <em>filename</em> <b>-outfile</b> <em>filename |</em>
 	<b>-data</b><em> data]</em></a></dt>
@@ -408,7 +409,7 @@ and integrity of messages and data.</p>
 	sizes and when the iv is used (iv_length &gt; 0).</dd>
 
     <dt><a name="tls::decrypt"><strong>tls::decrypt</strong>
-	<b>-cipher</b> <em>name</em> <b>-key</b> <em>key ?</em><b>-iv</b> <em>string?
+	<em>?</em><b>-cipher</b><em>? name</em> <b>-key</b> <em>key ?</em><b>-iv</b> <em>string?
 	[</em><b>-chan</b> <em>channelId |</em> <b>-command</b> <em>cmdName |</em>
 	<b>-infile</b> <em>filename</em> <b>-outfile</b> <em>filename |</em>
 	<b>-data</b><em> data]</em></a></dt>

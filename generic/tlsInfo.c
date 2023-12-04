@@ -53,7 +53,7 @@ void NamesCallback(const OBJ_NAME *obj, void *arg) {
 /*
  *-------------------------------------------------------------------
  *
- * CipherInfo --
+ * CipherObjCmd --
  *
  *	Return a list of properties and values for cipherName.
  *
@@ -71,9 +71,7 @@ static int CipherObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl
     const EVP_CIPHER *cipher;
     unsigned long flags, mode;
 
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
-    OpenSSL_add_all_ciphers(); /* Make sure they're loaded */
-#endif
+    dprintf("Called");
 
     /* Clear errors */
     Tcl_ResetResult(interp);
@@ -96,6 +94,9 @@ static int CipherObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl
 
     /* Get properties */
     objPtr = Tcl_NewListObj(0, NULL);
+    if (objPtr == NULL) {
+	return TCL_ERROR;
+    }
     LAPPEND_STR(interp, objPtr, "nid", OBJ_nid2ln(EVP_CIPHER_nid(cipher)), -1);
     LAPPEND_STR(interp, objPtr, "name", EVP_CIPHER_name(cipher), -1);
     LAPPEND_STR(interp, objPtr, "description", "", -1);
@@ -167,6 +168,32 @@ static int CipherObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl
 /*
  *-------------------------------------------------------------------
  *
+ * CipherList --
+ *
+ *	Return a list of all cipher algorithms
+ *
+ * Results:
+ *	A standard Tcl list.
+ *
+ * Side effects:
+ *	None.
+ *
+ *-------------------------------------------------------------------
+ */
+int CipherList(Tcl_Interp *interp) {
+    Tcl_Obj *objPtr = Tcl_NewListObj(0, NULL);
+    if (objPtr == NULL) {
+	return TCL_ERROR;
+    }
+
+    OBJ_NAME_do_all(OBJ_NAME_TYPE_CIPHER_METH, NamesCallback, (void *) objPtr);
+    Tcl_SetObjResult(interp, objPtr);
+    return TCL_OK;
+}
+
+/*
+ *-------------------------------------------------------------------
+ *
  * CiphersObjCmd --
  *
  *	This procedure is invoked to process the "tls::ciphers" command
@@ -184,14 +211,10 @@ static int CiphersObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tc
     SSL_CTX *ctx = NULL;
     SSL *ssl = NULL;
     STACK_OF(SSL_CIPHER) *sk = NULL;
-    int index, verbose = 0, use_supported = 0;
+    int index, verbose = 0, use_supported = 0, res = TCL_OK;
     int min_version, max_version;
 
     dprintf("Called");
-
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
-    OpenSSL_add_all_ciphers(); /* Make sure they're loaded */
-#endif
 
     /* Clear errors */
     Tcl_ResetResult(interp);
@@ -205,12 +228,7 @@ static int CiphersObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tc
 
     /* List all ciphers */
     if (objc == 1) {
-	Tcl_Obj *objPtr = Tcl_NewListObj(0, NULL);
-
-	OBJ_NAME_do_all(OBJ_NAME_TYPE_CIPHER_METH, NamesCallback, (void *) objPtr);
-	Tcl_SetObjResult(interp, objPtr);
-	return TCL_OK;
-
+	return CipherList(interp);
     }
 
     /* Get options */
@@ -309,6 +327,10 @@ static int CiphersObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tc
 	if (!verbose) {
 	    char *cp;
 	    objPtr = Tcl_NewListObj(0, NULL);
+	    if (objPtr == NULL) {
+		res = TCL_ERROR;
+		goto done;
+	    }
 
 	    for (int i = 0; i < sk_SSL_CIPHER_num(sk); i++) {
 		const SSL_CIPHER *c = sk_SSL_CIPHER_value(sk, i);
@@ -323,6 +345,10 @@ static int CiphersObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tc
 	} else {
 	    char buf[BUFSIZ];
 	    objPtr = Tcl_NewStringObj("",0);
+	    if (objPtr == NULL) {
+		res = TCL_ERROR;
+		goto done;
+	    }
 
 	    for (int i = 0; i < sk_SSL_CIPHER_num(sk); i++) {
 		const SSL_CIPHER *c = sk_SSL_CIPHER_value(sk, i);
@@ -344,9 +370,10 @@ static int CiphersObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tc
 	Tcl_SetObjResult(interp, objPtr);
     }
 
+done:
     SSL_free(ssl);
     SSL_CTX_free(ctx);
-    return TCL_OK;
+    return res;
 	clientData = clientData;
 }
 
@@ -379,6 +406,9 @@ int DigestInfo(Tcl_Interp *interp, char *digestName) {
 
     /* Get properties */
     objPtr = Tcl_NewListObj(0, NULL);
+    if (objPtr == NULL) {
+	return TCL_ERROR;
+    }
     LAPPEND_STR(interp, objPtr, "name", EVP_MD_name(md), -1);
     LAPPEND_STR(interp, objPtr, "description", "", -1);
     LAPPEND_INT(interp, objPtr, "size", EVP_MD_size(md));
@@ -405,6 +435,32 @@ int DigestInfo(Tcl_Interp *interp, char *digestName) {
 /*
  *-------------------------------------------------------------------
  *
+ * DigestList --
+ *
+ *	Return a list of all digest algorithms
+ *
+ * Results:
+ *	A standard Tcl list.
+ *
+ * Side effects:
+ *	None.
+ *
+ *-------------------------------------------------------------------
+ */
+int DigestList(Tcl_Interp *interp) {
+    Tcl_Obj *objPtr = Tcl_NewListObj(0, NULL);
+    if (objPtr == NULL) {
+	return TCL_ERROR;
+    }
+
+    OBJ_NAME_do_all(OBJ_NAME_TYPE_MD_METH, NamesCallback, (void *) objPtr);
+    Tcl_SetObjResult(interp, objPtr);
+    return TCL_OK;
+}
+
+/*
+ *-------------------------------------------------------------------
+ *
  * DigestsObjCmd --
  *
  *	Return a list of all valid hash algorithms or message digests.
@@ -418,32 +474,70 @@ int DigestInfo(Tcl_Interp *interp, char *digestName) {
  *-------------------------------------------------------------------
  */
 int DigestsObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
-    Tcl_Obj *objPtr;
-
     dprintf("Called");
 
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
-    OpenSSL_add_all_digests(); /* Make sure they're loaded */
-#endif
-
     /* Validate arg count */
-    if (objc == 2) {
-	char *digestName = Tcl_GetStringFromObj(objv[1],NULL);
-	return DigestInfo(interp, digestName);
-    } else if (objc > 2) {
+    if (objc == 1) {
+	return DigestList(interp);
+
+    } else if (objc == 2) {
+	return DigestInfo(interp, Tcl_GetStringFromObj(objv[1],NULL));
+
+    } else {
 	Tcl_WrongNumArgs(interp, 1, objv, "?name?");
 	return TCL_ERROR;
     }
-
-    /* List all digests */
-    objPtr = Tcl_NewListObj(0, NULL);
-    OBJ_NAME_do_all(OBJ_NAME_TYPE_MD_METH, NamesCallback, (void *) objPtr);
-    Tcl_SetObjResult(interp, objPtr);
     return TCL_OK;
 	clientData = clientData;
 }
 
 /*******************************************************************/
+
+/*
+ *-------------------------------------------------------------------
+ *
+ * MacInfo --
+ *
+ *	Return a list of properties and values for macName.
+ *
+ * Results:
+ *	A standard Tcl list.
+ *
+ * Side effects:
+ *	None.
+ *
+ *-------------------------------------------------------------------
+ */
+int MacInfo(Tcl_Interp *interp, char *macName) {
+     return TCL_OK;
+}
+
+/*
+ *-------------------------------------------------------------------
+ *
+ * MacList --
+ *
+ *	Return a list of all MAC algorithms
+ *
+ * Results:
+ *	A standard Tcl list.
+ *
+ * Side effects:
+ *	None.
+ *
+ *-------------------------------------------------------------------
+ */
+int MacList(Tcl_Interp *interp) {
+    Tcl_Obj *objPtr = Tcl_NewListObj(0, NULL);
+    if (objPtr == NULL) {
+	return TCL_ERROR;
+    }
+
+    Tcl_ListObjAppendElement(interp, objPtr, Tcl_NewStringObj("cmac", -1));
+    Tcl_ListObjAppendElement(interp, objPtr, Tcl_NewStringObj("hmac", -1));
+    Tcl_SetObjResult(interp, objPtr);
+    return TCL_OK;
+}
 
 /*
  *-------------------------------------------------------------------
@@ -461,21 +555,116 @@ int DigestsObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *
  *-------------------------------------------------------------------
  */
 int MacsObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
-    Tcl_Obj *objPtr;
-
     dprintf("Called");
 
+    /* Clear errors */
+    Tcl_ResetResult(interp);
+    ERR_clear_error();
+
     /* Validate arg count */
-    if (objc != 1) {
-	Tcl_WrongNumArgs(interp, 1, objv, NULL);
+    if (objc == 1) {
+	return MacList(interp);
+
+    } else if (objc == 2) {
+	return MacInfo(interp, Tcl_GetStringFromObj(objv[1],NULL));
+
+    } else {
+	Tcl_WrongNumArgs(interp, 1, objv, "?name?");
+	return TCL_ERROR;
+    }
+    return TCL_OK;
+	clientData = clientData;
+}
+
+/*******************************************************************/
+
+/*
+ *-------------------------------------------------------------------
+ *
+ * PkeyInfo --
+ *
+ *	Return a list of properties and values for pkeyName.
+ *
+ * Results:
+ *	A standard Tcl list.
+ *
+ * Side effects:
+ *	None.
+ *
+ *-------------------------------------------------------------------
+ */
+int PkeyInfo(Tcl_Interp *interp, char *pkeyName) {
+     return TCL_OK;
+}
+
+/*
+ *-------------------------------------------------------------------
+ *
+ * PkeyList --
+ *
+ *	Return a list of all public key methods
+ *
+ * Results:
+ *	A standard Tcl list.
+ *
+ * Side effects:
+ *	None.
+ *
+ *-------------------------------------------------------------------
+ */
+int PkeyList(Tcl_Interp *interp) {
+    Tcl_Obj *objPtr = Tcl_NewListObj(0, NULL);
+    if (objPtr == NULL) {
 	return TCL_ERROR;
     }
 
-    /* List all MACs */
-    objPtr = Tcl_NewListObj(0, NULL);
-    Tcl_ListObjAppendElement(interp, objPtr, Tcl_NewStringObj("cmac", -1));
-    Tcl_ListObjAppendElement(interp, objPtr, Tcl_NewStringObj("hmac", -1));
+    for (size_t i = 0; i < EVP_PKEY_meth_get_count(); i++) {
+        const EVP_PKEY_METHOD *pmeth = EVP_PKEY_meth_get0(i);
+        int pkey_id, pkey_flags;
+
+        EVP_PKEY_meth_get0_info(&pkey_id, &pkey_flags, pmeth);
+	/*LAPPEND_STR(interp, objPtr, "name", OBJ_nid2ln(pkey_id), -1);
+	LAPPEND_STR(interp, objPtr, "type", pkey_flags & ASN1_PKEY_DYNAMIC ? "External" : "Built-in", -1);*/
+
+	Tcl_ListObjAppendElement(interp, objPtr, Tcl_NewStringObj(OBJ_nid2ln(pkey_id), -1));
+    }
     Tcl_SetObjResult(interp, objPtr);
+    return TCL_OK;
+}
+
+/*
+ *-------------------------------------------------------------------
+ *
+ * PkeysObjCmd --
+ *
+ *	Return a list of all valid hash algorithms or message digests.
+ *
+ * Results:
+ *	A standard Tcl list.
+ *
+ * Side effects:
+ *	None.
+ *
+ *-------------------------------------------------------------------
+ */
+int PkeysObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
+    dprintf("Called");
+
+    /* Clear errors */
+    Tcl_ResetResult(interp);
+    ERR_clear_error();
+
+    /* Validate arg count */
+    if (objc == 1) {
+	return PkeyList(interp);
+
+    } else if (objc == 2) {
+	return PkeyInfo(interp, Tcl_GetStringFromObj(objv[1],NULL));
+
+    } else {
+	Tcl_WrongNumArgs(interp, 1, objv, "?name?");
+	return TCL_ERROR;
+    }
     return TCL_OK;
 	clientData = clientData;
 }
@@ -503,14 +692,21 @@ ProtocolsObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *co
 
     dprintf("Called");
 
+    /* Clear errors */
+    Tcl_ResetResult(interp);
+    ERR_clear_error();
+
     /* Validate arg count */
     if (objc != 1) {
 	Tcl_WrongNumArgs(interp, 1, objv, NULL);
 	return TCL_ERROR;
     }
 
-    /* List all MACs */
+    /* List all protocols */
     objPtr = Tcl_NewListObj(0, NULL);
+    if (objPtr == NULL) {
+	return TCL_ERROR;
+    }
 #if OPENSSL_VERSION_NUMBER < 0x10100000L && !defined(NO_SSL2) && !defined(OPENSSL_NO_SSL2)
     Tcl_ListObjAppendElement(interp, objPtr, Tcl_NewStringObj(protocols[TLS_SSL2], -1));
 #endif
@@ -587,10 +783,18 @@ VersionObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *cons
  *-------------------------------------------------------------------
  */
 int Tls_InfoCommands(Tcl_Interp *interp) {
+
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+    OpenSSL_add_all_ciphers();
+    OpenSSL_add_all_digests();
+    OpenSSL_add_all_algorithms();
+#endif
+
     Tcl_CreateObjCommand(interp, "tls::cipher", CipherObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
     Tcl_CreateObjCommand(interp, "tls::ciphers", CiphersObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
     Tcl_CreateObjCommand(interp, "tls::digests", DigestsObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
     Tcl_CreateObjCommand(interp, "tls::macs", MacsObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
+    Tcl_CreateObjCommand(interp, "tls::pkeys", PkeysObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
     Tcl_CreateObjCommand(interp, "tls::protocols", ProtocolsObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
     Tcl_CreateObjCommand(interp, "tls::version", VersionObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
     return TCL_OK;

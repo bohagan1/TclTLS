@@ -12,6 +12,7 @@ command,"proc lcompare {list1 list2} {set m """";set u """";foreach i $list1 {if
 command,proc exec_get {delim args} {return [split [exec openssl {*}$args] $delim]},,,,,,,,,
 command,"proc exec_get_ciphers {} {set list [list];set data [exec openssl list -cipher-algorithms];foreach line [split $data ""\n""] {foreach {cipher null alias} [split [string trim $line]] {lappend list [string tolower $cipher]}};return [lsort -unique $list]}",,,,,,,,,
 command,"proc exec_get_digests {} {set list [list];set data [exec openssl dgst -list];foreach line [split $data ""\n""] {foreach digest $line {if {[string match ""-*"" $digest]} {lappend list [string trimleft $digest ""-""]}}};return [lsort $list]}",,,,,,,,,
+command,"proc exec_get_pkeys {} {set list [list];set data [exec openssl list -public-key-methods];foreach line [split $data ""\n""] {if {![string match ""*Type:*"" $line]} {lappend list [string trim $line]}};return $list}",,,,,,,,,
 command,proc exec_get_macs {} {return [list cmac hmac]},,,,,,,,,
 command,proc list_tolower {list} {set result [list];foreach element $list {lappend result [string tolower $element]};return $result},,,,,,,,,
 ,,,,,,,,,,
@@ -66,6 +67,9 @@ Digest Info,md5,,,tls::digests md5,,,name MD5 description {} size 16 block_size 
 command,# Test list MACs,,,,,,,,,
 MAC List,All,,,lcompare [exec_get_macs] [tls::macs],,,missing {} unexpected {},,,
 ,,,,,,,,,,
+command,# Test list Pkeys,,,,,,,,,
+Pkey List,All,,,lcompare [exec_get_pkeys] [tls::pkeys],,,missing {} unexpected {},,,
+,,,,,,,,,,
 command,# Test list protocols,,,,,,,,,
 Protocols,All,,,lcompare $::protocols [::tls::protocols],,,missing {ssl2 ssl3} unexpected {},,,
 ,,,,,,,,,,
@@ -77,6 +81,7 @@ command,# Error Cases,,,,,,,,,
 Error Cases,Cipher Too few args,,,::tls::cipher,,,"wrong # args: should be ""::tls::cipher name""",,,1
 Error Cases,Cipher Too many args,,,::tls::cipher too many args,,,"wrong # args: should be ""::tls::cipher name""",,,1
 Error Cases,Digests Too many args,,,::tls::digests too many args,,,"wrong # args: should be ""::tls::digests ?name?""",,,1
-Error Cases,MACs Too many args,,,::tls::macs too many args,,,"wrong # args: should be ""::tls::macs""",,,1
+Error Cases,MACs Too many args,,,::tls::macs too many args,,,"wrong # args: should be ""::tls::macs ?name?""",,,1
+Error Cases,Pkeys Too many args,,,::tls::pkeys too many args,,,"wrong # args: should be ""::tls::pkeys ?name?""",,,1
 Error Cases,Protocols Too many args,,,::tls::protocols too many args,,,"wrong # args: should be ""::tls::protocols""",,,1
 Error Cases,Version Too many args,,,::tls::version too many args,,,"wrong # args: should be ""::tls::version""",,,1

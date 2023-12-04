@@ -2045,7 +2045,7 @@ static int ConnectionInfoObjCmd(ClientData clientData, Tcl_Interp *interp, int o
 	/* Indicates which SSL/TLS protocol version first defined the cipher */
 	LAPPEND_STR(interp, objPtr, "min_version", SSL_CIPHER_get_version(cipher), -1);
 
-	/* Cipher NID */
+	/* Cipher NID, digest NID (none for AEAD cipher suites), Key Exchange NID, and authentication NID */
 	LAPPEND_STR(interp, objPtr, "cipherNID", (char *)OBJ_nid2ln(SSL_CIPHER_get_cipher_nid(cipher)), -1);
 	LAPPEND_STR(interp, objPtr, "digestNID", (char *)OBJ_nid2ln(SSL_CIPHER_get_digest_nid(cipher)), -1);
 	LAPPEND_STR(interp, objPtr, "keyExchangeNID", (char *)OBJ_nid2ln(SSL_CIPHER_get_kx_nid(cipher)), -1);
@@ -2061,7 +2061,8 @@ static int ConnectionInfoObjCmd(ClientData clientData, Tcl_Interp *interp, int o
 	/* Two-byte ID used in the TLS protocol of the given cipher */
 	LAPPEND_INT(interp, objPtr, "protocol_id", (int) SSL_CIPHER_get_protocol_id(cipher));
 
-	/* Textual description of the cipher */
+	/* Textual description of the cipher. Includes: cipher name, protocol version, key
+	   exchange, authentication, symmetric encryption method, message authentication code */
 	if (SSL_CIPHER_description(cipher, buf, sizeof(buf)) != NULL) {
 	    LAPPEND_STR(interp, objPtr, "description", buf, -1);
 	}
