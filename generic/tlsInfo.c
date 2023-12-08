@@ -395,9 +395,12 @@ done:
  *-------------------------------------------------------------------
  */
 int DigestInfo(Tcl_Interp *interp, char *digestName) {
+    EVP_MD *md;
     Tcl_Obj *objPtr, *listPtr;
-    EVP_MD *md = EVP_get_digestbyname(digestName);
     unsigned long flags;
+
+    /* Get message digest */
+    md = EVP_get_digestbyname(digestName);
 
     if (md == NULL) {
 	Tcl_AppendResult(interp, "Invalid digest \"", digestName, "\"", NULL);
@@ -509,7 +512,22 @@ int DigestsObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *
  *-------------------------------------------------------------------
  */
 int MacInfo(Tcl_Interp *interp, char *macName) {
-     return TCL_OK;
+    if (strcmp(macName, "cmac") != 0 && strcmp(macName, "hmac") != 0) {
+	Tcl_AppendResult(interp, "Invalid MAC \"", macName, "\"", NULL);
+	return TCL_ERROR;
+    }
+
+    /* Get properties */
+    objPtr = Tcl_NewListObj(0, NULL);
+    if (objPtr == NULL) {
+	return TCL_ERROR;
+    }
+    LAPPEND_STR(interp, objPtr, "name", macName, -1);
+    LAPPEND_STR(interp, objPtr, "description", "", -1);
+    LAPPEND_STR(interp, objPtr, "provider", "", -1);
+
+    Tcl_SetObjResult(interp, objPtr);
+    return TCL_OK;
 }
 
 /*
@@ -594,7 +612,32 @@ int MacsObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *con
  *-------------------------------------------------------------------
  */
 int PkeyInfo(Tcl_Interp *interp, char *pkeyName) {
-     return TCL_OK;
+    Tcl_Obj *objPtr;
+    EVP_PKEY *pkey = NULL;
+
+/* In work */
+    if (pkey == NULL) {
+	Tcl_AppendResult(interp, "Invalid public key method \"", pkeyName, "\"", NULL);
+	return TCL_ERROR;
+    }
+
+    /* Get properties */
+    objPtr = Tcl_NewListObj(0, NULL);
+    if (objPtr == NULL) {
+	return TCL_ERROR;
+    }
+    LAPPEND_STR(interp, objPtr, "name", OBJ_nid2ln(EVP_PKEY_id(pkey)), -1);
+    LAPPEND_STR(interp, objPtr, "description", "", -1);
+    LAPPEND_STR(interp, objPtr, "baseId", OBJ_nid2ln(EVP_PKEY_base_id(pkey)), -1);
+    LAPPEND_STR(interp, objPtr, "provider", "", -1);
+    LAPPEND_STR(interp, objPtr, "type", OBJ_nid2ln(EVP_PKEY_type(EVP_PKEY_id(pkey))), -1);
+
+    LAPPEND_INT(interp, objPtr, "size", EVP_PKEY_size(pkey));
+    LAPPEND_INT(interp, objPtr, "bits", EVP_PKEY_bits(pkey));
+    LAPPEND_INT(interp, objPtr, "security_bits", EVP_PKEY_security_bits(pkey));
+
+    Tcl_SetObjResult(interp, objPtr);
+    return TCL_OK;
 }
 
 /*
