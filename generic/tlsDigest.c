@@ -1,8 +1,8 @@
 /*
  * Message Digest (MD) and Message Authentication Code (MAC) Module
  *
- * Provides commands to calculate a message digest (MD) or message
- * authentication code (MAC) using a specified hash function and/or cipher.
+ * Provides commands to calculate a Message Digest (MD) or a Message
+ * Authentication Code (MAC).
  *
  * Copyright (C) 2023 Brian O'Hagan
  *
@@ -309,12 +309,12 @@ int DigestUpdate(DigestState *statePtr, char *buf, size_t read, int do_result) {
 int DigestFinalize(Tcl_Interp *interp, DigestState *statePtr, Tcl_Obj **resultObj) {
     unsigned char md_buf[EVP_MAX_MD_SIZE];
     unsigned int ulen;
-    int res = 0, md_len = 0;
+    int res = 0, md_len = 0, type = statePtr->format & 0xFF0;
 
     dprintf("Called");
 
     /* Finalize cryptography function and get result */
-    switch(statePtr->format & 0xFF0) {
+    switch(type) {
     case TYPE_MD:
 	if (!(statePtr->format & IS_XOF)) {
 	    res = EVP_DigestFinal_ex(statePtr->ctx, md_buf, &ulen);
@@ -1322,7 +1322,7 @@ static int MACObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Ob
  *
  *-------------------------------------------------------------------
  */
- #define validate_argc(objc, objv) { \
+ #define VALIDATE_ARGC(objc, objv) { \
     if (objc != 2) { \
 	Tcl_WrongNumArgs(interp, 1, objv, "data"); \
 	return TCL_ERROR; \
@@ -1330,27 +1330,27 @@ static int MACObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Ob
 }
  
 int MD4ObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
-    validate_argc(objc, objv);
+    VALIDATE_ARGC(objc, objv);
     return DigestDataHandler(interp, objv[1], EVP_md4(), NULL, HEX_FORMAT | TYPE_MD, NULL, NULL);
 }
 
 int MD5ObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
-    validate_argc(objc, objv);
+    VALIDATE_ARGC(objc, objv);
     return DigestDataHandler(interp, objv[1], EVP_md5(), NULL, HEX_FORMAT | TYPE_MD, NULL, NULL);
 }
 
 int SHA1ObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
-    validate_argc(objc, objv);
+    VALIDATE_ARGC(objc, objv);
     return DigestDataHandler(interp, objv[1], EVP_sha1(), NULL, HEX_FORMAT | TYPE_MD, NULL, NULL);
 }
 
 int SHA256ObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
-    validate_argc(objc, objv);
+    VALIDATE_ARGC(objc, objv);
     return DigestDataHandler(interp, objv[1], EVP_sha256(), NULL, HEX_FORMAT | TYPE_MD, NULL, NULL);
 }
 
 int SHA512ObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
-    validate_argc(objc, objv);
+    VALIDATE_ARGC(objc, objv);
     return DigestDataHandler(interp, objv[1], EVP_sha512(), NULL, HEX_FORMAT | TYPE_MD, NULL, NULL);
 }
 

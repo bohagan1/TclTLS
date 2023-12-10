@@ -23,6 +23,7 @@ enum protocol {
     TLS_SSL2, TLS_SSL3, TLS_TLS1, TLS_TLS1_1, TLS_TLS1_2, TLS_TLS1_3, TLS_NONE
 };
 
+/*******************************************************************/
 
 /*
  *-------------------------------------------------------------------
@@ -40,11 +41,11 @@ enum protocol {
  *-------------------------------------------------------------------
  */
 void NamesCallback(const OBJ_NAME *obj, void *arg) {
-    Tcl_Obj *objPtr = (Tcl_Obj *) arg;
+    Tcl_Obj *listObj = (Tcl_Obj *) arg;
 
     /* Fields: (int) type and alias, (const char*) name (alias from) and data (alias to) */
     if (strstr(obj->name, "rsa") == NULL && strstr(obj->name, "RSA") == NULL) {
-	Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(obj->name,-1));
+	Tcl_ListObjAppendElement(NULL, listObj, Tcl_NewStringObj(obj->name,-1));
     }
 }
 
@@ -53,9 +54,9 @@ void NamesCallback(const OBJ_NAME *obj, void *arg) {
 /*
  *-------------------------------------------------------------------
  *
- * CipherObjCmd --
+ * CipherInfo --
  *
- *	Return a list of properties and values for cipherName.
+ *	Return a list of properties and values for cipher.
  *
  * Results:
  *	A standard Tcl list.
@@ -65,46 +66,34 @@ void NamesCallback(const OBJ_NAME *obj, void *arg) {
  *
  *-------------------------------------------------------------------
  */
-static int CipherObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
-    Tcl_Obj *objPtr, *listPtr;
-    unsigned char *cipherName = NULL, *modeName = NULL;
+int CipherInfo(Tcl_Interp *interp, Tcl_Obj *nameObj) {
     const EVP_CIPHER *cipher;
+    Tcl_Obj *resultObj, *listObj;
     unsigned long flags, mode;
-
-    dprintf("Called");
-
-    /* Clear errors */
-    Tcl_ResetResult(interp);
-    ERR_clear_error();
-
-    /* Validate arg count */
-    if (objc != 2) {
-	Tcl_WrongNumArgs(interp, 1, objv, "name");
-	return TCL_ERROR;
-    }
+    unsigned char *modeName = NULL;
+    char *name = Tcl_GetStringFromObj(nameObj,NULL);
 
     /* Get cipher */
-    cipherName = Tcl_GetStringFromObj(objv[1], NULL);
-    cipher = EVP_get_cipherbyname(cipherName);
+    cipher = EVP_get_cipherbyname(name);
 
     if (cipher == NULL) {
-	Tcl_AppendResult(interp, "Invalid cipher \"", cipherName, "\"", NULL);
+	Tcl_AppendResult(interp, "Invalid cipher \"", name, "\"", NULL);
 	return TCL_ERROR;
     }
 
     /* Get properties */
-    objPtr = Tcl_NewListObj(0, NULL);
-    if (objPtr == NULL) {
+    resultObj = Tcl_NewListObj(0, NULL);
+    if (resultObj == NULL) {
 	return TCL_ERROR;
     }
-    LAPPEND_STR(interp, objPtr, "nid", OBJ_nid2ln(EVP_CIPHER_nid(cipher)), -1);
-    LAPPEND_STR(interp, objPtr, "name", EVP_CIPHER_name(cipher), -1);
-    LAPPEND_STR(interp, objPtr, "description", "", -1);
-    LAPPEND_INT(interp, objPtr, "block_size", EVP_CIPHER_block_size(cipher));
-    LAPPEND_INT(interp, objPtr, "key_length", EVP_CIPHER_key_length(cipher));
-    LAPPEND_INT(interp, objPtr, "iv_length", EVP_CIPHER_iv_length(cipher));
-    LAPPEND_STR(interp, objPtr, "type", OBJ_nid2ln(EVP_CIPHER_type(cipher)), -1);
-    LAPPEND_STR(interp, objPtr, "provider", "", -1);
+    LAPPEND_STR(interp, resultObj, "nid", OBJ_nid2ln(EVP_CIPHER_nid(cipher)), -1);
+    LAPPEND_STR(interp, resultObj, "name", EVP_CIPHER_name(cipher), -1);
+    LAPPEND_STR(interp, resultObj, "description", "", -1);
+    LAPPEND_INT(interp, resultObj, "block_size", EVP_CIPHER_block_size(cipher));
+    LAPPEND_INT(interp, resultObj, "key_length", EVP_CIPHER_key_length(cipher));
+    LAPPEND_INT(interp, resultObj, "iv_length", EVP_CIPHER_iv_length(cipher));
+    LAPPEND_STR(interp, resultObj, "type", OBJ_nid2ln(EVP_CIPHER_type(cipher)), -1);
+    LAPPEND_STR(interp, resultObj, "provider", "", -1);
     flags = EVP_CIPHER_flags(cipher);
     mode  = EVP_CIPHER_mode(cipher);
 
@@ -147,21 +136,21 @@ static int CipherObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl
 	    modeName = "unknown";
 	    break;
     }
-    LAPPEND_STR(interp, objPtr, "mode", modeName, -1);
+    LAPPEND_STR(interp, resultObj, "mode", modeName, -1);
 
     /* Flags */
-    listPtr = Tcl_NewListObj(0, NULL);
-    LAPPEND_BOOL(interp, listPtr, "Variable Length", flags & EVP_CIPH_VARIABLE_LENGTH);
-    LAPPEND_BOOL(interp, listPtr, "Always Call Init", flags & EVP_CIPH_ALWAYS_CALL_INIT);
-    LAPPEND_BOOL(interp, listPtr, "Custom IV", flags & EVP_CIPH_CUSTOM_IV);
-    LAPPEND_BOOL(interp, listPtr, "Control Init", flags & EVP_CIPH_CTRL_INIT);
-    LAPPEND_BOOL(interp, listPtr, "Custom Cipher", flags & EVP_CIPH_FLAG_CUSTOM_CIPHER);
-    LAPPEND_BOOL(interp, listPtr, "AEAD Cipher", flags & EVP_CIPH_FLAG_AEAD_CIPHER);
-    LAPPEND_BOOL(interp, listPtr, "Custom Copy", flags & EVP_CIPH_CUSTOM_COPY);
-    LAPPEND_BOOL(interp, listPtr, "Non FIPS Allow", flags & EVP_CIPH_FLAG_NON_FIPS_ALLOW);
-    LAPPEND_OBJ(interp, objPtr, "flags", listPtr);
+    listObj = Tcl_NewListObj(0, NULL);
+    LAPPEND_BOOL(interp, listObj, "Variable Length", flags & EVP_CIPH_VARIABLE_LENGTH);
+    LAPPEND_BOOL(interp, listObj, "Always Call Init", flags & EVP_CIPH_ALWAYS_CALL_INIT);
+    LAPPEND_BOOL(interp, listObj, "Custom IV", flags & EVP_CIPH_CUSTOM_IV);
+    LAPPEND_BOOL(interp, listObj, "Control Init", flags & EVP_CIPH_CTRL_INIT);
+    LAPPEND_BOOL(interp, listObj, "Custom Cipher", flags & EVP_CIPH_FLAG_CUSTOM_CIPHER);
+    LAPPEND_BOOL(interp, listObj, "AEAD Cipher", flags & EVP_CIPH_FLAG_AEAD_CIPHER);
+    LAPPEND_BOOL(interp, listObj, "Custom Copy", flags & EVP_CIPH_CUSTOM_COPY);
+    LAPPEND_BOOL(interp, listObj, "Non FIPS Allow", flags & EVP_CIPH_FLAG_NON_FIPS_ALLOW);
+    LAPPEND_OBJ(interp, resultObj, "flags", listObj);
 
-    Tcl_SetObjResult(interp, objPtr);
+    Tcl_SetObjResult(interp, resultObj);
     return TCL_OK;
 }
 
@@ -181,14 +170,52 @@ static int CipherObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl
  *-------------------------------------------------------------------
  */
 int CipherList(Tcl_Interp *interp) {
-    Tcl_Obj *objPtr = Tcl_NewListObj(0, NULL);
-    if (objPtr == NULL) {
+    Tcl_Obj *resultObj = Tcl_NewListObj(0, NULL);
+    if (resultObj == NULL) {
 	return TCL_ERROR;
     }
 
-    OBJ_NAME_do_all(OBJ_NAME_TYPE_CIPHER_METH, NamesCallback, (void *) objPtr);
-    Tcl_SetObjResult(interp, objPtr);
+    /* Same as EVP_CIPHER_do_all */
+    OBJ_NAME_do_all(OBJ_NAME_TYPE_CIPHER_METH, NamesCallback, (void *) resultObj);
+    Tcl_SetObjResult(interp, resultObj);
     return TCL_OK;
+}
+
+/*
+ *-------------------------------------------------------------------
+ *
+ * CipherObjCmd --
+ *
+ *	Return a list of properties and values for cipherName.
+ *
+ * Results:
+ *	A standard Tcl list.
+ *
+ * Side effects:
+ *	None.
+ *
+ *-------------------------------------------------------------------
+ */
+static int CipherObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
+    dprintf("Called");
+
+    /* Clear errors */
+    Tcl_ResetResult(interp);
+    ERR_clear_error();
+
+    /* Validate arg count */
+    if (objc == 1) {
+	return CipherList(interp);
+
+    } else if (objc == 2) {
+	return CipherInfo(interp, objv[1]);
+
+    } else {
+	Tcl_WrongNumArgs(interp, 1, objv, "?name?");
+	return TCL_ERROR;
+    }
+    return TCL_OK;
+	clientData = clientData;
 }
 
 /*
@@ -322,12 +349,12 @@ static int CiphersObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tc
     }
 
     if (sk != NULL) {
-	Tcl_Obj *objPtr = NULL;
+	Tcl_Obj *resultObj = NULL;
 
 	if (!verbose) {
 	    char *cp;
-	    objPtr = Tcl_NewListObj(0, NULL);
-	    if (objPtr == NULL) {
+	    resultObj = Tcl_NewListObj(0, NULL);
+	    if (resultObj == NULL) {
 		res = TCL_ERROR;
 		goto done;
 	    }
@@ -339,13 +366,13 @@ static int CiphersObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tc
 		/* cipher name or (NONE) */
 		cp = SSL_CIPHER_get_name(c);
 		if (cp == NULL) break;
-		Tcl_ListObjAppendElement(interp, objPtr, Tcl_NewStringObj(cp, -1));
+		Tcl_ListObjAppendElement(interp, resultObj, Tcl_NewStringObj(cp, -1));
 	    }
 
 	} else {
 	    char buf[BUFSIZ];
-	    objPtr = Tcl_NewStringObj("",0);
-	    if (objPtr == NULL) {
+	    resultObj = Tcl_NewStringObj("",0);
+	    if (resultObj == NULL) {
 		res = TCL_ERROR;
 		goto done;
 	    }
@@ -356,9 +383,9 @@ static int CiphersObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tc
 
 		/* textual description of the cipher */
 		if (SSL_CIPHER_description(c, buf, sizeof(buf)) != NULL) {
-		    Tcl_AppendToObj(objPtr, buf, (Tcl_Size) strlen(buf));
+		    Tcl_AppendToObj(resultObj, buf, (Tcl_Size) strlen(buf));
 		} else {
-		    Tcl_AppendToObj(objPtr, "UNKNOWN\n", 8);
+		    Tcl_AppendToObj(resultObj, "UNKNOWN\n", 8);
 		}
 	    }
 	}
@@ -367,7 +394,7 @@ static int CiphersObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tc
 	if (use_supported) {
 	    sk_SSL_CIPHER_free(sk);
 	}
-	Tcl_SetObjResult(interp, objPtr);
+	Tcl_SetObjResult(interp, resultObj);
     }
 
 done:
@@ -384,7 +411,7 @@ done:
  *
  * DigestInfo --
  *
- *	Return a list of properties and values for digestName.
+ *	Return a list of properties and values for digest.
  *
  * Results:
  *	A standard Tcl list.
@@ -394,44 +421,46 @@ done:
  *
  *-------------------------------------------------------------------
  */
-int DigestInfo(Tcl_Interp *interp, char *digestName) {
+int DigestInfo(Tcl_Interp *interp, Tcl_Obj *nameObj) {
     EVP_MD *md;
-    Tcl_Obj *objPtr, *listPtr;
+    Tcl_Obj *resultObj, *listObj;
     unsigned long flags;
+    int res = TCL_OK;
+    char *name = Tcl_GetStringFromObj(nameObj,NULL);
 
     /* Get message digest */
-    md = EVP_get_digestbyname(digestName);
+    md = EVP_get_digestbyname(name);
 
     if (md == NULL) {
-	Tcl_AppendResult(interp, "Invalid digest \"", digestName, "\"", NULL);
+	Tcl_AppendResult(interp, "Invalid digest \"", name, "\"", NULL);
 	return TCL_ERROR;
     }
 
     /* Get properties */
-    objPtr = Tcl_NewListObj(0, NULL);
-    if (objPtr == NULL) {
+    resultObj = Tcl_NewListObj(0, NULL);
+    if (resultObj == NULL) {
 	return TCL_ERROR;
     }
-    LAPPEND_STR(interp, objPtr, "name", EVP_MD_name(md), -1);
-    LAPPEND_STR(interp, objPtr, "description", "", -1);
-    LAPPEND_INT(interp, objPtr, "size", EVP_MD_size(md));
-    LAPPEND_INT(interp, objPtr, "block_size", EVP_MD_block_size(md));
-    LAPPEND_STR(interp, objPtr, "provider", "", -1);
-    LAPPEND_STR(interp, objPtr, "type", OBJ_nid2ln(EVP_MD_type(md)), -1);
-    LAPPEND_STR(interp, objPtr, "pkey_type", OBJ_nid2ln(EVP_MD_pkey_type(md)), -1);
+    LAPPEND_STR(interp, resultObj, "name", EVP_MD_name(md), -1);
+    LAPPEND_STR(interp, resultObj, "description", "", -1);
+    LAPPEND_INT(interp, resultObj, "size", EVP_MD_size(md));
+    LAPPEND_INT(interp, resultObj, "block_size", EVP_MD_block_size(md));
+    LAPPEND_STR(interp, resultObj, "provider", "", -1);
+    LAPPEND_STR(interp, resultObj, "type", OBJ_nid2ln(EVP_MD_type(md)), -1);
+    LAPPEND_STR(interp, resultObj, "pkey_type", OBJ_nid2ln(EVP_MD_pkey_type(md)), -1);
     flags = EVP_MD_flags(md);
 
     /* Flags */
-    listPtr = Tcl_NewListObj(0, NULL);
-    LAPPEND_BOOL(interp, listPtr, "One-shot", flags & EVP_MD_FLAG_ONESHOT);
-    LAPPEND_BOOL(interp, listPtr, "XOF", flags & EVP_MD_FLAG_XOF);
-    LAPPEND_BOOL(interp, listPtr, "DigestAlgorithmId_NULL", flags & EVP_MD_FLAG_DIGALGID_NULL);
-    LAPPEND_BOOL(interp, listPtr, "DigestAlgorithmId_Abscent", flags & EVP_MD_FLAG_DIGALGID_ABSENT);
-    LAPPEND_BOOL(interp, listPtr, "DigestAlgorithmId_Custom", flags & EVP_MD_FLAG_DIGALGID_CUSTOM);
-    LAPPEND_BOOL(interp, listPtr, "FIPS", flags & EVP_MD_FLAG_FIPS);
-    LAPPEND_OBJ(interp, objPtr, "flags", listPtr);
+    listObj = Tcl_NewListObj(0, NULL);
+    LAPPEND_BOOL(interp, listObj, "One-shot", flags & EVP_MD_FLAG_ONESHOT);
+    LAPPEND_BOOL(interp, listObj, "XOF", flags & EVP_MD_FLAG_XOF);
+    LAPPEND_BOOL(interp, listObj, "DigestAlgorithmId_NULL", flags & EVP_MD_FLAG_DIGALGID_NULL);
+    LAPPEND_BOOL(interp, listObj, "DigestAlgorithmId_Abscent", flags & EVP_MD_FLAG_DIGALGID_ABSENT);
+    LAPPEND_BOOL(interp, listObj, "DigestAlgorithmId_Custom", flags & EVP_MD_FLAG_DIGALGID_CUSTOM);
+    LAPPEND_BOOL(interp, listObj, "FIPS", flags & EVP_MD_FLAG_FIPS);
+    LAPPEND_OBJ(interp, resultObj, "flags", listObj);
 
-    Tcl_SetObjResult(interp, objPtr);
+    Tcl_SetObjResult(interp, resultObj);
     return TCL_OK;
 }
 
@@ -451,13 +480,14 @@ int DigestInfo(Tcl_Interp *interp, char *digestName) {
  *-------------------------------------------------------------------
  */
 int DigestList(Tcl_Interp *interp) {
-    Tcl_Obj *objPtr = Tcl_NewListObj(0, NULL);
-    if (objPtr == NULL) {
+    Tcl_Obj *resultObj = Tcl_NewListObj(0, NULL);
+    if (resultObj == NULL) {
 	return TCL_ERROR;
     }
 
-    OBJ_NAME_do_all(OBJ_NAME_TYPE_MD_METH, NamesCallback, (void *) objPtr);
-    Tcl_SetObjResult(interp, objPtr);
+    /* Same as EVP_MD_do_all */
+    OBJ_NAME_do_all(OBJ_NAME_TYPE_MD_METH, NamesCallback, (void *) resultObj);
+    Tcl_SetObjResult(interp, resultObj);
     return TCL_OK;
 }
 
@@ -479,12 +509,17 @@ int DigestList(Tcl_Interp *interp) {
 int DigestsObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
     dprintf("Called");
 
+    /* Clear errors */
+    Tcl_ResetResult(interp);
+    ERR_clear_error();
+
+
     /* Validate arg count */
     if (objc == 1) {
 	return DigestList(interp);
 
     } else if (objc == 2) {
-	return DigestInfo(interp, Tcl_GetStringFromObj(objv[1],NULL));
+	return DigestInfo(interp, objv[1]);
 
     } else {
 	Tcl_WrongNumArgs(interp, 1, objv, "?name?");
@@ -511,23 +546,27 @@ int DigestsObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *
  *
  *-------------------------------------------------------------------
  */
-int MacInfo(Tcl_Interp *interp, char *macName) {
-    if (strcmp(macName, "cmac") != 0 && strcmp(macName, "hmac") != 0) {
-	Tcl_AppendResult(interp, "Invalid MAC \"", macName, "\"", NULL);
+int MacInfo(Tcl_Interp *interp, Tcl_Obj *nameObj) {
+    Tcl_Obj *resultObj;
+    int res = TCL_OK;
+    char *name = Tcl_GetStringFromObj(nameObj,NULL);
+
+    if (strcmp(name, "cmac") != 0 && strcmp(name, "hmac") != 0) {
+	Tcl_AppendResult(interp, "Invalid MAC \"", name, "\"", NULL);
 	return TCL_ERROR;
     }
 
     /* Get properties */
-    objPtr = Tcl_NewListObj(0, NULL);
-    if (objPtr == NULL) {
+    resultObj = Tcl_NewListObj(0, NULL);
+    if (resultObj == NULL) {
 	return TCL_ERROR;
     }
-    LAPPEND_STR(interp, objPtr, "name", macName, -1);
-    LAPPEND_STR(interp, objPtr, "description", "", -1);
-    LAPPEND_STR(interp, objPtr, "provider", "", -1);
+    LAPPEND_STR(interp, resultObj, "name", name, -1);
+    LAPPEND_STR(interp, resultObj, "description", "", -1);
+    LAPPEND_STR(interp, resultObj, "provider", "", -1);
 
-    Tcl_SetObjResult(interp, objPtr);
-    return TCL_OK;
+    Tcl_SetObjResult(interp, resultObj);
+    return res;
 }
 
 /*
@@ -546,14 +585,14 @@ int MacInfo(Tcl_Interp *interp, char *macName) {
  *-------------------------------------------------------------------
  */
 int MacList(Tcl_Interp *interp) {
-    Tcl_Obj *objPtr = Tcl_NewListObj(0, NULL);
-    if (objPtr == NULL) {
+    Tcl_Obj *resultObj = Tcl_NewListObj(0, NULL);
+    if (resultObj == NULL) {
 	return TCL_ERROR;
     }
 
-    Tcl_ListObjAppendElement(interp, objPtr, Tcl_NewStringObj("cmac", -1));
-    Tcl_ListObjAppendElement(interp, objPtr, Tcl_NewStringObj("hmac", -1));
-    Tcl_SetObjResult(interp, objPtr);
+    Tcl_ListObjAppendElement(interp, resultObj, Tcl_NewStringObj("cmac", -1));
+    Tcl_ListObjAppendElement(interp, resultObj, Tcl_NewStringObj("hmac", -1));
+    Tcl_SetObjResult(interp, resultObj);
     return TCL_OK;
 }
 
@@ -584,7 +623,7 @@ int MacsObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *con
 	return MacList(interp);
 
     } else if (objc == 2) {
-	return MacInfo(interp, Tcl_GetStringFromObj(objv[1],NULL));
+	return MacInfo(interp, objv[1]);
 
     } else {
 	Tcl_WrongNumArgs(interp, 1, objv, "?name?");
@@ -601,7 +640,7 @@ int MacsObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *con
  *
  * PkeyInfo --
  *
- *	Return a list of properties and values for pkeyName.
+ *	Return a list of properties and values for pkey.
  *
  * Results:
  *	A standard Tcl list.
@@ -611,33 +650,40 @@ int MacsObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *con
  *
  *-------------------------------------------------------------------
  */
-int PkeyInfo(Tcl_Interp *interp, char *pkeyName) {
-    Tcl_Obj *objPtr;
+int PkeyInfo(Tcl_Interp *interp, Tcl_Obj *nameObj) {
+    Tcl_Obj *resultObj;
+    int res = TCL_OK;
+    char *name = Tcl_GetStringFromObj(nameObj,NULL);
     EVP_PKEY *pkey = NULL;
 
-/* In work */
     if (pkey == NULL) {
-	Tcl_AppendResult(interp, "Invalid public key method \"", pkeyName, "\"", NULL);
+	Tcl_AppendResult(interp, "Invalid public key method \"", name, "\"", NULL);
 	return TCL_ERROR;
     }
 
     /* Get properties */
-    objPtr = Tcl_NewListObj(0, NULL);
-    if (objPtr == NULL) {
+    resultObj = Tcl_NewListObj(0, NULL);
+    if (resultObj == NULL) {
 	return TCL_ERROR;
     }
-    LAPPEND_STR(interp, objPtr, "name", OBJ_nid2ln(EVP_PKEY_id(pkey)), -1);
-    LAPPEND_STR(interp, objPtr, "description", "", -1);
-    LAPPEND_STR(interp, objPtr, "baseId", OBJ_nid2ln(EVP_PKEY_base_id(pkey)), -1);
-    LAPPEND_STR(interp, objPtr, "provider", "", -1);
-    LAPPEND_STR(interp, objPtr, "type", OBJ_nid2ln(EVP_PKEY_type(EVP_PKEY_id(pkey))), -1);
+    LAPPEND_STR(interp, resultObj, "name", OBJ_nid2ln(EVP_PKEY_id(pkey)), -1);
+    LAPPEND_STR(interp, resultObj, "description", "", -1);
+    LAPPEND_INT(interp, resultObj, "size", EVP_PKEY_size(pkey));
+    LAPPEND_INT(interp, resultObj, "bits", EVP_PKEY_bits(pkey));
+    LAPPEND_INT(interp, resultObj, "security_bits", EVP_PKEY_security_bits(pkey));
+    LAPPEND_STR(interp, resultObj, "baseId", OBJ_nid2ln(EVP_PKEY_base_id(pkey)), -1);
+    LAPPEND_STR(interp, resultObj, "provider", "", -1);
+    LAPPEND_STR(interp, resultObj, "type", OBJ_nid2ln(EVP_PKEY_type(EVP_PKEY_id(pkey))), -1);
 
-    LAPPEND_INT(interp, objPtr, "size", EVP_PKEY_size(pkey));
-    LAPPEND_INT(interp, objPtr, "bits", EVP_PKEY_bits(pkey));
-    LAPPEND_INT(interp, objPtr, "security_bits", EVP_PKEY_security_bits(pkey));
+    {
+	int pnid;
+	if (EVP_PKEY_get_default_digest_nid(pkey, &pnid) > 0) {
+	    LAPPEND_STR(interp, resultObj, "default_digest", OBJ_nid2ln(pnid), -2);
+	}
+    }
 
-    Tcl_SetObjResult(interp, objPtr);
-    return TCL_OK;
+    Tcl_SetObjResult(interp, resultObj);
+    return res;
 }
 
 /*
@@ -656,8 +702,8 @@ int PkeyInfo(Tcl_Interp *interp, char *pkeyName) {
  *-------------------------------------------------------------------
  */
 int PkeyList(Tcl_Interp *interp) {
-    Tcl_Obj *objPtr = Tcl_NewListObj(0, NULL);
-    if (objPtr == NULL) {
+    Tcl_Obj *resultObj = Tcl_NewListObj(0, NULL);
+    if (resultObj == NULL) {
 	return TCL_ERROR;
     }
 
@@ -666,12 +712,12 @@ int PkeyList(Tcl_Interp *interp) {
         int pkey_id, pkey_flags;
 
         EVP_PKEY_meth_get0_info(&pkey_id, &pkey_flags, pmeth);
-	/*LAPPEND_STR(interp, objPtr, "name", OBJ_nid2ln(pkey_id), -1);
-	LAPPEND_STR(interp, objPtr, "type", pkey_flags & ASN1_PKEY_DYNAMIC ? "External" : "Built-in", -1);*/
+	/*LAPPEND_STR(interp, resultObj, "name", OBJ_nid2ln(pkey_id), -1);
+	LAPPEND_STR(interp, resultObj, "type", pkey_flags & ASN1_PKEY_DYNAMIC ? "External" : "Built-in", -1);*/
 
-	Tcl_ListObjAppendElement(interp, objPtr, Tcl_NewStringObj(OBJ_nid2ln(pkey_id), -1));
+	Tcl_ListObjAppendElement(interp, resultObj, Tcl_NewStringObj(OBJ_nid2ln(pkey_id), -1));
     }
-    Tcl_SetObjResult(interp, objPtr);
+    Tcl_SetObjResult(interp, resultObj);
     return TCL_OK;
 }
 
@@ -702,7 +748,7 @@ int PkeysObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *co
 	return PkeyList(interp);
 
     } else if (objc == 2) {
-	return PkeyInfo(interp, Tcl_GetStringFromObj(objv[1],NULL));
+	return PkeyInfo(interp, objv[1]);
 
     } else {
 	Tcl_WrongNumArgs(interp, 1, objv, "?name?");
@@ -731,7 +777,7 @@ int PkeysObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *co
  */
 static int
 ProtocolsObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
-    Tcl_Obj *objPtr;
+    Tcl_Obj *resultObj;
 
     dprintf("Called");
 
@@ -746,29 +792,29 @@ ProtocolsObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *co
     }
 
     /* List all protocols */
-    objPtr = Tcl_NewListObj(0, NULL);
-    if (objPtr == NULL) {
+    resultObj = Tcl_NewListObj(0, NULL);
+    if (resultObj == NULL) {
 	return TCL_ERROR;
     }
 #if OPENSSL_VERSION_NUMBER < 0x10100000L && !defined(NO_SSL2) && !defined(OPENSSL_NO_SSL2)
-    Tcl_ListObjAppendElement(interp, objPtr, Tcl_NewStringObj(protocols[TLS_SSL2], -1));
+    Tcl_ListObjAppendElement(interp, resultObj, Tcl_NewStringObj(protocols[TLS_SSL2], -1));
 #endif
 #if !defined(NO_SSL3) && !defined(OPENSSL_NO_SSL3) && !defined(OPENSSL_NO_SSL3_METHOD)
-    Tcl_ListObjAppendElement(interp, objPtr, Tcl_NewStringObj(protocols[TLS_SSL3], -1));
+    Tcl_ListObjAppendElement(interp, resultObj, Tcl_NewStringObj(protocols[TLS_SSL3], -1));
 #endif
 #if !defined(NO_TLS1) && !defined(OPENSSL_NO_TLS1) && !defined(OPENSSL_NO_TLS1_METHOD)
-    Tcl_ListObjAppendElement(interp, objPtr, Tcl_NewStringObj(protocols[TLS_TLS1], -1));
+    Tcl_ListObjAppendElement(interp, resultObj, Tcl_NewStringObj(protocols[TLS_TLS1], -1));
 #endif
 #if !defined(NO_TLS1_1) && !defined(OPENSSL_NO_TLS1_1) && !defined(OPENSSL_NO_TLS1_1_METHOD)
-    Tcl_ListObjAppendElement(interp, objPtr, Tcl_NewStringObj(protocols[TLS_TLS1_1], -1));
+    Tcl_ListObjAppendElement(interp, resultObj, Tcl_NewStringObj(protocols[TLS_TLS1_1], -1));
 #endif
 #if !defined(NO_TLS1_2) && !defined(OPENSSL_NO_TLS1_2) && !defined(OPENSSL_NO_TLS1_2_METHOD)
-    Tcl_ListObjAppendElement(interp, objPtr, Tcl_NewStringObj(protocols[TLS_TLS1_2], -1));
+    Tcl_ListObjAppendElement(interp, resultObj, Tcl_NewStringObj(protocols[TLS_TLS1_2], -1));
 #endif
 #if !defined(NO_TLS1_3) && !defined(OPENSSL_NO_TLS1_3)
-    Tcl_ListObjAppendElement(interp, objPtr, Tcl_NewStringObj(protocols[TLS_TLS1_3], -1));
+    Tcl_ListObjAppendElement(interp, resultObj, Tcl_NewStringObj(protocols[TLS_TLS1_3], -1));
 #endif
-    Tcl_SetObjResult(interp, objPtr);
+    Tcl_SetObjResult(interp, resultObj);
     return TCL_OK;
 	clientData = clientData;
 }
@@ -792,7 +838,7 @@ ProtocolsObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *co
  */
 static int
 VersionObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
-    Tcl_Obj *objPtr;
+    Tcl_Obj *resultObj;
 
     dprintf("Called");
 
@@ -802,8 +848,8 @@ VersionObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *cons
 	return TCL_ERROR;
     }
 
-    objPtr = Tcl_NewStringObj(OPENSSL_VERSION_TEXT, -1);
-    Tcl_SetObjResult(interp, objPtr);
+    resultObj = Tcl_NewStringObj(OPENSSL_VERSION_TEXT, -1);
+    Tcl_SetObjResult(interp, resultObj);
     return TCL_OK;
 	clientData = clientData;
 }
@@ -842,3 +888,4 @@ int Tls_InfoCommands(Tcl_Interp *interp) {
     Tcl_CreateObjCommand(interp, "tls::version", VersionObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
     return TCL_OK;
 }
+
