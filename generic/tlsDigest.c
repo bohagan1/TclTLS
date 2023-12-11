@@ -1241,6 +1241,7 @@ static int DigestMain(int type, Tcl_Interp *interp, int objc, Tcl_Obj *const obj
 	OPTOBJ("-digest", digestObj);
 	OPTOBJ("-file", fileObj);
 	OPTOBJ("-filename", fileObj);
+	OPTOBJ("-hash", digestObj);
 	OPTOBJ("-key", keyObj);
 	OPTOBJ("-mac", macObj);
 

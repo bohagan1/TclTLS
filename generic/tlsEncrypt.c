@@ -1250,6 +1250,7 @@ static int EncryptMain(int type, Tcl_Interp *interp, int objc, Tcl_Obj *const ob
 	OPTOBJ("-command", cmdObj);
 	OPTOBJ("-data", dataObj);
 	OPTOBJ("-digest", digestObj);
+	OPTOBJ("-hash", digestObj);
 	OPTOBJ("-infile", inFileObj);
 	OPTOBJ("-outfile", outFileObj);
 	OPTOBJ("-key", keyObj);

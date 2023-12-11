@@ -2552,6 +2552,7 @@ DLLEXPORT int Tls_Init(Tcl_Interp *interp) {
     Tls_DigestCommands(interp);
     Tls_EncryptCommands(interp);
     Tls_InfoCommands(interp);
+    Tls_KeyCommands(interp);
 
     if (interp) {
 	Tcl_Eval(interp, tlsTclInitScript);

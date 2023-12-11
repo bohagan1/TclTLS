@@ -5396,7 +5396,7 @@ printf "%s\n" "$ac_cv_c_bigendian" >&6; }
 #-----------------------------------------------------------------------
 
 
-    vars="tls.c tlsBIO.c tlsDigest.c tlsEncrypt.c tlsInfo.c tlsIO.c tlsX509.c"
+    vars="tls.c tlsBIO.c tlsDigest.c tlsEncrypt.c tlsInfo.c tlsIO.c tlsKey.c tlsX509.c"
     for i in $vars; do
 	case $i in
 	    \$*)

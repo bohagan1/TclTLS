@@ -40,6 +40,8 @@
 	    <dt>&nbsp;</dt>
 	    <dd><b>tls::encrypt</b> <b>-cipher</b> <em>name</em> <b>-key</b> <em>key ?options?</em></dd>
 	    <dd><b>tls::decrypt</b> <b>-cipher</b> <em>name</em> <b>-key</b> <em>key ?options?</em></dd>
+	    <dt>&nbsp;</dt>
+	    <dd><b>tls::derive_key</b> <em>key ?options?</em></dd>
 	</dl>
     </dd>
     <dd><a href="#OPTIONS">OPTIONS</a></dd>
@@ -87,6 +89,8 @@ and integrity of messages and data.</p>
 <br>
 <a href="#tls::encrypt"><b>tls::encrypt</b> <b>-cipher</b> <i>name</i> <b>-key</b> <i>key ?options?</i></a><br>
 <a href="#tls::decrypt"><b>tls::decrypt</b> <b>-cipher</b> <i>name</i> <b>-key</b> <i>key ?options?</i></a><br>
+<br>
+<a href="#tls::derive_key"><b>tls::derive_key</b> <i>?options?</i></a><br>
 </p>
 
 <br>
@@ -113,19 +117,19 @@ and integrity of messages and data.</p>
 
 <dl>
     <dt><a name="-iterations"><strong>-iterations</strong> <em>count</em></a></dt>
-    <dd>Number (integer) of iterations on the password to use in deriving the
-    encryption key. Default is 10000. Some KDF implementations require an
-    iteration count.</dd>
+    <dd>Number (integer &gt; 0) of iterations to use in deriving the encryption
+    key. Default is 2048. Some <a href="#KDF"><b>KDF</b></a> implementations
+    require an iteration count.</dd>
 </dl>
 
 <dl>
     <dt><a name="-iv"><strong>-iv</strong> <em>string</em></a></dt>
     <dd>Initialization vector (IV) to use. Required for some ciphers and GMAC.
-    Cipher modes CBC, CFB, OFB and CTR all need an IV while ECB mode does not.
+    Cipher modes CBC, CFB, and OFB all need an IV while ECB and CTR modes do not.
     A new, random IV should be created for each use. Think of the IV as a nonce
     (number used once), it's public but random and unpredictable. See the
    <a href="#tls::cipher"><b>tls::cipher</b></a> for iv_length and
-    when required (length > 0). If not set, it will default to \x00 fill data.</dd>
+    when required (length > 0). Max is 16 bytes. If not set, it will default to \x00 fill data.</dd>
 </dl>
 
 <dl>
@@ -133,7 +137,7 @@ and integrity of messages and data.</p>
     <dd>Encryption key to use for cryptography function. Can be a binary or
     text string. Longer keys provide better protection. Used by ciphers, HMAC,
     some CMAC, and some KDF implementations. If the length of the key is &lt;
-    <b>key_length</b> it will be padded. If &gt; key_length, it will be rejected.
+    <b>key_length</b> it will be padded. Max is 64 bytes. If &gt; key_length, it will be rejected.
     See the <a href="#tls::cipher"><b>tls::cipher</b></a> for key_length.</dd>
 </dl>
 
@@ -145,19 +149,21 @@ and integrity of messages and data.</p>
 
 <dl>
     <dt><a name="-password"><strong>-password</strong> <em>string</em></a></dt>
-    <dd>Password to use for some KDF functions.</dd>
+    <dd>Password to use for some KDF functions. If not specified, the default
+    value is used. Can be a binary or text string.</dd>
 </dl>
 
 <dl>
     <dt><a name="-properties"><strong>-properties</strong> <em>list</em></a></dt>
-    <dd>List of additional properties to pass to cryptography function.</dd>
+    <dd>List of additional properties to pass to cryptographic function.</dd>
 </dl>
 
 <dl>
     <dt><a name="-salt"><strong>-salt</strong> <em>string</em></a></dt>
-    <dd>Specifies salt value to use when encrypting data. Default is to use a
-    randomly generated value. This option is used by BLAKE2 MAC and some KDF
-    implementations use a non-secret unique cryptographic salt.</dd>
+    <dd>Specifies salt value to use when encrypting data. Can be a binary or
+    text string. Default is to use a randomly generated value. This option is
+    used by BLAKE2 MAC and some KDF implementations use a non-secret unique
+    cryptographic salt.</dd>
 </dl>
 
 <dl>
@@ -284,7 +290,7 @@ and integrity of messages and data.</p>
 
 <dl>
 
-<h4>Info Commands</h4>
+<h4><a name="Info">Info Commands</a></h4>
 
     <dt><a name="tls::cipher"><strong>tls::cipher</strong> <em>name</em></a></dt>
     <dd>Return a list of property names and values describing cipher
@@ -329,7 +335,7 @@ and integrity of messages and data.</p>
 
 <br>
 
-<h4>Message Digest (MD) and Message Authentication Code (MAC) Commands</h4>
+<h4><a name="MD_MAC">Message Digest (MD) and Message Authentication Code (MAC) Commands</a></h4>
 
     <dt><a name="tls::cmac"><strong>tls::cmac</strong>
 	<em>?</em><b>-cipher</b><em>? name</em>
@@ -394,7 +400,7 @@ and integrity of messages and data.</p>
 
 <br>
 
-<h4>Encryption and Decryption Commands</h4>
+<h4><a name="Cipher">Encryption and Decryption Commands</a></h4>
 
     <dt><a name="tls::encrypt"><strong>tls::encrypt</strong>
 	<em>?</em><b>-cipher</b><em>? name</em> <b>-key</b> <em>key ?</em><b>-iv</b> <em>string?
@@ -419,6 +425,23 @@ and integrity of messages and data.</p>
 	info. Option <b>-iv</b> is only used for some ciphers. See the
 	&quot;<b>tls::cipher</b> <em>cipher</em>&quot; command for key and iv
 	sizes and when the iv is used (iv_length &gt; 0).</dd>
+</dl>
+
+<br>
+
+<h4><a name="KDF">Key Derivation Function (KDF) Commands</a></h4>
+
+    <dt><a name="tls::derive_key"><strong>tls::derive_key</strong>
+	<em>[</em><b>-cipher</b> <em>cipher |</em> <b>-size</b> <em>size]</em>
+	<b>-digest</b> <em>digest ?</em><b>-iterations</b> <em>count?
+	?</em><b>-password</b> <em>string? ?</em><b>-salt</b> <em>string?</em></a></dt>
+    <dd>Derive a key and initialization vector (iv) from a password and salt
+	value using PKCS5_PBKDF2_HMAC. This is a more secure way to generate
+	keys and ivs for use by <a href="#tls::encrypt"><b>tls::encrypt</b></a>.
+	See <a href="#OPTIONS"><b>options</b></a> for usage info. If <b>-cipher</b>
+	is specified, then the derived key and iv sized for that cipher are
+	returned as a key-value list. If not or if <b>-size</b> is specified,
+	then the derived key (dk) of <em>size</em> bytes is returned.</dd>
 </dl>
 
 <br>
