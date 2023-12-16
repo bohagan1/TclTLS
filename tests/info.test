@@ -214,11 +214,11 @@ test Version-12.2 {OpenSSL} -constraints {OpenSSL} -body {
 
 test Error_Cases-13.1 {Cipher Too few args} -body {
 	::tls::cipher
-    } -result {wrong # args: should be "::tls::cipher name"} -returnCodes {1}
+    } -result {wrong # args: should be "::tls::cipher ?name?"} -returnCodes {1}
 
 test Error_Cases-13.2 {Cipher Too many args} -body {
 	::tls::cipher too many args
-    } -result {wrong # args: should be "::tls::cipher name"} -returnCodes {1}
+    } -result {wrong # args: should be "::tls::cipher ?name?"} -returnCodes {1}
 
 test Error_Cases-13.3 {Digests Too many args} -body {
 	::tls::digests too many args

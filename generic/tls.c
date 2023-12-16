@@ -1012,6 +1012,20 @@ static int HandshakeObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, 
 	clientData = clientData;
 }
 
+static const char *command_opts [] = {
+    "-alpn", "-cadir", "-cafile", "-cert", "-certfile", "-cipher", "-ciphers", "-ciphersuites",
+    "-command", "-dhparams", "-key", "-keyfile", "-model", "-password", "-post_handshake",
+    "-request", "-require", "-security_level", "-server", "-servername", "-session_id", "-ssl2",
+    "-ssl3", "-tls1", "-tls1.1", "-tls1.2", "-tls1.3", "-validatecommand", "-vcmd", NULL};
+
+enum _command_opts {
+    _opt_alpn, _opt_cadir, _opt_cafile, _opt_cert, _opt_certfile, _opt_cipher, _opt_ciphers,
+    _opt_ciphersuite, _opt_cmd, _opt_dhparams, _opt_key, _opt_keyfile, _opt_model, _opt_password,
+    _opt_handshake, _opt_request, _opt_require, _opt_security_level, _opt_server, _opt_servername,
+    _opt_session_id, _opt_ssl2, _opt_ssl3, _opt_tls1, _opt_tls11, _opt_tls12, _opt_tls13,
+    _opt_validate, _opt_vcmd
+};
+
 /*
  *-------------------------------------------------------------------
  *
@@ -1034,11 +1048,11 @@ ImportObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const
     Tcl_Channel chan;		/* The channel to set a mode on. */
     State *statePtr;		/* client state for ssl socket */
     SSL_CTX *ctx	        = NULL;
-    Tcl_Obj *script	        = NULL;
-    Tcl_Obj *password	        = NULL;
+    Tcl_Obj *cmdObj	        = NULL;
+    Tcl_Obj *passwdObj	        = NULL;
     Tcl_Obj *vcmd	        = NULL;
     Tcl_DString upperChannelTranslation, upperChannelBlocking, upperChannelEncoding, upperChannelEOFChar;
-    int idx, len;
+    int idx, len, fn;
     int flags		        = TLS_TCL_INIT;
     int server		        = 0;	/* is connection incoming or outgoing? */
     char *keyfile	        = NULL;
@@ -1055,7 +1069,8 @@ ImportObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const
     char *model		        = NULL;
     char *servername	        = NULL;	/* hostname for Server Name Indication */
     const unsigned char *session_id = NULL;
-    Tcl_Obj *alpn		= NULL;
+    int sess_len                = 0;
+    Tcl_Obj *alpnObj		= NULL;
     int ssl2 = 0, ssl3 = 0;
     int tls1 = 1, tls1_1 = 1, tls1_2 = 1, tls1_3 = 1;
     int proto = 0, level = -1;
@@ -1092,45 +1107,103 @@ ImportObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const
     chan = Tcl_GetTopChannel(chan);
 
     for (idx = 2; idx < objc; idx++) {
-	char *opt = Tcl_GetStringFromObj(objv[idx], NULL);
+	if (Tcl_GetIndexFromObj(interp, objv[idx], command_opts, "option", 0, &fn) != TCL_OK) {
+	    return TCL_ERROR;
+	}
 
-	if (opt[0] != '-')
+	/* Validate arg has value */
+	if (++idx >= objc) {
+	    Tcl_AppendResult(interp, "No value for option \"", command_opts[fn], "\"", (char *) NULL);
+	    return TCL_ERROR;
+	}
+
+	switch(fn) {
+	case _opt_alpn:
+	    alpnObj = objv[idx];
 	    break;
-
-	OPTOBJ("-alpn", alpn);
-	OPTSTR("-cadir", CAdir);
-	OPTSTR("-cafile", CAfile);
-	OPTBYTE("-cert", cert, cert_len);
-	OPTSTR("-certfile", certfile);
-	OPTSTR("-cipher", ciphers);
-	OPTSTR("-ciphers", ciphers);
-	OPTSTR("-ciphersuites", ciphersuites);
-	OPTOBJ("-command", script);
-	OPTSTR("-dhparams", DHparams);
-	OPTBYTE("-key", key, key_len);
-	OPTSTR("-keyfile", keyfile);
-	OPTSTR("-model", model);
-	OPTOBJ("-password", password);
-	OPTBOOL("-post_handshake", post_handshake);
-	OPTBOOL("-request", request);
-	OPTBOOL("-require", require);
-	OPTINT("-security_level", level);
-	OPTBOOL("-server", server);
-	OPTSTR("-servername", servername);
-	OPTSTR("-session_id", session_id);
-	OPTBOOL("-ssl2", ssl2);
-	OPTBOOL("-ssl3", ssl3);
-	OPTBOOL("-tls1", tls1);
-	OPTBOOL("-tls1.1", tls1_1);
-	OPTBOOL("-tls1.2", tls1_2);
-	OPTBOOL("-tls1.3", tls1_3);
-	OPTOBJ("-validatecommand", vcmd);
-	OPTOBJ("-vcmd", vcmd);
-
-	OPTBAD("option", "-alpn, -cadir, -cafile, -cert, -certfile, -cipher, -ciphersuites, -command, -dhparams, -key, -keyfile, -model, -password, -post_handshake, -request, -require, -security_level, -server, -servername, -session_id, -ssl2, -ssl3, -tls1, -tls1.1, -tls1.2, -tls1.3, or -validatecommand");
-
-	return TCL_ERROR;
+	case _opt_cadir:
+	    GET_OPT_STRING(objv[idx], CAdir, NULL);
+	    break;
+	case _opt_cafile:
+	    GET_OPT_STRING(objv[idx], CAfile, NULL);
+	    break;
+	case _opt_cert:
+	    GET_OPT_BYTE_ARRAY(objv[idx], cert, &cert_len);
+	    break;
+	case _opt_certfile:
+	    GET_OPT_STRING(objv[idx], certfile, NULL);
+	    break;
+	case _opt_cipher:
+	case _opt_ciphers:
+	    GET_OPT_STRING(objv[idx], ciphers, NULL);
+	    break;
+	case _opt_ciphersuite:
+	    GET_OPT_STRING(objv[idx], ciphersuites, NULL);
+	    break;
+	case _opt_cmd:
+	    cmdObj = objv[idx];
+	    break;
+	case _opt_dhparams:
+	    GET_OPT_STRING(objv[idx], DHparams, NULL);
+	    break;
+	case _opt_key:
+	    GET_OPT_BYTE_ARRAY(objv[idx], key, &key_len);
+	    break;
+	case _opt_keyfile:
+	    GET_OPT_STRING(objv[idx], keyfile, NULL);
+	    break;
+	case _opt_model:
+	    GET_OPT_STRING(objv[idx], model, NULL);
+	    break;
+	case _opt_password:
+	    passwdObj = objv[idx];
+	    break;
+	case _opt_handshake:
+	    GET_OPT_BOOL(objv[idx], &post_handshake);
+	    break;
+	case _opt_request:
+	    GET_OPT_BOOL(objv[idx], &request);
+	    break;
+	case _opt_require:
+	    GET_OPT_BOOL(objv[idx], &require);
+	    break;
+	case _opt_security_level:
+	    GET_OPT_INT(objv[idx], &level);
+	    break;
+	case _opt_server:
+	    GET_OPT_BOOL(objv[idx], &server);
+	    break;
+	case _opt_servername:
+	    GET_OPT_STRING(objv[idx], servername, NULL);
+	    break;
+	case _opt_session_id:
+	    GET_OPT_BYTE_ARRAY(objv[idx], session_id, &sess_len);
+	    break;
+	case _opt_ssl2:
+	    GET_OPT_INT(objv[idx], &ssl2);
+	    break;
+	case _opt_ssl3:
+	    GET_OPT_INT(objv[idx], &ssl3);
+	    break;
+	case _opt_tls1:
+	    GET_OPT_INT(objv[idx], &tls1);
+	    break;
+	case _opt_tls11:
+	    GET_OPT_INT(objv[idx], &tls1_1);
+	    break;
+	case _opt_tls12:
+	    GET_OPT_INT(objv[idx], &tls1_2);
+	    break;
+	case _opt_tls13:
+	    GET_OPT_INT(objv[idx], &tls1_3);
+	    break;
+	case _opt_validate:
+	case _opt_vcmd:
+	    vcmd = objv[idx];
+	    break;
+	}
     }
+
     if (request)		verify |= SSL_VERIFY_CLIENT_ONCE | SSL_VERIFY_PEER;
     if (request && require)	verify |= SSL_VERIFY_FAIL_IF_NO_PEER_CERT;
     if (request && post_handshake)	verify |= SSL_VERIFY_POST_HANDSHAKE;
@@ -1164,19 +1237,19 @@ ImportObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const
     statePtr->err	= "";
 
     /* allocate script */
-    if (script) {
-	(void) Tcl_GetStringFromObj(script, &len);
+    if (cmdObj != NULL) {
+	(void) Tcl_GetStringFromObj(cmdObj, &len);
 	if (len) {
-	    statePtr->callback = script;
+	    statePtr->callback = cmdObj;
 	    Tcl_IncrRefCount(statePtr->callback);
 	}
     }
 
     /* allocate password */
-    if (password) {
-	(void) Tcl_GetStringFromObj(password, &len);
+    if (passwdObj != NULL) {
+	(void) Tcl_GetStringFromObj(passwdObj, &len);
 	if (len) {
-	    statePtr->password = password;
+	    statePtr->password = passwdObj;
 	    Tcl_IncrRefCount(statePtr->password);
 	}
     }
@@ -1287,9 +1360,9 @@ ImportObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const
     }
 
     /* Resume session id */
-    if (session_id && strlen(session_id) <= SSL_MAX_SID_CTX_LENGTH) {
+    if (session_id && sess_len <= SSL_MAX_SID_CTX_LENGTH) {
 	/* SSL_set_session() */
-	if (!SSL_SESSION_set1_id_context(SSL_get_session(statePtr->ssl), session_id, (unsigned int) strlen(session_id))) {
+	if (!SSL_SESSION_set1_id_context(SSL_get_session(statePtr->ssl), session_id, (unsigned int) sess_len)) {
 	    Tcl_AppendResult(interp, "Resume session id ", session_id, " failed", (char *) NULL);
 	    Tcl_SetErrorCode(interp, "TLS", "IMPORT", "SESSION", "FAILED", (char *) NULL);
 	    Tls_Free((char *) statePtr);
@@ -1299,14 +1372,14 @@ ImportObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const
 
     /* Enable Application-Layer Protocol Negotiation. Examples are: http/1.0,
 	http/1.1, h2, h3, ftp, imap, pop3, xmpp-client, xmpp-server, mqtt, irc, etc. */
-    if (alpn) {
+    if (alpnObj != NULL) {
 	/* Convert a TCL list into a protocol-list in wire-format */
 	unsigned char *protos, *p;
 	unsigned int protos_len = 0;
 	int i, len, cnt;
 	Tcl_Obj **list;
 
-	if (Tcl_ListObjGetElements(interp, alpn, &cnt, &list) != TCL_OK) {
+	if (Tcl_ListObjGetElements(interp, alpnObj, &cnt, &list) != TCL_OK) {
 	    Tls_Free((char *) statePtr);
 	    return TCL_ERROR;
 	}

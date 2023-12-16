@@ -13,6 +13,13 @@
 
 /*******************************************************************/
 
+static const char *command_opts [] = { 
+    "-cipher", "-digest", "-hash", "-iterations", "-password", "-salt", "-size", NULL};
+
+enum _command_opts {
+    _opt_cipher, _opt_digest, _opt_hash, _opt_iter, _opt_password, _opt_salt, _opt_size
+};
+
 /*
  *-------------------------------------------------------------------
  *
@@ -30,14 +37,15 @@
  *-------------------------------------------------------------------
  */
 static int DeriveKey(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
-    int key_len = 0, md_len = 0, pass_len = 0, salt_len = 0;
+    int key_len = 0, md_len = 0, pass_len = 0, salt_len = 0, fn;
     int iklen, ivlen, iter = PKCS5_DEFAULT_ITER;
     unsigned char *passwd = NULL, *salt = NULL;
-    Tcl_Obj *cipherObj = NULL, *digestObj = NULL, *passwdObj = NULL, *saltObj = NULL, *resultObj;
+    Tcl_Obj *resultObj;
     const EVP_MD *md = NULL;
     const EVP_CIPHER *cipher = NULL;
     int max = EVP_MAX_KEY_LENGTH + EVP_MAX_IV_LENGTH, size = max;
     unsigned char tmpkeyiv[EVP_MAX_KEY_LENGTH + EVP_MAX_IV_LENGTH];
+    char *cipherName = NULL, *digestName = NULL;
 
     dprintf("Called");
 
@@ -56,41 +64,62 @@ static int DeriveKey(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Ob
 
     /* Get options */
     for (int idx = 1; idx < objc; idx++) {
-	char *opt = Tcl_GetStringFromObj(objv[idx], NULL);
-
-	if (opt[0] != '-') {
-	    break;
+	/* Get option */
+	if (Tcl_GetIndexFromObj(interp, objv[idx], command_opts, "option", 0, &fn) != TCL_OK) {
+	    return TCL_ERROR;
 	}
 
-	OPTOBJ("-cipher", cipherObj);
-	OPTOBJ("-digest", digestObj);
-	OPTOBJ("-hash", digestObj);
-	OPTINT("-iterations", iter);
-	OPTOBJ("-password", passwdObj);
-	OPTOBJ("-salt", saltObj);
-	OPTINT("-size", size);
-
-	OPTBAD("option", "-cipher, -digest, -iterations, -password, -salt, or -size option");
+	/* Validate arg has value */
+	if (++idx >= objc) {
+	    Tcl_AppendResult(interp, "No value for option \"", command_opts[fn], "\"", (char *) NULL);
 	return TCL_ERROR;
+    }
+
+	switch(fn) {
+	case _opt_cipher:
+	    GET_OPT_STRING(objv[idx], cipherName, NULL);
+	    break;
+	case _opt_digest:
+	case _opt_hash:
+	    GET_OPT_STRING(objv[idx], digestName, NULL);
+	    break;
+	case _opt_iter:
+	    GET_OPT_INT(objv[idx], &iter);
+	    break;
+	case _opt_password:
+	    GET_OPT_BYTE_ARRAY(objv[idx], passwd, &pass_len);
+	    break;
+	case _opt_salt:
+	    GET_OPT_BYTE_ARRAY(objv[idx], salt, &salt_len);
+	    break;
+	case _opt_size:
+	    GET_OPT_INT(objv[idx], &size);
+	    break;
+	}
     }
 
     /* Validate options */
-    if (cipherObj != NULL) {
-	char *name = Tcl_GetByteArrayFromObj(cipherObj, NULL);
-	cipher = EVP_get_cipherbyname(name);
+    if (cipherName != NULL) {
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
+	cipher = EVP_get_cipherbyname(cipherName);
+#else
+	cipher = EVP_CIPHER_fetch(NULL, cipherName, NULL);
+#endif
+	if (cipher == NULL) {
+	    Tcl_AppendResult(interp, "Invalid cipher: \"", cipherName, "\"", NULL);
+	    return TCL_ERROR;
+	}
     }
-    if (digestObj != NULL) {
-	char *name = Tcl_GetStringFromObj(digestObj, &md_len);
-	md = EVP_get_digestbyname(name);
-    } else {
-	Tcl_AppendResult(interp, "No digest specified", NULL);
-	return TCL_ERROR;
-    }
-    if (passwdObj != NULL) {
-	passwd = Tcl_GetByteArrayFromObj(passwdObj, &pass_len);
-    }
-    if (saltObj != NULL) {
-	salt = Tcl_GetByteArrayFromObj(saltObj, &salt_len);
+    if (digestName != NULL) {
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
+	md = EVP_get_digestbyname(digestName);
+#else
+	md = EVP_MD_fetch(NULL, digestName, NULL);
+#endif
+	if (md == NULL) {
+	    Tcl_AppendResult(interp, "Invalid digest: \"", digestName, "\"", NULL);
+	    return TCL_ERROR;
+	}
     }
     if (iter < 1) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf("Invalid iterations count %d: must be > 0", iter));

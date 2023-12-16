@@ -786,6 +786,7 @@ static int EncryptChannelHandler(Tcl_Interp *interp, int type, const char *chann
 
     /* Validate args */
     if (channel == (const char *) NULL) {
+	Tcl_AppendResult(interp, "No channel", (char *) NULL);
 	return TCL_ERROR;
     }
 
@@ -1195,6 +1196,15 @@ done:
 
 /*******************************************************************/
 
+static const char *command_opts [] = {
+    "-chan", "-channel", "-cipher", "-command", "-data", "-digest", "-infile", "-filename",
+    "-outfile", "-hash", "-iv", "-key", "-mac", NULL};
+
+enum _command_opts {
+    _opt_chan, _opt_channel, _opt_cipher, _opt_command, _opt_data, _opt_digest, _opt_infile,
+    _opt_filename, _opt_outfile, _opt_hash, _opt_iv, _opt_key, _opt_mac
+};
+
 /*
  *-------------------------------------------------------------------
  *
@@ -1214,7 +1224,7 @@ static int EncryptMain(int type, Tcl_Interp *interp, int objc, Tcl_Obj *const ob
     Tcl_Obj *cipherObj = NULL, *cmdObj = NULL, *dataObj = NULL, *digestObj = NULL;
     Tcl_Obj *inFileObj = NULL, *outFileObj = NULL, *keyObj = NULL, *ivObj = NULL, *macObj = NULL;
     const char *channel = NULL, *opt;
-    int idx, res, start = 1;
+    int res, start = 1, fn;
 
     dprintf("Called");
 
@@ -1223,47 +1233,78 @@ static int EncryptMain(int type, Tcl_Interp *interp, int objc, Tcl_Obj *const ob
 
     /* Validate arg count */
     if (objc < 3 || objc > 12) {
-	Tcl_WrongNumArgs(interp, 1, objv, "-cipher name ?-digest name? -key key ?-iv string? ?-mac name? [-channel chan | -command cmdName | -infile filename -outfile filename | -data data]");
+	Tcl_WrongNumArgs(interp, 1, objv, "?-cipher? name ?-digest name? -key key ?-iv string? ?-mac name? [-channel chan | -command cmdName | -infile filename -outfile filename | ?-data? data]");
 	return TCL_ERROR;
     }
 
     /* Special case of first arg is cipher */
     opt = Tcl_GetStringFromObj(objv[start], NULL);
     if (opt[0] != '-') {
-	if (type == TYPE_ENCRYPT || type == TYPE_DECRYPT) {
-	    cipherObj = objv[start];
-	    start++;
+	switch(type) {
+	case TYPE_ENCRYPT:
+	case TYPE_DECRYPT:
+	    cipherObj = objv[start++];
+	    break;
 	}
     }
 
     /* Get options */
-    for (idx = start; idx < objc; idx++) {
+    for (int idx = start; idx < objc; idx++) {
+	/* Special case for when last arg is data */
+	if (idx == objc - 1) {
 	opt = Tcl_GetStringFromObj(objv[idx], NULL);
-
-	if (opt[0] != '-') {
-	    break;
+	    if (opt[0] != '-' && dataObj == NULL) {
+		dataObj = objv[idx];
+		break;
+	    }
 	}
 
-	OPTSTR("-chan", channel);
-	OPTSTR("-channel", channel);
-	OPTOBJ("-cipher", cipherObj);
-	OPTOBJ("-command", cmdObj);
-	OPTOBJ("-data", dataObj);
-	OPTOBJ("-digest", digestObj);
-	OPTOBJ("-hash", digestObj);
-	OPTOBJ("-infile", inFileObj);
-	OPTOBJ("-outfile", outFileObj);
-	OPTOBJ("-key", keyObj);
-	OPTOBJ("-iv", ivObj);
-	OPTOBJ("-mac", macObj);
+	/* Get option */
+	if (Tcl_GetIndexFromObj(interp, objv[idx], command_opts, "option", 0, &fn) != TCL_OK) {
+	    return TCL_ERROR;
+	}
 
-	OPTBAD("option", "-chan, -channel, -cipher, -command, -data, -digest, -infile, -key, -iv, -mac, -outfile");
+	/* Validate arg has value */
+	if (++idx >= objc) {
+	    Tcl_AppendResult(interp, "No value for option \"", command_opts[fn], "\"", (char *) NULL);
 	return TCL_ERROR;
     }
 
-    /* If only 1 arg left, it's the data */
-    if (idx < objc && dataObj == NULL) {
-	dataObj = objv[idx];
+	switch(fn) {
+	case _opt_chan:
+	case _opt_channel:
+    	    GET_OPT_STRING(objv[idx], channel, NULL);
+	    break;
+	case _opt_cipher:
+	    cipherObj = objv[idx];
+	    break;
+	case _opt_command:
+	    cmdObj = objv[idx];
+	    break;
+	case _opt_data:
+	    dataObj = objv[idx];
+	    break;
+	case _opt_digest:
+	case _opt_hash:
+	    digestObj = objv[idx];
+	    break;
+	case _opt_infile:
+	case _opt_filename:
+	    inFileObj = objv[idx];
+	    break;
+	case _opt_outfile:
+	    outFileObj = objv[idx];
+	    break;
+	case _opt_iv:
+	    ivObj = objv[idx];
+	    break;
+	case _opt_key:
+	    keyObj = objv[idx];
+	    break;
+	case _opt_mac:
+	    macObj = objv[idx];
+	    break;
+	}
     }
 
     /* Check for required options */
@@ -1284,7 +1325,7 @@ static int EncryptMain(int type, Tcl_Interp *interp, int objc, Tcl_Obj *const ob
     } else if (dataObj != NULL) {
 	res = EncryptDataHandler(interp, type, dataObj, cipherObj, digestObj, keyObj, ivObj);
     } else {
-	Tcl_AppendResult(interp, "No operation specified: Use -channel, -command, -data, -infile, or -outfile option", NULL);
+	Tcl_AppendResult(interp, "No operation specified: Use -channel, -command, -data, or -infile option", NULL);
 	res = TCL_ERROR;
     }
     return res;

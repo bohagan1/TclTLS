@@ -81,7 +81,7 @@ MD Errors,Too many args,,,::tls::md too many command line args to pass the test 
 MD Errors,Invalid digest,,,::tls::md bogus data,,,"Invalid digest ""bogus""",,,1
 MD Errors,Invalid digest Arg,,,::tls::md -digest bogus -data data,,,"Invalid digest ""bogus""",,,1
 MD Errors,No digest,,,::tls::md -hex -data value,,,No digest specified,,,1
-MD Errors,Invalid option,,,::tls::md -digest sha256 -bogus value,,,"bad option ""-bogus"": must be -bin, -channel, -cipher, -command, -data, -digest, -file, -filename, -hex, -key, or -mac",,,1
+MD Errors,Invalid option,,,::tls::md -digest sha256 -bogus value,,,"bad option ""-bogus"": must be -bin, -binary, -hex, -hexadecimal, -chan, -channel, -cipher, -command, -data, -digest, -file, -filename, -hash, -key, or -mac",,,1
 MD Errors,Invalid file,,,::tls::md -digest sha256 -file bogus,,,"couldn't open ""bogus"": no such file or directory",,,1
 MD Errors,Invalid channel,,,::tls::md -digest sha256 -channel bogus,,,"can not find channel named ""bogus""",,,1
 MD Errors,No operation,,,::tls::md -digest sha256 -bin,,,"No operation specified: Use -channel, -command, -data, or -file option",,,1

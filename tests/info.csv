@@ -78,8 +78,8 @@ Version,All,,,::tls::version,,glob,*,,,
 Version,OpenSSL,OpenSSL,,::tls::version,,glob,OpenSSL*,,,
 ,,,,,,,,,,
 command,# Error Cases,,,,,,,,,
-Error Cases,Cipher Too few args,,,::tls::cipher,,,"wrong # args: should be ""::tls::cipher name""",,,1
-Error Cases,Cipher Too many args,,,::tls::cipher too many args,,,"wrong # args: should be ""::tls::cipher name""",,,1
+Error Cases,Cipher Too few args,,,::tls::cipher,,,"wrong # args: should be ""::tls::cipher ?name?""",,,1
+Error Cases,Cipher Too many args,,,::tls::cipher too many args,,,"wrong # args: should be ""::tls::cipher ?name?""",,,1
 Error Cases,Digests Too many args,,,::tls::digests too many args,,,"wrong # args: should be ""::tls::digests ?name?""",,,1
 Error Cases,MACs Too many args,,,::tls::macs too many args,,,"wrong # args: should be ""::tls::macs ?name?""",,,1
 Error Cases,Pkeys Too many args,,,::tls::pkeys too many args,,,"wrong # args: should be ""::tls::pkeys ?name?""",,,1
