@@ -1,0 +1,150 @@
+# Auto generated from "SHA384.txt"
+package require tls
+package require tcltest
+
+tcltest::testConstraint SHA384 [expr {[lsearch -nocase [tls::digests] SHA384] > -1}]
+
+tcltest::test Hash_SHA384-1.1 {SHA384} \
+	-constraints SHA384 \
+	-setup {set data ""} \
+	-body {tls::digest -digest SHA384 -data $data} \
+	-match exact -result 38b060a751ac96384cd9327eb1b1e36a21fdb71114be07434c0cc7bf63f6e1da274edebfe76f65fbd51ad2f14898b95b
+
+tcltest::test Hash_SHA384-1.2 {SHA384} \
+	-constraints SHA384 \
+	-setup {set data "abc"} \
+	-body {tls::digest -digest SHA384 -data $data} \
+	-match exact -result cb00753f45a35e8bb5a03d699ac65007272c32ab0eded1631a8b605a43ff5bed8086072ba1e7cc2358baeca134c825a7
+
+tcltest::test Hash_SHA384-1.3 {SHA384} \
+	-constraints SHA384 \
+	-setup {set data "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq"} \
+	-body {tls::digest -digest SHA384 -data $data} \
+	-match exact -result 3391fdddfc8dc7393707a65b1b4709397cf8b1d162af05abfe8f450de5f36bc6b0455a8520bc4e6f5fe95b1fe3c8452b
+
+tcltest::test Hash_SHA384-1.4 {SHA384} \
+	-constraints SHA384 \
+	-setup {set data "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu"} \
+	-body {tls::digest -digest SHA384 -data $data} \
+	-match exact -result 09330c33f71147e83d192fc782cd1b4753111b173b3b05d22fa08086e3b0f712fcc7c71a557e2db966c3e9fa91746039
+
+tcltest::test Hash_SHA384-1.5 {SHA384} \
+	-constraints SHA384 \
+	-setup {set data [string repeat "a" 1000000]} \
+	-body {tls::digest -digest SHA384 -data $data} \
+	-match exact -result 9d0e1809716474cb086e834e310a4a1ced149e9c00f248527972cec5704c2a5b07b8b3dc38ecc4ebae97ddd87f3d8985
+
+tcltest::test Hash_SHA384-1.6 {SHA384} \
+	-constraints SHA384 \
+	-setup {set data [string repeat "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmno" 16777216]} \
+	-body {tls::digest -digest SHA384 -data $data} \
+	-match exact -result 5441235cc0235341ed806a64fb354742b5e5c02a3c5cb71b5f63fb793458d8fdae599c8cd8884943c04f11b31b89f023
+
+tcltest::test Hash_SHA384-1.7 {SHA384} \
+	-constraints SHA384 \
+	-setup {set data ""} \
+	-body {tls::digest -digest SHA384 -data $data} \
+	-match exact -result 38b060a751ac96384cd9327eb1b1e36a21fdb71114be07434c0cc7bf63f6e1da274edebfe76f65fbd51ad2f14898b95b
+
+tcltest::test Hash_SHA384-1.8 {SHA384} \
+	-constraints SHA384 \
+	-setup {set data [binary decode hex [string repeat 00 111]]} \
+	-body {tls::digest -digest SHA384 -data $data} \
+	-match exact -result 435770712c611be7293a66dd0dc8d1450dc7ff7337bfe115bf058ef2eb9bed09cee85c26963a5bcc0905dc2df7cc6a76
+
+tcltest::test Hash_SHA384-1.9 {SHA384} \
+	-constraints SHA384 \
+	-setup {set data [binary decode hex [string repeat 00 112]]} \
+	-body {tls::digest -digest SHA384 -data $data} \
+	-match exact -result 3e0cbf3aee0e3aa70415beae1bd12dd7db821efa446440f12132edffce76f635e53526a111491e75ee8e27b9700eec20
+
+tcltest::test Hash_SHA384-1.10 {SHA384} \
+	-constraints SHA384 \
+	-setup {set data [binary decode hex [string repeat 00 113]]} \
+	-body {tls::digest -digest SHA384 -data $data} \
+	-match exact -result 6be9af2cf3cd5dd12c8d9399ec2b34e66034fbd699d4e0221d39074172a380656089caafe8f39963f94cc7c0a07e3d21
+
+tcltest::test Hash_SHA384-1.11 {SHA384} \
+	-constraints SHA384 \
+	-setup {set data [binary decode hex [string repeat 00 122]]} \
+	-body {tls::digest -digest SHA384 -data $data} \
+	-match exact -result 12a72ae4972776b0db7d73d160a15ef0d19645ec96c7f816411ab780c794aa496a22909d941fe671ed3f3caee900bdd5
+
+tcltest::test Hash_SHA384-1.12 {SHA384} \
+	-constraints SHA384 \
+	-setup {set data [binary decode hex [string repeat 00 1000]]} \
+	-body {tls::digest -digest SHA384 -data $data} \
+	-match exact -result aae017d4ae5b6346dd60a19d52130fb55194b6327dd40b89c11efc8222292de81e1a23c9b59f9f58b7f6ad463fa108ca
+
+tcltest::test Hash_SHA384-1.13 {SHA384} \
+	-constraints SHA384 \
+	-setup {set data [binary decode hex [string repeat 41 1000]]} \
+	-body {tls::digest -digest SHA384 -data $data} \
+	-match exact -result 7df01148677b7f18617eee3a23104f0eed6bb8c90a6046f715c9445ff43c30d69e9e7082de39c3452fd1d3afd9ba0689
+
+tcltest::test Hash_SHA384-1.14 {SHA384} \
+	-constraints SHA384 \
+	-setup {set data [binary decode hex [string repeat 55 1005]]} \
+	-body {tls::digest -digest SHA384 -data $data} \
+	-match exact -result 1bb8e256da4a0d1e87453528254f223b4cb7e49c4420dbfa766bba4adba44eeca392ff6a9f565bc347158cc970ce44ec
+
+tcltest::test Hash_SHA384-1.15 {SHA384} \
+	-constraints SHA384 \
+	-setup {set data [binary decode hex [string repeat 00 1000000]]} \
+	-body {tls::digest -digest SHA384 -data $data} \
+	-match exact -result 8a1979f9049b3fff15ea3a43a4cf84c634fd14acad1c333fecb72c588b68868b66a994386dc0cd1687b9ee2e34983b81
+
+tcltest::test Hash_SHA384-1.16 {SHA384} \
+	-constraints SHA384 \
+	-setup {set data [binary decode hex [string repeat 5a 536870912]]} \
+	-body {tls::digest -digest SHA384 -data $data} \
+	-match exact -result 18aded227cc6b562cc7fb259e8f404549e52914531aa1c5d85167897c779cc4b25d0425fd1590e40bd763ec3f4311c1a
+
+tcltest::test Hash_SHA384-1.17 {SHA384} \
+	-constraints SHA384 \
+	-setup {set data "The quick brown fox jumps over the lazy dog"} \
+	-body {tls::digest -digest SHA384 -data $data} \
+	-match exact -result ca737f1014a48f4c0b6dd43cb177b0afd9e5169367544c494011e3317dbf9a509cb1e5dc1e85a941bbee3d7f2afbc9b1
+
+tcltest::test Hash_SHA384-1.18 {SHA384} \
+	-constraints SHA384 \
+	-setup {set data "abc"} \
+	-body {tls::digest -digest SHA384 -data $data} \
+	-match exact -result cb00753f45a35e8bb5a03d699ac65007272c32ab0eded1631a8b605a43ff5bed8086072ba1e7cc2358baeca134c825a7
+
+tcltest::test Hash_SHA384-1.19 {SHA384} \
+	-constraints SHA384 \
+	-setup {set data "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu"} \
+	-body {tls::digest -digest SHA384 -data $data} \
+	-match exact -result 09330c33f71147e83d192fc782cd1b4753111b173b3b05d22fa08086e3b0f712fcc7c71a557e2db966c3e9fa91746039
+
+tcltest::test Hash_SHA384-1.20 {SHA384} \
+	-constraints SHA384 \
+	-setup {set data [string repeat "a" 1000000]} \
+	-body {tls::digest -digest SHA384 -data $data} \
+	-match exact -result 9d0e1809716474cb086e834e310a4a1ced149e9c00f248527972cec5704c2a5b07b8b3dc38ecc4ebae97ddd87f3d8985
+
+tcltest::test Hash_SHA384-1.21 {SHA384} \
+	-constraints SHA384 \
+	-setup {set data [string repeat "0123456701234567012345670123456701234567012345670123456701234567" 10]} \
+	-body {tls::digest -digest SHA384 -data $data} \
+	-match exact -result 2fc64a4f500ddb6828f6a3430b8dd72a368eb7f3a8322a70bc84275b9c0b3ab00d27a5cc3c2d224aa6b61a0d79fb4596
+
+tcltest::test Hash_SHA384-1.22 {SHA384} \
+	-constraints SHA384 \
+	-setup {set data [binary decode hex b9]} \
+	-body {tls::digest -digest SHA384 -data $data} \
+	-match exact -result bc8089a19007c0b14195f4ecc74094fec64f01f90929282c2fb392881578208ad466828b1c6c283d2722cf0ad1ab6938
+
+tcltest::test Hash_SHA384-1.23 {SHA384} \
+	-constraints SHA384 \
+	-setup {set data [binary decode hex a41c497779c0375ff10a7f4e08591739]} \
+	-body {tls::digest -digest SHA384 -data $data} \
+	-match exact -result c9a68443a005812256b8ec76b00516f0dbb74fab26d665913f194b6ffb0e91ea9967566b58109cbc675cc208e4c823f7
+
+tcltest::test Hash_SHA384-1.24 {SHA384} \
+	-constraints SHA384 \
+	-setup {set data [binary decode hex 399669e28f6b9c6dbcbb6912ec10ffcf74790349b7dc8fbe4a8e7b3b5621db0f3e7dc87f823264bbe40d1811c9ea2061e1c84ad10a23fac1727e7202fc3f5042e6bf58cba8a2746e1f64f9b9ea352c711507053cf4e5339d52865f25cc22b5e87784a12fc961d66cb6e89573199a2ce6565cbdf13dca403832cfcb0e8b7211e83af32a11ac17929ff1c073a51cc027aaedeff85aad7c2b7c5a803e2404d96d2a77357bda1a6daeed17151cb9bc5125a422e941de0ca0fc5011c23ecffefdd09676711cf3db0a3440720e1615c1f22fbc3c721de521e1b99ba1bd5577408642147ed096]} \
+	-body {tls::digest -digest SHA384 -data $data} \
+	-match exact -result 4f440db1e6edd2899fa335f09515aa025ee177a79f4b4aaf38e42b5c4de660f5de8fb2a5b2fbd2a3cbffd20cff1288c0
+

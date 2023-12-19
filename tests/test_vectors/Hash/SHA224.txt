@@ -1,0 +1,120 @@
+# SHA224
+# From https://csrc.nist.gov/projects/cryptographic-standards-and-guidelines/example-values
+# and RFC 6234 SHA and SHA-based HMAC and HKDF
+
+[L = 28]
+
+Len = 0
+Msg = ""
+MD = d14a028c2a3a2bc9476102bb288234c415a2b01f828ea62ac5b3e42f
+
+Len = 3
+Msg = "abc"
+MD = 23097d223405d8228642a477bda255b32aadbce4bda0b3f7e36c9da7
+
+Len = 56
+Msg = "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq"
+MD = 75388b16512776cc5dba5da1fd890150b0c6455cb4f58b1952522525
+
+Len = 112
+Msg = "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu"
+MD = c97ca9a559850ce97a04a96def6d99a9e0e0e2ab14e6b8df265fc0b3
+
+Len = 1000000
+Repeat = 1000000
+Msg = "a"
+MD = 20794655980c91d8bbb4c1ea97618a4bf03f42581948b2ee4ee7ad67
+
+Len = 1073741824
+Repeat = 16777216
+Msg = "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmno"
+MD = b5989713ca4fe47a009f8621980b34e6d63ed3063b2a0a2c867d8a85
+
+Len = 1
+Msg = ff
+MD = e33f9d75e6ae1369dbabf81b96b4591ae46bba30b591a6b6c62542b5
+
+Len = 4
+Msg = e5e09924
+MD = fd19e74690d291467ce59f077df311638f1c3a46e510d0e49a67062d
+
+Len = 56
+Repeat = 56
+Msg = 00
+MD = 5c3e25b69d0ea26f260cfae87e23759e1eca9d1ecc9fbf3c62266804
+
+Len = 1000
+Repeat = 1000
+Msg = "Q"
+MD = 3706197f66890a41779dc8791670522e136fafa24874685715bd0a8a
+
+Len = 1000
+Repeat = 1000
+Msg = "A"
+MD = a8d0c66b5c6fdfd836eb3c6d04d32dfe66c3b1f168b488bf4c9c66ce
+
+Len = 1005
+Repeat = 1005
+Msg = 99
+MD = cb00ecd03788bf6c0908401e0eb053ac61f35e7e20a2cfd7bd96d640
+
+Len = 1000000
+Repeat = 1000000
+Msg = 00
+MD = 3a5d74b68f14f3a4b2be9289b8d370672d0b3d2f53bc303c59032df3
+
+Len = 0x20000000
+Repeat = 536870912
+Msg = "A"
+MD = c4250083cf8230bf21065b3014baaaf9f76fecefc21f91cf237dedc9
+
+#Len = 0x41000000
+#Repeat = 1090519040
+#Msg = 00
+#MD = 014674abc5cb980199935695af22fab683748f4261d4c6492b77c543
+
+#Len = 0x6000003f
+#Repeat = 1610612799
+#Msg = 84
+#MD = a654b50b767a8323c5b519f467d8669837142881dc7ad368a7d5ef8f
+
+Len = 43
+Msg = "The quick brown fox jumps over the lazy dog"
+MD = 730e109bd7a8a32b1cb9d9a09aa2325d2430587ddbc0c38bad911525
+
+# RFC 6234 Test Case 1
+Len = 3
+Msg = "abc"
+MD = 23097d223405d8228642a477bda255b32aadbce4bda0b3f7e36c9da7
+
+# RFC 6234 Test Case 2
+Len = 56
+Msg = "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq"
+MD = 75388b16512776cc5dba5da1fd890150b0c6455cb4f58b1952522525
+
+# RFC 6234 Test Case 3
+Len = 1000000
+Repeat = 1000000
+Msg = "a"
+MD = 20794655980c91d8bbb4c1ea97618a4bf03f42581948b2ee4ee7ad67
+
+# RFC 6234 Test Case 4
+Len = 640
+Repeat = 10
+Msg = "0123456701234567012345670123456701234567012345670123456701234567"
+MD = 567f69f168cd7844e65259ce658fe7aadfa25216e68eca0eb7ab8262
+
+# RFC 6234 Test Case 6
+Len = 1
+Msg = 07
+MD = 00ecd5f138422b8ad74c9799fd826c531bad2fcabc7450bee2aa8c2a
+
+# RFC 6234 Test Case 8
+Len = 16
+Msg = 18804005dd4fbd1556299d6f9d93df62
+MD = df90d78aa78821c99b40ba4c966921accd8ffb1e98ac388e56191db1
+
+# RFC 6234 Test Case 10
+Len = 163
+Msg = 55b210079c61b53add520622d1ac97d5cdbe8cb33aa0ae344517bee4d7ba09abc8533c5250887a43bebbac906c2e1837f26b36a59ae3be7814d506896b718b2a383ecdac16b96125553f416ff32c6674c74599a9005386d9ce1112245f48ee470d396c1ed63b92670ca56ec84deea814b6135eca54392bdedb9489bc9b875a8baf0dc1ae785736914ab7daa264bc079d269f2c0d7eddd810a426145a0776f67c878273
+MD = 0b31894ec8937ad9b91bdfbcba294d9adefaa18e09305e9f20d5c3a4

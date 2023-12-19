@@ -1,0 +1,66 @@
+# Auto generated from "RIPEMD256.txt"
+package require tls
+package require tcltest
+
+tcltest::testConstraint RIPEMD256 [expr {[lsearch -nocase [tls::digests] RIPEMD256] > -1}]
+
+tcltest::test Hash_RIPEMD256-1.1 {RIPEMD256} \
+	-constraints RIPEMD256 \
+	-setup {set data ""} \
+	-body {tls::digest -digest RIPEMD256 -data $data} \
+	-match exact -result 02ba4c4e5f8ecd1877fc52d64d30e37a2d9774fb1e5d026380ae0168e3c5522d
+
+tcltest::test Hash_RIPEMD256-1.2 {RIPEMD256} \
+	-constraints RIPEMD256 \
+	-setup {set data "a"} \
+	-body {tls::digest -digest RIPEMD256 -data $data} \
+	-match exact -result f9333e45d857f5d90a91bab70a1eba0cfb1be4b0783c9acfcd883a9134692925
+
+tcltest::test Hash_RIPEMD256-1.3 {RIPEMD256} \
+	-constraints RIPEMD256 \
+	-setup {set data "abc"} \
+	-body {tls::digest -digest RIPEMD256 -data $data} \
+	-match exact -result afbd6e228b9d8cbbcef5ca2d03e6dba10ac0bc7dcbe4680e1e42d2e975459b65
+
+tcltest::test Hash_RIPEMD256-1.4 {RIPEMD256} \
+	-constraints RIPEMD256 \
+	-setup {set data "message digest"} \
+	-body {tls::digest -digest RIPEMD256 -data $data} \
+	-match exact -result 87e971759a1ce47a514d5c914c392c9018c7c46bc14465554afcdf54a5070c0e
+
+tcltest::test Hash_RIPEMD256-1.5 {RIPEMD256} \
+	-constraints RIPEMD256 \
+	-setup {set data "abcdefghijklmnopqrstuvwxyz"} \
+	-body {tls::digest -digest RIPEMD256 -data $data} \
+	-match exact -result 649d3034751ea216776bf9a18acc81bc7896118a5197968782dd1fd97d8d5133
+
+tcltest::test Hash_RIPEMD256-1.6 {RIPEMD256} \
+	-constraints RIPEMD256 \
+	-setup {set data "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq"} \
+	-body {tls::digest -digest RIPEMD256 -data $data} \
+	-match exact -result 3843045583aac6c8c8d9128573e7a9809afb2a0f34ccc36ea9e72f16f6368e3f
+
+tcltest::test Hash_RIPEMD256-1.7 {RIPEMD256} \
+	-constraints RIPEMD256 \
+	-setup {set data "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"} \
+	-body {tls::digest -digest RIPEMD256 -data $data} \
+	-match exact -result 5740a408ac16b720b84424ae931cbb1fe363d1d0bf4017f1a89f7ea6de77a0b8
+
+tcltest::test Hash_RIPEMD256-1.8 {RIPEMD256} \
+	-constraints RIPEMD256 \
+	-setup {set data [string repeat "1234567890" 8]} \
+	-body {tls::digest -digest RIPEMD256 -data $data} \
+	-match exact -result 06fdcc7a409548aaf91368c06a6275b553e3f099bf0ea4edfd6778df89a890dd
+
+tcltest::test Hash_RIPEMD256-1.9 {RIPEMD256} \
+	-constraints RIPEMD256 \
+	-setup {set data [string repeat "a" 1000000]} \
+	-body {tls::digest -digest RIPEMD256 -data $data} \
+	-match exact -result ac953744e10e31514c150d4d8d7b677342e33399788296e43ae4850ce4f97978
+
+tcltest::test Hash_RIPEMD256-1.10 {RIPEMD256} \
+	-constraints RIPEMD256 \
+	-setup {set data "The quick brown fox jumps over the lazy dog"} \
+	-body {tls::digest -digest RIPEMD256 -data $data} \
+	-match exact -result c3b0c2f764ac6d576a6c430fb61a6f2255b4fa833e094b1ba8c1e29b6353036f
+

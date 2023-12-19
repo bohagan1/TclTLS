@@ -1,0 +1,10 @@
+# MDC2
+# From https://en.wikipedia.org/wiki/MDC-2
+
+Len = 0
+Msg = ""
+MD = 52525252525252522525252525252525
+
+Len = 43
+Msg = "The quick brown fox jumps over the lazy dog"
+MD = 000ed54e093d61679aefbeae05bfe33a

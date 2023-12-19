@@ -1,0 +1,34 @@
+# MD4
+# From RFC 1320
+
+Len = 0
+Msg = ""
+MD = 31d6cfe0d16ae931b73c59d7e0c089c0
+
+Len = 1
+Msg = "a"
+MD = bde52cb31de33e46245e05fbdbd6fb24
+
+Len = 3
+Msg = "abc"
+MD = a448017aaf21d8525fc10ae87aa6729d
+
+Len = 14
+Msg = "message digest"
+MD = d9130a8164549fe818874806e1c7014b
+
+Len = 26
+Msg = "abcdefghijklmnopqrstuvwxyz"
+MD = d79e1c308aa5bbcdeea8ed63df412da9
+
+Len = 62
+Msg = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+MD = 043f8582f241db351ce627e153e7f0e4
+
+Len = 80
+Msg = "12345678901234567890123456789012345678901234567890123456789012345678901234567890"
+MD = e33b4ddc9c38f2199c3e7b164fcc0536
+
+Len = 43
+Msg = "The quick brown fox jumps over the lazy dog"
+MD = 1bee69a46ba811185c194762abaeae90

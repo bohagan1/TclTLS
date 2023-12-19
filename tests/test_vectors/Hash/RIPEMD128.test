@@ -1,0 +1,66 @@
+# Auto generated from "RIPEMD128.txt"
+package require tls
+package require tcltest
+
+tcltest::testConstraint RIPEMD128 [expr {[lsearch -nocase [tls::digests] RIPEMD128] > -1}]
+
+tcltest::test Hash_RIPEMD128-1.1 {RIPEMD128} \
+	-constraints RIPEMD128 \
+	-setup {set data ""} \
+	-body {tls::digest -digest RIPEMD128 -data $data} \
+	-match exact -result cdf26213a150dc3ecb610f18f6b38b46
+
+tcltest::test Hash_RIPEMD128-1.2 {RIPEMD128} \
+	-constraints RIPEMD128 \
+	-setup {set data "a"} \
+	-body {tls::digest -digest RIPEMD128 -data $data} \
+	-match exact -result 86be7afa339d0fc7cfc785e72f578d33
+
+tcltest::test Hash_RIPEMD128-1.3 {RIPEMD128} \
+	-constraints RIPEMD128 \
+	-setup {set data "abc"} \
+	-body {tls::digest -digest RIPEMD128 -data $data} \
+	-match exact -result c14a12199c66e4ba84636b0f69144c77
+
+tcltest::test Hash_RIPEMD128-1.4 {RIPEMD128} \
+	-constraints RIPEMD128 \
+	-setup {set data "message digest"} \
+	-body {tls::digest -digest RIPEMD128 -data $data} \
+	-match exact -result 9e327b3d6e523062afc1132d7df9d1b8
+
+tcltest::test Hash_RIPEMD128-1.5 {RIPEMD128} \
+	-constraints RIPEMD128 \
+	-setup {set data "abcdefghijklmnopqrstuvwxyz"} \
+	-body {tls::digest -digest RIPEMD128 -data $data} \
+	-match exact -result fd2aa607f71dc8f510714922b371834e
+
+tcltest::test Hash_RIPEMD128-1.6 {RIPEMD128} \
+	-constraints RIPEMD128 \
+	-setup {set data "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq"} \
+	-body {tls::digest -digest RIPEMD128 -data $data} \
+	-match exact -result a1aa0689d0fafa2ddc22e88b49133a06
+
+tcltest::test Hash_RIPEMD128-1.7 {RIPEMD128} \
+	-constraints RIPEMD128 \
+	-setup {set data "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"} \
+	-body {tls::digest -digest RIPEMD128 -data $data} \
+	-match exact -result d1e959eb179c911faea4624c60c5c702
+
+tcltest::test Hash_RIPEMD128-1.8 {RIPEMD128} \
+	-constraints RIPEMD128 \
+	-setup {set data [string repeat "1234567890" 8]} \
+	-body {tls::digest -digest RIPEMD128 -data $data} \
+	-match exact -result 3f45ef194732c2dbb2c4a2c769795fa3
+
+tcltest::test Hash_RIPEMD128-1.9 {RIPEMD128} \
+	-constraints RIPEMD128 \
+	-setup {set data [string repeat "a" 1000000]} \
+	-body {tls::digest -digest RIPEMD128 -data $data} \
+	-match exact -result 4a7f5723f954eba1216c9d8f6320431f
+
+tcltest::test Hash_RIPEMD128-1.10 {RIPEMD128} \
+	-constraints RIPEMD128 \
+	-setup {set data "The quick brown fox jumps over the lazy dog"} \
+	-body {tls::digest -digest RIPEMD128 -data $data} \
+	-match exact -result 3fa9b57f053c053fbe2735b2380db596
+

@@ -1,0 +1,35 @@
+# SHA3-256
+# From https://csrc.nist.gov/projects/cryptographic-standards-and-guidelines/example-values
+
+[L = 32]
+
+Len = 0
+Msg = ""
+MD = a7ffc6f8bf1ed76651c14756a061d662f580ff4de43b49fa82d80a4b80f8434a
+
+Len = 200
+Repeat = 200
+Msg = a3
+MD = 79f38adec5c20307a98ef76e8324afbfd46cfd81b22e3973c65fa1bd9de31787
+
+Len = 3
+Msg = "abc"
+MD = 3a985da74fe225b2045c172d6bd390bd855f086e3e9d525b46bfe24511431532
+
+Len = 56
+Msg = "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq"
+MD = 41c0dba2a9d6240849100376a8235e2c82e1b9998a999e21db32dd97496d3376
+
+Len = 112
+Msg = "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu"
+MD = 916f6061fe879741ca6469b43971dfdb28b1a32dc36cb3254e812be27aad1d18
+
+Len = 1000000
+Repeat = 1000000
+Msg = "a"
+MD = 5c8875ae474a3634ba4fd55ec85bffd661f32aca75c6d699d0cdcb6c115891c1
+
+Len = 1073741824
+Repeat = 16777216
+Msg = "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmno"
+MD = ecbbc42cbf296603acb2c6bc0410ef4378bafb24b710357f12df607758b33e2b

@@ -1,0 +1,66 @@
+# Auto generated from "RIPEMD320.txt"
+package require tls
+package require tcltest
+
+tcltest::testConstraint RIPEMD320 [expr {[lsearch -nocase [tls::digests] RIPEMD320] > -1}]
+
+tcltest::test Hash_RIPEMD320-1.1 {RIPEMD320} \
+	-constraints RIPEMD320 \
+	-setup {set data ""} \
+	-body {tls::digest -digest RIPEMD320 -data $data} \
+	-match exact -result 22d65d5661536cdc75c1fdf5c6de7b41b9f27325ebc61e8557177d705a0ec880151c3a32a00899b8
+
+tcltest::test Hash_RIPEMD320-1.2 {RIPEMD320} \
+	-constraints RIPEMD320 \
+	-setup {set data "a"} \
+	-body {tls::digest -digest RIPEMD320 -data $data} \
+	-match exact -result ce78850638f92658a5a585097579926dda667a5716562cfcf6fbe77f63542f99b04705d6970dff5d
+
+tcltest::test Hash_RIPEMD320-1.3 {RIPEMD320} \
+	-constraints RIPEMD320 \
+	-setup {set data "abc"} \
+	-body {tls::digest -digest RIPEMD320 -data $data} \
+	-match exact -result de4c01b3054f8930a79d09ae738e92301e5a17085beffdc1b8d116713e74f82fa942d64cdbc4682d
+
+tcltest::test Hash_RIPEMD320-1.4 {RIPEMD320} \
+	-constraints RIPEMD320 \
+	-setup {set data "message digest"} \
+	-body {tls::digest -digest RIPEMD320 -data $data} \
+	-match exact -result 3a8e28502ed45d422f68844f9dd316e7b98533fa3f2a91d29f84d425c88d6b4eff727df66a7c0197
+
+tcltest::test Hash_RIPEMD320-1.5 {RIPEMD320} \
+	-constraints RIPEMD320 \
+	-setup {set data "abcdefghijklmnopqrstuvwxyz"} \
+	-body {tls::digest -digest RIPEMD320 -data $data} \
+	-match exact -result cabdb1810b92470a2093aa6bce05952c28348cf43ff60841975166bb40ed234004b8824463e6b009
+
+tcltest::test Hash_RIPEMD320-1.6 {RIPEMD320} \
+	-constraints RIPEMD320 \
+	-setup {set data "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq"} \
+	-body {tls::digest -digest RIPEMD320 -data $data} \
+	-match exact -result d034a7950cf722021ba4b84df769a5de2060e259df4c9bb4a4268c0e935bbc7470a969c9d072a1ac
+
+tcltest::test Hash_RIPEMD320-1.7 {RIPEMD320} \
+	-constraints RIPEMD320 \
+	-setup {set data "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"} \
+	-body {tls::digest -digest RIPEMD320 -data $data} \
+	-match exact -result ed544940c86d67f250d232c30b7b3e5770e0c60c8cb9a4cafe3b11388af9920e1b99230b843c86a4
+
+tcltest::test Hash_RIPEMD320-1.8 {RIPEMD320} \
+	-constraints RIPEMD320 \
+	-setup {set data [string repeat "1234567890" 8]} \
+	-body {tls::digest -digest RIPEMD320 -data $data} \
+	-match exact -result 557888af5f6d8ed62ab66945c6d2a0a47ecd5341e915eb8fea1d0524955f825dc717e4a008ab2d42
+
+tcltest::test Hash_RIPEMD320-1.9 {RIPEMD320} \
+	-constraints RIPEMD320 \
+	-setup {set data [string repeat "a" 1000000]} \
+	-body {tls::digest -digest RIPEMD320 -data $data} \
+	-match exact -result bdee37f4371e20646b8b0d862dda16292ae36f40965e8c8509e63d1dbddecc503e2b63eb9245bb66
+
+tcltest::test Hash_RIPEMD320-1.10 {RIPEMD320} \
+	-constraints RIPEMD320 \
+	-setup {set data "The quick brown fox jumps over the lazy dog"} \
+	-body {tls::digest -digest RIPEMD320 -data $data} \
+	-match exact -result e7660e67549435c62141e51c9ab1dcc3b1ee9f65c0b3e561ae8f58c5dba3d21997781cd1cc6fbc34
+

@@ -1,0 +1,135 @@
+# SHA256
+# From https://csrc.nist.gov/projects/cryptographic-standards-and-guidelines/example-values
+# and RFC 6234 SHA and SHA-based HMAC and HKDF
+
+[L = 32]
+
+Len = 0
+Msg = ""
+MD = e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+
+Len = 3
+Msg = "abc"
+MD = ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
+
+Len = 56
+Msg = "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq"
+MD = 248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1
+
+Len = 112
+Msg = "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu"
+MD = cf5b16a778af8380036ce59e7b0492370b249b11e8f07a51afac45037afee9d1
+
+Len = 1000000
+Repeat = 1000000
+Msg = "a"
+MD = cdc76e5c9914fb9281a1c7e284d73e67f1809a48a497200e046d39ccc7112cd0
+
+Len = 1073741824
+Repeat = 16777216
+Msg = "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmno"
+MD = 50e72a0e26442fe2552dc3938ac58658228c0cbfb1d2ca872ae435266fcd055e
+
+Len = 1
+Msg = bd
+MD = 68325720aabd7c82f30f554b313d0570c95accbb7dc4b5aae11204c08ffe732b
+
+Len = 4
+Msg = c98c8e55
+MD = 7abc22c0ae5af26ce93dbb94433a0e0b2e119d014f8e7f65bd56c61ccccd9504
+
+Len = 55
+Repeat = 55
+Msg = 00
+MD = 02779466cdec163811d078815c633f21901413081449002f24aa3e80f0b88ef7
+
+Len = 56
+Repeat = 56
+Msg = 00
+MD = d4817aa5497628e7c77e6b606107042bbba3130888c5f47a375e6179be789fbb
+
+Len = 57
+Repeat = 57
+Msg = 00
+MD = 65a16cb7861335d5ace3c60718b5052e44660726da4cd13bb745381b235a1785
+
+Len = 64
+Repeat = 64
+Msg = 00
+MD = f5a5fd42d16a20302798ef6ed309979b43003d2320d9f0e8ea9831a92759fb4b
+
+Len = 1000
+Repeat = 1000
+Msg = 00
+MD = 541b3e9daa09b20bf85fa273e5cbd3e80185aa4ec298e765db87742b70138a53
+
+Len = 1000
+Repeat = 1000
+Msg = 41
+MD = c2e686823489ced2017f6059b8b239318b6364f6dcd835d0a519105a1eadd6e4
+
+Len = 1005
+Repeat = 1005
+Msg = 55
+MD = f4d62ddec0f3dd90ea1380fa16a5ff8dc4c54b21740650f24afc4120903552b0
+
+Len = 1000000
+Repeat = 1000000
+Msg = 00
+MD = d29751f2649b32ff572b5e0a9f541ea660a50f94ff0beedfb0b692b924cc8025
+
+Len = 0x20000000
+Repeat = 536870912
+Msg = 5a
+MD = 15a1868c12cc53951e182344277447cd0979536badcc512ad24c67e9b2d4f3dd
+
+#Len = 0x41000000
+#Repeat = 1090519040
+#Msg = 00
+#MD = 461c19a93bd4344f9215f5ec64357090342bc66b15a148317d276e31cbc20b53
+
+#Len = 0x6000003e
+#Repeat = 1610612798
+#Msg = 42
+#MD = c23ce8a7895f4b21ec0daf37920ac0a262a220045a03eb2dfed48ef9b05aabea
+
+Len = 43
+Msg = "The quick brown fox jumps over the lazy dog"
+MD = d7a8fbb307d7809469ca9abcb0082e4f8d5651e46d3cdb762d02d0bf37c9e592
+
+# RFC 6234 Test Case 1
+Len = 3
+Msg = "abc"
+MD = ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
+
+# RFC 6234 Test Case 2
+Len = 56
+Msg = "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq"
+MD = 248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1
+
+# RFC 6234 Test Case 3
+Len = 1000000
+Repeat = 1000000
+Msg = "a"
+MD = cdc76e5c9914fb9281a1c7e284d73e67f1809a48a497200e046d39ccc7112cd0
+
+# RFC 6234 Test Case 4
+Len = 640
+Repeat = 10
+Msg = "0123456701234567012345670123456701234567012345670123456701234567"
+MD = 594847328451bdfa85056225462cc1d867d877fb388df0ce35f25ab5562bfbb5
+
+# RFC 6234 Test Case 6
+Len = 1
+Msg = 19
+MD = 68aa2e2ee5dff96e3355e6c7ee373e3d6a4e17f75f9518d843709c0c9bc3e3d4
+
+# RFC 6234 Test Case 8
+Len = 16
+Msg = e3d72570dcdd787ce3887ab2cd684652
+MD = 175ee69b02ba9b58e2b0a5fd13819cea573f3940a94f825128cf4209beabb4e8
+
+# RFC 6234 Test Case 10
+Len = 163
+Msg = 8326754e2277372f4fc12b20527afef04d8a056971b11ad57123a7c137760000d7bef6f3c1f7a9083aa39d810db310777dab8b1e7f02b84a26c773325f8b2374de7a4b5a58cb5c5cf35bcee6fb946e5bd694fa593a8beb3f9d6592ecedaa66ca82a29d0c51bcf9336230e5d784e4c0a43f8d79a30a165cbabe452b774b9c7109a97d138f129228966f6c0adc106aad5a9fdd30825769b2c671af6759df28eb393d54d6
+MD = 97dbca7df46d62c8a422c941dd7e835b8ad3361763f7e9b2d95f4f0da6e1ccbc

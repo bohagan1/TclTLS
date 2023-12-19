@@ -1,0 +1,30 @@
+# MD2
+# From RFC 1319
+
+Len = 0
+Msg = ""
+MD = 8350e5a3e24c153df2275c9f80692773
+
+Len = 1
+Msg = "a"
+MD = 32ec01ec4a6dac72c0ab96fb34c0b5d1
+
+Len = 3
+Msg = "abc"
+MD = da853b0d3f88d99b30283a69e6ded6bb
+
+Len = 14
+Msg = "message digest"
+MD = ab4f496bfb2a530b219ff33031fe06b0
+
+Len = 26
+Msg = "abcdefghijklmnopqrstuvwxyz"
+MD = 4e8ddff3650292ab5a4108c3aa47940b
+
+Len = 62
+Msg = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+MD = da33def2a42df13975352846c30338cd
+
+Len = 80
+Msg = "12345678901234567890123456789012345678901234567890123456789012345678901234567890"
+MD = d5976f79d83d3a0dc9806c3c66f3efd8

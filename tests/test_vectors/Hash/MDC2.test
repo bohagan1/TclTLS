@@ -1,0 +1,18 @@
+# Auto generated from "MDC2.txt"
+package require tls
+package require tcltest
+
+tcltest::testConstraint MDC2 [expr {[lsearch -nocase [tls::digests] MDC2] > -1}]
+
+tcltest::test Hash_MDC2-1.1 {MDC2} \
+	-constraints MDC2 \
+	-setup {set data ""} \
+	-body {tls::digest -digest MDC2 -data $data} \
+	-match exact -result 52525252525252522525252525252525
+
+tcltest::test Hash_MDC2-1.2 {MDC2} \
+	-constraints MDC2 \
+	-setup {set data "The quick brown fox jumps over the lazy dog"} \
+	-body {tls::digest -digest MDC2 -data $data} \
+	-match exact -result 000ed54e093d61679aefbeae05bfe33a
+

@@ -1,0 +1,54 @@
+# Auto generated from "BLAKE2b512.txt"
+package require tls
+package require tcltest
+
+tcltest::testConstraint BLAKE2b512 [expr {[lsearch -nocase [tls::digests] BLAKE2b512] > -1}]
+
+tcltest::test Hash_BLAKE2b512-1.1 {BLAKE2b512} \
+	-constraints BLAKE2b512 \
+	-setup {set data ""} \
+	-body {tls::digest -digest BLAKE2b512 -data $data} \
+	-match exact -result 786a02f742015903c6c6fd852552d272912f4740e15847618a86e217f71f5419d25e1031afee585313896444934eb04b903a685b1448b755d56f701afe9be2ce
+
+tcltest::test Hash_BLAKE2b512-1.2 {BLAKE2b512} \
+	-constraints BLAKE2b512 \
+	-setup {set data "a"} \
+	-body {tls::digest -digest BLAKE2b512 -data $data} \
+	-match exact -result 333fcb4ee1aa7c115355ec66ceac917c8bfd815bf7587d325aec1864edd24e34d5abe2c6b1b5ee3face62fed78dbef802f2a85cb91d455a8f5249d330853cb3c
+
+tcltest::test Hash_BLAKE2b512-1.3 {BLAKE2b512} \
+	-constraints BLAKE2b512 \
+	-setup {set data "abc"} \
+	-body {tls::digest -digest BLAKE2b512 -data $data} \
+	-match exact -result ba80a53f981c4d0d6a2797b69f12f6e94c212f14685ac4b74b12bb6fdbffa2d17d87c5392aab792dc252d5de4533cc9518d38aa8dbf1925ab92386edd4009923
+
+tcltest::test Hash_BLAKE2b512-1.4 {BLAKE2b512} \
+	-constraints BLAKE2b512 \
+	-setup {set data "message digest"} \
+	-body {tls::digest -digest BLAKE2b512 -data $data} \
+	-match exact -result 3c26ce487b1c0f062363afa3c675ebdbf5f4ef9bdc022cfbef91e3111cdc283840d8331fc30a8a0906cff4bcdbcd230c61aaec60fdfad457ed96b709a382359a
+
+tcltest::test Hash_BLAKE2b512-1.5 {BLAKE2b512} \
+	-constraints BLAKE2b512 \
+	-setup {set data "abcdefghijklmnopqrstuvwxyz"} \
+	-body {tls::digest -digest BLAKE2b512 -data $data} \
+	-match exact -result c68ede143e416eb7b4aaae0d8e48e55dd529eafed10b1df1a61416953a2b0a5666c761e7d412e6709e31ffe221b7a7a73908cb95a4d120b8b090a87d1fbedb4c
+
+tcltest::test Hash_BLAKE2b512-1.6 {BLAKE2b512} \
+	-constraints BLAKE2b512 \
+	-setup {set data "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"} \
+	-body {tls::digest -digest BLAKE2b512 -data $data} \
+	-match exact -result 99964802e5c25e703722905d3fb80046b6bca698ca9e2cc7e49b4fe1fa087c2edf0312dfbb275cf250a1e542fd5dc2edd313f9c491127c2e8c0c9b24168e2d50
+
+tcltest::test Hash_BLAKE2b512-1.7 {BLAKE2b512} \
+	-constraints BLAKE2b512 \
+	-setup {set data "12345678901234567890123456789012345678901234567890123456789012345678901234567890"} \
+	-body {tls::digest -digest BLAKE2b512 -data $data} \
+	-match exact -result 686f41ec5afff6e87e1f076f542aa466466ff5fbde162c48481ba48a748d842799f5b30f5b67fc684771b33b994206d05cc310f31914edd7b97e41860d77d282
+
+tcltest::test Hash_BLAKE2b512-1.8 {BLAKE2b512} \
+	-constraints BLAKE2b512 \
+	-setup {set data "The quick brown fox jumps over the lazy dog"} \
+	-body {tls::digest -digest BLAKE2b512 -data $data} \
+	-match exact -result a8add4bdddfd93e4877d2746e62817b116364a1fa7bc148d95090bc7333b3673f82401cf7aa2e4cb1ecd90296e3f14cb5413f8ed77be73045b13914cdcd6a918
+

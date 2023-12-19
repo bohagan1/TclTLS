@@ -1,0 +1,48 @@
+# Auto generated from "SHA3-384.txt"
+package require tls
+package require tcltest
+
+tcltest::testConstraint SHA3-384 [expr {[lsearch -nocase [tls::digests] SHA3-384] > -1}]
+
+tcltest::test Hash_SHA3-384-1.1 {SHA3-384} \
+	-constraints SHA3-384 \
+	-setup {set data ""} \
+	-body {tls::digest -digest SHA3-384 -data $data} \
+	-match exact -result 0c63a75b845e4f7d01107d852e4c2485c51a50aaaa94fc61995e71bbee983a2ac3713831264adb47fb6bd1e058d5f004
+
+tcltest::test Hash_SHA3-384-1.2 {SHA3-384} \
+	-constraints SHA3-384 \
+	-setup {set data [binary decode hex [string repeat a3 200]]} \
+	-body {tls::digest -digest SHA3-384 -data $data} \
+	-match exact -result 1881de2ca7e41ef95dc4732b8f5f002b189cc1e42b74168ed1732649ce1dbcdd76197a31fd55ee989f2d7050dd473e8f
+
+tcltest::test Hash_SHA3-384-1.3 {SHA3-384} \
+	-constraints SHA3-384 \
+	-setup {set data "abc"} \
+	-body {tls::digest -digest SHA3-384 -data $data} \
+	-match exact -result ec01498288516fc926459f58e2c6ad8df9b473cb0fc08c2596da7cf0e49be4b298d88cea927ac7f539f1edf228376d25
+
+tcltest::test Hash_SHA3-384-1.4 {SHA3-384} \
+	-constraints SHA3-384 \
+	-setup {set data "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq"} \
+	-body {tls::digest -digest SHA3-384 -data $data} \
+	-match exact -result 991c665755eb3a4b6bbdfb75c78a492e8c56a22c5c4d7e429bfdbc32b9d4ad5aa04a1f076e62fea19eef51acd0657c22
+
+tcltest::test Hash_SHA3-384-1.5 {SHA3-384} \
+	-constraints SHA3-384 \
+	-setup {set data "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu"} \
+	-body {tls::digest -digest SHA3-384 -data $data} \
+	-match exact -result 79407d3b5916b59c3e30b09822974791c313fb9ecc849e406f23592d04f625dc8c709b98b43b3852b337216179aa7fc7
+
+tcltest::test Hash_SHA3-384-1.6 {SHA3-384} \
+	-constraints SHA3-384 \
+	-setup {set data [string repeat "a" 1000000]} \
+	-body {tls::digest -digest SHA3-384 -data $data} \
+	-match exact -result eee9e24d78c1855337983451df97c8ad9eedf256c6334f8e948d252d5e0e76847aa0774ddb90a842190d2c558b4b8340
+
+tcltest::test Hash_SHA3-384-1.7 {SHA3-384} \
+	-constraints SHA3-384 \
+	-setup {set data [string repeat "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmno" 16777216]} \
+	-body {tls::digest -digest SHA3-384 -data $data} \
+	-match exact -result a04296f4fcaae14871bb5ad33e28dcf69238b04204d9941b8782e816d014bcb7540e4af54f30d578f1a1ca2930847a12
+

@@ -1,0 +1,54 @@
+# Auto generated from "BLAKE2s256.txt"
+package require tls
+package require tcltest
+
+tcltest::testConstraint BLAKE2s256 [expr {[lsearch -nocase [tls::digests] BLAKE2s256] > -1}]
+
+tcltest::test Hash_BLAKE2s256-1.1 {BLAKE2s256} \
+	-constraints BLAKE2s256 \
+	-setup {set data ""} \
+	-body {tls::digest -digest BLAKE2s256 -data $data} \
+	-match exact -result 69217a3079908094e11121d042354a7c1f55b6482ca1a51e1b250dfd1ed0eef9
+
+tcltest::test Hash_BLAKE2s256-1.2 {BLAKE2s256} \
+	-constraints BLAKE2s256 \
+	-setup {set data "a"} \
+	-body {tls::digest -digest BLAKE2s256 -data $data} \
+	-match exact -result 4a0d129873403037c2cd9b9048203687f6233fb6738956e0349bd4320fec3e90
+
+tcltest::test Hash_BLAKE2s256-1.3 {BLAKE2s256} \
+	-constraints BLAKE2s256 \
+	-setup {set data "abc"} \
+	-body {tls::digest -digest BLAKE2s256 -data $data} \
+	-match exact -result 508c5e8c327c14e2e1a72ba34eeb452f37458b209ed63a294d999b4c86675982
+
+tcltest::test Hash_BLAKE2s256-1.4 {BLAKE2s256} \
+	-constraints BLAKE2s256 \
+	-setup {set data "message digest"} \
+	-body {tls::digest -digest BLAKE2s256 -data $data} \
+	-match exact -result fa10ab775acf89b7d3c8a6e823d586f6b67bdbac4ce207fe145b7d3ac25cd28c
+
+tcltest::test Hash_BLAKE2s256-1.5 {BLAKE2s256} \
+	-constraints BLAKE2s256 \
+	-setup {set data "abcdefghijklmnopqrstuvwxyz"} \
+	-body {tls::digest -digest BLAKE2s256 -data $data} \
+	-match exact -result bdf88eb1f86a0cdf0e840ba88fa118508369df186c7355b4b16cf79fa2710a12
+
+tcltest::test Hash_BLAKE2s256-1.6 {BLAKE2s256} \
+	-constraints BLAKE2s256 \
+	-setup {set data "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"} \
+	-body {tls::digest -digest BLAKE2s256 -data $data} \
+	-match exact -result c75439ea17e1de6fa4510c335dc3d3f343e6f9e1ce2773e25b4174f1df8b119b
+
+tcltest::test Hash_BLAKE2s256-1.7 {BLAKE2s256} \
+	-constraints BLAKE2s256 \
+	-setup {set data "12345678901234567890123456789012345678901234567890123456789012345678901234567890"} \
+	-body {tls::digest -digest BLAKE2s256 -data $data} \
+	-match exact -result fdaedb290a0d5af9870864fec2e090200989dc9cd53a3c092129e8535e8b4f66
+
+tcltest::test Hash_BLAKE2s256-1.8 {BLAKE2s256} \
+	-constraints BLAKE2s256 \
+	-setup {set data "The quick brown fox jumps over the lazy dog"} \
+	-body {tls::digest -digest BLAKE2s256 -data $data} \
+	-match exact -result 606beeec743ccbeff6cbcdf5d5302aa855c256c29b88c8ed331ea1a6bf3c8812
+

@@ -1,0 +1,150 @@
+# Auto generated from "SHA512.txt"
+package require tls
+package require tcltest
+
+tcltest::testConstraint SHA512 [expr {[lsearch -nocase [tls::digests] SHA512] > -1}]
+
+tcltest::test Hash_SHA512-1.1 {SHA512} \
+	-constraints SHA512 \
+	-setup {set data ""} \
+	-body {tls::digest -digest SHA512 -data $data} \
+	-match exact -result cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e
+
+tcltest::test Hash_SHA512-1.2 {SHA512} \
+	-constraints SHA512 \
+	-setup {set data "abc"} \
+	-body {tls::digest -digest SHA512 -data $data} \
+	-match exact -result ddaf35a193617abacc417349ae20413112e6fa4e89a97ea20a9eeee64b55d39a2192992a274fc1a836ba3c23a3feebbd454d4423643ce80e2a9ac94fa54ca49f
+
+tcltest::test Hash_SHA512-1.3 {SHA512} \
+	-constraints SHA512 \
+	-setup {set data "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq"} \
+	-body {tls::digest -digest SHA512 -data $data} \
+	-match exact -result 204a8fc6dda82f0a0ced7beb8e08a41657c16ef468b228a8279be331a703c33596fd15c13b1b07f9aa1d3bea57789ca031ad85c7a71dd70354ec631238ca3445
+
+tcltest::test Hash_SHA512-1.4 {SHA512} \
+	-constraints SHA512 \
+	-setup {set data "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu"} \
+	-body {tls::digest -digest SHA512 -data $data} \
+	-match exact -result 8e959b75dae313da8cf4f72814fc143f8f7779c6eb9f7fa17299aeadb6889018501d289e4900f7e4331b99dec4b5433ac7d329eeb6dd26545e96e55b874be909
+
+tcltest::test Hash_SHA512-1.5 {SHA512} \
+	-constraints SHA512 \
+	-setup {set data [string repeat "a" 1000000]} \
+	-body {tls::digest -digest SHA512 -data $data} \
+	-match exact -result e718483d0ce769644e2e42c7bc15b4638e1f98b13b2044285632a803afa973ebde0ff244877ea60a4cb0432ce577c31beb009c5c2c49aa2e4eadb217ad8cc09b
+
+tcltest::test Hash_SHA512-1.6 {SHA512} \
+	-constraints SHA512 \
+	-setup {set data [string repeat "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmno" 16777216]} \
+	-body {tls::digest -digest SHA512 -data $data} \
+	-match exact -result b47c933421ea2db149ad6e10fce6c7f93d0752380180ffd7f4629a712134831d77be6091b819ed352c2967a2e2d4fa5050723c9630691f1a05a7281dbe6c1086
+
+tcltest::test Hash_SHA512-1.7 {SHA512} \
+	-constraints SHA512 \
+	-setup {set data ""} \
+	-body {tls::digest -digest SHA512 -data $data} \
+	-match exact -result cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e
+
+tcltest::test Hash_SHA512-1.8 {SHA512} \
+	-constraints SHA512 \
+	-setup {set data [binary decode hex [string repeat 00 111]]} \
+	-body {tls::digest -digest SHA512 -data $data} \
+	-match exact -result 77ddd3a542e530fd047b8977c657ba6ce72f1492e360b2b2212cd264e75ec03882e4ff0525517ab4207d14c70c2259ba88d4d335ee0e7e20543d22102ab1788c
+
+tcltest::test Hash_SHA512-1.9 {SHA512} \
+	-constraints SHA512 \
+	-setup {set data [binary decode hex [string repeat 00 112]]} \
+	-body {tls::digest -digest SHA512 -data $data} \
+	-match exact -result 2be2e788c8a8adeaa9c89a7f78904cacea6e39297d75e0573a73c756234534d6627ab4156b48a6657b29ab8beb73334040ad39ead81446bb09c70704ec707952
+
+tcltest::test Hash_SHA512-1.10 {SHA512} \
+	-constraints SHA512 \
+	-setup {set data [binary decode hex [string repeat 00 113]]} \
+	-body {tls::digest -digest SHA512 -data $data} \
+	-match exact -result 0e67910bcf0f9ccde5464c63b9c850a12a759227d16b040d98986d54253f9f34322318e56b8feb86c5fb2270ed87f31252f7f68493ee759743909bd75e4bb544
+
+tcltest::test Hash_SHA512-1.11 {SHA512} \
+	-constraints SHA512 \
+	-setup {set data [binary decode hex [string repeat 00 122]]} \
+	-body {tls::digest -digest SHA512 -data $data} \
+	-match exact -result 4f3f095d015be4a7a7cc0b8c04da4aa09e74351e3a97651f744c23716ebd9b3e822e5077a01baa5cc0ed45b9249e88ab343d4333539df21ed229da6f4a514e0f
+
+tcltest::test Hash_SHA512-1.12 {SHA512} \
+	-constraints SHA512 \
+	-setup {set data [binary decode hex [string repeat 00 1000]]} \
+	-body {tls::digest -digest SHA512 -data $data} \
+	-match exact -result ca3dff61bb23477aa6087b27508264a6f9126ee3a004f53cb8db942ed345f2f2d229b4b59c859220a1cf1913f34248e3803bab650e849a3d9a709edc09ae4a76
+
+tcltest::test Hash_SHA512-1.13 {SHA512} \
+	-constraints SHA512 \
+	-setup {set data [binary decode hex [string repeat 41 1000]]} \
+	-body {tls::digest -digest SHA512 -data $data} \
+	-match exact -result 329c52ac62d1fe731151f2b895a00475445ef74f50b979c6f7bb7cae349328c1d4cb4f7261a0ab43f936a24b000651d4a824fcdd577f211aef8f806b16afe8af
+
+tcltest::test Hash_SHA512-1.14 {SHA512} \
+	-constraints SHA512 \
+	-setup {set data [binary decode hex [string repeat 55 1005]]} \
+	-body {tls::digest -digest SHA512 -data $data} \
+	-match exact -result 59f5e54fe299c6a8764c6b199e44924a37f59e2b56c3ebad939b7289210dc8e4c21b9720165b0f4d4374c90f1bf4fb4a5ace17a1161798015052893a48c3d161
+
+tcltest::test Hash_SHA512-1.15 {SHA512} \
+	-constraints SHA512 \
+	-setup {set data [binary decode hex [string repeat 00 1000000]]} \
+	-body {tls::digest -digest SHA512 -data $data} \
+	-match exact -result ce044bc9fd43269d5bbc946cbebc3bb711341115cc4abdf2edbc3ff2c57ad4b15deb699bda257fea5aef9c6e55fcf4cf9dc25a8c3ce25f2efe90908379bff7ed
+
+tcltest::test Hash_SHA512-1.16 {SHA512} \
+	-constraints SHA512 \
+	-setup {set data [binary decode hex [string repeat 5a 536870912]]} \
+	-body {tls::digest -digest SHA512 -data $data} \
+	-match exact -result da172279f3ebbda95f6b6e1e5f0ebec682c25d3d93561a1624c2fa9009d64c7e9923f3b46bcaf11d39a531f43297992ba4155c7e827bd0f1e194ae7ed6de4cac
+
+tcltest::test Hash_SHA512-1.17 {SHA512} \
+	-constraints SHA512 \
+	-setup {set data "The quick brown fox jumps over the lazy dog"} \
+	-body {tls::digest -digest SHA512 -data $data} \
+	-match exact -result 07e547d9586f6a73f73fbac0435ed76951218fb7d0c8d788a309d785436bbb642e93a252a954f23912547d1e8a3b5ed6e1bfd7097821233fa0538f3db854fee6
+
+tcltest::test Hash_SHA512-1.18 {SHA512} \
+	-constraints SHA512 \
+	-setup {set data "abc"} \
+	-body {tls::digest -digest SHA512 -data $data} \
+	-match exact -result ddaf35a193617abacc417349ae20413112e6fa4e89a97ea20a9eeee64b55d39a2192992a274fc1a836ba3c23a3feebbd454d4423643ce80e2a9ac94fa54ca49f
+
+tcltest::test Hash_SHA512-1.19 {SHA512} \
+	-constraints SHA512 \
+	-setup {set data "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu"} \
+	-body {tls::digest -digest SHA512 -data $data} \
+	-match exact -result 8e959b75dae313da8cf4f72814fc143f8f7779c6eb9f7fa17299aeadb6889018501d289e4900f7e4331b99dec4b5433ac7d329eeb6dd26545e96e55b874be909
+
+tcltest::test Hash_SHA512-1.20 {SHA512} \
+	-constraints SHA512 \
+	-setup {set data [string repeat "a" 1000000]} \
+	-body {tls::digest -digest SHA512 -data $data} \
+	-match exact -result e718483d0ce769644e2e42c7bc15b4638e1f98b13b2044285632a803afa973ebde0ff244877ea60a4cb0432ce577c31beb009c5c2c49aa2e4eadb217ad8cc09b
+
+tcltest::test Hash_SHA512-1.21 {SHA512} \
+	-constraints SHA512 \
+	-setup {set data [string repeat "0123456701234567012345670123456701234567012345670123456701234567" 10]} \
+	-body {tls::digest -digest SHA512 -data $data} \
+	-match exact -result 89d05ba632c699c31231ded4ffc127d5a894dad412c0e024db872d1abd2ba8141a0f85072a9be1e2aa04cf33c765cb510813a39cd5a84c4acaa64d3f3fb7bae9
+
+tcltest::test Hash_SHA512-1.22 {SHA512} \
+	-constraints SHA512 \
+	-setup {set data [binary decode hex D0]} \
+	-body {tls::digest -digest SHA512 -data $data} \
+	-match exact -result 9992202938e882e73e20f6b69e68a0a7149090423d93c81bab3f21678d4aceeee50e4e8cafada4c85a54ea8306826c4ad6e74cece9631bfa8a549b4ab3fbba15
+
+tcltest::test Hash_SHA512-1.23 {SHA512} \
+	-constraints SHA512 \
+	-setup {set data [binary decode hex 8d4e3c0e3889191491816e9d98bff0a0]} \
+	-body {tls::digest -digest SHA512 -data $data} \
+	-match exact -result cb0b67a4b8712cd73c9aabc0b199e9269b20844afb75acbdd1c153c9828924c3ddedaafe669c5fdd0bc66f630f6773988213eb1b16f517ad0de4b2f0c95c90f8
+
+tcltest::test Hash_SHA512-1.24 {SHA512} \
+	-constraints SHA512 \
+	-setup {set data [binary decode hex a55f20c411aad132807a502d65824e31a2305432aa3d06d3e282a8d84e0de1de6974bf495469fc7f338f8054d58c26c49360c3e87af56523acf6d89d03e56ff2f868002bc3e431edc44df2f0223d4bb3b243586e1a7d924936694fcbbaf88d9519e4eb50a644f8e4f95eb0ea95bc4465c8821aacd2fe15ab4981164bbb6dc32f969087a145b0d9cc9c67c22b763299419cc4128be9a077b3ace634064e6d99283513dc06e7515d0d73132e9a0dc6d3b1f8b246f1a98a3fc72941b1e3bb2098e8bf16f268d64f0b0f4707fe1ea1a1791ba2f3c0c758e5f551863a96c949ad47d7fb40d2]} \
+	-body {tls::digest -digest SHA512 -data $data} \
+	-match exact -result c665befb36da189d78822d10528cbf3b12b3eef726039909c1a16a270d48719377966b957a878e720584779a62825c18da26415e49a7176a894e7510fd1451f5
+

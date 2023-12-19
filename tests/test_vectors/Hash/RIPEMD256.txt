@@ -1,0 +1,45 @@
+# RIPEMD256
+# From https://homes.esat.kuleuven.be/~bosselae/ripemd160.html
+# and https://en.wikipedia.org/wiki/RIPEMD
+
+Len = 0
+Msg = ""
+MD = 02ba4c4e5f8ecd1877fc52d64d30e37a2d9774fb1e5d026380ae0168e3c5522d
+
+Len = 1
+Msg = "a"
+MD = f9333e45d857f5d90a91bab70a1eba0cfb1be4b0783c9acfcd883a9134692925
+
+Len = 3
+Msg = "abc"
+MD = afbd6e228b9d8cbbcef5ca2d03e6dba10ac0bc7dcbe4680e1e42d2e975459b65
+
+Len = 14
+Msg = "message digest"
+MD = 87e971759a1ce47a514d5c914c392c9018c7c46bc14465554afcdf54a5070c0e
+
+Len = 26
+Msg = "abcdefghijklmnopqrstuvwxyz"
+MD = 649d3034751ea216776bf9a18acc81bc7896118a5197968782dd1fd97d8d5133
+
+Len = 56
+Msg = "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq"
+MD = 3843045583aac6c8c8d9128573e7a9809afb2a0f34ccc36ea9e72f16f6368e3f
+
+Len = 62
+Msg = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+MD = 5740a408ac16b720b84424ae931cbb1fe363d1d0bf4017f1a89f7ea6de77a0b8
+
+Len = 80
+Repeat = 8
+Msg = "1234567890"
+MD = 06fdcc7a409548aaf91368c06a6275b553e3f099bf0ea4edfd6778df89a890dd
+
+Len = 1000000
+Repeat = 1000000
+Msg = "a"
+MD = ac953744e10e31514c150d4d8d7b677342e33399788296e43ae4850ce4f97978
+
+Len = 43
+Msg = "The quick brown fox jumps over the lazy dog"
+MD = c3b0c2f764ac6d576a6c430fb61a6f2255b4fa833e094b1ba8c1e29b6353036f

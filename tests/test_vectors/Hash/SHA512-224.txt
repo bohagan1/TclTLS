@@ -1,0 +1,20 @@
+# SHA512-224
+# From https://csrc.nist.gov/projects/cryptographic-standards-and-guidelines/example-values
+
+[L = 28]
+
+Len = 0
+Msg = ""
+MD = 6ed0dd02806fa89e25de060c19d3ac86cabb87d6a0ddd05c333b84f4
+
+Len = 3
+Msg = "abc"
+MD = 4634270f707b6a54daae7530460842e20e37ed265ceee9a43e8924aa
+
+Len = 43
+Msg = "The quick brown fox jumps over the lazy dog"
+MD = 944cd2847fb54558d4775db0485a50003111c8e5daa63fe722c6aa37
+
+Len = 112
+Msg = "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu"
+MD = 23fec5bb94d60b23308192640b0c453335d664734fe40e7268674af9
