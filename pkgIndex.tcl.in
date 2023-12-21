@@ -6,7 +6,7 @@ if {[package vsatisfies [package provide Tcl] 9.0-]} {
 	    [list load [file join $dir @PKG_LIB_FILE9@] [string totitle @PACKAGE_NAME@]]
     set initScript [file join $dir @PACKAGE_NAME@.tcl]
     if {[file exists $initScript]} {
-	source $initScript
+	source -encoding utf-8 $initScript
     }
 } else {
     if {![package vsatisfies [package provide Tcl] 8.5]} {return}
@@ -18,7 +18,7 @@ if {[package vsatisfies [package provide Tcl] 9.0-]} {
 	}
 	set initScript [file join $dir @PACKAGE_NAME@.tcl]
 	if {[file exists $initScript]} {
-	    source $initScript
+	    source -encoding utf-8 $initScript
 	}
     }} $dir]
 }

@@ -1105,6 +1105,7 @@ test tlsIO-8.1 {testing -async flag on sockets} {socket} {
     puts $s1 a
     # need update to complete TLS handshake in-process
     update
+    fconfigure $s1 -blocking 1
     set z [gets $s1]
     close $s
     close $s1

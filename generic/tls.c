@@ -2567,6 +2567,12 @@ void Tls_Clean(State *statePtr) {
     dprintf("Returning");
 }
 
+#if TCL_MAJOR_VERSION > 8
+#define MIN_VERSION "9.0"
+#else
+#define MIN_VERSION "8.5"
+#endif
+
 /*
  *-------------------------------------------------------------------
  *
@@ -2590,25 +2596,14 @@ DLLEXPORT int Tls_Init(Tcl_Interp *interp) {
 
     dprintf("Called");
 
-#if TCL_MAJOR_VERSION > 8
 #ifdef USE_TCL_STUBS
-    if (Tcl_InitStubs(interp, "9.0", 0) == NULL) {
+    if (Tcl_InitStubs(interp, MIN_VERSION, 0) == NULL) {
 	return TCL_ERROR;
     }
 #endif
-    if (Tcl_PkgRequire(interp, "Tcl", "9.0-", 0) == NULL) {
+    if (Tcl_PkgRequire(interp, "Tcl", MIN_VERSION, 0) == NULL) {
 	return TCL_ERROR;
     }
-#else
-#ifdef USE_TCL_STUBS
-    if (Tcl_InitStubs(interp, "8.5", 0) == NULL) {
-	return TCL_ERROR;
-    }
-#endif
-    if (Tcl_PkgRequire(interp, "Tcl", "8.5-", 0) == NULL) {
-	return TCL_ERROR;
-    }
-#endif
 
     if (TlsLibInit(0) != TCL_OK) {
 	Tcl_AppendResult(interp, "could not initialize SSL library", NULL);
