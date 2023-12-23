@@ -1249,7 +1249,7 @@ static int DigestMain(int type, Tcl_Interp *interp, int objc, Tcl_Obj *const obj
 	    return TCL_ERROR;
 	}
 
-	/* Validate arg has value */
+	/* Validate arg has a value */
 	if (fn > _opt_hexadecimal) {
 	    if (++idx >= objc) {
 		Tcl_AppendResult(interp, "No value for option \"", command_opts[fn], "\"", (char *) NULL);

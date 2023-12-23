@@ -1264,7 +1264,7 @@ static int EncryptMain(int type, Tcl_Interp *interp, int objc, Tcl_Obj *const ob
 	    return TCL_ERROR;
 	}
 
-	/* Validate arg has value */
+	/* Validate arg has a value */
 	if (++idx >= objc) {
 	    Tcl_AppendResult(interp, "No value for option \"", command_opts[fn], "\"", (char *) NULL);
 	return TCL_ERROR;

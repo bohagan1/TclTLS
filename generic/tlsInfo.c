@@ -8,7 +8,6 @@
  */
 
 #include "tlsInt.h"
-#include "tclOpts.h"
 #include <openssl/crypto.h>
 #include <openssl/ssl.h>
 #include <openssl/safestack.h>
@@ -149,6 +148,32 @@ int CipherInfo(Tcl_Interp *interp, Tcl_Obj *nameObj) {
     LAPPEND_BOOL(interp, listObj, "Custom Copy", flags & EVP_CIPH_CUSTOM_COPY);
     LAPPEND_BOOL(interp, listObj, "Non FIPS Allow", flags & EVP_CIPH_FLAG_NON_FIPS_ALLOW);
     LAPPEND_OBJ(interp, resultObj, "flags", listObj);
+
+    /* CTX only properties */
+    {
+	EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
+	int tag_len = 0;
+
+	EVP_EncryptInit_ex(ctx, cipher, NULL, NULL, NULL);
+	if (mode == EVP_CIPH_GCM_MODE || mode == EVP_CIPH_OCB_MODE) {
+	    tag_len = EVP_GCM_TLS_TAG_LEN; /* EVP_MAX_AEAD_TAG_LENGTH */
+	} else if (mode == EVP_CIPH_CCM_MODE) {
+	    tag_len = EVP_CCM_TLS_TAG_LEN;
+	} else if (cipher == EVP_get_cipherbyname("chacha20-poly1305")) {
+	    tag_len = EVP_CHACHAPOLY_TLS_TAG_LEN; /* POLY1305_BLOCK_SIZE */
+	}
+	EVP_CIPHER_CTX_free(ctx);
+	LAPPEND_INT(interp, resultObj, "tag_length", tag_len);
+    }
+    
+    /* AEAD properties */
+    {
+	int aad_len = 0;
+	if (flags & EVP_CIPH_FLAG_AEAD_CIPHER) {
+	    aad_len = EVP_AEAD_TLS1_AAD_LEN;
+	}
+	LAPPEND_INT(interp, resultObj, "aad_length", aad_len);
+    }
 
     Tcl_SetObjResult(interp, resultObj);
     return TCL_OK;
@@ -534,6 +559,74 @@ int DigestsObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *
 /*
  *-------------------------------------------------------------------
  *
+ * KdfList --
+ *
+ *	Return a list of all KDF algorithms
+ *
+ * Results:
+ *	A standard Tcl list.
+ *
+ * Side effects:
+ *	None.
+ *
+ *-------------------------------------------------------------------
+ */
+int KdfList(Tcl_Interp *interp, char *select_name) {
+    Tcl_Obj *resultObj = Tcl_NewListObj(0, NULL);
+    if (resultObj == NULL) {
+	return TCL_ERROR;
+    }
+
+    Tcl_ListObjAppendElement(interp, resultObj, Tcl_NewStringObj("hkdf", -1));
+    Tcl_ListObjAppendElement(interp, resultObj, Tcl_NewStringObj("pbkdf2", -1));
+    Tcl_ListObjAppendElement(interp, resultObj, Tcl_NewStringObj("scrypt", -1));
+    Tcl_SetObjResult(interp, resultObj);
+    return TCL_OK;
+}
+
+/*
+ *-------------------------------------------------------------------
+ *
+ * KdfsObjCmd --
+ *
+ *	Return a list of all valid Key Derivation Function (KDF).
+ *
+ * Results:
+ *	A standard Tcl list.
+ *
+ * Side effects:
+ *	None.
+ *
+ *-------------------------------------------------------------------
+ */
+int KdfsObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
+    dprintf("Called");
+
+    /* Clear errors */
+    Tcl_ResetResult(interp);
+    ERR_clear_error();
+
+
+    /* Validate arg count */
+    if (objc == 1) {
+	return KdfList(interp, NULL);
+
+    } else if (objc == 2) {
+
+
+    } else {
+	Tcl_WrongNumArgs(interp, 1, objv, "?name?");
+	return TCL_ERROR;
+    }
+    return TCL_OK;
+	clientData = clientData;
+}
+
+/*******************************************************************/
+
+/*
+ *-------------------------------------------------------------------
+ *
  * MacInfo --
  *
  *	Return a list of properties and values for macName.
@@ -882,6 +975,7 @@ int Tls_InfoCommands(Tcl_Interp *interp) {
     Tcl_CreateObjCommand(interp, "tls::cipher", CipherObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
     Tcl_CreateObjCommand(interp, "tls::ciphers", CiphersObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
     Tcl_CreateObjCommand(interp, "tls::digests", DigestsObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
+    Tcl_CreateObjCommand(interp, "tls::kdfs", KdfsObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
     Tcl_CreateObjCommand(interp, "tls::macs", MacsObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
     Tcl_CreateObjCommand(interp, "tls::pkeys", PkeysObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
     Tcl_CreateObjCommand(interp, "tls::protocols", ProtocolsObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
