@@ -14,42 +14,6 @@
 
 /*******************************************************************/
 
-/*
- * Get cipher
- */
-EVP_CIPHER *Util_GetCipher(Tcl_Interp *interp, char *name, int exist) {
-    EVP_CIPHER *cipher = NULL;
-
-    if (name != NULL) {
-	cipher = EVP_get_cipherbyname(name);
-	if (cipher == NULL) {
-	    Tcl_AppendResult(interp, "Invalid cipher: \"", name, "\"", NULL);
-	}
-    } else if (exist) {
-	Tcl_AppendResult(interp, "No cipher specified", NULL);
-    }
-    return cipher;
-}
-
-/*
- * Get message digest
- */
-EVP_MD *Util_GetDigest(Tcl_Interp *interp, char *name, int exist) {
-    EVP_MD *md = NULL;
-
-    if (name != NULL) {
-	md = EVP_get_digestbyname(name);
-	if (md == NULL) {
-	    Tcl_AppendResult(interp, "Invalid digest: \"", name, "\"", NULL);
-	}
-    } else if (exist) {
-	Tcl_AppendResult(interp, "No digest specified", NULL);
-    }
-    return md;
-}
-
-/*******************************************************************/
-
 /* Options for KDF commands */
 
 static const char *command_opts [] = {
@@ -80,12 +44,11 @@ enum _command_opts {
 static int KDF_PBKDF2(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
     int pass_len = 0, salt_len = 0, fn;
     int iklen, ivlen, iter = 1;
-    unsigned char *password = NULL, *salt = NULL;
+    unsigned char *pass = NULL, *salt = NULL;
     const EVP_MD *md = NULL;
     const EVP_CIPHER *cipher = NULL;
     int buf_len = (EVP_MAX_KEY_LENGTH + EVP_MAX_IV_LENGTH)*4, dk_len = buf_len;
     unsigned char tmpkeyiv[(EVP_MAX_KEY_LENGTH + EVP_MAX_IV_LENGTH)*4];
-    char *cipherName = NULL, *digestName = NULL;
 
     dprintf("Called");
 
@@ -111,51 +74,46 @@ static int KDF_PBKDF2(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_O
 
 	/* Validate arg has a value */
 	if (++idx >= objc) {
-	    Tcl_AppendResult(interp, "No value for option \"", command_opts[fn], "\"", (char *) NULL);
+	    Tcl_AppendResult(interp, "No value for option \"", command_opts[fn], "\"", NULL);
 	    return TCL_ERROR;
 	}
 
 	switch(fn) {
 	case _opt_cipher:
-	    GET_OPT_STRING(objv[idx], cipherName, NULL);
+	    if ((cipher = Util_GetCipher(interp, objv[idx], TRUE)) == NULL) {
+		return TCL_ERROR;
+	    }
 	    break;
 	case _opt_digest:
 	case _opt_hash:
-	    GET_OPT_STRING(objv[idx], digestName, NULL);
+	    if ((md = Util_GetDigest(interp, objv[idx], TRUE)) == NULL) {
+		return TCL_ERROR;
+	    }
 	    break;
 	case _opt_iter:
-	    GET_OPT_INT(objv[idx], &iter);
+	    if (Util_GetInt(interp, objv[idx], &iter, "iterations", 1, -1) != TCL_OK) {
+		return TCL_ERROR;
+	    }
 	    break;
 	case _opt_key:
 	case _opt_password:
-	    GET_OPT_BYTE_ARRAY(objv[idx], password, &pass_len);
+	    pass = Util_GetKey(interp, objv[idx], &pass_len, command_opts[fn], 0, FALSE);
 	    break;
 	case _opt_salt:
 	    GET_OPT_BYTE_ARRAY(objv[idx], salt, &salt_len);
 	    break;
 	case _opt_length:
 	case _opt_size:
-	    GET_OPT_INT(objv[idx], &dk_len);
+	    if (Util_GetInt(interp, objv[idx], &dk_len, command_opts[fn], 1, buf_len) != TCL_OK) {
+		return TCL_ERROR;
+	    }
 	    break;
 	}
     }
 
     /* Validate options */
-    if (cipherName != NULL && (cipher = Util_GetCipher(interp, cipherName, 0)) == NULL) {
-	return TCL_ERROR;
-    }
-
-    if ((md = Util_GetDigest(interp, digestName, TRUE)) == NULL) {
-	return TCL_ERROR;
-    }
-
-    if (iter < 1) {
-	Tcl_SetObjResult(interp, Tcl_ObjPrintf("Invalid iterations count %d: must be > 0", iter));
-	return TCL_ERROR;
-    }
-
-    if (dk_len < 1 || dk_len > buf_len) {
-	Tcl_SetObjResult(interp, Tcl_ObjPrintf("Invalid derived key length %d: must be 0 < size <= %d", dk_len, buf_len));
+    if (md == NULL) {
+	Tcl_AppendResult(interp, "no digest", NULL);
 	return TCL_ERROR;
     }
 
@@ -171,7 +129,7 @@ static int KDF_PBKDF2(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_O
     }
 
     /* Derive key */
-    if (!PKCS5_PBKDF2_HMAC(password, pass_len, salt, salt_len, iter, md, dk_len, tmpkeyiv)) {
+    if (!PKCS5_PBKDF2_HMAC(pass, pass_len, salt, salt_len, iter, md, dk_len, tmpkeyiv)) {
 	Tcl_AppendResult(interp, "Key derivation failed: ", REASON(), NULL);
 	return TCL_ERROR;
     }
@@ -189,6 +147,7 @@ static int KDF_PBKDF2(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_O
     /* Clear data */
     memset(tmpkeyiv, 0, buf_len);
     return TCL_OK;
+	clientData = clientData;
 }
 
 /*
@@ -208,11 +167,11 @@ static int KDF_PBKDF2(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_O
  *-------------------------------------------------------------------
  */
 static int KDF_HKDF(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
-    EVP_PKEY_CTX *pctx;
+    EVP_PKEY_CTX *pctx = NULL;
     const EVP_MD *md = NULL;
     unsigned char *salt = NULL, *key = NULL, *info = NULL, *out = NULL;
-    int salt_len = 0, key_len = 0, info_len = 0, dk_len = 1024, res = TCL_OK, fn;
-    char *digestName;
+    int salt_len = 0, key_len = 0, info_len = 0, res = TCL_OK, fn;
+    int dk_len = EVP_MAX_KEY_LENGTH + EVP_MAX_IV_LENGTH;
     size_t out_len;
     Tcl_Obj *resultObj;
 
@@ -223,7 +182,7 @@ static int KDF_HKDF(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj
     ERR_clear_error();
 
     /* Validate arg count */
-    if (objc < 3 || objc > 11) {
+    if (objc < 5 || objc > 11) {
 	Tcl_WrongNumArgs(interp, 1, objv, "-digest digest -key string ?-info string? ?-salt string? ?-size derived_length?");
 	return TCL_ERROR;
     }
@@ -237,14 +196,16 @@ static int KDF_HKDF(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj
 
 	/* Validate arg has a value */
 	if (++idx >= objc) {
-	    Tcl_AppendResult(interp, "No value for option \"", command_opts[fn], "\"", (char *) NULL);
+	    Tcl_AppendResult(interp, "No value for option \"", command_opts[fn], "\"", NULL);
 	    return TCL_ERROR;
 	}
 
 	switch(fn) {
 	case _opt_digest:
 	case _opt_hash:
-	    GET_OPT_STRING(objv[idx], digestName, NULL);
+	    if ((md = Util_GetDigest(interp, objv[idx], TRUE)) == NULL) {
+		goto error;
+	    }
 	    break;
 	case _opt_info:
 	    /* Max 1024/2048 */
@@ -252,27 +213,36 @@ static int KDF_HKDF(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj
 	    break;
 	case _opt_key:
 	case _opt_password:
-	    GET_OPT_BYTE_ARRAY(objv[idx], key, &key_len);
+	    if ((key = Util_GetKey(interp, objv[idx], &key_len, command_opts[fn], 0, 1)) == NULL) {
+		goto error;
+	    }
 	    break;
 	case _opt_salt:
 	    GET_OPT_BYTE_ARRAY(objv[idx], salt, &salt_len);
 	    break;
 	case _opt_length:
 	case _opt_size:
-	    GET_OPT_INT(objv[idx], &dk_len);
+	    if (Util_GetInt(interp, objv[idx], &dk_len, command_opts[fn], 1, 0) != TCL_OK) {
+		goto error;
+	    }
 	    break;
 	}
     }
 
-    /* Get digest */
-    if ((md = Util_GetDigest(interp, digestName, TRUE)) == NULL) {
+    if (md == NULL) {
+	Tcl_AppendResult(interp, "no digest", NULL);
+	goto error;
+    }
+
+    if (key == NULL) {
+	Tcl_AppendResult(interp, "no key", NULL);
 	goto error;
     }
 
     /* Create context */
     pctx = EVP_PKEY_CTX_new_id(EVP_PKEY_HKDF, NULL);
     if (pctx == NULL) {
-	Tcl_AppendResult(interp, "Memory allocation error", (char *) NULL);
+	Tcl_AppendResult(interp, "Memory allocation error", NULL);
 	goto error;
     }
 
@@ -312,9 +282,10 @@ static int KDF_HKDF(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj
 	/* Shrink buffer to actual size */
 	Tcl_SetByteArrayLength(resultObj, (int) out_len);
 	Tcl_SetObjResult(interp, resultObj);
+	res = TCL_OK;
 	goto done;
     } else {
-	Tcl_AppendResult(interp, "Derive key failed: ", REASON(), NULL);
+	Tcl_AppendResult(interp, "Key derivation failed: ", REASON(), NULL);
 	Tcl_DecrRefCount(resultObj);
     }
 
@@ -324,7 +295,7 @@ done:
     if (pctx != NULL) {
 	EVP_PKEY_CTX_free(pctx);
     }
-    return TCL_OK;
+    return res;
 }
 
 /*
@@ -344,7 +315,7 @@ done:
  *-------------------------------------------------------------------
  */
 static int KDF_Scrypt(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
-    EVP_PKEY_CTX *pctx;
+    EVP_PKEY_CTX *pctx = NULL;
     unsigned char *salt = NULL, *pass = NULL, *out = NULL;
     int salt_len = 0, pass_len = 0, dk_len = 64, res = TCL_OK, fn;
     uint64_t N = 0, p = 0, r = 0, maxmem = 0;
@@ -386,7 +357,9 @@ static int KDF_Scrypt(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_O
 	    break;
 	case _opt_length:
 	case _opt_size:
-	    GET_OPT_INT(objv[idx], &dk_len);
+	    if (Util_GetInt(interp, objv[idx], &dk_len, command_opts[fn], 1, 0) != TCL_OK) {
+		goto error;
+	    }
 	    break;
 	case _opt_N:
 	case _opt_n:
@@ -399,6 +372,16 @@ static int KDF_Scrypt(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_O
 	    GET_OPT_WIDE(objv[idx], &p);
 	    break;
 	}
+    }
+
+    if (pass == NULL) {
+	Tcl_AppendResult(interp, "no password", (char *) NULL);
+	return TCL_ERROR;
+    }
+
+    if (salt == NULL) {
+	Tcl_AppendResult(interp, "no salt", (char *) NULL);
+	return TCL_ERROR;
     }
 
     /* Create context */
@@ -453,13 +436,15 @@ static int KDF_Scrypt(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_O
 	Tcl_SetByteArrayLength(resultObj, (int) out_len);
 	Tcl_SetObjResult(interp, resultObj);
 	goto done;
+
     } else {
-	Tcl_AppendResult(interp, "Derive key failed: ", REASON(), NULL);
+	Tcl_AppendResult(interp, "Key derivation failed: ", REASON(), NULL);
 	Tcl_DecrRefCount(resultObj);
     }
 
 error:
     res = TCL_ERROR;
+
 done:
     if (pctx != NULL) {
 	EVP_PKEY_CTX_free(pctx);

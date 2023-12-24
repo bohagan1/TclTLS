@@ -201,6 +201,16 @@ int             Tls_KeyCommands(Tcl_Interp *interp);
 
 BIO             *BIO_new_tcl(State* statePtr, int flags);
 
+EVP_CIPHER	*Util_GetCipher(Tcl_Interp *interp, Tcl_Obj *cipherObj, int no_null);
+EVP_MD		*Util_GetDigest(Tcl_Interp *interp, Tcl_Obj *digestObj, int no_null);
+unsigned char	*Util_GetIV(Tcl_Interp *interp, Tcl_Obj *ivObj, int *len, int max, int no_null);
+unsigned char	*Util_GetKey(Tcl_Interp *interp, Tcl_Obj *keyObj, int *len, char *name, int max, int no_null);
+unsigned char	*Util_GetSalt(Tcl_Interp *interp, Tcl_Obj *saltObj, int *len, int max, int no_null);
+int		Util_GetInt(Tcl_Interp *interp, Tcl_Obj *dataObj, int *value, char *name, int min, int max);
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+EVP_MAC		*Util_GetMAC(Tcl_Interp *interp, Tcl_Obj *MacObj, int no_null);
+#endif
+
 #define PTR2INT(x) ((int) ((intptr_t) (x)))
 
 #endif /* _TLSINT_H */

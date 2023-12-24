@@ -138,7 +138,7 @@ void EncryptStateFree(EncryptState *statePtr) {
 int EncryptInitialize(Tcl_Interp *interp, int type, EVP_CIPHER_CTX **ctx,
 	Tcl_Obj *cipherObj, Tcl_Obj *keyObj, Tcl_Obj *ivObj) {
     const EVP_CIPHER *cipher;
-    char *cipherName =  NULL, *keyString = NULL, *ivString = NULL;
+    char *keyString = NULL, *ivString = NULL;
     int cipher_len = 0, key_len = 0, iv_len = 0, res, max;
     unsigned char key[EVP_MAX_KEY_LENGTH], iv[EVP_MAX_IV_LENGTH];
 
@@ -148,91 +148,52 @@ int EncryptInitialize(Tcl_Interp *interp, int type, EVP_CIPHER_CTX **ctx,
     memset(key, 0, EVP_MAX_KEY_LENGTH);
     memset(iv, 0, EVP_MAX_IV_LENGTH);
 
-    /* Get encryption parameters */
-    if (cipherObj != NULL) {
-	cipherName = Tcl_GetStringFromObj(cipherObj, &cipher_len);
-    }
-    if (keyObj != NULL) {
-	keyString = Tcl_GetByteArrayFromObj(keyObj, &key_len);
-    }
-    if (ivObj != NULL) {
-	ivString = Tcl_GetByteArrayFromObj(ivObj, &iv_len);
-    }
-
-    /* Get cipher name */
-#if OPENSSL_VERSION_NUMBER < 0x30000000L
-    cipher = EVP_get_cipherbyname(cipherName);
-#else
-    cipher = EVP_CIPHER_fetch(NULL, cipherName, NULL);
-#endif
+    /* Get cipher */
+    cipher = Util_GetCipher(interp, cipherObj, 1);
     if (cipher == NULL) {
-	Tcl_AppendResult(interp, "Invalid cipher: \"", cipherName, "\"", NULL);
 	return TCL_ERROR;
     }
 
-    if (key_len > 0) {
-#if OPENSSL_VERSION_NUMBER < 0x30000000L
-	max = EVP_CIPHER_key_length(cipher);
-#else
-	max = EVP_CIPHER_get_key_length(cipher);
-#endif
-	if (max == 0) {
-	} else if (key_len <= max) {
-	    memcpy((void *) key, (const void *) keyString, (size_t) key_len);
-	} else {
-	    Tcl_SetObjResult(interp, Tcl_ObjPrintf("Key too long. Must be <= %d bytes", max));
-	    return TCL_ERROR;
-	}
+    /*  Get key - Only support internally defined cipher lengths.
+	Custom ciphers can be up to size_t bytes. */
+    max = EVP_CIPHER_key_length(cipher);
+    keyString = (const void *) Util_GetKey(interp, keyObj, &key_len, "key", max, FALSE);
+    if (keyString != NULL) {
+	memcpy((void *) key, (const void *) keyString, (size_t) key_len);
+    } else if (keyObj != NULL)  {
+	return TCL_ERROR;
     }
 
-    if (iv_len > 0) {
-#if OPENSSL_VERSION_NUMBER < 0x30000000L
-	max = EVP_CIPHER_iv_length(cipher);
-#else
-	max = EVP_CIPHER_get_iv_length(cipher);
-#endif
-	if (max == 0) {
-	} else if (iv_len <= max) {
-	    memcpy((void *) iv, (const void *) ivString, (size_t) iv_len);
-	} else {
-	    Tcl_SetObjResult(interp, Tcl_ObjPrintf("IV too long. Must be <= %d bytes", max));
-	    return TCL_ERROR;
-	}
+    /*  Get IV */
+    max = EVP_CIPHER_iv_length(cipher);
+    ivString = (const void *) Util_GetIV(interp, ivObj, &iv_len, max, FALSE);
+    if (ivString != NULL) {
+	memcpy((void *) iv, (const void *) ivString, (size_t) iv_len);
+    } else if (ivObj != NULL) {
+	return TCL_ERROR;
     }
 
-    /* Create and initialize the context */
+    /* Create context */
     if((*ctx = EVP_CIPHER_CTX_new()) == NULL) {
 	Tcl_AppendResult(interp, "Memory allocation error", (char *) NULL);
 	return TCL_ERROR;
     }
 
     /* Initialize the operation. Need appropriate key and iv size. */
-#if OPENSSL_VERSION_NUMBER < 0x30000000L
     if (type == TYPE_ENCRYPT) {
 	res = EVP_EncryptInit_ex(*ctx, cipher, NULL, key, iv);
     } else {
 	res = EVP_DecryptInit_ex(*ctx, cipher, NULL, key, iv);
     }
-#else
-	OSSL_PARAM params[2];
-	int index = 0;
-
-	if (iv != NULL) {
-	    params[index++] = OSSL_PARAM_construct_octet_string(OSSL_CIPHER_PARAM_IV, (void *) iv, (size_t) iv_len);
-	}
-	params[index] = OSSL_PARAM_construct_end();
-
-    if (type == TYPE_ENCRYPT) {
-	res = EVP_EncryptInit_ex2(ctx, cipher, key, iv, params);
-    } else {
-	res = EVP_DecryptInit_ex2(ctx, cipher, key, iv, params);
-    }
-#endif
 
     if(!res) {
 	Tcl_AppendResult(interp, "Initialize failed: ", REASON(), NULL);
 	return TCL_ERROR;
     }
+
+    /* Erase buffers */
+    memset(key, 0, EVP_MAX_KEY_LENGTH);
+    memset(iv, 0, EVP_MAX_IV_LENGTH);
     return TCL_OK;
 }
 

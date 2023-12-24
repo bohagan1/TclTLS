@@ -149,13 +149,31 @@ void DigestStateFree(DigestState *statePtr) {
  */
 int DigestInitialize(Tcl_Interp *interp, DigestState *statePtr, Tcl_Obj *digestObj,
 	Tcl_Obj *cipherObj, Tcl_Obj *keyObj, Tcl_Obj *macObj) {
-    int key_len = 0, type = statePtr->format & 0xFF0;
-    const char *digestName = NULL, *cipherName = NULL, *macName = NULL;
+    int res = 0, type = statePtr->format & 0xFF0;
     const EVP_MD *md = NULL;
     const EVP_CIPHER *cipher = NULL;
-    const unsigned char *key = NULL;
+    const void *key = NULL, *iv = NULL, *salt = NULL;
+    int key_len = 0;
 
     dprintf("Called");
+
+    /* Get digest */
+    md = Util_GetDigest(interp, digestObj, type != TYPE_CMAC);
+    if (md == NULL && type != TYPE_CMAC) {
+	return TCL_ERROR;
+    }
+
+    /* Get cipher */
+    cipher = Util_GetCipher(interp, cipherObj, type == TYPE_CMAC);
+    if (cipher == NULL && type == TYPE_CMAC) {
+	return TCL_ERROR;
+    }
+
+    /* Get key */
+    key = (const void *) Util_GetKey(interp, keyObj, &key_len, "key", 0, type != TYPE_MD);
+    if (key == NULL && type != TYPE_MD) {
+	return TCL_ERROR;
+    }
 
     /* Create contexts */
     switch(type) {
@@ -178,68 +196,16 @@ int DigestInitialize(Tcl_Interp *interp, DigestState *statePtr, Tcl_Obj *digestO
 	return TCL_ERROR;
     }
 
-    /* Get MAC */
-    if (macObj != NULL) {
-	macName = Tcl_GetStringFromObj(macObj, NULL);
-	if (strcmp(macName, "cmac") == 0) {
-	    type = TYPE_CMAC;
-	} else if (strcmp(macName, "hmac") == 0) {
-	    type = TYPE_HMAC;
-	} else {
-	    Tcl_AppendResult(interp, "Invalid MAC \"", macName, "\"", NULL);
-	    return TCL_ERROR;
-	}
-    } else if (type == TYPE_MAC) {
-	Tcl_AppendResult(interp, "No MAC specified", NULL);
-	return TCL_ERROR;
-    }
-
-    /* Get digest */
-    if (digestObj != NULL) {
-	digestName = Tcl_GetStringFromObj(digestObj, NULL);
-	md = EVP_get_digestbyname(digestName);
-	if (md == NULL) {
-	    Tcl_AppendResult(interp, "Invalid digest \"", digestName, "\"", NULL);
-	    return TCL_ERROR;
-	} else if (md == EVP_shake128() || md == EVP_shake256()) {
-	    statePtr->format |= IS_XOF;
-	}
-    } else if (type != TYPE_CMAC) {
-	Tcl_AppendResult(interp, "No digest specified", NULL);
-	return TCL_ERROR;
-    }
-
-    /* Get cipher */
-    if (cipherObj != NULL) {
-	cipherName = Tcl_GetStringFromObj(cipherObj, NULL);
-	cipher = EVP_get_cipherbyname(cipherName);
-	if (cipher == NULL) {
-	    Tcl_AppendResult(interp, "Invalid cipher \"", cipherName, "\"", NULL);
-	    return TCL_ERROR;
-	}
-    } else if (type == TYPE_CMAC) {
-	Tcl_AppendResult(interp, "No cipher specified", NULL);
-	return TCL_ERROR;
-    }
-
-    /* Get key */
-    if (keyObj != NULL) {
-	key = Tcl_GetByteArrayFromObj(keyObj, &key_len);
-    } else if (type != TYPE_MD) {
-	Tcl_AppendResult(interp, "No key specified", NULL);
-	return TCL_ERROR;
-    }
-
     /* Initialize cryptography function */
     switch(type) {
     case TYPE_MD:
 	res = EVP_DigestInit_ex(statePtr->ctx, md, NULL);
 	break;
     case TYPE_HMAC:
-	res = HMAC_Init_ex(statePtr->hctx, (const void *) key, key_len, md, NULL);
+	res = HMAC_Init_ex(statePtr->hctx, key, key_len, md, NULL);
 	break;
     case TYPE_CMAC:
-	res = CMAC_Init(statePtr->cctx, (const void *) key, key_len, cipher, NULL);
+	res = CMAC_Init(statePtr->cctx, key, key_len, cipher, NULL);
 	break;
     }
 
@@ -1315,11 +1281,11 @@ static int DigestMain(int type, Tcl_Interp *interp, int objc, Tcl_Obj *const obj
 	    } else if (strcmp(macName,"hmac") == 0) {
 		type = TYPE_HMAC;
 	    } else {
-		Tcl_AppendResult(interp, "Invalid MAC \"", macName, "\"", NULL);
+		Tcl_AppendResult(interp, "invalid MAC \"", macName, "\"", NULL);
 		return TCL_ERROR;
 	    }
 	} else {
-	    Tcl_AppendResult(interp, "No MAC specified", NULL);
+	    Tcl_AppendResult(interp, "no MAC", NULL);
 	    return TCL_ERROR;
 	}
     }
@@ -1334,7 +1300,7 @@ static int DigestMain(int type, Tcl_Interp *interp, int objc, Tcl_Obj *const obj
     } else if (dataObj != NULL) {
 	res = DigestDataHandler(interp, dataObj, digestObj, cipherObj, format | type, keyObj, macObj);
     } else {
-	Tcl_AppendResult(interp, "No operation specified: Use -channel, -command, -data, or -file option", NULL);
+	Tcl_AppendResult(interp, "No operation: Use -channel, -command, -data, or -file option", NULL);
 	res = TCL_ERROR;
     }
     return res;
