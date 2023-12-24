@@ -1,0 +1,75 @@
+# Auto generated from "PBKDF2-SHA256.txt"
+package require tls
+package require tcltest
+
+tcltest::testConstraint PBKDF2 [expr {[lsearch -nocase [tls::kdfs] PBKDF2] > -1}]
+
+tcltest::test KDF_PBKDF2-SHA256-1.1 {PBKDF2-SHA256} \
+	-constraints PBKDF2 \
+	-setup {} \
+	-body {binary encode hex [tls::pbkdf2 -digest SHA256 -password "password" -salt "salt" -iterations 1 -size 20]} \
+	-match exact -result 120fb6cffcf8b32c43e7225256c4f837a86548c9
+
+tcltest::test KDF_PBKDF2-SHA256-1.2 {PBKDF2-SHA256} \
+	-constraints PBKDF2 \
+	-setup {} \
+	-body {binary encode hex [tls::pbkdf2 -digest SHA256 -password "password" -salt "salt" -iterations 2 -size 20]} \
+	-match exact -result ae4d0c95af6b46d32d0adff928f06dd02a303f8e
+
+tcltest::test KDF_PBKDF2-SHA256-1.3 {PBKDF2-SHA256} \
+	-constraints PBKDF2 \
+	-setup {} \
+	-body {binary encode hex [tls::pbkdf2 -digest SHA256 -password "password" -salt "salt" -iterations 4096 -size 20]} \
+	-match exact -result c5e478d59288c841aa530db6845c4c8d962893a0
+
+tcltest::test KDF_PBKDF2-SHA256-1.4 {PBKDF2-SHA256} \
+	-constraints PBKDF2 \
+	-setup {} \
+	-body {binary encode hex [tls::pbkdf2 -digest SHA256 -password "password" -salt "salt" -iterations 16777216 -size 20]} \
+	-match exact -result cf81c66fe8cfc04d1f31ecb65dab4089f7f179e8
+
+tcltest::test KDF_PBKDF2-SHA256-1.5 {PBKDF2-SHA256} \
+	-constraints PBKDF2 \
+	-setup {} \
+	-body {binary encode hex [tls::pbkdf2 -digest SHA256 -password "passwordPASSWORDpassword" -salt "saltSALTsaltSALTsaltSALTsaltSALTsalt" -iterations 4096 -size 25]} \
+	-match exact -result 348c89dbcbd32b2f32d814b8116e84cf2b17347ebc1800181c
+
+tcltest::test KDF_PBKDF2-SHA256-1.6 {PBKDF2-SHA256} \
+	-constraints PBKDF2 \
+	-setup {} \
+	-body {binary encode hex [tls::pbkdf2 -digest SHA256 -password "pass\0word" -salt "sa\0lt" -iterations 4096 -size 16]} \
+	-match exact -result 89b69d0516f829893c696226650a8687
+
+tcltest::test KDF_PBKDF2-SHA256-1.7 {PBKDF2-SHA256} \
+	-constraints PBKDF2 \
+	-setup {} \
+	-body {binary encode hex [tls::pbkdf2 -digest SHA256 -password "passwd" -salt "salt" -iterations 1 -size 128]} \
+	-match exact -result 55ac046e56e3089fec1691c22544b605f94185216dde0465e68b9d57c20dacbc49ca9cccf179b645991664b39d77ef317c71b845b1e30bd509112041d3a19783c294e850150390e1160c34d62e9665d659ae49d314510fc98274cc79681968104b8f89237e69b2d549111868658be62f59bd715cac44a1147ed5317c9bae6b2a
+
+tcltest::test KDF_PBKDF2-SHA256-1.8 {PBKDF2-SHA256} \
+	-constraints PBKDF2 \
+	-setup {} \
+	-body {binary encode hex [tls::pbkdf2 -digest SHA256 -password "Password" -salt "NaCl" -iterations 80000 -size 128]} \
+	-match exact -result 4ddcd8f60b98be21830cee5ef22701f9641a4418d04c0414aeff08876b34ab56a1d425a1225833549adb841b51c9b3176a272bdebba1d078478f62b397f33c8d62aae85a11cdde829d89cb6ffd1ab0e63a981f8747d2f2f9fe5874165c83c168d2eed1d2d5ca4052dec2be5715623da019b8c0ec87dc36aa751c38f9893d15c3
+
+tcltest::test KDF_PBKDF2-SHA256-1.9 {PBKDF2-SHA256} \
+	-constraints PBKDF2 \
+	-setup {} \
+	-body {binary encode hex [tls::pbkdf2 -digest SHA256 -password "Password" -salt "sa\0lt" -iterations 4096 -size 256]} \
+	-match exact -result 436c82c6af9010bb0fdb274791934ac7dee21745dd11fb57bb90112ab187c495ad82df776ad7cefb606f34fedca59baa5922a57f3e91bc0e11960da7ec87ed0471b456a0808b60dff757b7d313d4068bf8d337a99caede24f3248f87d1bf16892b70b076a07dd163a8a09db788ae34300ff2f2d0a92c9e678186183622a636f4cbce15680dfea46f6d224e51c299d4946aa2471133a649288eef3e4227b609cf203dba65e9fa69e63d35b6ff435ff51664cbd6773d72ebc341d239f0084b004388d6afa504eee6719a7ae1bb9daf6b7628d851fab335f1d13948e8ee6f7ab033a32df447f8d0950809a70066605d6960847ed436fa52cdfbcf261b44d2a87061
+
+tcltest::test KDF_PBKDF2-SHA256-1.10 {PBKDF2-SHA256} \
+	-constraints PBKDF2 \
+	-setup {} \
+	-body {binary encode hex [tls::pbkdf2 -digest SHA256 -password "passwd" -salt "salt" -iterations 1 -size 64]} \
+	-match exact -result 55ac046e56e3089fec1691c22544b605f94185216dde0465e68b9d57c20dacbc49ca9cccf179b645991664b39d77ef317c71b845b1e30bd509112041d3a19783
+
+tcltest::test KDF_PBKDF2-SHA256-1.11 {PBKDF2-SHA256} \
+	-constraints PBKDF2 \
+	-setup {} \
+	-body {binary encode hex [tls::pbkdf2 -digest SHA256 -password "Password" -salt "NaCl" -iterations 80000 -size 64]} \
+	-match exact -result 4ddcd8f60b98be21830cee5ef22701f9641a4418d04c0414aeff08876b34ab56a1d425a1225833549adb841b51c9b3176a272bdebba1d078478f62b397f33c8d
+
+# Cleanup
+::tcltest::cleanupTests
+return

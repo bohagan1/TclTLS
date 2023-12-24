@@ -1,0 +1,61 @@
+# HKDF-SHA224
+# From https://csrc.nist.gov/projects/cryptographic-standards-and-guidelines/example-values
+# and RFC 6234 SHA and SHA-based HMAC and HKDF
+# and RFC 5869 HKDF
+# SHA2 from https://github.com/brycx/Test-Vector-Generation/blob/master/HKDF/hkdf-hmac-sha2-test-vectors.md
+
+# RFC 5869 - A.1.  Test Case 1, Basic test case with SHA-256
+Hash = SHA224
+Klen = 22
+IKM  = 0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b
+Slen = 13
+salt = 000102030405060708090a0b0c
+Ilen = 10
+info = f0f1f2f3f4f5f6f7f8f9
+L    = 42
+OKM = 2f21cd7cbc818ca5c561b933728e2e08e154a87e1432399a820dee13aa222d0cee6152fa539ab70f8e80
+
+# RFC 5869 - A.2.  Test Case 2, Test with SHA-256 and longer inputs/outputs
+Hash = SHA224
+Klen = 80
+IKM  = 000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f
+Slen = 80
+salt = 606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeaf
+Ilen = 80
+info = b0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff
+L    = 82
+OKM = 3e49703c243a3894916349b52a8f55c7c160452f97b2870f04ba924ba9056ab351765b04207231158dcb03d0c7d427cb2b7e060179459f9daffee05e8705113f7bc45b4f452601d884df6dfd4ff9dacfde69
+
+# RFC 5869 - A.3.  Test Case 3, Test with SHA-256 and zero-length salt/info
+Hash = SHA224
+Klen = 22
+IKM  = 0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b
+Slen = 0
+salt =
+Ilen = 0
+info =
+L    = 42
+OKM = 2a268083ea787e06604a5845f1a53544dd7847bd6fb74adfcc1178baac5a0fe74076f8935971c00c2b19
+
+# RFC 5869 - A.4.  Test Case 4, Basic test case with SHA-1
+Hash = SHA224
+Klen = 11
+IKM  = 0b0b0b0b0b0b0b0b0b0b0b
+Slen = 13
+salt = 000102030405060708090a0b0c
+Ilen = 10
+info = f0f1f2f3f4f5f6f7f8f9
+L    = 42
+OKM = 7fc8ae0335ed468cef56be091f6478a1aae84c0da54ce5176aa38946c79e210ea32a4487e2138405c340
+
+# RFC 5869 - A.7.  Test Case 7, Test with SHA-1, salt not provided (defaults to HashLen zero octets), zero-length info
+Hash = SHA224
+Klen = 22
+IKM  = 0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c
+Slen = 0
+salt =
+Ilen = 0
+info =
+L    = 42
+OKM = ca8401e645b3a58e00992857fe0038cb1bf8dc51edf052336c08f3bed682c83e77803cdd16d156bb8a30
+

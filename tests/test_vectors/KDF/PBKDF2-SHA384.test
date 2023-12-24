@@ -1,0 +1,63 @@
+# Auto generated from "PBKDF2-SHA384.txt"
+package require tls
+package require tcltest
+
+tcltest::testConstraint PBKDF2 [expr {[lsearch -nocase [tls::kdfs] PBKDF2] > -1}]
+
+tcltest::test KDF_PBKDF2-SHA384-1.1 {PBKDF2-SHA384} \
+	-constraints PBKDF2 \
+	-setup {} \
+	-body {binary encode hex [tls::pbkdf2 -digest SHA384 -password "password" -salt "salt" -iterations 1 -size 20]} \
+	-match exact -result c0e14f06e49e32d73f9f52ddf1d0c5c719160923
+
+tcltest::test KDF_PBKDF2-SHA384-1.2 {PBKDF2-SHA384} \
+	-constraints PBKDF2 \
+	-setup {} \
+	-body {binary encode hex [tls::pbkdf2 -digest SHA384 -password "password" -salt "salt" -iterations 2 -size 20]} \
+	-match exact -result 54f775c6d790f21930459162fc535dbf04a93918
+
+tcltest::test KDF_PBKDF2-SHA384-1.3 {PBKDF2-SHA384} \
+	-constraints PBKDF2 \
+	-setup {} \
+	-body {binary encode hex [tls::pbkdf2 -digest SHA384 -password "password" -salt "salt" -iterations 4096 -size 20]} \
+	-match exact -result 559726be38db125bc85ed7895f6e3cf574c7a01c
+
+tcltest::test KDF_PBKDF2-SHA384-1.4 {PBKDF2-SHA384} \
+	-constraints PBKDF2 \
+	-setup {} \
+	-body {binary encode hex [tls::pbkdf2 -digest SHA384 -password "password" -salt "salt" -iterations 16777216 -size 20]} \
+	-match exact -result a7fdb349ba2bfa6bf647bb0161bae1320df27e64
+
+tcltest::test KDF_PBKDF2-SHA384-1.5 {PBKDF2-SHA384} \
+	-constraints PBKDF2 \
+	-setup {} \
+	-body {binary encode hex [tls::pbkdf2 -digest SHA384 -password "passwordPASSWORDpassword" -salt "saltSALTsaltSALTsaltSALTsaltSALTsalt" -iterations 4096 -size 25]} \
+	-match exact -result 819143ad66df9a552559b9e131c52ae6c5c1b0eed18f4d283b
+
+tcltest::test KDF_PBKDF2-SHA384-1.6 {PBKDF2-SHA384} \
+	-constraints PBKDF2 \
+	-setup {} \
+	-body {binary encode hex [tls::pbkdf2 -digest SHA384 -password "pass\0word" -salt "sa\0lt" -iterations 4096 -size 16]} \
+	-match exact -result a3f00ac8657e095f8e0823d232fc60b3
+
+tcltest::test KDF_PBKDF2-SHA384-1.7 {PBKDF2-SHA384} \
+	-constraints PBKDF2 \
+	-setup {} \
+	-body {binary encode hex [tls::pbkdf2 -digest SHA384 -password "passwd" -salt "salt" -iterations 1 -size 128]} \
+	-match exact -result cd3443723a41cf1460cca9efeede428a8898a82d2ad4d1fc5cca08ed3f4d3cb47a62a70b3cb9ce65dcbfb9fb9d425027a8be69b53e2a22674b0939e5e0a682f76d21f449ad184562a3bc4c519b4d048de6d8e0999fb88770f95e40185e19fc8b68767417ccc064f47a455d045b3bafda7e81b97ad0e4c5581af1aa27871cd5e4
+
+tcltest::test KDF_PBKDF2-SHA384-1.8 {PBKDF2-SHA384} \
+	-constraints PBKDF2 \
+	-setup {} \
+	-body {binary encode hex [tls::pbkdf2 -digest SHA384 -password "Password" -salt "NaCl" -iterations 80000 -size 128]} \
+	-match exact -result 11c198987730fa113458053cd5cc9b51d7024a35f9134f1ee8740923c901aab23bbaea43686981b6e6a9f4130a1401daeeec74060246ebac958f3cfc3c65579b6e3d08b94ade5fc257a6902a0a1664b8dbd5a8ae2af70438931d3f3679abffc7a17770582f1ee413cc0d9914ce5f8143c8a7dc9c43fbc31e3d41b2030fb73c02
+
+tcltest::test KDF_PBKDF2-SHA384-1.9 {PBKDF2-SHA384} \
+	-constraints PBKDF2 \
+	-setup {} \
+	-body {binary encode hex [tls::pbkdf2 -digest SHA384 -password "Password" -salt "sa\0lt" -iterations 4096 -size 256]} \
+	-match exact -result cf6f194aaf4e970afea1f41169045029e34759e124a670b5f73053da552a190ad2d7085533b8b22901f0e3caeeb431ba673468f981352dfcbe517699db791777cf52346a460b093c59ea300fb18daee270e2ea8473806da1663cebe7438b51fe56ba832c13d88ad5b2e46404457c34cc6ad8e5cd8707a1acfa737f3617628a5983d8d10fa16a92652cfa736d4610132710a517c216cc3252e6c2b8aae0275d04a49756fa5bf1bb067bc367d1b8c80c3df7dc22ee74b4be4150871624bfdde3f86f5fbd4e0828af7d5a4f01b5605e54471435d827eaecf199db315ae60d1a6350105c0e1a71b40518a4a66ebba4792a511f8f52aeac961ebea215f8fb89ba998b
+
+# Cleanup
+::tcltest::cleanupTests
+return
