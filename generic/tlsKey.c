@@ -330,6 +330,146 @@ done:
 /*
  *-------------------------------------------------------------------
  *
+ * KDF_Scrypt --
+ *
+ *	HMAC-based Extract-and-Expand Key Derivation Function (HKDF).
+ *	See RFC 5869 and RFC 7914.
+ *
+ * Returns:
+ *	TCL_OK or TCL_ERROR
+ *
+ * Side effects:
+ *	Sets result to a list of key and iv values, or an error message
+ *
+ *-------------------------------------------------------------------
+ */
+static int KDF_Scrypt(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
+    EVP_PKEY_CTX *pctx;
+    unsigned char *salt = NULL, *pass = NULL, *out = NULL;
+    int salt_len = 0, pass_len = 0, dk_len = 64, res = TCL_OK, fn;
+    uint64_t N = 0, p = 0, r = 0, maxmem = 0;
+    size_t out_len;
+    Tcl_Obj *resultObj;
+
+    dprintf("Called");
+
+    /* Clear errors */
+    Tcl_ResetResult(interp);
+    ERR_clear_error();
+
+    /* Validate arg count */
+    if (objc < 5 || objc > 13) {
+	Tcl_WrongNumArgs(interp, 1, objv, "-password string -salt string ?-N costParameter? ?-r blockSize? ?-p parallelization? ?-size derived_length?");
+	return TCL_ERROR;
+    }
+
+    /* Get options */
+    for (int idx = 1; idx < objc; idx++) {
+	/* Get option */
+	if (Tcl_GetIndexFromObj(interp, objv[idx], command_opts, "option", 0, &fn) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+
+	/* Validate arg has a value */
+	if (++idx >= objc) {
+	    Tcl_AppendResult(interp, "No value for option \"", command_opts[fn], "\"", (char *) NULL);
+	    return TCL_ERROR;
+	}
+
+	switch(fn) {
+	case _opt_key:
+	case _opt_password:
+	    GET_OPT_BYTE_ARRAY(objv[idx], pass, &pass_len);
+	    break;
+	case _opt_salt:
+	    GET_OPT_BYTE_ARRAY(objv[idx], salt, &salt_len);
+	    break;
+	case _opt_length:
+	case _opt_size:
+	    GET_OPT_INT(objv[idx], &dk_len);
+	    break;
+	case _opt_N:
+	case _opt_n:
+	    GET_OPT_WIDE(objv[idx], &N);
+	    break;
+	case _opt_r:
+	    GET_OPT_WIDE(objv[idx], &r);
+	    break;
+	case _opt_p:
+	    GET_OPT_WIDE(objv[idx], &p);
+	    break;
+	}
+    }
+
+    /* Create context */
+    pctx = EVP_PKEY_CTX_new_id(EVP_PKEY_SCRYPT, NULL);
+    if (pctx == NULL) {
+	Tcl_AppendResult(interp, "Memory allocation error", (char *) NULL);
+	goto error;
+    }
+
+    if (EVP_PKEY_derive_init(pctx) < 1) {
+	Tcl_AppendResult(interp, "Initialize failed: ", REASON(), NULL);
+	goto error;
+    }
+
+    /* Set config parameters */
+    if (EVP_PKEY_CTX_set1_pbe_pass(pctx, pass, pass_len) < 1) {
+	Tcl_AppendResult(interp, "Set key failed: ", REASON(), NULL);
+	goto error;
+    }
+    if (EVP_PKEY_CTX_set1_scrypt_salt(pctx, salt, salt_len) < 1) {
+	Tcl_AppendResult(interp, "Set salt failed: ", REASON(), NULL);
+	goto error;
+    }
+    if (N != 0 && EVP_PKEY_CTX_set_scrypt_N(pctx, N) < 1) {
+	Tcl_AppendResult(interp, "Set cost parameter (N) failed: ", REASON(), NULL);
+	goto error;
+    }
+    if (r != 0 && EVP_PKEY_CTX_set_scrypt_r(pctx, r) < 1) {
+	Tcl_AppendResult(interp, "Set lock size parameter (r) failed: ", REASON(), NULL);
+	goto error;
+   }
+    if (p != 0 && EVP_PKEY_CTX_set_scrypt_p(pctx, p) < 1) {
+	Tcl_AppendResult(interp, "Set Parallelization parameter (p) failed: ", REASON(), NULL);
+	goto error;
+    }
+    if (maxmem != 0 && EVP_PKEY_CTX_set_scrypt_maxmem_bytes(pctx, maxmem) < 1) {
+	Tcl_AppendResult(interp, "Set max memory failed: ", REASON(), NULL);
+	goto error;
+    }
+
+    /* Get buffer */
+    resultObj = Tcl_NewObj();
+    if ((out = Tcl_SetByteArrayLength(resultObj, dk_len)) == NULL) {
+	Tcl_AppendResult(interp, "Memory allocation error", (char *) NULL);
+	goto error;
+    }
+    out_len = (size_t) dk_len;
+
+    /* Derive key */
+    if (EVP_PKEY_derive(pctx, out, &out_len) > 0) {
+	/* Shrink buffer to actual size */
+	Tcl_SetByteArrayLength(resultObj, (int) out_len);
+	Tcl_SetObjResult(interp, resultObj);
+	goto done;
+    } else {
+	Tcl_AppendResult(interp, "Derive key failed: ", REASON(), NULL);
+	Tcl_DecrRefCount(resultObj);
+    }
+
+error:
+    res = TCL_ERROR;
+done:
+    if (pctx != NULL) {
+	EVP_PKEY_CTX_free(pctx);
+    }
+    return res;
+}
+
+/*
+ *-------------------------------------------------------------------
+ *
  * Tls_KeyCommands --
  *
  *	Create key commands
@@ -345,6 +485,7 @@ done:
 int Tls_KeyCommands(Tcl_Interp *interp) {
     Tcl_CreateObjCommand(interp, "tls::hkdf", KDF_HKDF, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
     Tcl_CreateObjCommand(interp, "tls::pbkdf2", KDF_PBKDF2, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
+    Tcl_CreateObjCommand(interp, "tls::scrypt", KDF_Scrypt, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
     return TCL_OK;
 }
 

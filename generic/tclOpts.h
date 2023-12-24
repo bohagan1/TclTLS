@@ -15,6 +15,21 @@
 	return TCL_ERROR;					\
     }
 
+#define GET_OPT_LONG(objPtr, varPtr) \
+    if (Tcl_GetLongFromObj(interp, objPtr, varPtr) != TCL_OK) {	\
+	return TCL_ERROR;					\
+    }
+
+#define GET_OPT_WIDE(objPtr, varPtr) \
+    if (Tcl_GetWideIntFromObj(interp, objPtr, varPtr) != TCL_OK) {	\
+	return TCL_ERROR;					\
+    }
+
+#define GET_OPT_BIGNUM(objPtr, varPtr) \
+    if (Tcl_GetBignumFromObj(interp, objPtr, varPtr) != TCL_OK) {	\
+	return TCL_ERROR;					\
+    }
+
 #define GET_OPT_STRING(objPtr, var, lenPtr) \
     if ((var = Tcl_GetStringFromObj(objPtr, lenPtr)) == NULL) {	\
 	return TCL_ERROR;					\
