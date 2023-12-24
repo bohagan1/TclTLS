@@ -88,3 +88,6 @@ tcltest::test Hash_SHA1-1.14 {SHA1} \
 	-body {tls::digest -digest SHA1 -data $data} \
 	-match exact -result cb0082c8f197d260991ba6a460e76e202bad27b3
 
+# Cleanup
+::tcltest::cleanupTests
+return

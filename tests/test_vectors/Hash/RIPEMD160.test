@@ -64,3 +64,6 @@ tcltest::test Hash_RIPEMD160-1.10 {RIPEMD160} \
 	-body {tls::digest -digest RIPEMD160 -data $data} \
 	-match exact -result 37f332f68db77bd9d7edd4969571ad671cf9dd3b
 
+# Cleanup
+::tcltest::cleanupTests
+return

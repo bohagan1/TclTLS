@@ -1,6 +1,7 @@
 # SHA3-224
 # From https://csrc.nist.gov/projects/cryptographic-standards-and-guidelines/example-values
 
+[b = 144]
 [L = 28]
 
 Len = 0

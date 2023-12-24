@@ -52,3 +52,6 @@ tcltest::test Hash_MD4-1.8 {MD4} \
 	-body {tls::digest -digest MD4 -data $data} \
 	-match exact -result 1bee69a46ba811185c194762abaeae90
 
+# Cleanup
+::tcltest::cleanupTests
+return

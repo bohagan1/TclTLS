@@ -1,0 +1,62 @@
+# HMAC-RIPEMD128
+# From RFC 2286
+
+[L = 20]
+
+# RFC 2286 Test Case 1
+Klen = 16
+Tlen = 16
+Len = 8
+Key = 0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b
+Msg = "Hi There"
+Mac = fbf61f9492aa4bbf81c172e84e0734db
+
+# RFC 2286 Test Case 2
+Klen = 4
+Tlen = 16
+Len = 28
+Key = "Jefe"
+#Key = 4a656665
+Msg = "what do ya want for nothing?"
+Mac = 875f828862b6b334b427c55f9f7ff09b
+
+# RFC 2286 Test Case 3
+Klen = 16
+Tlen = 16
+Len = 50
+Key = aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+Msg = dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+Mac = 09f0b2846d2f543da363cbec8d62a38d
+
+# RFC 2286 Test Case 4
+Klen = 25
+Tlen = 16
+Len = 50
+Key = 0102030405060708090a0b0c0d0e0f10111213141516171819
+Msg = cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd
+Mac = bdbbd7cf03e44b5aa60af815be4d2294
+
+# RFC 2286 Test Case 5
+Klen = 16
+Tlen = 12
+Len = 20
+Key = 0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c
+Msg = "Test With Truncation"
+Mac = e79808f24b25fd031c155f0d551d9a3a
+Trunc = e79808f24b25fd031c155f0d
+
+# RFC 2286 Test Case 6
+Klen = 80
+Tlen = 16
+Len = 54
+Key = aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+Msg = "Test Using Larger Than Block-Size Key - Hash Key First"
+Mac = dc732928de98104a1f59d373c150acbb
+
+# RFC 2286 Test Case 7
+Klen = 80
+Tlen = 16
+Len = 73
+Key = aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+Msg = "Test Using Larger Than Block-Size Key and Larger Than One Block-Size Data"
+Mac = 5c6bec96793e16d40690c237635f30c5

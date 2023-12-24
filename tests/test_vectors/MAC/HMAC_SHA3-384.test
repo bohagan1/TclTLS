@@ -1,0 +1,34 @@
+# Auto generated from "HMAC_SHA3-384.txt"
+package require tls
+package require tcltest
+
+tcltest::testConstraint HMAC [expr {[lsearch -nocase [tls::macs] HMAC] > -1}]
+tcltest::testConstraint SHA3_384 [expr {[lsearch -nocase [tls::digests] SHA3-384] > -1}]
+
+tcltest::test MAC_HMAC-SHA3-384-1.1 {HMAC_SHA3-384} \
+	-constraints {HMAC SHA3_384 } \
+	-setup {} \
+	-body {string range [tls::hmac -hex -digest SHA3-384 -key [binary decode hex 000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f] -data "Sample message for keylen<blocklen"] 0 95} \
+	-match exact -result d588a3c51f3f2d906e8298c1199aa8ff6296218127f6b38a90b6afe2c5617725bc99987f79b22a557b6520db710b7f42
+
+tcltest::test MAC_HMAC-SHA3-384-1.2 {HMAC_SHA3-384} \
+	-constraints {HMAC SHA3_384 } \
+	-setup {} \
+	-body {string range [tls::hmac -hex -digest SHA3-384 -key [binary decode hex 000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f6061626364656667] -data "Sample message for keylen=blocklen"] 0 95} \
+	-match exact -result a27d24b592e8c8cbf6d4ce6fc5bf62d8fc98bf2d486640d9eb8099e24047837f5f3bffbe92dcce90b4ed5b1e7e44fa90
+
+tcltest::test MAC_HMAC-SHA3-384-1.3 {HMAC_SHA3-384} \
+	-constraints {HMAC SHA3_384 } \
+	-setup {} \
+	-body {string range [tls::hmac -hex -digest SHA3-384 -key [binary decode hex 000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f9091929394959697] -data "Sample message for keylen>blocklen"] 0 95} \
+	-match exact -result e5ae4c739f455279368ebf36d4f5354c95aa184c899d3870e460ebc288ef1f9470053f73f7c6da2a71bcaec38ce7d6ac
+
+tcltest::test MAC_HMAC-SHA3-384-1.4 {HMAC_SHA3-384} \
+	-constraints {HMAC SHA3_384 } \
+	-setup {} \
+	-body {string range [tls::hmac -hex -digest SHA3-384 -key [binary decode hex 000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f] -data "Sample message for keylen<blocklen, with truncated tag"] 0 47} \
+	-match exact -result 25f4bf53606e91af79d24a4bb1fd6aecd44414a30c8ebb0a
+
+# Cleanup
+::tcltest::cleanupTests
+return

@@ -1,0 +1,63 @@
+# CMAC-DES3
+# From NIST SP_800-38B
+
+[L = 8]
+
+# Three Key
+Klen = 24
+Tlen = 8
+Len = 0
+Key = 8aa83bf8cbda10620bc1bf19fbb6cd58bc313d4a371ca8b5
+Msg = ""
+Mac = b7a688e122ffaf95
+
+Klen = 24
+Tlen = 8
+Len = 8
+Key = 8aa83bf8cbda10620bc1bf19fbb6cd58bc313d4a371ca8b5
+Msg = 6bc1bee22e409f96
+Mac = 8e8f293136283797
+
+Klen = 24
+Tlen = 8
+Len = 20
+Key = 8aa83bf8cbda10620bc1bf19fbb6cd58bc313d4a371ca8b5
+Msg = 6bc1bee22e409f96e93d7e117393172aae2d8a57
+Mac = 743ddbe0ce2dc2ed
+
+Klen = 24
+Tlen = 8
+Len = 32
+Key = 8aa83bf8cbda10620bc1bf19fbb6cd58bc313d4a371ca8b5
+Msg = 6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e51
+Mac = 33e6b1092400eae5
+
+
+# Two Key
+Klen = 24
+Tlen = 8
+Len = 0
+Key = 4cf15134a2850dd58a3d10ba80570d384cf15134a2850dd5
+Msg = ""
+Mac = bd2ebf9a3ba00361
+
+Klen = 24
+Tlen = 8
+Len = 8
+Key = 4cf15134a2850dd58a3d10ba80570d384cf15134a2850dd5
+Msg = 6bc1bee22e409f96
+Mac = 4ff2ab813c53ce83
+
+Klen = 24
+Tlen = 8
+Len = 20
+Key = 4cf15134a2850dd58a3d10ba80570d384cf15134a2850dd5
+Msg = 6bc1bee22e409f96e93d7e117393172aae2d8a57
+Mac = 62dd1b471902bd4e
+
+Klen = 24
+Tlen = 8
+Len = 32
+Key = 4cf15134a2850dd58a3d10ba80570d384cf15134a2850dd5
+Msg = 6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e51
+Mac = 31b1e431dabc4eb8

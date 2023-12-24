@@ -388,3 +388,6 @@ tcltest::test Hash_SHA256-3.64 {SHA256LongMsg} \
 	-body {tls::digest -digest SHA256 -data $data} \
 	-match exact -result 33b6229592ca719e4e46f35b287617fedadd3b7c38be3c8c1c9f446d2d9085b3
 
+# Cleanup
+::tcltest::cleanupTests
+return

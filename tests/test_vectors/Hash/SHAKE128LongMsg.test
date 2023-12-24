@@ -604,3 +604,6 @@ tcltest::test Hash_SHAKE128-3.100 {SHAKE128LongMsg} \
 	-body {tls::digest -digest SHAKE128 -data $data} \
 	-match exact -result 0f994e4aa804282cff22ad7d6229ef2c
 
+# Cleanup
+::tcltest::cleanupTests
+return

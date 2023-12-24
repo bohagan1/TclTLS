@@ -394,3 +394,6 @@ tcltest::test Hash_SHA1-2.65 {SHA1ShortMsg} \
 	-body {tls::digest -digest SHA1 -data $data} \
 	-match exact -result a70cfbfe7563dd0e665c7c6715a96a8d756950c0
 
+# Cleanup
+::tcltest::cleanupTests
+return

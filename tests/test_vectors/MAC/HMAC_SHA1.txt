@@ -1,0 +1,167 @@
+# HMAC-SHA1
+# From https://csrc.nist.gov/projects/cryptographic-standards-and-guidelines/example-values
+# and RFC 2202
+# and RFC 6234 SHA and SHA-based HMAC and HKDF
+
+[b = 64]
+[L = 20]
+
+Klen = 64
+Tlen = 20
+Len = 34
+Msg = "Sample message for keylen=blocklen"
+Key = 000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f
+Mac = 5fd596ee78d5553c8ff4e72d266dfd192366da29
+
+Klen = 20
+Tlen = 20
+Len = 34
+Msg = "Sample message for keylen<blocklen"
+Key = 000102030405060708090a0b0c0d0e0f10111213
+Mac = 4c99ff0cb1b31bd33f8431dbaf4d17fcd356a807
+
+Klen = 100
+Tlen = 20
+Len = 34
+Msg = "Sample message for keylen=blocklen"
+Key = 000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f60616263
+Mac = 2d51b2f7750e410584662e38f133435f4c4fd42a
+
+Klen = 49
+Tlen = 12
+Len = 54
+Msg = "Sample message for keylen<blocklen, with truncated tag"
+Key = 000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f30
+Mac = fe3529565cd8e28c5fa79eac9d8023b53b289d96
+Trunc = fe3529565cd8e28c5fa79eac
+
+# RFC 2202 Test Case 1
+Klen = 20
+Tlen = 20
+Len = 8
+Key = 0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b
+Msg = "Hi There"
+#Msg = 4869205468657265
+Mac = b617318655057264e28bc0b6fb378c8ef146be00
+
+# RFC 2202 Test Case 2
+Klen = 4
+Tlen = 20
+Len = 28
+Key = "Jefe"
+#Key = 4a656665
+Msg = "what do ya want for nothing?"
+#Msg = 7768617420646f2079612077616e7420666f72206e6f7468696e673f
+Mac = effcdf6ae5eb2fa2d27416d5f184df9c259a7c79
+
+# RFC 2202 Test Case 3
+Klen = 20
+Tlen = 20
+Len = 50
+Key = aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+Msg = dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+Mac = 125d7342b9ac11cd91a39af48aa17b4f63f175d3
+
+# RFC 2202 Test Case 4
+Klen = 25
+Tlen = 20
+Len = 50
+Key = 0102030405060708090a0b0c0d0e0f10111213141516171819
+Msg = cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd
+Mac = 4c9007f4026250c6bc8414f9bf50c86c2d7235da
+
+# RFC 2202 Test Case 5
+Klen = 20
+Tlen = 12
+Len = 20
+Key = 0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c
+Msg = "Test With Truncation"
+#Msg = 546573742057697468205472756e636174696f6e
+Mac = 4c1a03424b55e07fe7f27be1d58bb9324a9a5a04
+Trunc = 4c1a03424b55e07fe7f27be1
+
+# RFC 2202 Test Case 6
+Klen = 80
+Tlen = 20
+Len = 54
+Key = aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+Msg = "Test Using Larger Than Block-Size Key - Hash Key First"
+#Msg = 54657374205573696e67204c6172676572205468616e20426c6f636b2d53697a65204b6579202d2048617368204b6579204669727374
+Mac = aa4ae5e15272d00e95705637ce8a3b55ed402112
+
+# RFC 2202 Test Case 7
+Klen = 80
+Tlen = 20
+Len = 73
+Key = aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+Msg = "Test Using Larger Than Block-Size Key and Larger Than One Block-Size Data"
+#Msg = 54657374205573696e67204c6172676572205468616e20426c6f636b2d53697a65204b657920616e64204c6172676572205468616e204f6e6520426c6f636b2d53697a652044617461
+Mac = e8e99d0f45237d786d6bbaa7965c7808bbff1a91
+
+# Wikipedia
+Klen = 3
+Tlen = 20
+Len = 43
+Key = "key"
+Msg = "The quick brown fox jumps over the lazy dog"
+Mac = de7c9b85b8b78aa6bc8a7a36f70a90701c9db4d9
+
+# RFC 6234 Test Case 1
+Klen = 20
+Tlen = 20
+Len = 8
+Key = 0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b
+Msg = "Hi There"
+#Msg = 4869205468657265
+Mac = b617318655057264e28bc0b6fb378c8ef146be00
+
+# RFC 6234 Test Case 2
+Klen = 4
+Tlen = 20
+Len = 28
+Key = "Jefe"
+#Key = 4a656665
+Msg = "what do ya want for nothing?"
+#Msg = 7768617420646f2079612077616e7420666f72206e6f7468696e673f
+Mac = effcdf6ae5eb2fa2d27416d5f184df9c259a7c79
+
+# RFC 6234 Test Case 3
+Klen = 20
+Tlen = 20
+Len = 50
+Key = aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+Msg = dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+Mac = 125d7342b9ac11cd91a39af48aa17b4f63f175d3
+
+# RFC 6234 Test Case 4
+Klen = 25
+Tlen = 20
+Len = 50
+Key = 0102030405060708090a0b0c0d0e0f10111213141516171819
+Msg = cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd
+Mac = 4c9007f4026250c6bc8414f9bf50c86c2d7235da
+
+# RFC 6234 Test Case 5
+Klen = 20
+Tlen = 12
+Len = 20
+Key = 0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c
+Msg = "Test With Truncation"
+Mac = 4c1a03424b55e07fe7f27be1
+
+# RFC 6234 Test Case 6
+Klen = 80
+Tlen = 20
+Len = 54
+Key = aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+Msg = "Test Using Larger Than Block-Size Key - Hash Key First"
+Mac = aa4ae5e15272d00e95705637ce8a3b55ed402112
+
+# RFC 6234 Test Case 7
+Klen = 80
+Tlen = 20
+Len = 73
+Key = aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+Msg = "Test Using Larger Than Block-Size Key and Larger Than One Block-Size Data"
+#Msg = 54657374205573696e67204c6172676572205468616e20426c6f636b2d53697a65204b657920616e64204c6172676572205468616e204f6e6520426c6f636b2d53697a652044617461
+Mac = e8e99d0f45237d786d6bbaa7965c7808bbff1a91

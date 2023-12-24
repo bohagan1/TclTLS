@@ -136,3 +136,6 @@ tcltest::test Hash_SHA224-1.22 {SHA224} \
 	-body {tls::digest -digest SHA224 -data $data} \
 	-match exact -result 0b31894ec8937ad9b91bdfbcba294d9adefaa18e09305e9f20d5c3a4
 
+# Cleanup
+::tcltest::cleanupTests
+return

@@ -1,6 +1,7 @@
 # SHA3-384
 # From https://csrc.nist.gov/projects/cryptographic-standards-and-guidelines/example-values
 
+[b = 104]
 [L = 48]
 
 Len = 0

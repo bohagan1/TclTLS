@@ -52,3 +52,6 @@ tcltest::test Hash_MD5-1.8 {MD5} \
 	-body {tls::digest -digest MD5 -data $data} \
 	-match exact -result 9e107d9d372bb6826bd81d3542a419d6
 
+# Cleanup
+::tcltest::cleanupTests
+return

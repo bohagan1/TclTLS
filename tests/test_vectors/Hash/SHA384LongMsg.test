@@ -772,3 +772,6 @@ tcltest::test Hash_SHA384-3.128 {SHA384LongMsg} \
 	-body {tls::digest -digest SHA384 -data $data} \
 	-match exact -result d558f26d7e8e293a3911d606e7b7c822a92e28675a8e92389ca27ab0cbe71b2debbf0c360c8d33586c7a374550266db2
 
+# Cleanup
+::tcltest::cleanupTests
+return

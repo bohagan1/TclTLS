@@ -1642,3 +1642,6 @@ tcltest::test Hash_SHAKE256-2.273 {SHAKE256ShortMsg} \
 	-body {tls::digest -digest SHAKE256 -data $data} \
 	-match exact -result 46293a63c235750d58a24edca5ba637b96cae74325c6c8122c4155c0d15805e6
 
+# Cleanup
+::tcltest::cleanupTests
+return

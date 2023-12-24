@@ -772,3 +772,6 @@ tcltest::test Hash_SHA512-3.128 {SHA512LongMsg} \
 	-body {tls::digest -digest SHA512 -data $data} \
 	-match exact -result 26263445024bbdbd0518b331a7ab88e7bdc8d8344a3480d1c19ad0e7c7cb22447cf88e53d2536fd215e25c5158dbc52ef56585f7ab5b771387811a9f9afbdb7f
 
+# Cleanup
+::tcltest::cleanupTests
+return

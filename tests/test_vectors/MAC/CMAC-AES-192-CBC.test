@@ -1,0 +1,34 @@
+# Auto generated from "CMAC-AES-192-CBC.txt"
+package require tls
+package require tcltest
+
+tcltest::testConstraint CMAC [expr {[lsearch -nocase [tls::macs] CMAC] > -1}]
+tcltest::testConstraint AES_192_CBC [expr {[lsearch -nocase [tls::ciphers] AES-192-CBC] > -1}]
+
+tcltest::test MAC_CMAC-AES-192-CBC-1.1 {CMAC-AES-192-CBC} \
+	-constraints {CMAC  AES_192_CBC} \
+	-setup {} \
+	-body {string range [tls::cmac -hex -cipher AES-192-CBC -key [binary decode hex 8e73b0f7da0e6452c810f32b809079e562f8ead2522c6b7b] -data ""] 0 31} \
+	-match exact -result d17ddf46adaacde531cac483de7a9367
+
+tcltest::test MAC_CMAC-AES-192-CBC-1.2 {CMAC-AES-192-CBC} \
+	-constraints {CMAC  AES_192_CBC} \
+	-setup {} \
+	-body {string range [tls::cmac -hex -cipher AES-192-CBC -key [binary decode hex 8e73b0f7da0e6452c810f32b809079e562f8ead2522c6b7b] -data [binary decode hex 6bc1bee22e409f96e93d7e117393172a]] 0 31} \
+	-match exact -result 9e99a7bf31e710900662f65e617c5184
+
+tcltest::test MAC_CMAC-AES-192-CBC-1.3 {CMAC-AES-192-CBC} \
+	-constraints {CMAC  AES_192_CBC} \
+	-setup {} \
+	-body {string range [tls::cmac -hex -cipher AES-192-CBC -key [binary decode hex 8e73b0f7da0e6452c810f32b809079e562f8ead2522c6b7b] -data [binary decode hex 6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e5130c81c46a35ce411]] 0 31} \
+	-match exact -result 8a1de5be2eb31aad089a82e6ee908b0e
+
+tcltest::test MAC_CMAC-AES-192-CBC-1.4 {CMAC-AES-192-CBC} \
+	-constraints {CMAC  AES_192_CBC} \
+	-setup {} \
+	-body {string range [tls::cmac -hex -cipher AES-192-CBC -key [binary decode hex 8e73b0f7da0e6452c810f32b809079e562f8ead2522c6b7b] -data [binary decode hex 6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e5130c81c46a35ce411e5fbc1191a0a52eff69f2445df4f9b17ad2b417be66c3710]] 0 31} \
+	-match exact -result a1d5df0eed790f794d77589659f39a11
+
+# Cleanup
+::tcltest::cleanupTests
+return

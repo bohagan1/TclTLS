@@ -1,0 +1,76 @@
+# Auto generated from "HMAC_MD5.txt"
+package require tls
+package require tcltest
+
+tcltest::testConstraint HMAC [expr {[lsearch -nocase [tls::macs] HMAC] > -1}]
+tcltest::testConstraint MD5 [expr {[lsearch -nocase [tls::digests] MD5] > -1}]
+
+tcltest::test MAC_HMAC-MD5-1.1 {HMAC_MD5} \
+	-constraints {HMAC MD5 } \
+	-setup {} \
+	-body {string range [tls::hmac -hex -digest MD5 -key [binary decode hex 0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b] -data "Hi There"] 0 31} \
+	-match exact -result 9294727a3638bb1c13f48ef8158bfc9d
+
+tcltest::test MAC_HMAC-MD5-1.2 {HMAC_MD5} \
+	-constraints {HMAC MD5 } \
+	-setup {} \
+	-body {string range [tls::hmac -hex -digest MD5 -key "Jefe" -data "what do ya want for nothing?"] 0 31} \
+	-match exact -result 750c783e6ab0b503eaa86e310a5db738
+
+tcltest::test MAC_HMAC-MD5-1.3 {HMAC_MD5} \
+	-constraints {HMAC MD5 } \
+	-setup {} \
+	-body {string range [tls::hmac -hex -digest MD5 -key [binary decode hex aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa] -data [binary decode hex dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd]] 0 31} \
+	-match exact -result 56be34521d144c88dbb8c733f0e8b3f6
+
+tcltest::test MAC_HMAC-MD5-1.4 {HMAC_MD5} \
+	-constraints {HMAC MD5 } \
+	-setup {} \
+	-body {string range [tls::hmac -hex -digest MD5 -key [binary decode hex 0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b] -data "Hi There"] 0 31} \
+	-match exact -result 9294727a3638bb1c13f48ef8158bfc9d
+
+tcltest::test MAC_HMAC-MD5-1.5 {HMAC_MD5} \
+	-constraints {HMAC MD5 } \
+	-setup {} \
+	-body {string range [tls::hmac -hex -digest MD5 -key "Jefe" -data "what do ya want for nothing?"] 0 31} \
+	-match exact -result 750c783e6ab0b503eaa86e310a5db738
+
+tcltest::test MAC_HMAC-MD5-1.6 {HMAC_MD5} \
+	-constraints {HMAC MD5 } \
+	-setup {} \
+	-body {string range [tls::hmac -hex -digest MD5 -key [binary decode hex aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa] -data [binary decode hex dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd]] 0 31} \
+	-match exact -result 56be34521d144c88dbb8c733f0e8b3f6
+
+tcltest::test MAC_HMAC-MD5-1.7 {HMAC_MD5} \
+	-constraints {HMAC MD5 } \
+	-setup {} \
+	-body {string range [tls::hmac -hex -digest MD5 -key [binary decode hex 0102030405060708090a0b0c0d0e0f10111213141516171819] -data [binary decode hex cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd]] 0 31} \
+	-match exact -result 697eaf0aca3a3aea3a75164746ffaa79
+
+tcltest::test MAC_HMAC-MD5-1.8 {HMAC_MD5} \
+	-constraints {HMAC MD5 } \
+	-setup {} \
+	-body {string range [tls::hmac -hex -digest MD5 -key [binary decode hex 0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c] -data "Test With Truncation"] 0 23} \
+	-match exact -result 56461ef2342edc00f9bab995
+
+tcltest::test MAC_HMAC-MD5-1.9 {HMAC_MD5} \
+	-constraints {HMAC MD5 } \
+	-setup {} \
+	-body {string range [tls::hmac -hex -digest MD5 -key [binary decode hex aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa] -data "Test Using Larger Than Block-Size Key - Hash Key First"] 0 31} \
+	-match exact -result 6b1ab7fe4bd7bf8f0b62e6ce61b9d0cd
+
+tcltest::test MAC_HMAC-MD5-1.10 {HMAC_MD5} \
+	-constraints {HMAC MD5 } \
+	-setup {} \
+	-body {string range [tls::hmac -hex -digest MD5 -key [binary decode hex aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa] -data "Test Using Larger Than Block-Size Key and Larger Than One Block-Size Data"] 0 31} \
+	-match exact -result 6f630fad67cda0ee1fb1f562db3aa53e
+
+tcltest::test MAC_HMAC-MD5-1.11 {HMAC_MD5} \
+	-constraints {HMAC MD5 } \
+	-setup {} \
+	-body {string range [tls::hmac -hex -digest MD5 -key "key" -data "The quick brown fox jumps over the lazy dog"] 0 31} \
+	-match exact -result 80070713463e7749b90c2dc24911e275
+
+# Cleanup
+::tcltest::cleanupTests
+return

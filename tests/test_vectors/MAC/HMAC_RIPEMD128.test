@@ -1,0 +1,52 @@
+# Auto generated from "HMAC_RIPEMD128.txt"
+package require tls
+package require tcltest
+
+tcltest::testConstraint HMAC [expr {[lsearch -nocase [tls::macs] HMAC] > -1}]
+tcltest::testConstraint RIPEMD128 [expr {[lsearch -nocase [tls::digests] RIPEMD128] > -1}]
+
+tcltest::test MAC_HMAC-RIPEMD128-1.1 {HMAC_RIPEMD128} \
+	-constraints {HMAC RIPEMD128 } \
+	-setup {} \
+	-body {string range [tls::hmac -hex -digest RIPEMD128 -key [binary decode hex 0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b] -data "Hi There"] 0 31} \
+	-match exact -result fbf61f9492aa4bbf81c172e84e0734db
+
+tcltest::test MAC_HMAC-RIPEMD128-1.2 {HMAC_RIPEMD128} \
+	-constraints {HMAC RIPEMD128 } \
+	-setup {} \
+	-body {string range [tls::hmac -hex -digest RIPEMD128 -key "Jefe" -data "what do ya want for nothing?"] 0 31} \
+	-match exact -result 875f828862b6b334b427c55f9f7ff09b
+
+tcltest::test MAC_HMAC-RIPEMD128-1.3 {HMAC_RIPEMD128} \
+	-constraints {HMAC RIPEMD128 } \
+	-setup {} \
+	-body {string range [tls::hmac -hex -digest RIPEMD128 -key [binary decode hex aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa] -data [binary decode hex dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd]] 0 31} \
+	-match exact -result 09f0b2846d2f543da363cbec8d62a38d
+
+tcltest::test MAC_HMAC-RIPEMD128-1.4 {HMAC_RIPEMD128} \
+	-constraints {HMAC RIPEMD128 } \
+	-setup {} \
+	-body {string range [tls::hmac -hex -digest RIPEMD128 -key [binary decode hex 0102030405060708090a0b0c0d0e0f10111213141516171819] -data [binary decode hex cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd]] 0 31} \
+	-match exact -result bdbbd7cf03e44b5aa60af815be4d2294
+
+tcltest::test MAC_HMAC-RIPEMD128-1.5 {HMAC_RIPEMD128} \
+	-constraints {HMAC RIPEMD128 } \
+	-setup {} \
+	-body {string range [tls::hmac -hex -digest RIPEMD128 -key [binary decode hex 0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c] -data "Test With Truncation"] 0 23} \
+	-match exact -result e79808f24b25fd031c155f0d
+
+tcltest::test MAC_HMAC-RIPEMD128-1.6 {HMAC_RIPEMD128} \
+	-constraints {HMAC RIPEMD128 } \
+	-setup {} \
+	-body {string range [tls::hmac -hex -digest RIPEMD128 -key [binary decode hex aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa] -data "Test Using Larger Than Block-Size Key - Hash Key First"] 0 31} \
+	-match exact -result dc732928de98104a1f59d373c150acbb
+
+tcltest::test MAC_HMAC-RIPEMD128-1.7 {HMAC_RIPEMD128} \
+	-constraints {HMAC RIPEMD128 } \
+	-setup {} \
+	-body {string range [tls::hmac -hex -digest RIPEMD128 -key [binary decode hex aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa] -data "Test Using Larger Than Block-Size Key and Larger Than One Block-Size Data"] 0 31} \
+	-match exact -result 5c6bec96793e16d40690c237635f30c5
+
+# Cleanup
+::tcltest::cleanupTests
+return

@@ -778,3 +778,6 @@ tcltest::test Hash_SHA384-2.129 {SHA384ShortMsg} \
 	-body {tls::digest -digest SHA384 -data $data} \
 	-match exact -result 12b6cb35eda92ee37356ddee77781a17b3d90e563824a984faffc6fdd1693bd7626039635563cfc3b9a2b00f9c65eefd
 
+# Cleanup
+::tcltest::cleanupTests
+return

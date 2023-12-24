@@ -33,10 +33,10 @@ catch {::tcltest::normalizePath ::tcltest::testsDirectory}
 #
 # Run all tests in current and any sub directories with an all.tcl file.
 #
-set exitCode 0
+set ::exitCode 0
 if {[package vsatisfies [package require tcltest] 2.5-]} {
     if {[::tcltest::runAllTests] == 1} {
-	set exitCode 1
+	set ::exitCode 1
     }
 
 } else {
@@ -44,10 +44,10 @@ if {[package vsatisfies [package require tcltest] 2.5-]} {
     # proper exit code: 0=all passed, 1=one or more failed
     proc tcltest::cleanupTestsHook {} {
 	variable numTests
-	set exitCode [expr {$numTests(Total) == 0 || $numTests(Failed) > 0}]
+	set ::exitCode [expr {$numTests(Total) == 0 || $numTests(Failed) > 0}]
     }
     ::tcltest::runAllTests
 }
 
 #  Exit code: 0=all passed, 1=one or more failed
-exit $exitCode
+exit $::exitCode

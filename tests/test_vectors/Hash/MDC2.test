@@ -16,3 +16,6 @@ tcltest::test Hash_MDC2-1.2 {MDC2} \
 	-body {tls::digest -digest MDC2 -data $data} \
 	-match exact -result 000ed54e093d61679aefbeae05bfe33a
 
+# Cleanup
+::tcltest::cleanupTests
+return

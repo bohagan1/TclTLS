@@ -1,6 +1,7 @@
 # SHA512-256
 # From https://csrc.nist.gov/projects/cryptographic-standards-and-guidelines/example-values
 
+[b = 128]
 [L = 32]
 
 Len = 0

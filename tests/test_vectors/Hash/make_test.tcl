@@ -8,14 +8,13 @@
 proc do_test {group tail file_num tc digest params} {
     array set config [list Msg "" Repeat 1]
     array set config $params
-    set name name
 
     # Test info
     set line [format "tcltest::test %s-%d.%d {%s}" $group $file_num $tc $tail]
     append line " \\\n\t"
 
     # Test constraints
-    append line [format "-constraints %s" $digest]
+    append line [format "-constraints %s" [string map [list "-" "_"] $digest]]
     append line " \\\n\t"
 
     # Test setup
@@ -47,6 +46,7 @@ proc do_test {group tail file_num tc digest params} {
     set result ""
     foreach key [list MD Mac Output] {
 	if {[info exists config($key)]} {
+# For SHAKE XOF, need to truncate to config(Len) size/8 (bits -> bytes)
 	    set result $config($key)
 	}
     }
@@ -83,7 +83,7 @@ proc parse {group filename file_num} {
     puts $out [format "# Auto generated from \"%s\"" [file tail $filename]]
     puts $out "package require tls"
     puts $out "package require tcltest\n"
-    puts $out [format "tcltest::testConstraint %s %s" $digest \
+    puts $out [format "tcltest::testConstraint %s %s" [string map [list "-" "_"] $digest] \
 	[format {[expr {[lsearch -nocase [tls::digests] %s] > -1}]} $digest]]
     puts $out ""
 
@@ -123,6 +123,9 @@ proc parse {group filename file_num} {
 	puts $out [do_test $group $tail $file_num [incr tc] $digest $params]
 	puts $out ""
     }
+    
+    # Cleanup
+    puts $out "# Cleanup\n::tcltest::cleanupTests\nreturn"
     close $ch
     close $out
 }

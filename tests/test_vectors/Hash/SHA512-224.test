@@ -2,29 +2,32 @@
 package require tls
 package require tcltest
 
-tcltest::testConstraint SHA512-224 [expr {[lsearch -nocase [tls::digests] SHA512-224] > -1}]
+tcltest::testConstraint SHA512_224 [expr {[lsearch -nocase [tls::digests] SHA512-224] > -1}]
 
 tcltest::test Hash_SHA512-224-1.1 {SHA512-224} \
-	-constraints SHA512-224 \
+	-constraints SHA512_224 \
 	-setup {set data ""} \
 	-body {tls::digest -digest SHA512-224 -data $data} \
 	-match exact -result 6ed0dd02806fa89e25de060c19d3ac86cabb87d6a0ddd05c333b84f4
 
 tcltest::test Hash_SHA512-224-1.2 {SHA512-224} \
-	-constraints SHA512-224 \
+	-constraints SHA512_224 \
 	-setup {set data "abc"} \
 	-body {tls::digest -digest SHA512-224 -data $data} \
 	-match exact -result 4634270f707b6a54daae7530460842e20e37ed265ceee9a43e8924aa
 
 tcltest::test Hash_SHA512-224-1.3 {SHA512-224} \
-	-constraints SHA512-224 \
+	-constraints SHA512_224 \
 	-setup {set data "The quick brown fox jumps over the lazy dog"} \
 	-body {tls::digest -digest SHA512-224 -data $data} \
 	-match exact -result 944cd2847fb54558d4775db0485a50003111c8e5daa63fe722c6aa37
 
 tcltest::test Hash_SHA512-224-1.4 {SHA512-224} \
-	-constraints SHA512-224 \
+	-constraints SHA512_224 \
 	-setup {set data "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu"} \
 	-body {tls::digest -digest SHA512-224 -data $data} \
 	-match exact -result 23fec5bb94d60b23308192640b0c453335d664734fe40e7268674af9
 
+# Cleanup
+::tcltest::cleanupTests
+return

@@ -40,3 +40,6 @@ tcltest::test Hash_SM3-1.6 {SM3} \
 	-body {tls::digest -digest SM3 -data $data} \
 	-match exact -result b965764c8bebb091c7602b74afd34eefb531dccb4e0076d9b7cd813199b45971
 
+# Cleanup
+::tcltest::cleanupTests
+return

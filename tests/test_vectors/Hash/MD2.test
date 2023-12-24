@@ -46,3 +46,6 @@ tcltest::test Hash_MD2-1.7 {MD2} \
 	-body {tls::digest -digest MD2 -data $data} \
 	-match exact -result d5976f79d83d3a0dc9806c3c66f3efd8
 
+# Cleanup
+::tcltest::cleanupTests
+return

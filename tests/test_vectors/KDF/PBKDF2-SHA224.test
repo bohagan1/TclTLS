@@ -3,51 +3,52 @@ package require tls
 package require tcltest
 
 tcltest::testConstraint PBKDF2 [expr {[lsearch -nocase [tls::kdfs] PBKDF2] > -1}]
+tcltest::testConstraint SHA224 [expr {[lsearch -nocase [tls::digests] SHA224] > -1}]
 
 tcltest::test KDF_PBKDF2-SHA224-1.1 {PBKDF2-SHA224} \
-	-constraints PBKDF2 \
+	-constraints {PBKDF2 SHA224} \
 	-setup {} \
 	-body {binary encode hex [tls::pbkdf2 -digest SHA224 -password "password" -salt "salt" -iterations 1 -size 20]} \
 	-match exact -result 3c198cbdb9464b7857966bd05b7bc92bc1cc4e6e
 
 tcltest::test KDF_PBKDF2-SHA224-1.2 {PBKDF2-SHA224} \
-	-constraints PBKDF2 \
+	-constraints {PBKDF2 SHA224} \
 	-setup {} \
 	-body {binary encode hex [tls::pbkdf2 -digest SHA224 -password "password" -salt "salt" -iterations 2 -size 20]} \
 	-match exact -result 93200ffa96c5776d38fa10abdf8f5bfc0054b971
 
 tcltest::test KDF_PBKDF2-SHA224-1.3 {PBKDF2-SHA224} \
-	-constraints PBKDF2 \
+	-constraints {PBKDF2 SHA224} \
 	-setup {} \
 	-body {binary encode hex [tls::pbkdf2 -digest SHA224 -password "password" -salt "salt" -iterations 4096 -size 20]} \
 	-match exact -result 218c453bf90635bd0a21a75d172703ff6108ef60
 
 tcltest::test KDF_PBKDF2-SHA224-1.4 {PBKDF2-SHA224} \
-	-constraints PBKDF2 \
+	-constraints {PBKDF2 SHA224} \
 	-setup {} \
 	-body {binary encode hex [tls::pbkdf2 -digest SHA224 -password "password" -salt "salt" -iterations 16777216 -size 20]} \
 	-match exact -result b49925184cb4b559f365e94fcafcd4cdb9f7aef4
 
 tcltest::test KDF_PBKDF2-SHA224-1.5 {PBKDF2-SHA224} \
-	-constraints PBKDF2 \
+	-constraints {PBKDF2 SHA224} \
 	-setup {} \
 	-body {binary encode hex [tls::pbkdf2 -digest SHA224 -password "passwordPASSWORDpassword" -salt "saltSALTsaltSALTsaltSALTsaltSALTsalt" -iterations 4096 -size 25]} \
 	-match exact -result 056c4ba438ded91fc14e0594e6f52b87e1f3690c0dc0fbc057
 
 tcltest::test KDF_PBKDF2-SHA224-1.6 {PBKDF2-SHA224} \
-	-constraints PBKDF2 \
+	-constraints {PBKDF2 SHA224} \
 	-setup {} \
 	-body {binary encode hex [tls::pbkdf2 -digest SHA224 -password "pass\0word" -salt "sa\0lt" -iterations 4096 -size 16]} \
 	-match exact -result 9b4011b641f40a2a500a31d4a392d15c
 
 tcltest::test KDF_PBKDF2-SHA224-1.7 {PBKDF2-SHA224} \
-	-constraints PBKDF2 \
+	-constraints {PBKDF2 SHA224} \
 	-setup {} \
 	-body {binary encode hex [tls::pbkdf2 -digest SHA224 -password "passwd" -salt "salt" -iterations 1 -size 128]} \
 	-match exact -result e55bd77cfc18b012ac6362e22d7cdf77c4b03879a6af51fbf0045bc32a03e7f0d829d26b765bff0ca5873e07a8e85804ff4a17683ed706130d51657456bc0ebd07c35ca0675b3113ad9c33fe48a5eb9e9dc6c6a8cf5cf6de1318b414dbe667bfaeb863ef8399ff4a732520dab4ba82336513a25077ddfc11fc618c11efaf04ae
 
 tcltest::test KDF_PBKDF2-SHA224-1.8 {PBKDF2-SHA224} \
-	-constraints PBKDF2 \
+	-constraints {PBKDF2 SHA224} \
 	-setup {} \
 	-body {binary encode hex [tls::pbkdf2 -digest SHA224 -password "Password" -salt "sa\0lt" -iterations 4096 -size 256]} \
 	-match exact -result a329a360c825e12e454ad8633a842a06ba1456907770779d1fa4e0b61a5b1c6ce02e71de74ae433bbf14b907690d008d0cab5b01c976c1e627b027a9a809fd001082c809650344ecfcdebdf0d64b92cb1e869bf91b75517ea36918127b1eccc4cac145fb965071292a6dfa388d8ad893d2541f83a0dac1c55d2d90709963b066de985e92974e87b7d8c0e8026d96684bb0425203919b4792962b065e2b2b815ba888b8428ae51f57a74f637a658e27cf5fbc5593e85f775a1f81660850a723e2eb565f30dfc2cf2973ad57ec95b89c0979c7bab81c11d8987540a32badb2f7bbe4ff21a4f0d91dbd911b88ddd928603fd27b0ede994ee99edd2c04667b82067f

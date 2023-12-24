@@ -1,0 +1,165 @@
+# HMAC-SHA512
+# From https://csrc.nist.gov/projects/cryptographic-standards-and-guidelines/example-values
+# and RFC 4231 HMAC-SHA Identifiers and Test Vectors
+# and RFC 6234 SHA and SHA-based HMAC and HKDF
+
+[b = 128]
+[L = 64]
+
+Klen = 128
+Tlen = 64
+Len = 34
+Msg = "Sample message for keylen=blocklen"
+Key = 000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f
+Mac = fc25e240658ca785b7a811a8d3f7b4ca48cfa26a8a366bf2cd1f836b05fcb024bd36853081811d6cea4216ebad79da1cfcb95ea4586b8a0ce356596a55fb1347
+
+Klen = 64
+Tlen = 64
+Len = 34
+Msg = "Sample message for keylen<blocklen"
+Key = 000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f
+Mac = fd44c18bda0bb0a6ce0e82b031bf2818f6539bd56ec00bdc10a8a2d730b3634de2545d639b0f2cf710d0692c72a1896f1f211c2b922d1a96c392e07e7ea9fedc
+
+Klen = 200
+Tlen = 64
+Len = 34
+Msg = "Sample message for keylen=blocklen"
+Key = 000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7
+Mac = d93ec8d2de1ad2a9957cb9b83f14e76ad6b5e0cce285079a127d3b14bccb7aa7286d4ac0d4ce64215f2bc9e6870b33d97438be4aaa20cda5c5a912b48b8e27f3
+
+Klen = 48
+Tlen = 32
+Len = 54
+Msg = "Sample message for keylen<blocklen, with truncated tag"
+Key = 000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f30
+Mac = 00f3e9a77bb0f06de15f160603e42b5028758808596664c03e1ab8fb2b0767780563aedc644960d4f0c0c5d239f67a2a61b141e8c871f3d40db2c605588dab92
+Trunc = 00f3e9a77bb0f06de15f160603e42b5028758808596664c03e1ab8fb2b076778
+
+# RFC 4231 Test Case 1
+Klen = 20
+Tlen = 64
+Len = 8
+Key = 0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b
+Msg = "Hi There"
+#Msg = 4869205468657265
+Mac = 87aa7cdea5ef619d4ff0b4241a1d6cb02379f4e2ce4ec2787ad0b30545e17cdedaa833b7d6b8a702038b274eaea3f4e4be9d914eeb61f1702e696c203a126854
+
+# RFC 4231 Test Case 2: Test with a key shorter than the length of the HMAC output.
+Klen = 4
+Tlen = 64
+Len = 28
+Key = "Jefe"
+#Key = 4a656665
+Msg = "what do ya want for nothing?"
+#Msg = 7768617420646f2079612077616e7420666f72206e6f7468696e673f
+Mac = 164b7a7bfcf819e2e395fbe73b56e0a387bd64222e831fd610270cd7ea2505549758bf75c05a994a6d034f65f8f0e6fdcaeab1a34d4a6b4b636e070a38bce737
+
+# RFC 4231 Test Case 3: Test with a combined length of key and data that is larger than 64 bytes (= block-size of SHA-224 and SHA-256).
+Klen = 20
+Tlen = 64
+Len = 50
+Key = aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+Msg = dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+Mac = fa73b0089d56a284efb0f0756c890be9b1b5dbdd8ee81a3655f83e33b2279d39bf3e848279a722c806b485a47e67c807b946a337bee8942674278859e13292fb
+
+# RFC 4231 Test Case 4: Test with a combined length of key and data that is larger than 64 bytes (= block-size of SHA-224 and SHA-256).
+Klen = 25
+Tlen = 64
+Len = 50
+Key = 0102030405060708090a0b0c0d0e0f10111213141516171819
+Msg = cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd
+Mac = b0ba465637458c6990e5a8c5f61d4af7e576d97ff94b872de76f8050361ee3dba91ca5c11aa25eb4d679275cc5788063a5f19741120c4f2de2adebeb10a298dd
+
+# RFC 4231 Test Case 5: Test with a truncation of output to 128 bits.
+Klen = 20
+Tlen = 16
+Len = 20
+Key = 0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c
+Msg = "Test With Truncation"
+Mac = 415fad6271580a531d4179bc891d87a6
+Trunc = 415fad6271580a531d4179bc891d87a6
+
+# RFC 4231 Test Case 6: Test with a key larger than 128 bytes (= block-size of SHA-384 and SHA-512).
+Klen = 131
+Tlen = 64
+Len = 54
+Key =  aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+Msg = "Test Using Larger Than Block-Size Key - Hash Key First"
+#Msg = 54657374205573696e67204c6172676572205468616e20426c6f636b2d53697a65204b6579202d2048617368204b6579204669727374
+Mac = 80b24263c7c1a3ebb71493c1dd7be8b49b46d1f41b4aeec1121b013783f8f3526b56d037e05f2598bd0fd2215d6a1e5295e64f73f63f0aec8b915a985d786598
+
+# RFC 4231 Test Case 7: Test with a key and data that is larger than 128 bytes (= block-size of SHA-384 and SHA-512).
+Klen = 131
+Tlen = 64
+Len = 152
+Key = aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+Msg = "This is a test using a larger than block-size key and a larger than block-size data. The key needs to be hashed before being used by the HMAC algorithm."
+#Msg = 5468697320697320612074657374207573696e672061206c6172676572207468616e20626c6f636b2d73697a65206b657920616e642061206c6172676572207468616e20626c6f636b2d73697a6520646174612e20546865206b6579206e6565647320746f20626520686173686564206265666f7265206265696e6720757365642062792074686520484d414320616c676f726974686d2e
+Mac = e37b6a775dc87dbaa4dfa9f96e5e3ffddebd71f8867289865df5a32d20cdc944b6022cac3c4982b10d5eeb55c3e4de15134676fb6de0446065c97440fa8c6a58
+
+# Wikipedia
+Klen = 3
+Tlen = 64
+Len = 43
+Key = "key"
+Msg = "The quick brown fox jumps over the lazy dog"
+Mac = b42af09057bac1e2d41708e48a902e09b5ff7f12ab428a4fe86653c73dd248fb82f948a549f7b791a5b41915ee4d1ec3935357e4e2317250d0372afa2ebeeb3a
+
+# RFC 6234 Test Case 1
+Klen = 20
+Tlen = 64
+Len = 8
+Key = 0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b
+Msg = "Hi There"
+#Msg = 4869205468657265
+Mac = 87aa7cdea5ef619d4ff0b4241a1d6cb02379f4e2ce4ec2787ad0b30545e17cdedaa833b7d6b8a702038b274eaea3f4e4be9d914eeb61f1702e696c203a126854
+
+# RFC 6234 Test Case 2
+Klen = 4
+Tlen = 64
+Len = 28
+Key = "Jefe"
+#Key = 4a656665
+Msg = "what do ya want for nothing?"
+#Msg = 7768617420646f2079612077616e7420666f72206e6f7468696e673f
+Mac = 164b7a7bfcf819e2e395fbe73b56e0a387bd64222e831fd610270cd7ea2505549758bf75c05a994a6d034f65f8f0e6fdcaeab1a34d4a6b4b636e070a38bce737
+
+# RFC 6234 Test Case 3
+Klen = 20
+Tlen = 64
+Len = 50
+Key = aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+Msg = dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+Mac = fa73b0089d56a284efb0f0756c890be9b1b5dbdd8ee81a3655f83e33b2279d39bf3e848279a722c806b485a47e67c807b946a337bee8942674278859e13292fb
+
+# RFC 6234 Test Case 4
+Klen = 25
+Tlen = 64
+Len = 50
+Key = 0102030405060708090a0b0c0d0e0f10111213141516171819
+Msg = cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd
+Mac = b0ba465637458c6990e5a8c5f61d4af7e576d97ff94b872de76f8050361ee3dba91ca5c11aa25eb4d679275cc5788063a5f19741120c4f2de2adebeb10a298dd
+
+# RFC 6234 Test Case 5
+Klen = 20
+Tlen = 16
+Len = 20
+Key = 0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c
+Msg = "Test With Truncation"
+Mac = 415fad6271580a531d4179bc891d87a6
+
+# RFC 6234 Test Case 6
+Klen = 131
+Tlen = 64
+Len = 54
+Key = aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+Msg = "Test Using Larger Than Block-Size Key - Hash Key First"
+Mac = 80b24263c7c1a3ebb71493c1dd7be8b49b46d1f41b4aeec1121b013783f8f3526b56d037e05f2598bd0fd2215d6a1e5295e64f73f63f0aec8b915a985d786598
+
+# RFC 6234 Test Case 7
+Klen = 131
+Tlen = 64
+Len = 153
+Key = aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+Msg = "This is a test using a larger than block-size key and a larger than block-size data. The key needs to be hashed before being used by the HMAC algorithm."
+Mac = e37b6a775dc87dbaa4dfa9f96e5e3ffddebd71f8867289865df5a32d20cdc944b6022cac3c4982b10d5eeb55c3e4de15134676fb6de0446065c97440fa8c6a58

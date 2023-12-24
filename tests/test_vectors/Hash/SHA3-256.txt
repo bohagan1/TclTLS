@@ -1,6 +1,7 @@
 # SHA3-256
 # From https://csrc.nist.gov/projects/cryptographic-standards-and-guidelines/example-values
 
+[b = 136]
 [L = 32]
 
 Len = 0

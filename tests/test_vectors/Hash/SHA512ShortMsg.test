@@ -778,3 +778,6 @@ tcltest::test Hash_SHA512-2.129 {SHA512ShortMsg} \
 	-body {tls::digest -digest SHA512 -data $data} \
 	-match exact -result a21b1077d52b27ac545af63b32746c6e3c51cb0cb9f281eb9f3580a6d4996d5c9917d2a6e484627a9d5a06fa1b25327a9d710e027387fc3e07d7c4d14c6086cc
 
+# Cleanup
+::tcltest::cleanupTests
+return

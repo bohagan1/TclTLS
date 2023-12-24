@@ -13,7 +13,7 @@ proc do_test {group tail file_num tc kdf digest params} {
     append line " \\\n\t"
 
     # Test constraints
-    append line [format "-constraints %s" $kdf]
+    append line [format "-constraints {%s %s}" [string map [list "-" "_"] $kdf] [string map [list "-" "_"] $digest]]
     append line " \\\n\t"
 
     # Test setup
@@ -52,6 +52,7 @@ proc do_test {group tail file_num tc kdf digest params} {
     foreach name [list OKM DK Output] {
 	if {[info exists config($name)]} {
 	    set result $config($name)
+	    break
 	}
     }
     
@@ -87,8 +88,12 @@ proc parse {group filename file_num} {
     puts $out [format "# Auto generated from \"%s\"" [file tail $filename]]
     puts $out "package require tls"
     puts $out "package require tcltest\n"
-    puts $out [format "tcltest::testConstraint %s %s" $kdf \
+    puts $out [format "tcltest::testConstraint %s %s" [string map [list "-" "_"] $kdf] \
 	[format {[expr {[lsearch -nocase [tls::kdfs] %s] > -1}]} $kdf]]
+    if {$digest ne ""} {
+	puts $out [format "tcltest::testConstraint %s %s" [string map [list "-" "_"] $digest] \
+	    [format {[expr {[lsearch -nocase [tls::digests] %s] > -1}]} $digest]]
+    }
     puts $out ""
 
     # Process file

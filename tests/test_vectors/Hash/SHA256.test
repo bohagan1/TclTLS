@@ -154,3 +154,6 @@ tcltest::test Hash_SHA256-1.25 {SHA256} \
 	-body {tls::digest -digest SHA256 -data $data} \
 	-match exact -result 97dbca7df46d62c8a422c941dd7e835b8ad3361763f7e9b2d95f4f0da6e1ccbc
 
+# Cleanup
+::tcltest::cleanupTests
+return

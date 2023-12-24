@@ -1,6 +1,7 @@
 # SHA3-512
 # From https://csrc.nist.gov/projects/cryptographic-standards-and-guidelines/example-values
 
+[b = 72]
 [L = 64]
 
 Len = 0

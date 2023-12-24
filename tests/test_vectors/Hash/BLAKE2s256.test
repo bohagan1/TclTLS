@@ -52,3 +52,6 @@ tcltest::test Hash_BLAKE2s256-1.8 {BLAKE2s256} \
 	-body {tls::digest -digest BLAKE2s256 -data $data} \
 	-match exact -result 606beeec743ccbeff6cbcdf5d5302aa855c256c29b88c8ed331ea1a6bf3c8812
 
+# Cleanup
+::tcltest::cleanupTests
+return

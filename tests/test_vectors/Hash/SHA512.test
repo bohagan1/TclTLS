@@ -148,3 +148,6 @@ tcltest::test Hash_SHA512-1.24 {SHA512} \
 	-body {tls::digest -digest SHA512 -data $data} \
 	-match exact -result c665befb36da189d78822d10528cbf3b12b3eef726039909c1a16a270d48719377966b957a878e720584779a62825c18da26415e49a7176a894e7510fd1451f5
 
+# Cleanup
+::tcltest::cleanupTests
+return

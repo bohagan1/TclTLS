@@ -2026,3 +2026,6 @@ tcltest::test Hash_SHAKE128-2.337 {SHAKE128ShortMsg} \
 	-body {tls::digest -digest SHAKE128 -data $data} \
 	-match exact -result b4813895ae01b43c9d9ed85a8b03aaf4
 
+# Cleanup
+::tcltest::cleanupTests
+return

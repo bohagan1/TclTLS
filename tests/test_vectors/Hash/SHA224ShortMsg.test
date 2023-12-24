@@ -394,3 +394,6 @@ tcltest::test Hash_SHA224-2.65 {SHA224ShortMsg} \
 	-body {tls::digest -digest SHA224 -data $data} \
 	-match exact -result b2a5586d9cbf0baa999157b4af06d88ae08d7c9faab4bc1a96829d65
 
+# Cleanup
+::tcltest::cleanupTests
+return

@@ -1,0 +1,58 @@
+# Auto generated from "CMAC-DES3.txt"
+package require tls
+package require tcltest
+
+tcltest::testConstraint CMAC [expr {[lsearch -nocase [tls::macs] CMAC] > -1}]
+tcltest::testConstraint DES3 [expr {[lsearch -nocase [tls::ciphers] DES3] > -1}]
+
+tcltest::test MAC_CMAC-DES3-1.1 {CMAC-DES3} \
+	-constraints {CMAC  DES3} \
+	-setup {} \
+	-body {string range [tls::cmac -hex -cipher DES3 -key [binary decode hex 8aa83bf8cbda10620bc1bf19fbb6cd58bc313d4a371ca8b5] -data ""] 0 15} \
+	-match exact -result b7a688e122ffaf95
+
+tcltest::test MAC_CMAC-DES3-1.2 {CMAC-DES3} \
+	-constraints {CMAC  DES3} \
+	-setup {} \
+	-body {string range [tls::cmac -hex -cipher DES3 -key [binary decode hex 8aa83bf8cbda10620bc1bf19fbb6cd58bc313d4a371ca8b5] -data [binary decode hex 6bc1bee22e409f96]] 0 15} \
+	-match exact -result 8e8f293136283797
+
+tcltest::test MAC_CMAC-DES3-1.3 {CMAC-DES3} \
+	-constraints {CMAC  DES3} \
+	-setup {} \
+	-body {string range [tls::cmac -hex -cipher DES3 -key [binary decode hex 8aa83bf8cbda10620bc1bf19fbb6cd58bc313d4a371ca8b5] -data [binary decode hex 6bc1bee22e409f96e93d7e117393172aae2d8a57]] 0 15} \
+	-match exact -result 743ddbe0ce2dc2ed
+
+tcltest::test MAC_CMAC-DES3-1.4 {CMAC-DES3} \
+	-constraints {CMAC  DES3} \
+	-setup {} \
+	-body {string range [tls::cmac -hex -cipher DES3 -key [binary decode hex 8aa83bf8cbda10620bc1bf19fbb6cd58bc313d4a371ca8b5] -data [binary decode hex 6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e51]] 0 15} \
+	-match exact -result 33e6b1092400eae5
+
+tcltest::test MAC_CMAC-DES3-1.5 {CMAC-DES3} \
+	-constraints {CMAC  DES3} \
+	-setup {} \
+	-body {string range [tls::cmac -hex -cipher DES3 -key [binary decode hex 4cf15134a2850dd58a3d10ba80570d384cf15134a2850dd5] -data ""] 0 15} \
+	-match exact -result bd2ebf9a3ba00361
+
+tcltest::test MAC_CMAC-DES3-1.6 {CMAC-DES3} \
+	-constraints {CMAC  DES3} \
+	-setup {} \
+	-body {string range [tls::cmac -hex -cipher DES3 -key [binary decode hex 4cf15134a2850dd58a3d10ba80570d384cf15134a2850dd5] -data [binary decode hex 6bc1bee22e409f96]] 0 15} \
+	-match exact -result 4ff2ab813c53ce83
+
+tcltest::test MAC_CMAC-DES3-1.7 {CMAC-DES3} \
+	-constraints {CMAC  DES3} \
+	-setup {} \
+	-body {string range [tls::cmac -hex -cipher DES3 -key [binary decode hex 4cf15134a2850dd58a3d10ba80570d384cf15134a2850dd5] -data [binary decode hex 6bc1bee22e409f96e93d7e117393172aae2d8a57]] 0 15} \
+	-match exact -result 62dd1b471902bd4e
+
+tcltest::test MAC_CMAC-DES3-1.8 {CMAC-DES3} \
+	-constraints {CMAC  DES3} \
+	-setup {} \
+	-body {string range [tls::cmac -hex -cipher DES3 -key [binary decode hex 4cf15134a2850dd58a3d10ba80570d384cf15134a2850dd5] -data [binary decode hex 6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e51]] 0 15} \
+	-match exact -result 31b1e431dabc4eb8
+
+# Cleanup
+::tcltest::cleanupTests
+return
