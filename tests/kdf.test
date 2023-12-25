@@ -1,0 +1,210 @@
+# Auto generated test cases for kdf.csv
+
+# Load Tcl Test package
+if {[lsearch [namespace children] ::tcltest] == -1} {
+	package require tcltest
+	namespace import ::tcltest::*
+}
+
+set auto_path [concat [list [file dirname [file dirname [info script]]]] $auto_path]
+
+package require tls
+
+# PBKDF2 Error Cases
+
+
+test PBKDF2_Errors-1.1 {Too few args} -body {
+	::tls::pbkdf2
+    } -result {wrong # args: should be "::tls::pbkdf2 [-cipher cipher | -size length] -digest digest ?-iterations count? ?-password string? ?-salt string?"} -returnCodes {1}
+
+test PBKDF2_Errors-1.2 {Too many args} -body {
+	::tls::pbkdf2 too many command line args to pass the test without an error or failing
+    } -result {wrong # args: should be "::tls::pbkdf2 [-cipher cipher | -size length] -digest digest ?-iterations count? ?-password string? ?-salt string?"} -returnCodes {1}
+
+test PBKDF2_Errors-1.3 {Invalid cipher} -body {
+	::tls::pbkdf2 -digest sha256 -password key -cipher bogus
+    } -result {invalid cipher "bogus"} -returnCodes {1}
+
+test PBKDF2_Errors-1.4 {Invalid digest} -body {
+	::tls::pbkdf2 -digest bogus -password key
+    } -result {invalid digest "bogus"} -returnCodes {1}
+
+test PBKDF2_Errors-1.5 {Invalid iterations} -body {
+	::tls::pbkdf2 -digest sha256 -password key -iterations -1
+    } -result {invalid value "-1" for option "iterations": must be >= 1} -returnCodes {1}
+
+test PBKDF2_Errors-1.6 {No password value} -body {
+	::tls::pbkdf2 -digest sha256 -password
+    } -result {No value for option "-password"} -returnCodes {1}
+
+test PBKDF2_Errors-1.7 {No salt value} -body {
+	::tls::pbkdf2 -digest sha256 -password key -salt
+    } -result {No value for option "-salt"} -returnCodes {1}
+
+test PBKDF2_Errors-1.8 {Invalid size} -body {
+	::tls::pbkdf2 -digest sha256 -password key -size 0
+    } -result {invalid value "0" for option "-size": must be >= 1} -returnCodes {1}
+
+test PBKDF2_Errors-1.9 {Too big size} -body {
+	::tls::pbkdf2 -digest sha256 -password key -size 400
+    } -result {invalid value "400" for option "-size": must be <= 320} -returnCodes {1}
+
+# HKDF Error Cases
+
+
+test HKDF_Errors-2.1 {Too few args} -body {
+	::tls::hkdf
+    } -result {wrong # args: should be "::tls::hkdf -digest digest -key string ?-info string? ?-salt string? ?-size derived_length?"} -returnCodes {1}
+
+test HKDF_Errors-2.2 {Too many args} -body {
+	::tls::hkdf too many command line args to pass the test without an error or failing
+    } -result {wrong # args: should be "::tls::hkdf -digest digest -key string ?-info string? ?-salt string? ?-size derived_length?"} -returnCodes {1}
+
+test HKDF_Errors-2.3 {No digest} -body {
+	::tls::hkdf -key key -key key
+    } -result {no digest} -returnCodes {1}
+
+test HKDF_Errors-2.4 {No key} -body {
+	::tls::hkdf -digest sha256 -digest sha256
+    } -result {no key} -returnCodes {1}
+
+test HKDF_Errors-2.5 {No info value} -body {
+	::tls::hkdf -digest sha256 -key key -info
+    } -result {No value for option "-info"} -returnCodes {1}
+
+test HKDF_Errors-2.6 {No salt value} -body {
+	::tls::hkdf -digest sha256 -password key -salt
+    } -result {No value for option "-salt"} -returnCodes {1}
+
+test HKDF_Errors-2.7 {Invalid size} -body {
+	::tls::hkdf -digest sha256 -password key -size 0
+    } -result {invalid value "0" for option "-size": must be >= 1} -returnCodes {1}
+
+test HKDF_Errors-2.8 {Too big size} -body {
+	::tls::hkdf -digest sha256 -password key -size 8161
+    } -result "Key derivation failed: " -returnCodes {1}
+
+# Scrypt Error Cases
+
+
+test Scrypt_Errors-3.1 {Too few args} -body {
+	::tls::scrypt
+    } -result {wrong # args: should be "::tls::scrypt -password string -salt string ?-N costParameter? ?-r blockSize? ?-p parallelization? ?-size derived_length?"} -returnCodes {1}
+
+test Scrypt_Errors-3.2 {Too many args} -body {
+	::tls::scrypt too many command line args to pass the test without an error or failing
+    } -result {wrong # args: should be "::tls::scrypt -password string -salt string ?-N costParameter? ?-r blockSize? ?-p parallelization? ?-size derived_length?"} -returnCodes {1}
+
+test Scrypt_Errors-3.3 {No password value} -body {
+	::tls::scrypt -salt salt -salt salt
+    } -result {no password} -returnCodes {1}
+
+test Scrypt_Errors-3.4 {No salt value} -body {
+	::tls::scrypt -password key -password key
+    } -result {no salt} -returnCodes {1}
+
+test Scrypt_Errors-3.5 {Invalid size} -body {
+	::tls::scrypt -password key -salt salt -size 0
+    } -result {invalid value "0" for option "-size": must be >= 1} -returnCodes {1}
+
+test Scrypt_Errors-3.6 {Invalid N costParameter} -constraints {knownIgnored} -body {
+	::tls::scrypt -password key -salt salt -N 0
+    } -returnCodes {1}
+
+test Scrypt_Errors-3.7 {Invalid r blockSize} -constraints {knownIgnored} -body {
+	::tls::scrypt -password key -salt salt -r 0
+    } -returnCodes {1}
+
+test Scrypt_Errors-3.8 {Invalid p parallelization} -constraints {knownIgnored} -body {
+	::tls::scrypt -password key -salt salt -p 0
+    } -returnCodes {1}
+
+set digest sha1
+set P "password"
+set S "salt"
+set dkLen 20
+
+# PBKDF2 RFC 6070
+
+
+test PBKDF2_RFC_6070-4.1 {Test Case 1} -body {
+	binary encode hex [::tls::pbkdf2 -digest $digest -password $P -salt $S -iterations 1 -size $dkLen]
+    } -result {0c60c80f961f0e71f3a9b524af6012062fe037a6}
+
+test PBKDF2_RFC_6070-4.2 {Test Case 2} -body {
+	binary encode hex [::tls::pbkdf2 -digest $digest -password $P -salt $S -iterations 2 -size $dkLen]
+    } -result {ea6c014dc72d6f8ccd1ed92ace1d41f0d8de8957}
+
+test PBKDF2_RFC_6070-4.3 {Test Case 3} -body {
+	binary encode hex [::tls::pbkdf2 -digest $digest -password $P -salt $S -iterations 4096 -size $dkLen]
+    } -result {4b007901b765489abead49d926f721d065a429c1}
+
+test PBKDF2_RFC_6070-4.4 {Test Case 4} -body {
+	binary encode hex [::tls::pbkdf2 -digest $digest -password $P -salt $S -iterations 16777216 -size $dkLen]
+    } -result {eefe3d61cd4da4e4e9945b3d6ba2158c2634e984}
+
+set digest sha1
+set key [binary decode hex 0b0b0b0b0b0b0b0b0b0b0b]
+set salt [binary decode hex 000102030405060708090a0b0c]
+set info [binary decode hex f0f1f2f3f4f5f6f7f8f9]
+set size 42
+
+# HKDF RFC 6234
+
+
+test HKDF_RFC_6234-5.1 {A.4.  Test Case 4, Basic test case with SHA-1} -body {
+	binary encode hex [::tls::hkdf -digest $digest -password $key -salt $salt -info $info -size $size]
+    } -result {085a01ea1b10f36933068b56efa5ad81a4f14b822f5b091568a9cdd4f155fda2c22e422478d305f3f896}
+
+set key [binary decode hex 000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f]
+set salt [binary decode hex 606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeaf]
+set info [binary decode hex b0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff]
+set size 82
+
+
+test HKDF_RFC_6234-5.2 {A.5.  Test Case 5, Test with SHA-1 and longer inputs/outputs} -body {
+	binary encode hex [::tls::hkdf -digest $digest -password $key -salt $salt -info $info -size $size]
+    } -result {0bd770a74d1160f7c9f12cd5912a06ebff6adcae899d92191fe4305673ba2ffe8fa3f1a4e5ad79f3f334b3b202b2173c486ea37ce3d397ed034c7f9dfeb15c5e927336d0441f4c4300e2cff0d0900b52d3b4}
+
+set key [binary decode hex 0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b]
+set salt ""
+set info ""
+set size 42
+
+
+test HKDF_RFC_6234-5.3 {A.6.  Test Case 6, Test with SHA-1 and zero-length salt/info} -body {
+	binary encode hex [::tls::hkdf -digest $digest -password $key -salt $salt -info $info -size $size]
+    } -result {0ac1af7002b3d761d1e55298da9d0506b9ae52057220a306e07b6b87e8df21d0ea00033de03984d34918}
+
+set key [binary decode hex 0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c]
+set salt ""
+set info ""
+set size 42
+
+
+test HKDF_RFC_6234-5.4 {A.7.  Test Case 7, Test with SHA-1, salt not provided (defaults to HashLen zero octets), zero-length info} -body {
+	binary encode hex [::tls::hkdf -digest $digest -password $key -salt $salt -info $info -size $size]
+    } -result {2c91117204d745f3500d636a62f64f0ab3bae548aa53d423b0d1f27ebba6f5e5673a081d70cce7acfc48}
+
+# Scrypt RFC 7914
+
+
+test Scrypt_RFC_7914-6.1 {Test Case 1} -body {
+	binary encode hex [::tls::scrypt -password "" -salt "" -N 16 -r 1 -p 1 -size 64]
+    } -result {77d6576238657b203b19ca42c18a0497f16b4844e3074ae8dfdffa3fede21442fcd0069ded0948f8326a753a0fc81f17e8d3e0fb2e0d3628cf35e20c38d18906}
+
+test Scrypt_RFC_7914-6.2 {Test Case 2} -body {
+	binary encode hex [::tls::scrypt -password "password" -salt "NaCl" -N 1024 -r 8 -p 16 -size 64]
+    } -result {fdbabe1c9d3472007856e7190d01e9fe7c6ad7cbc8237830e77376634b3731622eaf30d92e22a3886ff109279d9830dac727afb94a83ee6d8360cbdfa2cc0640}
+
+test Scrypt_RFC_7914-6.3 {Test Case 3} -body {
+	binary encode hex [::tls::scrypt -password "pleaseletmein" -salt "SodiumChloride" -N 16384 -r 8 -p 1 -size 64]
+    } -result {7023bdcb3afd7348461c06cd81fd38ebfda8fbba904f8e3ea9b543f6545da1f2d5432955613f0fcf62d49705242a9af9e61e85dc0d651e40dfcf017b45575887}
+
+test Scrypt_RFC_7914-6.4 {Test Case 4} -body {
+	binary encode hex [::tls::scrypt -password "pleaseletmein" -salt "SodiumChloride" -N 1048576 -r 8 -p 1 -size 64]
+    } -result {2101cb9b6a511aaeaddbbe09cf70f881ec568d574a2ffd4dabe5ee9820adaa478e56fd8f4ba5d09ffa1c6d927c40f4c337304049e8a952fbcbf45c6fa77a41a4}
+
+# Cleanup
+::tcltest::cleanupTests
+return

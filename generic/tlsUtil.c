@@ -220,6 +220,42 @@ unsigned char *Util_GetSalt(Tcl_Interp *interp, Tcl_Obj *saltObj, int *len, int 
 /*
  *-------------------------------------------------------------------
  *
+ * Util_GetBinaryArray --
+ *
+ *	Get binary array from TclObj
+ *
+ * Returns:
+ *	Pointer to type or NULL, and size
+ *
+ * Side effects:
+ *	None
+ *
+ *-------------------------------------------------------------------
+ */
+unsigned char *Util_GetBinaryArray(Tcl_Interp *interp, Tcl_Obj *dataObj, int *len, char *name, int min, int max, int no_null) {
+    unsigned char *data = NULL;
+    *len = 0;
+
+    if (dataObj != NULL) {
+	data = Tcl_GetByteArrayFromObj(dataObj, len);
+    } else if (no_null) {
+	Tcl_AppendResult(interp, "no ", name, (char *) NULL);
+	return NULL;
+    }
+
+    if (*len < min) {
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf("Invalid length for \"%s\": must be >= %d", name, min));
+	return NULL;
+    } else if (max > 0 && *len > max) {
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf("Invalid length for \"%s\": must be <= %d", name, max));
+	return NULL;
+    }
+    return data;
+}
+
+/*
+ *-------------------------------------------------------------------
+ *
  * Util_GetInt --
  *
  *	Get integer value from TclObj

@@ -78,13 +78,13 @@ MD File,md5 hex,,,::tls::md -digest md5 -file $test_file -hex,,,962bf0803b4232ec
 command,# MD Error Cases,,,,,,,,,
 MD Errors,Too few args,,,::tls::md,,,"wrong # args: should be ""::tls::md ?-bin|-hex? ?-cipher name? ?-digest name? ?-key key? ?-mac name? [-channel chan | -command cmdName | -file filename | ?-data? data]""",,,1
 MD Errors,Too many args,,,::tls::md too many command line args to pass the test without an error or failing,,,"wrong # args: should be ""::tls::md ?-bin|-hex? ?-cipher name? ?-digest name? ?-key key? ?-mac name? [-channel chan | -command cmdName | -file filename | ?-data? data]""",,,1
-MD Errors,Invalid digest,,,::tls::md bogus data,,,"Invalid digest ""bogus""",,,1
-MD Errors,Invalid digest Arg,,,::tls::md -digest bogus -data data,,,"Invalid digest ""bogus""",,,1
-MD Errors,No digest,,,::tls::md -hex -data value,,,No digest specified,,,1
+MD Errors,Invalid digest,,,::tls::md bogus data,,,"invalid digest ""bogus""",,,1
+MD Errors,Invalid digest Arg,,,::tls::md -digest bogus -data data,,,"invalid digest ""bogus""",,,1
+MD Errors,No digest,,,::tls::md -hex -data value,,,no digest,,,1
 MD Errors,Invalid option,,,::tls::md -digest sha256 -bogus value,,,"bad option ""-bogus"": must be -bin, -binary, -hex, -hexadecimal, -chan, -channel, -cipher, -command, -data, -digest, -file, -filename, -hash, -key, or -mac",,,1
 MD Errors,Invalid file,,,::tls::md -digest sha256 -file bogus,,,"couldn't open ""bogus"": no such file or directory",,,1
 MD Errors,Invalid channel,,,::tls::md -digest sha256 -channel bogus,,,"can not find channel named ""bogus""",,,1
-MD Errors,No operation,,,::tls::md -digest sha256 -bin,,,"No operation specified: Use -channel, -command, -data, or -file option",,,1
+MD Errors,No operation,,,::tls::md -digest sha256 -bin,,,"No operation: Use -channel, -command, -data, or -file option",,,1
 ,,,,,,,,,,
 ,,,,,,,,,,
 command,# Test CMAC command,,,,,,,,,
@@ -109,9 +109,9 @@ CMAC Shortcut,data,,,::tls::cmac $test_cipher -key $test_key $test_data,,,baf5c2
 command,# CMAC Error Cases,,,,,,,,,
 CMAC Errors,Too few args,,,::tls::cmac,,,"wrong # args: should be ""::tls::cmac ?-bin|-hex? ?-cipher name? ?-digest name? ?-key key? ?-mac name? [-channel chan | -command cmdName | -file filename | ?-data? data]""",,,1
 CMAC Errors,Too many args,,,::tls::cmac too many command line args to pass the test without an error or failing,,,"wrong # args: should be ""::tls::cmac ?-bin|-hex? ?-cipher name? ?-digest name? ?-key key? ?-mac name? [-channel chan | -command cmdName | -file filename | ?-data? data]""",,,1
-CMAC Errors,No cipher,,,::tls::cmac -hex -data $test_data,,,No cipher specified,,,1
-CMAC Errors,No key,,,::tls::cmac -cipher $test_cipher -data $test_data,,,No key specified,,,1
-CMAC Errors,Invalid cipher,,,::tls::cmac -cipher bogus -data $test_data,,,"Invalid cipher ""bogus""",,,1
+CMAC Errors,No cipher,,,::tls::cmac -hex -data $test_data,,,no cipher,,,1
+CMAC Errors,No key,,,::tls::cmac -cipher $test_cipher -data $test_data,,,no key,,,1
+CMAC Errors,Invalid cipher,,,::tls::cmac -cipher bogus -data $test_data,,,"invalid cipher ""bogus""",,,1
 ,,,,,,,,,,
 ,,,,,,,,,,
 command,# Test HMAC command,,,,,,,,,
@@ -136,9 +136,9 @@ HMAC Shortcut,data,,,::tls::hmac $test_digest -key $test_key $test_data,,,f98327
 command,# HMAC Error Cases,,,,,,,,,
 HMAC Errors,Too few args,,,::tls::hmac,,,"wrong # args: should be ""::tls::hmac ?-bin|-hex? ?-cipher name? ?-digest name? ?-key key? ?-mac name? [-channel chan | -command cmdName | -file filename | ?-data? data]""",,,1
 HMAC Errors,Too many args,,,::tls::hmac too many command line args to pass the test without an error or failing,,,"wrong # args: should be ""::tls::hmac ?-bin|-hex? ?-cipher name? ?-digest name? ?-key key? ?-mac name? [-channel chan | -command cmdName | -file filename | ?-data? data]""",,,1
-HMAC Errors,No digest,,,::tls::hmac -hex -data $test_data,,,No digest specified,,,1
-HMAC Errors,No key,,,::tls::hmac -digest sha256 -data $test_data,,,No key specified,,,1
-HMAC Errors,Invalid digest,,,::tls::md -digest bogus -key $test_key -data $test_data,,,"Invalid digest ""bogus""",,,1
+HMAC Errors,No digest,,,::tls::hmac -hex -data $test_data,,,no digest,,,1
+HMAC Errors,No key,,,::tls::hmac -digest sha256 -data $test_data,,,no key,,,1
+HMAC Errors,Invalid digest,,,::tls::md -digest bogus -key $test_key -data $test_data,,,"invalid digest ""bogus""",,,1
 ,,,,,,,,,,
 ,,,,,,,,,,
 command,# Test MAC command,,,,,,,,,
@@ -152,9 +152,9 @@ MAC,MD-HMAC,,,::tls::md -digest $test_digest -key $test_key -mac hmac -data $tes
 ,,,,,,,,,,
 command,# MAC Error Cases,,,,,,,,,
 MAC Errors,Too few args,,,::tls::mac,,,"wrong # args: should be ""::tls::mac ?-bin|-hex? ?-cipher name? ?-digest name? ?-key key? ?-mac name? [-channel chan | -command cmdName | -file filename | ?-data? data]""",,,1
-MAC Errors,No mac,,,::tls::mac -key $test_key -data $test_data,,,No MAC specified,,,1
-MAC Errors,No key,,,::tls::mac -mac hmac -data $test_data,,,No key specified,,,1
-MAC Errors,Invalid MAC,,,::tls::mac -mac scrypt -key $test_key -data $test_data,,,"Invalid MAC ""scrypt""",,,1
+MAC Errors,No mac,,,::tls::mac -key $test_key -data $test_data,,,no MAC,,,1
+MAC Errors,No key,,,::tls::mac -mac hmac -digest $test_digest -data $test_data,,,no key,,,1
+MAC Errors,Invalid MAC,,,::tls::mac -mac bogus -key $test_key -data $test_data,,,"invalid MAC ""bogus""",,,1
 MAC Errors,Too many args,,,::tls::mac too many command line args to pass the test without an error or failing,,,"wrong # args: should be ""::tls::mac ?-bin|-hex? ?-cipher name? ?-digest name? ?-key key? ?-mac name? [-channel chan | -command cmdName | -file filename | ?-data? data]""",,,1
 ,,,,,,,,,,
 ,,,,,,,,,,

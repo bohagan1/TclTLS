@@ -239,15 +239,15 @@ test MD_Errors-8.2 {Too many args} -body {
 
 test MD_Errors-8.3 {Invalid digest} -body {
 	::tls::md bogus data
-    } -result {Invalid digest "bogus"} -returnCodes {1}
+    } -result {invalid digest "bogus"} -returnCodes {1}
 
 test MD_Errors-8.4 {Invalid digest Arg} -body {
 	::tls::md -digest bogus -data data
-    } -result {Invalid digest "bogus"} -returnCodes {1}
+    } -result {invalid digest "bogus"} -returnCodes {1}
 
 test MD_Errors-8.5 {No digest} -body {
 	::tls::md -hex -data value
-    } -result {No digest specified} -returnCodes {1}
+    } -result {no digest} -returnCodes {1}
 
 test MD_Errors-8.6 {Invalid option} -body {
 	::tls::md -digest sha256 -bogus value
@@ -263,7 +263,7 @@ test MD_Errors-8.8 {Invalid channel} -body {
 
 test MD_Errors-8.9 {No operation} -body {
 	::tls::md -digest sha256 -bin
-    } -result {No operation specified: Use -channel, -command, -data, or -file option} -returnCodes {1}
+    } -result {No operation: Use -channel, -command, -data, or -file option} -returnCodes {1}
 
 
 # Test CMAC command
@@ -334,15 +334,15 @@ test CMAC_Errors-12.2 {Too many args} -body {
 
 test CMAC_Errors-12.3 {No cipher} -body {
 	::tls::cmac -hex -data $test_data
-    } -result {No cipher specified} -returnCodes {1}
+    } -result {no cipher} -returnCodes {1}
 
 test CMAC_Errors-12.4 {No key} -body {
 	::tls::cmac -cipher $test_cipher -data $test_data
-    } -result {No key specified} -returnCodes {1}
+    } -result {no key} -returnCodes {1}
 
 test CMAC_Errors-12.5 {Invalid cipher} -body {
 	::tls::cmac -cipher bogus -data $test_data
-    } -result {Invalid cipher "bogus"} -returnCodes {1}
+    } -result {invalid cipher "bogus"} -returnCodes {1}
 
 
 # Test HMAC command
@@ -413,15 +413,15 @@ test HMAC_Errors-16.2 {Too many args} -body {
 
 test HMAC_Errors-16.3 {No digest} -body {
 	::tls::hmac -hex -data $test_data
-    } -result {No digest specified} -returnCodes {1}
+    } -result {no digest} -returnCodes {1}
 
 test HMAC_Errors-16.4 {No key} -body {
 	::tls::hmac -digest sha256 -data $test_data
-    } -result {No key specified} -returnCodes {1}
+    } -result {no key} -returnCodes {1}
 
 test HMAC_Errors-16.5 {Invalid digest} -body {
 	::tls::md -digest bogus -key $test_key -data $test_data
-    } -result {Invalid digest "bogus"} -returnCodes {1}
+    } -result {invalid digest "bogus"} -returnCodes {1}
 
 
 # Test MAC command
@@ -455,15 +455,15 @@ test MAC_Errors-18.1 {Too few args} -body {
 
 test MAC_Errors-18.2 {No mac} -body {
 	::tls::mac -key $test_key -data $test_data
-    } -result {No MAC specified} -returnCodes {1}
+    } -result {no MAC} -returnCodes {1}
 
 test MAC_Errors-18.3 {No key} -body {
-	::tls::mac -mac hmac -data $test_data
-    } -result {No key specified} -returnCodes {1}
+	::tls::mac -mac hmac -digest $test_digest -data $test_data
+    } -result {no key} -returnCodes {1}
 
 test MAC_Errors-18.4 {Invalid MAC} -body {
-	::tls::mac -mac scrypt -key $test_key -data $test_data
-    } -result {Invalid MAC "scrypt"} -returnCodes {1}
+	::tls::mac -mac bogus -key $test_key -data $test_data
+    } -result {invalid MAC "bogus"} -returnCodes {1}
 
 test MAC_Errors-18.5 {Too many args} -body {
 	::tls::mac too many command line args to pass the test without an error or failing

@@ -1,0 +1,80 @@
+# Group,Name,Constraints,Setup,Body,Cleanup,Match,Result,Output,Error Output,Return Codes
+command,package require tls,,,,,,,,,
+,,,,,,,,,,
+command,# PBKDF2 Error Cases,,,,,,,,,
+PBKDF2 Errors,Too few args,,,::tls::pbkdf2,,,"wrong # args: should be ""::tls::pbkdf2 [-cipher cipher | -size length] -digest digest ?-iterations count? ?-password string? ?-salt string?""",,,1
+PBKDF2 Errors,Too many args,,,::tls::pbkdf2 too many command line args to pass the test without an error or failing,,,"wrong # args: should be ""::tls::pbkdf2 [-cipher cipher | -size length] -digest digest ?-iterations count? ?-password string? ?-salt string?""",,,1
+PBKDF2 Errors,Invalid cipher,,,::tls::pbkdf2 -digest sha256 -password key -cipher bogus,,,"invalid cipher ""bogus""",,,1
+PBKDF2 Errors,Invalid digest,,,::tls::pbkdf2 -digest bogus -password key,,,"invalid digest ""bogus""",,,1
+PBKDF2 Errors,Invalid iterations,,,::tls::pbkdf2 -digest sha256 -password key -iterations -1,,,"invalid value ""-1"" for option ""iterations"": must be >= 1",,,1
+PBKDF2 Errors,No password value,,,::tls::pbkdf2 -digest sha256 -password,,,"No value for option ""-password""",,,1
+PBKDF2 Errors,No salt value,,,::tls::pbkdf2 -digest sha256 -password key -salt,,,"No value for option ""-salt""",,,1
+PBKDF2 Errors,Invalid size,,,::tls::pbkdf2 -digest sha256 -password key -size 0,,,"invalid value ""0"" for option ""-size"": must be >= 1",,,1
+PBKDF2 Errors,Too big size,,,::tls::pbkdf2 -digest sha256 -password key -size 400,,,"invalid value ""400"" for option ""-size"": must be <= 320",,,1
+,,,,,,,,,,
+command,# HKDF Error Cases,,,,,,,,,
+HKDF Errors,Too few args,,,::tls::hkdf,,,"wrong # args: should be ""::tls::hkdf -digest digest -key string ?-info string? ?-salt string? ?-size derived_length?""",,,1
+HKDF Errors,Too many args,,,::tls::hkdf too many command line args to pass the test without an error or failing,,,"wrong # args: should be ""::tls::hkdf -digest digest -key string ?-info string? ?-salt string? ?-size derived_length?""",,,1
+HKDF Errors,No digest,,,::tls::hkdf -key key -key key,,,no digest,,,1
+HKDF Errors,No key,,,::tls::hkdf -digest sha256 -digest sha256,,,no key,,,1
+HKDF Errors,No info value,,,::tls::hkdf -digest sha256 -key key -info,,,"No value for option ""-info""",,,1
+HKDF Errors,No salt value,,,::tls::hkdf -digest sha256 -password key -salt,,,"No value for option ""-salt""",,,1
+HKDF Errors,Invalid size,,,::tls::hkdf -digest sha256 -password key -size 0,,,"invalid value ""0"" for option ""-size"": must be >= 1",,,1
+HKDF Errors,Too big size,,,::tls::hkdf -digest sha256 -password key -size 8161,,,"""Key derivation failed: """,,,1
+,,,,,,,,,,
+command,# Scrypt Error Cases,,,,,,,,,
+Scrypt Errors,Too few args,,,::tls::scrypt,,,"wrong # args: should be ""::tls::scrypt -password string -salt string ?-N costParameter? ?-r blockSize? ?-p parallelization? ?-size derived_length?""",,,1
+Scrypt Errors,Too many args,,,::tls::scrypt too many command line args to pass the test without an error or failing,,,"wrong # args: should be ""::tls::scrypt -password string -salt string ?-N costParameter? ?-r blockSize? ?-p parallelization? ?-size derived_length?""",,,1
+Scrypt Errors,No password value,,,::tls::scrypt -salt salt -salt salt,,,no password,,,1
+Scrypt Errors,No salt value,,,::tls::scrypt -password key -password key,,,no salt,,,1
+Scrypt Errors,Invalid size,,,::tls::scrypt -password key -salt salt -size 0,,,"invalid value ""0"" for option ""-size"": must be >= 1",,,1
+Scrypt Errors,Invalid N costParameter,knownIgnored,,::tls::scrypt -password key -salt salt -N 0,,,,,,1
+Scrypt Errors,Invalid r blockSize,knownIgnored,,::tls::scrypt -password key -salt salt -r 0,,,,,,1
+Scrypt Errors,Invalid p parallelization,knownIgnored,,::tls::scrypt -password key -salt salt -p 0,,,,,,1
+,,,,,,,,,,
+command,set digest sha1,,,,,,,,,
+command,"set P ""password""",,,,,,,,,
+command,"set S ""salt""",,,,,,,,,
+command,set dkLen 20,,,,,,,,,
+,,,,,,,,,,
+command,# PBKDF2 RFC 6070,,,,,,,,,
+PBKDF2 RFC 6070,Test Case 1,,,binary encode hex [::tls::pbkdf2 -digest $digest -password $P -salt $S -iterations 1 -size $dkLen],,,0c60c80f961f0e71f3a9b524af6012062fe037a6,,,
+PBKDF2 RFC 6070,Test Case 2,,,binary encode hex [::tls::pbkdf2 -digest $digest -password $P -salt $S -iterations 2 -size $dkLen],,,ea6c014dc72d6f8ccd1ed92ace1d41f0d8de8957,,,
+PBKDF2 RFC 6070,Test Case 3,,,binary encode hex [::tls::pbkdf2 -digest $digest -password $P -salt $S -iterations 4096 -size $dkLen],,,4b007901b765489abead49d926f721d065a429c1,,,
+PBKDF2 RFC 6070,Test Case 4,,,binary encode hex [::tls::pbkdf2 -digest $digest -password $P -salt $S -iterations 16777216 -size $dkLen],,,eefe3d61cd4da4e4e9945b3d6ba2158c2634e984,,,
+,,,,,,,,,,
+command,set digest sha1,,,,,,,,,
+command,set key [binary decode hex 0b0b0b0b0b0b0b0b0b0b0b],,,,,,,,,
+command,set salt [binary decode hex 000102030405060708090a0b0c],,,,,,,,,
+command,set info [binary decode hex f0f1f2f3f4f5f6f7f8f9],,,,,,,,,
+command,set size 42,,,,,,,,,
+,,,,,,,,,,
+command,# HKDF RFC 6234,,,,,,,,,
+HKDF RFC 6234,"A.4.  Test Case 4, Basic test case with SHA-1",,,binary encode hex [::tls::hkdf -digest $digest -password $key -salt $salt -info $info -size $size],,,085a01ea1b10f36933068b56efa5ad81a4f14b822f5b091568a9cdd4f155fda2c22e422478d305f3f896,,,
+,,,,,,,,,,
+command,set key [binary decode hex 000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f],,,,,,,,,
+command,set salt [binary decode hex 606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeaf],,,,,,,,,
+command,set info [binary decode hex b0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff],,,,,,,,,
+command,set size 82,,,,,,,,,
+,,,,,,,,,,
+HKDF RFC 6234,"A.5.  Test Case 5, Test with SHA-1 and longer inputs/outputs",,,binary encode hex [::tls::hkdf -digest $digest -password $key -salt $salt -info $info -size $size],,,0bd770a74d1160f7c9f12cd5912a06ebff6adcae899d92191fe4305673ba2ffe8fa3f1a4e5ad79f3f334b3b202b2173c486ea37ce3d397ed034c7f9dfeb15c5e927336d0441f4c4300e2cff0d0900b52d3b4,,,
+,,,,,,,,,,
+command,set key [binary decode hex 0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b],,,,,,,,,
+command,"set salt """"",,,,,,,,,
+command,"set info """"",,,,,,,,,
+command,set size 42,,,,,,,,,
+,,,,,,,,,,
+HKDF RFC 6234,"A.6.  Test Case 6, Test with SHA-1 and zero-length salt/info",,,binary encode hex [::tls::hkdf -digest $digest -password $key -salt $salt -info $info -size $size],,,0ac1af7002b3d761d1e55298da9d0506b9ae52057220a306e07b6b87e8df21d0ea00033de03984d34918,,,
+,,,,,,,,,,
+command,set key [binary decode hex 0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c],,,,,,,,,
+command,"set salt """"",,,,,,,,,
+command,"set info """"",,,,,,,,,
+command,set size 42,,,,,,,,,
+,,,,,,,,,,
+HKDF RFC 6234,"A.7.  Test Case 7, Test with SHA-1, salt not provided (defaults to HashLen zero octets), zero-length info",,,binary encode hex [::tls::hkdf -digest $digest -password $key -salt $salt -info $info -size $size],,,2c91117204d745f3500d636a62f64f0ab3bae548aa53d423b0d1f27ebba6f5e5673a081d70cce7acfc48,,,
+,,,,,,,,,,
+command,# Scrypt RFC 7914,,,,,,,,,
+Scrypt RFC 7914,Test Case 1,,,"binary encode hex [::tls::scrypt -password """" -salt """" -N 16 -r 1 -p 1 -size 64]",,,77d6576238657b203b19ca42c18a0497f16b4844e3074ae8dfdffa3fede21442fcd0069ded0948f8326a753a0fc81f17e8d3e0fb2e0d3628cf35e20c38d18906,,,
+Scrypt RFC 7914,Test Case 2,,,"binary encode hex [::tls::scrypt -password ""password"" -salt ""NaCl"" -N 1024 -r 8 -p 16 -size 64]",,,fdbabe1c9d3472007856e7190d01e9fe7c6ad7cbc8237830e77376634b3731622eaf30d92e22a3886ff109279d9830dac727afb94a83ee6d8360cbdfa2cc0640,,,
+Scrypt RFC 7914,Test Case 3,,,"binary encode hex [::tls::scrypt -password ""pleaseletmein"" -salt ""SodiumChloride"" -N 16384 -r 8 -p 1 -size 64]",,,7023bdcb3afd7348461c06cd81fd38ebfda8fbba904f8e3ea9b543f6545da1f2d5432955613f0fcf62d49705242a9af9e61e85dc0d651e40dfcf017b45575887,,,
+Scrypt RFC 7914,Test Case 4,,,"binary encode hex [::tls::scrypt -password ""pleaseletmein"" -salt ""SodiumChloride"" -N 1048576 -r 8 -p 1 -size 64]",,,2101cb9b6a511aaeaddbbe09cf70f881ec568d574a2ffd4dabe5ee9820adaa478e56fd8f4ba5d09ffa1c6d927c40f4c337304049e8a952fbcbf45c6fa77a41a4,,,

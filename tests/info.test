@@ -161,7 +161,7 @@ test Ciphers_Errors-5.10 {TLS1.3} -constraints {!tls1.3} -body {
 
 test Cipher_Info-6.1 {AES-256-CCM} -body {
 	tls::cipher aes-256-ccm
-    } -result {nid aes-256-ccm name id-aes256-CCM description {} block_size 1 key_length 32 iv_length 12 type aes-256-ccm provider {} mode CCM flags {{Variable Length} 0 {Always Call Init} 1 {Custom IV} 1 {Control Init} 1 {Custom Cipher} 1 {AEAD Cipher} 1 {Custom Copy} 1 {Non FIPS Allow} 0}}
+    } -result {nid aes-256-ccm name id-aes256-CCM description {} block_size 1 key_length 32 iv_length 12 type aes-256-ccm provider {} mode CCM flags {{Variable Length} 0 {Always Call Init} 1 {Custom IV} 1 {Control Init} 1 {Custom Cipher} 1 {AEAD Cipher} 1 {Custom Copy} 1 {Non FIPS Allow} 0} tag_length 16 aad_length 13}
 
 # Test list digests
 
@@ -212,31 +212,27 @@ test Version-12.2 {OpenSSL} -constraints {OpenSSL} -body {
 # Error Cases
 
 
-test Error_Cases-13.1 {Cipher Too few args} -body {
-	::tls::cipher
-    } -result {wrong # args: should be "::tls::cipher ?name?"} -returnCodes {1}
-
-test Error_Cases-13.2 {Cipher Too many args} -body {
+test Error_Cases-13.1 {Cipher Too many args} -body {
 	::tls::cipher too many args
     } -result {wrong # args: should be "::tls::cipher ?name?"} -returnCodes {1}
 
-test Error_Cases-13.3 {Digests Too many args} -body {
+test Error_Cases-13.2 {Digests Too many args} -body {
 	::tls::digests too many args
     } -result {wrong # args: should be "::tls::digests ?name?"} -returnCodes {1}
 
-test Error_Cases-13.4 {MACs Too many args} -body {
+test Error_Cases-13.3 {MACs Too many args} -body {
 	::tls::macs too many args
     } -result {wrong # args: should be "::tls::macs ?name?"} -returnCodes {1}
 
-test Error_Cases-13.5 {Pkeys Too many args} -body {
+test Error_Cases-13.4 {Pkeys Too many args} -body {
 	::tls::pkeys too many args
     } -result {wrong # args: should be "::tls::pkeys ?name?"} -returnCodes {1}
 
-test Error_Cases-13.6 {Protocols Too many args} -body {
+test Error_Cases-13.5 {Protocols Too many args} -body {
 	::tls::protocols too many args
     } -result {wrong # args: should be "::tls::protocols"} -returnCodes {1}
 
-test Error_Cases-13.7 {Version Too many args} -body {
+test Error_Cases-13.6 {Version Too many args} -body {
 	::tls::version too many args
     } -result {wrong # args: should be "::tls::version"} -returnCodes {1}
 
