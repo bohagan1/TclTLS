@@ -1,0 +1,61 @@
+# Auto generated test cases for random.csv
+
+# Load Tcl Test package
+if {[lsearch [namespace children] ::tcltest] == -1} {
+	package require tcltest
+	namespace import ::tcltest::*
+}
+
+set auto_path [concat [list [file dirname [file dirname [info script]]]] $auto_path]
+
+package require tls
+
+# Random command
+
+
+test Random-1.1 {Min Length} -body {
+	string length [::tls::random 0]
+    } -result {0}
+
+test Random-1.2 {Example 1} -body {
+	string length [::tls::random 42]
+    } -result {42}
+
+test Random-1.3 {Example 2} -body {
+	string length [::tls::random 1000]
+    } -result {1000}
+
+test Random-1.4 {Private Option} -body {
+	string length [::tls::random -private 42]
+    } -result {42}
+
+# Random command errors
+
+
+test Random_Errors-2.1 {Too few args} -body {
+	::tls::random
+    } -result {wrong # args: should be "tls::random ?-private? length"} -returnCodes {1}
+
+test Random_Errors-2.2 {Too many args} -body {
+	::tls::random too many command line args to pass the test without an error or failing
+    } -result {wrong # args: should be "tls::random ?-private? length"} -returnCodes {1}
+
+test Random_Errors-2.3 {Invalid length value} -body {
+	::tls::random bogus
+    } -result {expected integer but got "bogus"} -returnCodes {1}
+
+test Random_Errors-2.4 {Negative length} -body {
+	::tls::random -1
+    } -result {bad count "-1": must be integer >= 0} -returnCodes {1}
+
+test Random_Errors-2.5 {Invalid option} -body {
+	::tls::random -bogus 42
+    } -result {bad option "-bogus": must be -private} -returnCodes {1}
+
+test Random_Errors-2.6 {Invalid length with option} -body {
+	::tls::random -private bogus
+    } -result {expected integer but got "bogus"} -returnCodes {1}
+
+# Cleanup
+::tcltest::cleanupTests
+return
