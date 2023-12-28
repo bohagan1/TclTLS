@@ -32,6 +32,7 @@ PRJ_OBJS = $(TMP_DIR)\tls.obj \
 	$(TMP_DIR)\tlsInfo.obj \
 	$(TMP_DIR)\tlsIO.obj \
 	$(TMP_DIR)\tlsKDF.obj \
+	$(TMP_DIR)\tlsRand.obj \
 	$(TMP_DIR)\tlsUtil.obj \
 	$(TMP_DIR)\tlsX509.obj
 

@@ -467,7 +467,7 @@ done:
  *
  *-------------------------------------------------------------------
  */
-int Tls_KeyCommands(Tcl_Interp *interp) {
+int Tls_KDFCommands(Tcl_Interp *interp) {
     Tcl_CreateObjCommand(interp, "tls::hkdf", KDF_HKDF, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
     Tcl_CreateObjCommand(interp, "tls::pbkdf2", KDF_PBKDF2, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
     Tcl_CreateObjCommand(interp, "tls::scrypt", KDF_Scrypt, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
