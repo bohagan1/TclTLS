@@ -60,8 +60,6 @@ set TCLINSTALL=\path\to\tcl\dir
 2b) Start BASH shell (MinGW62 Git shell)
 
 cd %BUILDDIR%
-./gen_dh_params > dh_params.h
-
 od -A n -v -t xC < 'library/tls.tcl' > tls.tcl.h.new.1
 sed 's@[^0-9A-Fa-f]@@g;s@..@0x&, @g' < tls.tcl.h.new.1 > generic/tls.tcl.h
 rm -f tls.tcl.h.new.1

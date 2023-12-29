@@ -48,29 +48,6 @@ AC_DEFUN([TCLTLS_SSL_OPENSSL], [
 	])
 
 
-	dnl Enable support for building the same Diffie–Hellman parameters each time
-	AC_ARG_ENABLE([deterministic], AS_HELP_STRING([--enable-deterministic], [enable deterministic DH parameters]), [
-		tcltls_deterministic="$enableval"
-	], [
-		tcltls_deterministic='no'
-	])
-	if test "$tcltls_deterministic" = 'yes'; then
-		GEN_DH_PARAMS_ARGS='fallback'
-	else
-		GEN_DH_PARAMS_ARGS=''
-	fi
-
-	dnl Enable support for specifying pre-computed DH params size
-	AC_ARG_WITH([builtin-dh-params-size], AS_HELP_STRING([--with-builtin-dh-params-size=<bits>],
-		[specify the size in bits of the built-in, precomputed, DH params]), [
-		AS_CASE([$withval],[2048|4096|8192],,[AC_MSG_ERROR([Unsupported DH params size: $withval])])
-		GEN_DH_PARAMS_ARGS="${GEN_DH_PARAMS_ARGS} bits=$withval"
-	])
-	AC_SUBST(GEN_DH_PARAMS_ARGS)
-	AC_MSG_CHECKING([for DH params])
-	AC_MSG_RESULT([$GEN_DH_PARAMS_ARGS])
-
-
 	dnl Determine if we have been asked to use a fast path if possible
 	AC_ARG_ENABLE([ssl-fastpath], AS_HELP_STRING([--enable-ssl-fastpath],
 		[enable using the underlying file descriptor for talking directly to the SSL library]), [

@@ -8,19 +8,20 @@
 
 static int BioWrite(BIO *bio, const char *buf, int bufLen) {
     Tcl_Channel chan;
-    int ret;
+    Tcl_Size ret;
     int tclEofChan, tclErrno;
 
     chan = Tls_GetParent((State *) BIO_get_data(bio), 0);
 
     dprintf("[chan=%p] BioWrite(%p, <buf>, %d)", (void *)chan, (void *) bio, bufLen);
 
-    ret = (int) Tcl_WriteRaw(chan, buf, bufLen);
+    ret = Tcl_WriteRaw(chan, buf, (Tcl_Size) bufLen);
 
     tclEofChan = Tcl_Eof(chan);
     tclErrno = Tcl_GetErrno();
 
-    dprintf("[chan=%p] BioWrite(%d) -> %d [tclEof=%d; tclErrno=%d]", (void *) chan, bufLen, ret, tclEofChan, Tcl_GetErrno());
+    dprintf("[chan=%p] BioWrite(%d) -> %" TCL_SIZE_MODIFIER "d [tclEof=%d; tclErrno=%d]",
+	(void *) chan, bufLen, ret, tclEofChan, Tcl_GetErrno());
 
     BIO_clear_flags(bio, BIO_FLAGS_WRITE | BIO_FLAGS_SHOULD_RETRY);
 
@@ -54,7 +55,7 @@ static int BioWrite(BIO *bio, const char *buf, int bufLen) {
 	    BIO_set_retry_read(bio);
 	}
     }
-    return(ret);
+    return((int) ret);
 }
 
 static int BioRead(BIO *bio, char *buf, int bufLen) {
@@ -70,12 +71,13 @@ static int BioRead(BIO *bio, char *buf, int bufLen) {
 	return 0;
     }
 
-    ret = Tcl_ReadRaw(chan, buf, bufLen);
+    ret = Tcl_ReadRaw(chan, buf, (Tcl_Size) bufLen);
 
     tclEofChan = Tcl_Eof(chan);
     tclErrno = Tcl_GetErrno();
 
-    dprintf("[chan=%p] BioRead(%d) -> %d [tclEof=%d; tclErrno=%d]", (void *) chan, bufLen, ret, tclEofChan, tclErrno);
+    dprintf("[chan=%p] BioRead(%d) -> %" TCL_SIZE_MODIFIER "d [tclEof=%d; tclErrno=%d]",
+	(void *) chan, bufLen, ret, tclEofChan, tclErrno);
 
     BIO_clear_flags(bio, BIO_FLAGS_READ | BIO_FLAGS_SHOULD_RETRY);
 
@@ -110,9 +112,10 @@ static int BioRead(BIO *bio, char *buf, int bufLen) {
 	}
     }
 
-    dprintf("BioRead(%p, <buf>, %d) [%p] returning %i", (void *) bio, bufLen, (void *) chan, ret);
+    dprintf("BioRead(%p, <buf>, %d) [%p] returning %" TCL_SIZE_MODIFIER "d", (void *) bio,
+	bufLen, (void *) chan, ret);
 
-    return(ret);
+    return((int) ret);
 }
 
 static int BioPuts(BIO *bio, const char *str) {

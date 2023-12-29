@@ -90,7 +90,7 @@ TEA_ADD_TCL_SOURCES([library/tls.tcl])
 # TEA_ADD_* any platform specific compiler/build info here.
 #--------------------------------------------------------------------
 
-CONFIG_CLEAN_FILES="$CONFIG_CLEAN_FILES tls.tcl.h.* config.log config.status dh_params.h.new dh_params.h Makefile pkgIndex.tcl tcltls.a.linkadd tcltls.syms"
+CONFIG_CLEAN_FILES="$CONFIG_CLEAN_FILES tls.tcl.h.* config.log config.status Makefile pkgIndex.tcl tcltls.a.linkadd tcltls.syms"
 if test "${TEA_PLATFORM}" = "windows" ; then
     AC_DEFINE(BUILD_tls)
     AC_DEFINE(WINDOWS)

@@ -647,14 +647,14 @@ ac_includes_default="\
 ac_header_c_list=
 ac_subst_vars='LTLIBOBJS
 TCLSH_PROG
+TCLTLS_SSL_LIBS
 TCLTLS_SSL_INCLUDES
 TCLTLS_SSL_CFLAGS
-TCLTLS_SSL_LIBS
-GEN_DH_PARAMS_ARGS
 PKG_CONFIG
 VC_MANIFEST_EMBED_EXE
 VC_MANIFEST_EMBED_DLL
 RANLIB_STUB
+PKG_STUB_LIB_FILE
 MAKE_STUB_LIB
 MAKE_STATIC_LIB
 MAKE_SHARED_LIB
@@ -720,7 +720,6 @@ PKG_HEADERS
 PKG_TCL_SOURCES
 PKG_STUB_OBJECTS
 PKG_STUB_SOURCES
-PKG_STUB_LIB_FILE
 PKG_LIB_FILE9
 PKG_LIB_FILE8
 PKG_LIB_FILE
@@ -782,8 +781,6 @@ enable_tls1
 enable_tls1_1
 enable_tls1_2
 enable_tls1_3
-enable_deterministic
-with_builtin_dh_params_size
 enable_ssl_fastpath
 enable_hardening
 enable_static_ssl
@@ -801,9 +798,9 @@ LDFLAGS
 LIBS
 CPPFLAGS
 CPP
-TCLTLS_SSL_LIBS
 TCLTLS_SSL_CFLAGS
-TCLTLS_SSL_INCLUDES'
+TCLTLS_SSL_INCLUDES
+TCLTLS_SSL_LIBS'
 
 
 # Initialize some variables set by options.
@@ -1434,7 +1431,6 @@ Optional Features:
   --disable-tls1_1        disable TLS1.1 protocol
   --disable-tls1_2        disable TLS1.2 protocol
   --disable-tls1_3        disable TLS1.3 protocol
-  --enable-deterministic  enable deterministic DH parameters
   --enable-ssl-fastpath   enable using the underlying file descriptor for
                           talking directly to the SSL library
   --enable-hardening      enable hardening attempts
@@ -1447,9 +1443,6 @@ Optional Packages:
                           (tclConfig.sh)
   --with-tcl8             Compile for Tcl8 in Tcl9 environment
   --with-tclinclude       directory containing the public Tcl header files
-  --with-builtin-dh-params-size=<bits>
-                          specify the size in bits of the built-in,
-                          precomputed, DH params
   --with-openssl-dir=<dir>
                           path to root directory of OpenSSL or LibreSSL
                           installation
@@ -1472,12 +1465,12 @@ Some influential environment variables:
   CPPFLAGS    (Objective) C/C++ preprocessor flags, e.g. -I<include dir> if
               you have headers in a nonstandard directory <include dir>
   CPP         C preprocessor
-  TCLTLS_SSL_LIBS
-              libraries to pass to the linker for OpenSSL or LibreSSL
   TCLTLS_SSL_CFLAGS
               C compiler flags for OpenSSL or LibreSSL
   TCLTLS_SSL_INCLUDES
               C compiler include paths for OpenSSL or LibreSSL
+  TCLTLS_SSL_LIBS
+              libraries to pass to the linker for OpenSSL or LibreSSL
 
 Use these variables to override the choices made by `configure' or to help
 it to find libraries and programs with nonstandard names/locations.
@@ -2613,8 +2606,6 @@ printf "%s\n" "$as_me: configuring ${PACKAGE_NAME} ${PACKAGE_VERSION}" >&6;}
     # This package name must be replaced statically for AC_SUBST to work
 
 
-
-    # Substitute STUB_LIB_FILE in case package creates a stub library too.
 
 
     # We AC_SUBST these here to ensure they are subst'ed,
@@ -5510,7 +5501,7 @@ printf "%s\n" "$ac_cv_c_bigendian" >&6; }
 # TEA_ADD_* any platform specific compiler/build info here.
 #--------------------------------------------------------------------
 
-CONFIG_CLEAN_FILES="$CONFIG_CLEAN_FILES tls.tcl.h.* config.log config.status dh_params.h.new dh_params.h Makefile pkgIndex.tcl tcltls.a.linkadd tcltls.syms"
+CONFIG_CLEAN_FILES="$CONFIG_CLEAN_FILES tls.tcl.h.* config.log config.status Makefile pkgIndex.tcl tcltls.a.linkadd tcltls.syms"
 if test "${TEA_PLATFORM}" = "windows" ; then
     printf "%s\n" "#define BUILD_tls 1" >>confdefs.h
 
@@ -8873,7 +8864,11 @@ printf "%s\n" "#define TCL_MAJOR_VERSION 8" >>confdefs.h
 	    eval eval "PKG_LIB_FILE=${PACKAGE_LIB_PREFIX}${PACKAGE_NAME}${UNSHARED_LIB_SUFFIX}"
 	fi
 	# Some packages build their own stubs libraries
-	eval eval "PKG_STUB_LIB_FILE=${PACKAGE_LIB_PREFIX8}${PACKAGE_NAME}stub${UNSHARED_LIB_SUFFIX}"
+	if test "${TCL_MAJOR_VERSION}" -gt 8 -a x"${with_tcl8}" == x; then
+	    eval eval "PKG_STUB_LIB_FILE=${PACKAGE_LIB_PREFIX8}${PACKAGE_NAME}stub.a"
+	else
+	    eval eval "PKG_STUB_LIB_FILE=${PACKAGE_LIB_PREFIX8}${PACKAGE_NAME}stub${UNSHARED_LIB_SUFFIX}"
+	fi
 	if test "$GCC" = "yes"; then
 	    PKG_STUB_LIB_FILE=lib${PKG_STUB_LIB_FILE}
 	fi
@@ -8892,12 +8887,16 @@ printf "%s\n" "#define TCL_MAJOR_VERSION 8" >>confdefs.h
 	    eval eval "PKG_LIB_FILE=lib${PACKAGE_LIB_PREFIX}${PACKAGE_NAME}${SHARED_LIB_SUFFIX}"
 	    RANLIB=:
 	else
-	    eval eval "PKG_LIB_FILE=lib${PACKAGE_LIB_PREFIX8}${PACKAGE_NAME}${UNSHARED_LIB_SUFFIX}"
-	    eval eval "PKG_LIB_FILE=lib${PACKAGE_LIB_PREFIX9}${PACKAGE_NAME}${UNSHARED_LIB_SUFFIX}"
+	    eval eval "PKG_LIB_FILE8=lib${PACKAGE_LIB_PREFIX8}${PACKAGE_NAME}${UNSHARED_LIB_SUFFIX}"
+	    eval eval "PKG_LIB_FILE9=lib${PACKAGE_LIB_PREFIX9}${PACKAGE_NAME}${UNSHARED_LIB_SUFFIX}"
 	    eval eval "PKG_LIB_FILE=lib${PACKAGE_LIB_PREFIX}${PACKAGE_NAME}${UNSHARED_LIB_SUFFIX}"
 	fi
 	# Some packages build their own stubs libraries
-	eval eval "PKG_STUB_LIB_FILE=lib${PACKAGE_LIB_PREFIX8}${PACKAGE_NAME}stub${UNSHARED_LIB_SUFFIX}"
+	if test "${TCL_MAJOR_VERSION}" -gt 8 -a x"${with_tcl8}" == x; then
+	    eval eval "PKG_STUB_LIB_FILE=lib${PACKAGE_LIB_PREFIX8}${PACKAGE_NAME}stub.a"
+	else
+	    eval eval "PKG_STUB_LIB_FILE=lib${PACKAGE_LIB_PREFIX8}${PACKAGE_NAME}stub${UNSHARED_LIB_SUFFIX}"
+	fi
     fi
 
     # These are escaped so that only CFLAGS is picked up at configure time.
@@ -8910,6 +8909,8 @@ printf "%s\n" "#define TCL_MAJOR_VERSION 8" >>confdefs.h
 
 
 
+
+    # Substitute STUB_LIB_FILE in case package creates a stub library too.
 
 
 
@@ -9010,7 +9011,7 @@ printf "%s\n" "no" >&6; }
 fi
 
   if test "x$ac_ct_PKG_CONFIG" = x; then
-    PKG_CONFIG="false"
+    PKG_CONFIG=""
   else
     case $cross_compiling:$ac_tool_warned in
 yes:)
@@ -9094,46 +9095,6 @@ fi
 
 
 
-		# Check whether --enable-deterministic was given.
-if test ${enable_deterministic+y}
-then :
-  enableval=$enable_deterministic;
-		tcltls_deterministic="$enableval"
-
-else $as_nop
-
-		tcltls_deterministic='no'
-
-fi
-
-	if test "$tcltls_deterministic" = 'yes'; then
-		GEN_DH_PARAMS_ARGS='fallback'
-	else
-		GEN_DH_PARAMS_ARGS=''
-	fi
-
-
-# Check whether --with-builtin-dh-params-size was given.
-if test ${with_builtin_dh_params_size+y}
-then :
-  withval=$with_builtin_dh_params_size;
-		case $withval in #(
-  2048|4096|8192) :
-     ;; #(
-  *) :
-    as_fn_error $? "Unsupported DH params size: $withval" "$LINENO" 5 ;;
-esac
-		GEN_DH_PARAMS_ARGS="${GEN_DH_PARAMS_ARGS} bits=$withval"
-
-fi
-
-
-	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for DH params" >&5
-printf %s "checking for DH params... " >&6; }
-	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $GEN_DH_PARAMS_ARGS" >&5
-printf "%s\n" "$GEN_DH_PARAMS_ARGS" >&6; }
-
-
 		# Check whether --enable-ssl-fastpath was given.
 if test ${enable_ssl_fastpath+y}
 then :
@@ -9207,12 +9168,6 @@ printf %s "checking for static linking of openSSL libraries... " >&6; }
 	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $TCLEXT_TLS_STATIC_SSL" >&5
 printf "%s\n" "$TCLEXT_TLS_STATIC_SSL" >&6; }
 
-	# Static lib
-	pkgConfigExtraArgs=''
-	if test "${SHARED_BUILD}" == 0 -o "$TCLEXT_TLS_STATIC_SSL" = 'yes'; then
-		pkgConfigExtraArgs='--static'
-	fi
-
 
 
 # Check whether --with-openssl-dir was given.
@@ -9239,7 +9194,7 @@ then :
 else $as_nop
 
 			if test -n "$openssldir"; then
-				opensslincludedir="${openssldir}${PATH_SEPARATOR}include${PATH_SEPARATOR}openssl"
+				opensslincludedir="$openssldir/include/openssl"
 			else
 				opensslincludedir=''
 			fi
@@ -9253,12 +9208,15 @@ printf %s "checking for OpenSSL include directory... " >&6; }
 printf "%s\n" "$opensslincludedir" >&6; }
 
 		if test -n "$opensslincludedir"; then
-		if test -f "${opensslincludedir}${PATH_SEPARATOR}ssl.h"; then
+		if test -f "$opensslincludedir/ssl.h"; then
 			TCLTLS_SSL_CFLAGS="-I$opensslincludedir"
 			TCLTLS_SSL_INCLUDES="-I$opensslincludedir"
 		else
 			as_fn_error $? "Unable to locate ssl.h" "$LINENO" 5
 		fi
+	else
+		TCLTLS_SSL_CFLAGS="-I$(includedir)/openssl"
+		TCLTLS_SSL_INCLUDES="-I$(includedir)/openssl"
 	fi
 
 
@@ -9272,9 +9230,9 @@ else $as_nop
 
 			if test -n "$openssldir"; then
 				if test "$do64bit" == 'yes'; then
-					openssllibdir="${openssldir}${PATH_SEPARATOR}lib64"
+					openssllibdir="$openssldir/lib64"
 				else
-					openssllibdir="${openssldir}${PATH_SEPARATOR}lib"
+					openssllibdir="$openssldir/lib"
 				fi
 			else
 				openssllibdir=''
@@ -9288,8 +9246,8 @@ printf %s "checking for OpenSSL lib directory... " >&6; }
 	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $openssllibdir" >&5
 printf "%s\n" "$openssllibdir" >&6; }
 
-	if test -n "$openssllibdir"; then
-		if test -f "${openssllibdir}${PATH_SEPARATOR}libssl${SHLIB_SUFFIX}"; then
+		if test -n "$openssllibdir"; then
+		if test -f "$openssllibdir/libssl${SHLIB_SUFFIX}"; then
 			if test "${TCLEXT_TLS_STATIC_SSL}" == 'no'; then
 				TCLTLS_SSL_LIBS="-L$openssllibdir -lcrypto -lssl"
 			else
@@ -9304,6 +9262,11 @@ printf "%s\n" "$openssllibdir" >&6; }
 	else
 		TCLTLS_SSL_LIBS="-lcrypto -lssl"
 	fi
+
+
+
+
+
 
 
 
@@ -9325,29 +9288,34 @@ printf %s "checking for OpenSSL pkgconfig... " >&6; }
 	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $opensslpkgconfigdir" >&5
 printf "%s\n" "$opensslpkgconfigdir" >&6; }
 
-			PKG_CONFIG_PATH_SAVE="${PKG_CONFIG_PATH}"
-	if test -n "${opensslpkgconfigdir}"; then
-		if ! test -f "${opensslpkgconfigdir}${PATH_SEPARATOR}openssl.pc"; then
-			as_fn_error $? "Unable to locate ${opensslpkgconfigdir}${PATH_SEPARATOR}openssl.pc" "$LINENO" 5
+
+	# Use Package Config tool to get config
+	pkgConfigExtraArgs=''
+	if test "${SHARED_BUILD}" == 0 -o "$TCLEXT_TLS_STATIC_SSL" = 'yes'; then
+		pkgConfigExtraArgs='--static'
+	fi
+
+		if test -n "${PKG_CONFIG}"; then
+				PKG_CONFIG_PATH_SAVE="${PKG_CONFIG_PATH}"
+		if test -n "${opensslpkgconfigdir}"; then
+			if ! test -f "${opensslpkgconfigdir}/openssl.pc"; then
+				as_fn_error $? "Unable to locate ${opensslpkgconfigdir}/openssl.pc" "$LINENO" 5
+			fi
+
+			PKG_CONFIG_PATH="${opensslpkgconfigdir}${PATH_SEPARATOR}${PKG_CONFIG_PATH}"
+			export PKG_CONFIG_PATH
 		fi
-
-		PKG_CONFIG_PATH="${opensslpkgconfigdir}${PATH_SEPARATOR}${PKG_CONFIG_PATH}"
-		export PKG_CONFIG_PATH
+		if test -z "$TCLTLS_SSL_LIBS"; then
+			TCLTLS_SSL_LIBS="`"${PKG_CONFIG}" openssl --libs $pkgConfigExtraArgs`" || as_fn_error $? "Unable to get OpenSSL Configuration" "$LINENO" 5
+		fi
+		if test -z "$TCLTLS_SSL_CFLAGS"; then
+			TCLTLS_SSL_CFLAGS="`"${PKG_CONFIG}" openssl --cflags-only-other $pkgConfigExtraArgs`" || as_fn_error $? "Unable to get OpenSSL Configuration" "$LINENO" 5
+		fi
+		if test -z "$TCLTLS_SSL_INCLUDES"; then
+			TCLTLS_SSL_INCLUDES="`"${PKG_CONFIG}" openssl --cflags-only-I $pkgConfigExtraArgs`" || as_fn_error $? "Unable to get OpenSSL Configuration" "$LINENO" 5
+		fi
+		PKG_CONFIG_PATH="${PKG_CONFIG_PATH_SAVE}"
 	fi
-
-
-
-
-	if test -z "$TCLTLS_SSL_LIBS"; then
-		TCLTLS_SSL_LIBS="`"${PKG_CONFIG}" openssl --libs $pkgConfigExtraArgs`" || as_fn_error $? "Unable to get OpenSSL Configuration" "$LINENO" 5
-	fi
-	if test -z "$TCLTLS_SSL_CFLAGS"; then
-		TCLTLS_SSL_CFLAGS="`"${PKG_CONFIG}" openssl --cflags-only-other $pkgConfigExtraArgs`" || as_fn_error $? "Unable to get OpenSSL Configuration" "$LINENO" 5
-	fi
-	if test -z "$TCLTLS_SSL_INCLUDES"; then
-		TCLTLS_SSL_INCLUDES="`"${PKG_CONFIG}" openssl --cflags-only-I $pkgConfigExtraArgs`" || as_fn_error $? "Unable to get OpenSSL Configuration" "$LINENO" 5
-	fi
-	PKG_CONFIG_PATH="${PKG_CONFIG_PATH_SAVE}"
 
 
 #--------------------------------------------------------------------
