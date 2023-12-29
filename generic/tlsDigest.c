@@ -154,6 +154,7 @@ int DigestInitialize(Tcl_Interp *interp, DigestState *statePtr, Tcl_Obj *digestO
     const EVP_CIPHER *cipher = NULL;
     const void *key = NULL, *iv = NULL, *salt = NULL;
     int key_len = 0;
+    (void *) macObj;
 
     dprintf("Called");
 
@@ -850,6 +851,7 @@ static int DigestChannelHandler(Tcl_Interp *interp, const char *channel, Tcl_Obj
 static int DigestUnstackObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
     Tcl_Channel chan;
     int mode; /* OR-ed combination of TCL_READABLE and TCL_WRITABLE  */
+    (void) clientData;
 
     dprintf("Called");
 
@@ -878,7 +880,6 @@ static int DigestUnstackObjCmd(ClientData clientData, Tcl_Interp *interp, int ob
 
     /* Pop transform from channel */
     return Tcl_UnstackChannel(interp, chan);
-    	clientData = clientData;
 }
 
 /*******************************************************************/
@@ -1322,18 +1323,22 @@ static int DigestMain(int type, Tcl_Interp *interp, int objc, Tcl_Obj *const obj
  *-------------------------------------------------------------------
  */
 static int MdObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
+    (void) clientData;
     return DigestMain(TYPE_MD, interp, objc, objv);
 }
 
 static int CMACObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
+    (void) clientData;
     return DigestMain(TYPE_CMAC, interp, objc, objv);
 }
 
 static int HMACObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
+    (void) clientData;
     return DigestMain(TYPE_HMAC, interp, objc, objv);
 }
 
 static int MACObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
+    (void) clientData;
     return DigestMain(TYPE_MAC, interp, objc, objv);
 }
 
@@ -1371,22 +1376,27 @@ static int MACObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Ob
 }
  
 int MD4ObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
+    (void) clientData;
     return TemplateCmd(interp, objc, objv, "md4", HEX_FORMAT | TYPE_MD);
 }
 
 int MD5ObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
+    (void) clientData;
     return TemplateCmd(interp, objc, objv, "md5", HEX_FORMAT | TYPE_MD);
 }
 
 int SHA1ObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
+    (void) clientData;
     return TemplateCmd(interp, objc, objv, "sha1", HEX_FORMAT | TYPE_MD);
 }
 
 int SHA256ObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
+    (void) clientData;
     return TemplateCmd(interp, objc, objv, "sha256", HEX_FORMAT | TYPE_MD);
 }
 
 int SHA512ObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
+    (void) clientData;
     return TemplateCmd(interp, objc, objv, "sha512", HEX_FORMAT | TYPE_MD);
 }
 
@@ -1406,17 +1416,17 @@ int SHA512ObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *c
  *-------------------------------------------------------------------
  */
 int Tls_DigestCommands(Tcl_Interp *interp) {
-    Tcl_CreateObjCommand(interp, "tls::digest", MdObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
-    Tcl_CreateObjCommand(interp, "tls::md", MdObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
-    Tcl_CreateObjCommand(interp, "tls::cmac", CMACObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
-    Tcl_CreateObjCommand(interp, "tls::hmac", HMACObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
-    Tcl_CreateObjCommand(interp, "tls::mac", MACObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
-    Tcl_CreateObjCommand(interp, "tls::md4", MD4ObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
-    Tcl_CreateObjCommand(interp, "tls::md5", MD5ObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
-    Tcl_CreateObjCommand(interp, "tls::sha1", SHA1ObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
-    Tcl_CreateObjCommand(interp, "tls::sha256", SHA256ObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
-    Tcl_CreateObjCommand(interp, "tls::sha512", SHA512ObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
-    Tcl_CreateObjCommand(interp, "tls::unstack", DigestUnstackObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
+    Tcl_CreateObjCommand(interp, "tls::digest", MdObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
+    Tcl_CreateObjCommand(interp, "tls::md", MdObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
+    Tcl_CreateObjCommand(interp, "tls::cmac", CMACObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
+    Tcl_CreateObjCommand(interp, "tls::hmac", HMACObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
+    Tcl_CreateObjCommand(interp, "tls::mac", MACObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
+    Tcl_CreateObjCommand(interp, "tls::md4", MD4ObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
+    Tcl_CreateObjCommand(interp, "tls::md5", MD5ObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
+    Tcl_CreateObjCommand(interp, "tls::sha1", SHA1ObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
+    Tcl_CreateObjCommand(interp, "tls::sha256", SHA256ObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
+    Tcl_CreateObjCommand(interp, "tls::sha512", SHA512ObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
+    Tcl_CreateObjCommand(interp, "tls::unstack", DigestUnstackObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
     return TCL_OK;
 }
 

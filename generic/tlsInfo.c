@@ -222,6 +222,8 @@ int CipherList(Tcl_Interp *interp) {
  *-------------------------------------------------------------------
  */
 static int CipherObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
+    (void) clientData;
+
     dprintf("Called");
 
     /* Clear errors */
@@ -240,7 +242,6 @@ static int CipherObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl
 	return TCL_ERROR;
     }
     return TCL_OK;
-	clientData = clientData;
 }
 
 /*
@@ -265,6 +266,7 @@ static int CiphersObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tc
     STACK_OF(SSL_CIPHER) *sk = NULL;
     int index, verbose = 0, use_supported = 0, res = TCL_OK;
     int min_version, max_version;
+    (void) clientData;
 
     dprintf("Called");
 
@@ -426,7 +428,6 @@ done:
     SSL_free(ssl);
     SSL_CTX_free(ctx);
     return res;
-	clientData = clientData;
 }
 
 /*******************************************************************/
@@ -532,6 +533,8 @@ int DigestList(Tcl_Interp *interp) {
  *-------------------------------------------------------------------
  */
 int DigestsObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
+    (void) clientData;
+
     dprintf("Called");
 
     /* Clear errors */
@@ -551,7 +554,6 @@ int DigestsObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *
 	return TCL_ERROR;
     }
     return TCL_OK;
-	clientData = clientData;
 }
 
 /*******************************************************************/
@@ -600,6 +602,8 @@ int KdfList(Tcl_Interp *interp, char *select_name) {
  *-------------------------------------------------------------------
  */
 int KdfsObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
+    (void) clientData;
+
     dprintf("Called");
 
     /* Clear errors */
@@ -619,7 +623,6 @@ int KdfsObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *con
 	return TCL_ERROR;
     }
     return TCL_OK;
-	clientData = clientData;
 }
 
 /*******************************************************************/
@@ -705,6 +708,8 @@ int MacList(Tcl_Interp *interp) {
  *-------------------------------------------------------------------
  */
 int MacsObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
+    (void) clientData;
+
     dprintf("Called");
 
     /* Clear errors */
@@ -723,7 +728,6 @@ int MacsObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *con
 	return TCL_ERROR;
     }
     return TCL_OK;
-	clientData = clientData;
 }
 
 /*******************************************************************/
@@ -830,6 +834,8 @@ int PkeyList(Tcl_Interp *interp) {
  *-------------------------------------------------------------------
  */
 int PkeysObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
+    (void) clientData;
+
     dprintf("Called");
 
     /* Clear errors */
@@ -848,7 +854,6 @@ int PkeysObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *co
 	return TCL_ERROR;
     }
     return TCL_OK;
-	clientData = clientData;
 }
 
 /*******************************************************************/
@@ -871,6 +876,7 @@ int PkeysObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *co
 static int
 ProtocolsObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
     Tcl_Obj *resultObj;
+    (void) clientData;
 
     dprintf("Called");
 
@@ -909,7 +915,6 @@ ProtocolsObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *co
 #endif
     Tcl_SetObjResult(interp, resultObj);
     return TCL_OK;
-	clientData = clientData;
 }
 
 /*******************************************************************/
@@ -932,6 +937,7 @@ ProtocolsObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *co
 static int
 VersionObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
     Tcl_Obj *resultObj;
+    (void) clientData;
 
     dprintf("Called");
 
@@ -944,7 +950,6 @@ VersionObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *cons
     resultObj = Tcl_NewStringObj(OPENSSL_VERSION_TEXT, -1);
     Tcl_SetObjResult(interp, resultObj);
     return TCL_OK;
-	clientData = clientData;
 }
 
 /*******************************************************************/
@@ -972,14 +977,14 @@ int Tls_InfoCommands(Tcl_Interp *interp) {
     OpenSSL_add_all_algorithms();
 #endif
 
-    Tcl_CreateObjCommand(interp, "tls::cipher", CipherObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
-    Tcl_CreateObjCommand(interp, "tls::ciphers", CiphersObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
-    Tcl_CreateObjCommand(interp, "tls::digests", DigestsObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
-    Tcl_CreateObjCommand(interp, "tls::kdfs", KdfsObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
-    Tcl_CreateObjCommand(interp, "tls::macs", MacsObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
-    Tcl_CreateObjCommand(interp, "tls::pkeys", PkeysObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
-    Tcl_CreateObjCommand(interp, "tls::protocols", ProtocolsObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
-    Tcl_CreateObjCommand(interp, "tls::version", VersionObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
+    Tcl_CreateObjCommand(interp, "tls::cipher", CipherObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
+    Tcl_CreateObjCommand(interp, "tls::ciphers", CiphersObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
+    Tcl_CreateObjCommand(interp, "tls::digests", DigestsObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
+    Tcl_CreateObjCommand(interp, "tls::kdfs", KdfsObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
+    Tcl_CreateObjCommand(interp, "tls::macs", MacsObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
+    Tcl_CreateObjCommand(interp, "tls::pkeys", PkeysObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
+    Tcl_CreateObjCommand(interp, "tls::protocols", ProtocolsObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
+    Tcl_CreateObjCommand(interp, "tls::version", VersionObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
     return TCL_OK;
 }
 

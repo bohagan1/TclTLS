@@ -73,15 +73,13 @@ static int TlsBlockModeProc(ClientData instanceData, int mode) {
  */
 static int TlsCloseProc(ClientData instanceData, Tcl_Interp *interp) {
     State *statePtr = (State *) instanceData;
+    (void *) interp;
 
     dprintf("TlsCloseProc(%p)", (void *) statePtr);
 
     Tls_Clean(statePtr);
     Tcl_EventuallyFree((ClientData)statePtr, Tls_Free);
     return(0);
-
-	/* Interp is unused. */
-	interp = interp;
 }
 
 static int TlsClose2Proc(ClientData instanceData,    /* The socket state. */

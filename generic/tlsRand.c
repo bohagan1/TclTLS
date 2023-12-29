@@ -42,6 +42,7 @@ static int RAND_Random(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_
     int out_len = 0, res;
     unsigned char *out_buf;
     Tcl_Obj *resultObj;
+    (void) clientData;
 
     dprintf("Called");
 
@@ -92,7 +93,6 @@ static int RAND_Random(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_
 
     Tcl_SetObjResult(interp, resultObj);
     return TCL_OK;
-	clientData = clientData;
 }
 
 /*
@@ -111,7 +111,7 @@ static int RAND_Random(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_
  *-------------------------------------------------------------------
  */
 int Tls_RandCommands(Tcl_Interp *interp) {
-    Tcl_CreateObjCommand(interp, "tls::random", RAND_Random, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
+    Tcl_CreateObjCommand(interp, "tls::random", RAND_Random, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
     return TCL_OK;
 }
 

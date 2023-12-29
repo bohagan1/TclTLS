@@ -49,6 +49,7 @@ static int KDF_PBKDF2(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_O
     const EVP_CIPHER *cipher = NULL;
     int buf_len = (EVP_MAX_KEY_LENGTH + EVP_MAX_IV_LENGTH)*4, dk_len = buf_len;
     unsigned char tmpkeyiv[(EVP_MAX_KEY_LENGTH + EVP_MAX_IV_LENGTH)*4];
+    (void) clientData;
 
     dprintf("Called");
 
@@ -147,7 +148,6 @@ static int KDF_PBKDF2(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_O
     /* Clear data */
     memset(tmpkeyiv, 0, buf_len);
     return TCL_OK;
-	clientData = clientData;
 }
 
 /*
@@ -174,6 +174,7 @@ static int KDF_HKDF(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj
     int dk_len = EVP_MAX_KEY_LENGTH + EVP_MAX_IV_LENGTH;
     size_t out_len;
     Tcl_Obj *resultObj;
+    (void) clientData;
 
     dprintf("Called");
 
@@ -321,6 +322,7 @@ static int KDF_Scrypt(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_O
     uint64_t N = 0, p = 0, r = 0, maxmem = 0;
     size_t out_len;
     Tcl_Obj *resultObj;
+    (void) clientData;
 
     dprintf("Called");
 
@@ -468,9 +470,9 @@ done:
  *-------------------------------------------------------------------
  */
 int Tls_KDFCommands(Tcl_Interp *interp) {
-    Tcl_CreateObjCommand(interp, "tls::hkdf", KDF_HKDF, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
-    Tcl_CreateObjCommand(interp, "tls::pbkdf2", KDF_PBKDF2, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
-    Tcl_CreateObjCommand(interp, "tls::scrypt", KDF_Scrypt, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
+    Tcl_CreateObjCommand(interp, "tls::hkdf", KDF_HKDF, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
+    Tcl_CreateObjCommand(interp, "tls::pbkdf2", KDF_PBKDF2, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
+    Tcl_CreateObjCommand(interp, "tls::scrypt", KDF_Scrypt, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
     return TCL_OK;
 }
 

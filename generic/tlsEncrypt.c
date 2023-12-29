@@ -742,6 +742,7 @@ static int EncryptChannelHandler(Tcl_Interp *interp, int type, const char *chann
     int mode; /* OR-ed combination of TCL_READABLE and TCL_WRITABLE */
     Tcl_Channel chan;
     EncryptState *statePtr;
+    (void *) digestObj;
 
     dprintf("Called");
 
@@ -808,6 +809,7 @@ static int EncryptChannelHandler(Tcl_Interp *interp, int type, const char *chann
 static int EncryptUnstackObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
     Tcl_Channel chan;
     int mode; /* OR-ed combination of TCL_READABLE and TCL_WRITABLE  */
+    (void) clientData;
 
     dprintf("Called");
 
@@ -836,7 +838,6 @@ static int EncryptUnstackObjCmd(ClientData clientData, Tcl_Interp *interp, int o
 
     /* Pop transform from channel */
     return Tcl_UnstackChannel(interp, chan);
-    	clientData = clientData;
 }
 
 /*******************************************************************/
@@ -964,6 +965,7 @@ int EncryptCommandHandler(Tcl_Interp *interp, int type, Tcl_Obj *cmdObj,
 	Tcl_Obj *cipherObj, Tcl_Obj *digestObj, Tcl_Obj *keyObj, Tcl_Obj *ivObj) {
     EncryptState *statePtr;
     char *cmdName = Tcl_GetStringFromObj(cmdObj, NULL);
+    (void *) digestObj;
 
     dprintf("Called");
 
@@ -1010,6 +1012,7 @@ int EncryptDataHandler(Tcl_Interp *interp, int type, Tcl_Obj *dataObj, Tcl_Obj *
     int data_len = 0, out_len = 0, len = 0, res = TCL_OK;
     unsigned char *data, *out_buf;
     Tcl_Obj *resultObj;
+    (void *) digestObj;
 
     dprintf("Called");
 
@@ -1080,6 +1083,7 @@ int EncryptFileHandler(Tcl_Interp *interp, int type, Tcl_Obj *inFileObj, Tcl_Obj
     Tcl_Channel in = NULL, out = NULL;
     unsigned char in_buf[BUFFER_SIZE];
     unsigned char out_buf[BUFFER_SIZE+EVP_MAX_BLOCK_LENGTH];
+    (void *) digestObj;
 
     dprintf("Called");
 
@@ -1308,10 +1312,12 @@ static int EncryptMain(int type, Tcl_Interp *interp, int objc, Tcl_Obj *const ob
  *-------------------------------------------------------------------
  */
 static int EncryptObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
+    (void) clientData;
     return EncryptMain(TYPE_ENCRYPT, interp, objc, objv);
 }
 
 static int DecryptObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
+    (void) clientData;
     return EncryptMain(TYPE_DECRYPT, interp, objc, objv);
 }
 
@@ -1331,9 +1337,9 @@ static int DecryptObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tc
  *-------------------------------------------------------------------
  */
 int Tls_EncryptCommands(Tcl_Interp *interp) {
-    Tcl_CreateObjCommand(interp, "tls::encrypt", EncryptObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
-    Tcl_CreateObjCommand(interp, "tls::decrypt", DecryptObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
-    Tcl_CreateObjCommand(interp, "tls::unstack2", EncryptUnstackObjCmd, (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
+    Tcl_CreateObjCommand(interp, "tls::encrypt", EncryptObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
+    Tcl_CreateObjCommand(interp, "tls::decrypt", DecryptObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
+    Tcl_CreateObjCommand(interp, "tls::unstack2", EncryptUnstackObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
     return TCL_OK;
 }
 
