@@ -42,7 +42,7 @@ enum _command_opts {
  *-------------------------------------------------------------------
  */
 static int KDF_PBKDF2(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
-    int pass_len = 0, salt_len = 0, fn;
+    Tcl_Size fn, salt_len = 0, pass_len = 0;
     int iklen, ivlen, iter = 1;
     unsigned char *pass = NULL, *salt = NULL;
     const EVP_MD *md = NULL;
@@ -75,7 +75,7 @@ static int KDF_PBKDF2(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_O
 
 	/* Validate arg has a value */
 	if (++idx >= objc) {
-	    Tcl_AppendResult(interp, "No value for option \"", command_opts[fn], "\"", NULL);
+	    Tcl_AppendResult(interp, "No value for option \"", command_opts[fn], "\"", (char *) NULL);
 	    return TCL_ERROR;
 	}
 
@@ -114,7 +114,7 @@ static int KDF_PBKDF2(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_O
 
     /* Validate options */
     if (md == NULL) {
-	Tcl_AppendResult(interp, "no digest", NULL);
+	Tcl_AppendResult(interp, "no digest", (char *) NULL);
 	return TCL_ERROR;
     }
 
@@ -130,18 +130,18 @@ static int KDF_PBKDF2(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_O
     }
 
     /* Derive key */
-    if (!PKCS5_PBKDF2_HMAC(pass, pass_len, salt, salt_len, iter, md, dk_len, tmpkeyiv)) {
-	Tcl_AppendResult(interp, "Key derivation failed: ", REASON(), NULL);
+    if (!PKCS5_PBKDF2_HMAC(pass, (int) pass_len, salt, (int) salt_len, iter, md, dk_len, tmpkeyiv)) {
+	Tcl_AppendResult(interp, "Key derivation failed: ", REASON(), (char *) NULL);
 	return TCL_ERROR;
     }
 
    /* Set result to key and iv */
     if (cipher == NULL) {
-	Tcl_SetObjResult(interp, Tcl_NewByteArrayObj(tmpkeyiv, dk_len));
+	Tcl_SetObjResult(interp, Tcl_NewByteArrayObj(tmpkeyiv, (Tcl_Size) dk_len));
     } else {
 	Tcl_Obj *resultObj = Tcl_NewListObj(0, NULL);
-	LAPPEND_BARRAY(interp, resultObj, "key", tmpkeyiv, iklen);
-	LAPPEND_BARRAY(interp, resultObj, "iv", tmpkeyiv+iklen, ivlen);
+	LAPPEND_BARRAY(interp, resultObj, "key", tmpkeyiv, (Tcl_Size) iklen);
+	LAPPEND_BARRAY(interp, resultObj, "iv", tmpkeyiv+iklen, (Tcl_Size) ivlen);
 	Tcl_SetObjResult(interp, resultObj);
     }
 
@@ -170,7 +170,9 @@ static int KDF_HKDF(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj
     EVP_PKEY_CTX *pctx = NULL;
     const EVP_MD *md = NULL;
     unsigned char *salt = NULL, *key = NULL, *info = NULL, *out = NULL;
-    int salt_len = 0, key_len = 0, info_len = 0, res = TCL_OK, fn;
+    Tcl_Size salt_len = 0, key_len = 0, info_len = 0;
+    int res = TCL_OK;
+    Tcl_Size fn;
     int dk_len = EVP_MAX_KEY_LENGTH + EVP_MAX_IV_LENGTH;
     size_t out_len;
     Tcl_Obj *resultObj;
@@ -197,7 +199,7 @@ static int KDF_HKDF(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj
 
 	/* Validate arg has a value */
 	if (++idx >= objc) {
-	    Tcl_AppendResult(interp, "No value for option \"", command_opts[fn], "\"", NULL);
+	    Tcl_AppendResult(interp, "No value for option \"", command_opts[fn], "\"", (char *) NULL);
 	    return TCL_ERROR;
 	}
 
@@ -231,48 +233,48 @@ static int KDF_HKDF(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj
     }
 
     if (md == NULL) {
-	Tcl_AppendResult(interp, "no digest", NULL);
+	Tcl_AppendResult(interp, "no digest", (char *) NULL);
 	goto error;
     }
 
     if (key == NULL) {
-	Tcl_AppendResult(interp, "no key", NULL);
+	Tcl_AppendResult(interp, "no key", (char *) NULL);
 	goto error;
     }
 
     /* Create context */
     pctx = EVP_PKEY_CTX_new_id(EVP_PKEY_HKDF, NULL);
     if (pctx == NULL) {
-	Tcl_AppendResult(interp, "Memory allocation error", NULL);
+	Tcl_AppendResult(interp, "Memory allocation error", (char *) NULL);
 	goto error;
     }
 
     if (EVP_PKEY_derive_init(pctx) < 1) {
-	Tcl_AppendResult(interp, "Initialize failed: ", REASON(), NULL);
+	Tcl_AppendResult(interp, "Initialize failed: ", REASON(), (char *) NULL);
 	goto error;
     }
 
     /* Set config parameters */
     if (EVP_PKEY_CTX_set_hkdf_md(pctx, md) < 1) {
-	Tcl_AppendResult(interp, "Set digest failed: ", REASON(), NULL);
+	Tcl_AppendResult(interp, "Set digest failed: ", REASON(), (char *) NULL);
 	goto error;
     }
-    if (EVP_PKEY_CTX_set1_hkdf_key(pctx, key, key_len) < 1) {
-	Tcl_AppendResult(interp, "Set key failed: ", REASON(), NULL);
+    if (EVP_PKEY_CTX_set1_hkdf_key(pctx, key, (int) key_len) < 1) {
+	Tcl_AppendResult(interp, "Set key failed: ", REASON(), (char *) NULL);
 	goto error;
     }
-    if (salt != NULL && EVP_PKEY_CTX_set1_hkdf_salt(pctx, salt, salt_len) < 1) {
-	Tcl_AppendResult(interp, "Set salt failed: ", REASON(), NULL);
+    if (salt != NULL && EVP_PKEY_CTX_set1_hkdf_salt(pctx, salt, (int) salt_len) < 1) {
+	Tcl_AppendResult(interp, "Set salt failed: ", REASON(), (char *) NULL);
 	goto error;
     }
-    if (info != NULL && EVP_PKEY_CTX_add1_hkdf_info(pctx, info, info_len) < 1) {
-	Tcl_AppendResult(interp, "Set info failed: ", REASON(), NULL);
+    if (info != NULL && EVP_PKEY_CTX_add1_hkdf_info(pctx, info, (int) info_len) < 1) {
+	Tcl_AppendResult(interp, "Set info failed: ", REASON(), (char *) NULL);
 	goto error;
     }
 
     /* Get buffer */
     resultObj = Tcl_NewObj();
-    if ((out = Tcl_SetByteArrayLength(resultObj, dk_len)) == NULL) {
+    if ((out = Tcl_SetByteArrayLength(resultObj, (Tcl_Size) dk_len)) == NULL) {
 	Tcl_AppendResult(interp, "Memory allocation error", (char *) NULL);
 	goto error;
     }
@@ -281,12 +283,12 @@ static int KDF_HKDF(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj
     /* Derive key */
     if (EVP_PKEY_derive(pctx, out, &out_len) > 0) {
 	/* Shrink buffer to actual size */
-	Tcl_SetByteArrayLength(resultObj, (int) out_len);
+	Tcl_SetByteArrayLength(resultObj, (Tcl_Size) out_len);
 	Tcl_SetObjResult(interp, resultObj);
 	res = TCL_OK;
 	goto done;
     } else {
-	Tcl_AppendResult(interp, "Key derivation failed: ", REASON(), NULL);
+	Tcl_AppendResult(interp, "Key derivation failed: ", REASON(), (char *) NULL);
 	Tcl_DecrRefCount(resultObj);
     }
 
@@ -318,7 +320,9 @@ done:
 static int KDF_Scrypt(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
     EVP_PKEY_CTX *pctx = NULL;
     unsigned char *salt = NULL, *pass = NULL, *out = NULL;
-    int salt_len = 0, pass_len = 0, dk_len = 64, res = TCL_OK, fn;
+    Tcl_Size salt_len = 0, pass_len = 0;
+    int dk_len = 64, res = TCL_OK;
+    Tcl_Size fn;
     uint64_t N = 0, p = 0, r = 0, maxmem = 0;
     size_t out_len;
     Tcl_Obj *resultObj;
@@ -394,39 +398,39 @@ static int KDF_Scrypt(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_O
     }
 
     if (EVP_PKEY_derive_init(pctx) < 1) {
-	Tcl_AppendResult(interp, "Initialize failed: ", REASON(), NULL);
+	Tcl_AppendResult(interp, "Initialize failed: ", REASON(), (char *) NULL);
 	goto error;
     }
 
     /* Set config parameters */
-    if (EVP_PKEY_CTX_set1_pbe_pass(pctx, pass, pass_len) < 1) {
-	Tcl_AppendResult(interp, "Set key failed: ", REASON(), NULL);
+    if (EVP_PKEY_CTX_set1_pbe_pass(pctx, pass, (int) pass_len) < 1) {
+	Tcl_AppendResult(interp, "Set key failed: ", REASON(), (char *) NULL);
 	goto error;
     }
-    if (EVP_PKEY_CTX_set1_scrypt_salt(pctx, salt, salt_len) < 1) {
-	Tcl_AppendResult(interp, "Set salt failed: ", REASON(), NULL);
+    if (EVP_PKEY_CTX_set1_scrypt_salt(pctx, salt, (int) salt_len) < 1) {
+	Tcl_AppendResult(interp, "Set salt failed: ", REASON(), (char *) NULL);
 	goto error;
     }
     if (N != 0 && EVP_PKEY_CTX_set_scrypt_N(pctx, N) < 1) {
-	Tcl_AppendResult(interp, "Set cost parameter (N) failed: ", REASON(), NULL);
+	Tcl_AppendResult(interp, "Set cost parameter (N) failed: ", REASON(), (char *) NULL);
 	goto error;
     }
     if (r != 0 && EVP_PKEY_CTX_set_scrypt_r(pctx, r) < 1) {
-	Tcl_AppendResult(interp, "Set lock size parameter (r) failed: ", REASON(), NULL);
+	Tcl_AppendResult(interp, "Set lock size parameter (r) failed: ", REASON(), (char *) NULL);
 	goto error;
    }
     if (p != 0 && EVP_PKEY_CTX_set_scrypt_p(pctx, p) < 1) {
-	Tcl_AppendResult(interp, "Set Parallelization parameter (p) failed: ", REASON(), NULL);
+	Tcl_AppendResult(interp, "Set Parallelization parameter (p) failed: ", REASON(), (char *) NULL);
 	goto error;
     }
     if (maxmem != 0 && EVP_PKEY_CTX_set_scrypt_maxmem_bytes(pctx, maxmem) < 1) {
-	Tcl_AppendResult(interp, "Set max memory failed: ", REASON(), NULL);
+	Tcl_AppendResult(interp, "Set max memory failed: ", REASON(), (char *) NULL);
 	goto error;
     }
 
     /* Get buffer */
     resultObj = Tcl_NewObj();
-    if ((out = Tcl_SetByteArrayLength(resultObj, dk_len)) == NULL) {
+    if ((out = Tcl_SetByteArrayLength(resultObj, (Tcl_Size) dk_len)) == NULL) {
 	Tcl_AppendResult(interp, "Memory allocation error", (char *) NULL);
 	goto error;
     }
@@ -435,12 +439,12 @@ static int KDF_Scrypt(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_O
     /* Derive key */
     if (EVP_PKEY_derive(pctx, out, &out_len) > 0) {
 	/* Shrink buffer to actual size */
-	Tcl_SetByteArrayLength(resultObj, (int) out_len);
+	Tcl_SetByteArrayLength(resultObj, (Tcl_Size) out_len);
 	Tcl_SetObjResult(interp, resultObj);
 	goto done;
 
     } else {
-	Tcl_AppendResult(interp, "Key derivation failed: ", REASON(), NULL);
+	Tcl_AppendResult(interp, "Key derivation failed: ", REASON(), (char *) NULL);
 	Tcl_DecrRefCount(resultObj);
     }
 

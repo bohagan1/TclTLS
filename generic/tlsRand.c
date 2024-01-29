@@ -55,7 +55,7 @@ static int RAND_Random(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_
 	Tcl_WrongNumArgs(interp, 1, objv, "?-private? length");
 	return TCL_ERROR;
     } else if (objc == 3) {
-	int fn;
+	Tcl_Size fn;
 	if (Tcl_GetIndexFromObj(interp, objv[1], command_opts, "option", 0, &fn) != TCL_OK) {
 	    return TCL_ERROR;
 	}
@@ -72,7 +72,7 @@ static int RAND_Random(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_
 
     /* Allocate storage for result */
     resultObj = Tcl_NewObj();
-    out_buf = Tcl_SetByteArrayLength(resultObj, out_len);
+    out_buf = Tcl_SetByteArrayLength(resultObj, (Tcl_Size) out_len);
     if (resultObj == NULL || out_buf == NULL) {
 	Tcl_AppendResult(interp, "Memory allocation error", (char *) NULL);
 	Tcl_DecrRefCount(resultObj);

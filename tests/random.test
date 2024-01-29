@@ -34,11 +34,11 @@ test Random-1.4 {Private Option} -body {
 
 test Random_Errors-2.1 {Too few args} -body {
 	::tls::random
-    } -result {wrong # args: should be "tls::random ?-private? length"} -returnCodes {1}
+    } -result {wrong # args: should be "::tls::random ?-private? length"} -returnCodes {1}
 
 test Random_Errors-2.2 {Too many args} -body {
 	::tls::random too many command line args to pass the test without an error or failing
-    } -result {wrong # args: should be "tls::random ?-private? length"} -returnCodes {1}
+    } -result {wrong # args: should be "::tls::random ?-private? length"} -returnCodes {1}
 
 test Random_Errors-2.3 {Invalid length value} -body {
 	::tls::random bogus

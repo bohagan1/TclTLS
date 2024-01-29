@@ -20,7 +20,7 @@ if {[lsearch [namespace children] ::tcltest] == -1} {
 
 # Get common functions
 if {[file exists [file join $path common.tcl]]} {
-    source [file join $path common.tcl]
+    source -encoding utf-8 [file join $path common.tcl]
 }
 
 set ::tcltest::testSingleFile false

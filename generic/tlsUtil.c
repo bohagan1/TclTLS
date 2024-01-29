@@ -32,7 +32,7 @@ EVP_CIPHER *Util_GetCipher(Tcl_Interp *interp, Tcl_Obj *cipherObj, int no_null) 
     char *name = NULL;
 
     if (cipherObj != NULL) {
-	name = Tcl_GetStringFromObj(cipherObj, NULL);
+	name = Tcl_GetStringFromObj(cipherObj, (Tcl_Size *) NULL);
 #if OPENSSL_VERSION_NUMBER < 0x30000000L
 	cipher = EVP_get_cipherbyname(name);
 #else
@@ -67,7 +67,7 @@ EVP_MD *Util_GetDigest(Tcl_Interp *interp, Tcl_Obj *digestObj, int no_null) {
     char *name = NULL;
 
     if (digestObj != NULL) {
-	name = Tcl_GetStringFromObj(digestObj, NULL);
+	name = Tcl_GetStringFromObj(digestObj, (Tcl_Size *) NULL);
 #if OPENSSL_VERSION_NUMBER < 0x30000000L
 	md = EVP_get_digestbyname(name);
 #else
@@ -97,12 +97,14 @@ EVP_MD *Util_GetDigest(Tcl_Interp *interp, Tcl_Obj *digestObj, int no_null) {
  *
  *-------------------------------------------------------------------
  */
-unsigned char *Util_GetIV(Tcl_Interp *interp, Tcl_Obj *ivObj, int *len, int max, int no_null) {
+unsigned char *Util_GetIV(Tcl_Interp *interp, Tcl_Obj *ivObj, Tcl_Size *len, int max, int no_null) {
     unsigned char *iv = NULL;
     *len = 0;
+    Tcl_Size size = 0;
 
     if (ivObj != NULL) {
-	iv = Tcl_GetByteArrayFromObj(ivObj, len);
+	iv = Tcl_GetByteArrayFromObj(ivObj, &size);
+	*len = (int) size;
     } else if (no_null) {
 	Tcl_AppendResult(interp, "no initialization vector (IV)", (char *) NULL);
 	return NULL;
@@ -130,7 +132,7 @@ unsigned char *Util_GetIV(Tcl_Interp *interp, Tcl_Obj *ivObj, int *len, int max,
  *
  *-------------------------------------------------------------------
  */
-unsigned char *Util_GetKey(Tcl_Interp *interp, Tcl_Obj *keyObj, int *len, char *name, int max, int no_null) {
+unsigned char *Util_GetKey(Tcl_Interp *interp, Tcl_Obj *keyObj, Tcl_Size *len, char *name, int max, int no_null) {
     unsigned char *key = NULL;
     *len = 0;
 
@@ -169,7 +171,7 @@ EVP_MAC *Util_GetMAC(Tcl_Interp *interp, Tcl_Obj *MacObj, int no_null) {
     char *name = NULL;
 
     if (MacObj != NULL) {
-	name = Tcl_GetStringFromObj(MacObj, NULL);
+	name = Tcl_GetStringFromObj(MacObj, (Tcl_Size *) NULL);
 	mac = EVP_MAC_fetch(NULL, name, NULL);
 	if (mac == NULL) {
 	    Tcl_AppendResult(interp, "invalid MAC \"", name, "\"", (char *) NULL);
@@ -197,7 +199,7 @@ EVP_MAC *Util_GetMAC(Tcl_Interp *interp, Tcl_Obj *MacObj, int no_null) {
  *
  *-------------------------------------------------------------------
  */
-unsigned char *Util_GetSalt(Tcl_Interp *interp, Tcl_Obj *saltObj, int *len, int max, int no_null) {
+unsigned char *Util_GetSalt(Tcl_Interp *interp, Tcl_Obj *saltObj, Tcl_Size *len, int max, int no_null) {
     unsigned char *salt = NULL;
     *len = 0;
 
@@ -232,7 +234,8 @@ unsigned char *Util_GetSalt(Tcl_Interp *interp, Tcl_Obj *saltObj, int *len, int 
  *
  *-------------------------------------------------------------------
  */
-unsigned char *Util_GetBinaryArray(Tcl_Interp *interp, Tcl_Obj *dataObj, int *len, char *name, int min, int max, int no_null) {
+unsigned char *Util_GetBinaryArray(Tcl_Interp *interp, Tcl_Obj *dataObj, Tcl_Size *len,
+	char *name, Tcl_Size min, Tcl_Size max, int no_null) {
     unsigned char *data = NULL;
     *len = 0;
 

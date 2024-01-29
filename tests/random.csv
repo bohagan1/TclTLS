@@ -8,8 +8,8 @@ Random,Example 2,,,string length [::tls::random 1000],,,1000,,,
 Random,Private Option,,,string length [::tls::random -private 42],,,42,,,
 ,,,,,,,,,,
 command,# Random command errors,,,,,,,,,
-Random Errors,Too few args,,,::tls::random,,,"wrong # args: should be ""tls::random ?-private? length""",,,1
-Random Errors,Too many args,,,::tls::random too many command line args to pass the test without an error or failing,,,"wrong # args: should be ""tls::random ?-private? length""",,,1
+Random Errors,Too few args,,,::tls::random,,,"wrong # args: should be ""::tls::random ?-private? length""",,,1
+Random Errors,Too many args,,,::tls::random too many command line args to pass the test without an error or failing,,,"wrong # args: should be ""::tls::random ?-private? length""",,,1
 Random Errors,Invalid length value,,,::tls::random bogus,,,"expected integer but got ""bogus""",,,1
 Random Errors,Negative length,,,::tls::random -1,,,"bad count ""-1"": must be integer >= 0",,,1
 Random Errors,Invalid option,,,::tls::random -bogus 42,,,"bad option ""-bogus"": must be -private",,,1

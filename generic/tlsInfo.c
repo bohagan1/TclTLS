@@ -44,7 +44,7 @@ void NamesCallback(const OBJ_NAME *obj, void *arg) {
 
     /* Fields: (int) type and alias, (const char*) name (alias from) and data (alias to) */
     if (strstr(obj->name, "rsa") == NULL && strstr(obj->name, "RSA") == NULL) {
-	Tcl_ListObjAppendElement(NULL, listObj, Tcl_NewStringObj(obj->name,-1));
+	Tcl_ListObjAppendElement(NULL, listObj, Tcl_NewStringObj(obj->name, -1));
     }
 }
 
@@ -70,13 +70,13 @@ int CipherInfo(Tcl_Interp *interp, Tcl_Obj *nameObj) {
     Tcl_Obj *resultObj, *listObj;
     unsigned long flags, mode;
     unsigned char *modeName = NULL;
-    char *name = Tcl_GetStringFromObj(nameObj,NULL);
+    char *name = Tcl_GetStringFromObj(nameObj, (Tcl_Size *) NULL);
 
     /* Get cipher */
     cipher = EVP_get_cipherbyname(name);
 
     if (cipher == NULL) {
-	Tcl_AppendResult(interp, "Invalid cipher \"", name, "\"", NULL);
+	Tcl_AppendResult(interp, "Invalid cipher \"", name, "\"", (char *) NULL);
 	return TCL_ERROR;
     }
 
@@ -264,7 +264,8 @@ static int CiphersObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tc
     SSL_CTX *ctx = NULL;
     SSL *ssl = NULL;
     STACK_OF(SSL_CIPHER) *sk = NULL;
-    int index, verbose = 0, use_supported = 0, res = TCL_OK;
+    Tcl_Size index;
+    int verbose = 0, use_supported = 0, res = TCL_OK;
     int min_version, max_version;
     (void) clientData;
 
@@ -294,11 +295,11 @@ static int CiphersObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tc
 
     switch ((enum protocol)index) {
 	case TLS_SSL2:
-	    Tcl_AppendResult(interp, protocols[index], ": protocol not supported", NULL);
+	    Tcl_AppendResult(interp, protocols[index], ": protocol not supported", (char *) NULL);
 	    return TCL_ERROR;
 	case TLS_SSL3:
 #if defined(NO_SSL3) || defined(OPENSSL_NO_SSL3) || defined(OPENSSL_NO_SSL3_METHOD)
-	    Tcl_AppendResult(interp, protocols[index], ": protocol not supported", NULL);
+	    Tcl_AppendResult(interp, protocols[index], ": protocol not supported", (char *) NULL);
 	    return TCL_ERROR;
 #else
             min_version = SSL3_VERSION;
@@ -307,7 +308,7 @@ static int CiphersObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tc
 #endif
 	case TLS_TLS1:
 #if defined(NO_TLS1) || defined(OPENSSL_NO_TLS1) || defined(OPENSSL_NO_TLS1_METHOD)
-	    Tcl_AppendResult(interp, protocols[index], ": protocol not supported", NULL);
+	    Tcl_AppendResult(interp, protocols[index], ": protocol not supported", (char *) NULL);
 	    return TCL_ERROR;
 #else
             min_version = TLS1_VERSION;
@@ -316,7 +317,7 @@ static int CiphersObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tc
 #endif
 	case TLS_TLS1_1:
 #if defined(NO_TLS1_1) || defined(OPENSSL_NO_TLS1_1) || defined(OPENSSL_NO_TLS1_1_METHOD)
-	    Tcl_AppendResult(interp, protocols[index], ": protocol not supported", NULL);
+	    Tcl_AppendResult(interp, protocols[index], ": protocol not supported", (char *) NULL);
 	    return TCL_ERROR;
 #else
             min_version = TLS1_1_VERSION;
@@ -325,7 +326,7 @@ static int CiphersObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tc
 #endif
 	case TLS_TLS1_2:
 #if defined(NO_TLS1_2) || defined(OPENSSL_NO_TLS1_2) || defined(OPENSSL_NO_TLS1_2_METHOD)
-	    Tcl_AppendResult(interp, protocols[index], ": protocol not supported", NULL);
+	    Tcl_AppendResult(interp, protocols[index], ": protocol not supported", (char *) NULL);
 	    return TCL_ERROR;
 #else
             min_version = TLS1_2_VERSION;
@@ -334,7 +335,7 @@ static int CiphersObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tc
 #endif
 	case TLS_TLS1_3:
 #if defined(NO_TLS1_3) || defined(OPENSSL_NO_TLS1_3)
-	    Tcl_AppendResult(interp, protocols[index], ": protocol not supported", NULL);
+	    Tcl_AppendResult(interp, protocols[index], ": protocol not supported", (char *) NULL);
 	    return TCL_ERROR;
 #else
             min_version = TLS1_3_VERSION;
@@ -349,7 +350,7 @@ static int CiphersObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tc
 
     /* Create context */
     if ((ctx = SSL_CTX_new(TLS_server_method())) == NULL) {
-	Tcl_AppendResult(interp, REASON(), NULL);
+	Tcl_AppendResult(interp, REASON(), (char *) NULL);
 	return TCL_ERROR;
     }
 
@@ -362,7 +363,7 @@ static int CiphersObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tc
 
     /* Create SSL context */
     if ((ssl = SSL_new(ctx)) == NULL) {
-	Tcl_AppendResult(interp, REASON(), NULL);
+	Tcl_AppendResult(interp, REASON(), (char *) NULL);
 	SSL_CTX_free(ctx);
 	return TCL_ERROR;
     }
@@ -398,7 +399,7 @@ static int CiphersObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tc
 
 	} else {
 	    char buf[BUFSIZ];
-	    resultObj = Tcl_NewStringObj("",0);
+	    resultObj = Tcl_NewStringObj("", 0);
 	    if (resultObj == NULL) {
 		res = TCL_ERROR;
 		goto done;
@@ -452,13 +453,13 @@ int DigestInfo(Tcl_Interp *interp, Tcl_Obj *nameObj) {
     Tcl_Obj *resultObj, *listObj;
     unsigned long flags;
     int res = TCL_OK;
-    char *name = Tcl_GetStringFromObj(nameObj,NULL);
+    char *name = Tcl_GetStringFromObj(nameObj, (Tcl_Size *) NULL);
 
     /* Get message digest */
     md = EVP_get_digestbyname(name);
 
     if (md == NULL) {
-	Tcl_AppendResult(interp, "Invalid digest \"", name, "\"", NULL);
+	Tcl_AppendResult(interp, "Invalid digest \"", name, "\"", (char *) NULL);
 	return TCL_ERROR;
     }
 
@@ -645,10 +646,10 @@ int KdfsObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *con
 int MacInfo(Tcl_Interp *interp, Tcl_Obj *nameObj) {
     Tcl_Obj *resultObj;
     int res = TCL_OK;
-    char *name = Tcl_GetStringFromObj(nameObj,NULL);
+    char *name = Tcl_GetStringFromObj(nameObj, (Tcl_Size *) NULL);
 
     if (strcmp(name, "cmac") != 0 && strcmp(name, "hmac") != 0) {
-	Tcl_AppendResult(interp, "Invalid MAC \"", name, "\"", NULL);
+	Tcl_AppendResult(interp, "Invalid MAC \"", name, "\"", (char *) NULL);
 	return TCL_ERROR;
     }
 
@@ -750,11 +751,11 @@ int MacsObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *con
 int PkeyInfo(Tcl_Interp *interp, Tcl_Obj *nameObj) {
     Tcl_Obj *resultObj;
     int res = TCL_OK;
-    char *name = Tcl_GetStringFromObj(nameObj,NULL);
+    char *name = Tcl_GetStringFromObj(nameObj, (Tcl_Size *) NULL);
     EVP_PKEY *pkey = NULL;
 
     if (pkey == NULL) {
-	Tcl_AppendResult(interp, "Invalid public key method \"", name, "\"", NULL);
+	Tcl_AppendResult(interp, "Invalid public key method \"", name, "\"", (char *) NULL);
 	return TCL_ERROR;
     }
 

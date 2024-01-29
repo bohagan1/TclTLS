@@ -41,11 +41,17 @@
  * Backwards compatibility for size type change
  */
 #if TCL_MAJOR_VERSION < 9 && TCL_MINOR_VERSION < 7
+    #include <limits.h>
+    #define TCL_SIZE_MAX INT_MAX
+
     #ifndef Tcl_Size
         typedef int Tcl_Size;
     #endif
 
     #define TCL_SIZE_MODIFIER ""
+    #define Tcl_GetSizeIntFromObj Tcl_GetIntFromObj
+    #define Tcl_NewSizeIntObj     Tcl_NewIntObj
+    #define Tcl_NewSizeIntFromObj Tcl_NewWideIntObj
 #endif
 
 #include <openssl/ssl.h>
@@ -208,9 +214,9 @@ BIO             *BIO_new_tcl(State* statePtr, int flags);
 
 EVP_CIPHER	*Util_GetCipher(Tcl_Interp *interp, Tcl_Obj *cipherObj, int no_null);
 EVP_MD		*Util_GetDigest(Tcl_Interp *interp, Tcl_Obj *digestObj, int no_null);
-unsigned char	*Util_GetIV(Tcl_Interp *interp, Tcl_Obj *ivObj, int *len, int max, int no_null);
-unsigned char	*Util_GetKey(Tcl_Interp *interp, Tcl_Obj *keyObj, int *len, char *name, int max, int no_null);
-unsigned char	*Util_GetSalt(Tcl_Interp *interp, Tcl_Obj *saltObj, int *len, int max, int no_null);
+unsigned char	*Util_GetIV(Tcl_Interp *interp, Tcl_Obj *ivObj, Tcl_Size *len, int max, int no_null);
+unsigned char	*Util_GetKey(Tcl_Interp *interp, Tcl_Obj *keyObj, Tcl_Size *len, char *name, int max, int no_null);
+unsigned char	*Util_GetSalt(Tcl_Interp *interp, Tcl_Obj *saltObj, Tcl_Size *len, int max, int no_null);
 int		Util_GetInt(Tcl_Interp *interp, Tcl_Obj *dataObj, int *value, char *name, int min, int max);
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
 EVP_MAC		*Util_GetMAC(Tcl_Interp *interp, Tcl_Obj *MacObj, int no_null);
