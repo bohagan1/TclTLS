@@ -350,7 +350,7 @@ static int CiphersObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tc
 
     /* Create context */
     if ((ctx = SSL_CTX_new(TLS_server_method())) == NULL) {
-	Tcl_AppendResult(interp, REASON(), (char *) NULL);
+	Tcl_AppendResult(interp, GET_ERR_REASON(), (char *) NULL);
 	return TCL_ERROR;
     }
 
@@ -363,7 +363,7 @@ static int CiphersObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tc
 
     /* Create SSL context */
     if ((ssl = SSL_new(ctx)) == NULL) {
-	Tcl_AppendResult(interp, REASON(), (char *) NULL);
+	Tcl_AppendResult(interp, GET_ERR_REASON(), (char *) NULL);
 	SSL_CTX_free(ctx);
 	return TCL_ERROR;
     }

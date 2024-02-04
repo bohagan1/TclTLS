@@ -115,20 +115,25 @@ static int
 EvalCallback(Tcl_Interp *interp, State *statePtr, Tcl_Obj *cmdPtr) {
     int code, ok = 0;
 
+    dprintf("Called");
+
     Tcl_Preserve((ClientData) interp);
     Tcl_Preserve((ClientData) statePtr);
 
     /* Eval callback with success for ok or return value 1, fail for error or return value 0 */
     Tcl_ResetResult(interp);
     code = Tcl_EvalObjEx(interp, cmdPtr, TCL_EVAL_GLOBAL);
+    dprintf("EvalCallback: %d", code);
     if (code == TCL_OK) {
 	/* Check result for return value */
 	Tcl_Obj *result = Tcl_GetObjResult(interp);
 	if (result == NULL || Tcl_GetIntFromObj(interp, result, &ok) != TCL_OK) {
 	    ok = 1;
 	}
+	dprintf("Result: %d", ok);
     } else {
 	/* Error - reject the certificate */
+	dprintf("Tcl_BackgroundError");
 #if (TCL_MAJOR_VERSION == 8) && (TCL_MINOR_VERSION < 6)
 	Tcl_BackgroundError(interp);
 #else
@@ -366,16 +371,18 @@ MessageCallback(int write_p, int version, int content_type, const void *buf, siz
 static int
 VerifyCallback(int ok, X509_STORE_CTX *ctx) {
     Tcl_Obj *cmdPtr;
-    SSL   *ssl		= (SSL*)X509_STORE_CTX_get_ex_data(ctx, SSL_get_ex_data_X509_STORE_CTX_idx());
+    SSL   *ssl = (SSL*)X509_STORE_CTX_get_ex_data(ctx, SSL_get_ex_data_X509_STORE_CTX_idx());
     X509  *cert		= X509_STORE_CTX_get_current_cert(ctx);
     State *statePtr	= (State*)SSL_get_app_data(ssl);
     Tcl_Interp *interp	= statePtr->interp;
     int depth		= X509_STORE_CTX_get_error_depth(ctx);
     int err		= X509_STORE_CTX_get_error(ctx);
 
-    dprintf("Verify: %d", ok);
+    dprintf("Called");
+    dprintf("VerifyCallback: %d", ok);
 
     if (statePtr->vcmd == (Tcl_Obj*)NULL) {
+	/* Use ok value if verification is required */
 	if (statePtr->vflags & SSL_VERIFY_FAIL_IF_NO_PEER_CERT) {
 	    return ok;
 	} else {
@@ -384,6 +391,8 @@ VerifyCallback(int ok, X509_STORE_CTX *ctx) {
     } else if (cert == NULL || ssl == NULL) {
 	return 0;
     }
+
+    dprintf("VerifyCallback: eval callback");
 
     /* Create command to eval */
     cmdPtr = Tcl_DuplicateObj(statePtr->vcmd);
@@ -403,6 +412,8 @@ VerifyCallback(int ok, X509_STORE_CTX *ctx) {
     Tcl_IncrRefCount(cmdPtr);
     ok = EvalCallback(interp, statePtr, cmdPtr);
     Tcl_DecrRefCount(cmdPtr);
+
+    dprintf("VerifyCallback: command result = %d", ok);
 
     /* statePtr->flags &= ~(TLS_TCL_CALLBACK); */
     return(ok);	/* By default, leave verification unchanged. */
@@ -977,7 +988,6 @@ static int HandshakeObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, 
 	dprintf("Async set and err = EAGAIN");
 	ret = 0;
     } else if (ret < 0) {
-	long result;
 	errStr = statePtr->err;
 	Tcl_ResetResult(interp);
 	Tcl_SetErrno(err);
@@ -987,9 +997,6 @@ static int HandshakeObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, 
 	}
 
 	Tcl_AppendResult(interp, "handshake failed: ", errStr, (char *) NULL);
-	if ((result = SSL_get_verify_result(statePtr->ssl)) != X509_V_OK) {
-	    Tcl_AppendResult(interp, " due to: ", X509_verify_cert_error_string(result), (char *) NULL);
-	}
 	Tcl_SetErrorCode(interp, "TLS", "HANDSHAKE", "FAILED", (char *) NULL);
 	dprintf("Returning TCL_ERROR with handshake failed: %s", errStr);
 	return(TCL_ERROR);
@@ -1306,7 +1313,8 @@ ImportObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const
     Tcl_SetChannelOption(interp, chan, "-translation", "binary");
     Tcl_SetChannelOption(interp, chan, "-blocking", "true");
     dprintf("Consuming Tcl channel %s", Tcl_GetChannelName(chan));
-    statePtr->self = Tcl_StackChannel(interp, Tls_ChannelType(), (ClientData) statePtr, (TCL_READABLE | TCL_WRITABLE), chan);
+    statePtr->self = Tcl_StackChannel(interp, Tls_ChannelType(), (ClientData) statePtr,
+	(TCL_READABLE | TCL_WRITABLE), chan);
     dprintf("Created channel named %s", Tcl_GetChannelName(statePtr->self));
     if (statePtr->self == (Tcl_Channel) NULL) {
 	/*
@@ -1327,7 +1335,7 @@ ImportObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const
     statePtr->ssl = SSL_new(statePtr->ctx);
     if (!statePtr->ssl) {
 	/* SSL library error */
-	Tcl_AppendResult(interp, "couldn't construct ssl session: ", REASON(), (char *) NULL);
+	Tcl_AppendResult(interp, "couldn't construct ssl session: ", GET_ERR_REASON(), (char *) NULL);
 	    Tcl_SetErrorCode(interp, "TLS", "IMPORT", "INIT", "FAILED", (char *) NULL);
 	Tls_Free((char *) statePtr);
 	return TCL_ERROR;
@@ -1338,7 +1346,7 @@ ImportObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const
 	/* Sets the server name indication (SNI) in ClientHello extension */
 	/* Per RFC 6066, hostname is a ASCII encoded string, though RFC 4366 says UTF-8. */
 	if (!SSL_set_tlsext_host_name(statePtr->ssl, servername) && require) {
-	    Tcl_AppendResult(interp, "setting TLS host name extension failed", (char *) NULL);
+	    Tcl_AppendResult(interp, "Set SNI extension failed: ", GET_ERR_REASON(), (char *) NULL);
 	    Tcl_SetErrorCode(interp, "TLS", "IMPORT", "SNI", "FAILED", (char *) NULL);
 	    Tls_Free((char *) statePtr);
 	    return TCL_ERROR;
@@ -1347,7 +1355,7 @@ ImportObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const
 	/* Set hostname for peer certificate hostname verification in clients.
 	   Don't use SSL_set1_host since it has limitations. */
 	if (!SSL_add1_host(statePtr->ssl, servername)) {
-	    Tcl_AppendResult(interp, "setting DNS host name failed", (char *) NULL);
+	    Tcl_AppendResult(interp, "Set DNS hostname failed: ", GET_ERR_REASON(), (char *) NULL);
 	    Tcl_SetErrorCode(interp, "TLS", "IMPORT", "HOSTNAME", "FAILED", (char *) NULL);
 	    Tls_Free((char *) statePtr);
 	    return TCL_ERROR;
@@ -1358,7 +1366,7 @@ ImportObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const
     if (session_id && sess_len <= SSL_MAX_SID_CTX_LENGTH) {
 	/* SSL_set_session() */
 	if (!SSL_SESSION_set1_id_context(SSL_get_session(statePtr->ssl), session_id, (unsigned int) sess_len)) {
-	    Tcl_AppendResult(interp, "Resume session id ", session_id, " failed", (char *) NULL);
+	    Tcl_AppendResult(interp, "Resume session failed: ", GET_ERR_REASON(), (char *) NULL);
 	    Tcl_SetErrorCode(interp, "TLS", "IMPORT", "SESSION", "FAILED", (char *) NULL);
 	    Tls_Free((char *) statePtr);
 	    return TCL_ERROR;
@@ -1384,7 +1392,7 @@ ImportObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const
 	for (i = 0; i < cnt; i++) {
 	    Tcl_GetStringFromObj(list[i], &len);
 	    if (len > 255) {
-		Tcl_AppendResult(interp, "ALPN protocol name too long", (char *) NULL);
+		Tcl_AppendResult(interp, "ALPN protocol names too long", (char *) NULL);
 		Tcl_SetErrorCode(interp, "TLS", "IMPORT", "ALPN", "FAILED", (char *) NULL);
 		Tls_Free((char *) statePtr);
 		return TCL_ERROR;
@@ -1405,7 +1413,7 @@ ImportObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const
 	/* SSL_set_alpn_protos makes a copy of the protocol-list */
 	/* Note: This functions reverses the return value convention */
 	if (SSL_set_alpn_protos(statePtr->ssl, protos, protos_len)) {
-	    Tcl_AppendResult(interp, "failed to set ALPN protocols", (char *) NULL);
+	    Tcl_AppendResult(interp, "Set ALPN protocols failed: ", GET_ERR_REASON(), (char *) NULL);
 	    Tcl_SetErrorCode(interp, "TLS", "IMPORT", "ALPN", "FAILED", (char *) NULL);
 	    Tls_Free((char *) statePtr);
 	    ckfree(protos);
@@ -1772,7 +1780,7 @@ CTX_Init(State *statePtr, int isServer, int proto, char *keyfile, char *certfile
 	} else {
 	    /* Use well known DH parameters that have built-in support in OpenSSL */
 	    if (!SSL_CTX_set_dh_auto(ctx, 1)) {
-		Tcl_AppendResult(interp, "Could not enable set DH auto: ", REASON(), (char *) NULL);
+		Tcl_AppendResult(interp, "Could not enable set DH auto: ", GET_ERR_REASON(), (char *) NULL);
 		SSL_CTX_free(ctx);
 		return NULL;
 	    }
@@ -1790,7 +1798,7 @@ CTX_Init(State *statePtr, int isServer, int proto, char *keyfile, char *certfile
 	if (SSL_CTX_use_certificate_file(ctx, F2N(certfile, &ds), SSL_FILETYPE_PEM) <= 0) {
 	    Tcl_DStringFree(&ds);
 	    Tcl_AppendResult(interp, "unable to set certificate file ", certfile, ": ",
-			     REASON(), (char *) NULL);
+		GET_ERR_REASON(), (char *) NULL);
 	    SSL_CTX_free(ctx);
 	    return NULL;
 	}
@@ -1799,7 +1807,7 @@ CTX_Init(State *statePtr, int isServer, int proto, char *keyfile, char *certfile
 	if (SSL_CTX_use_certificate_ASN1(ctx, cert_len, cert) <= 0) {
 	    Tcl_DStringFree(&ds);
 	    Tcl_AppendResult(interp, "unable to set certificate: ",
-			     REASON(), (char *) NULL);
+		GET_ERR_REASON(), (char *) NULL);
 	    SSL_CTX_free(ctx);
 	    return NULL;
 	}
@@ -1810,7 +1818,7 @@ CTX_Init(State *statePtr, int isServer, int proto, char *keyfile, char *certfile
 #if 0
 	    Tcl_DStringFree(&ds);
 	    Tcl_AppendResult(interp, "unable to use default certificate file ", certfile, ": ",
-			     REASON(), (char *) NULL);
+		GET_ERR_REASON(), (char *) NULL);
 	    SSL_CTX_free(ctx);
 	    return NULL;
 #endif
@@ -1834,7 +1842,7 @@ CTX_Init(State *statePtr, int isServer, int proto, char *keyfile, char *certfile
 		/* flush the passphrase which might be left in the result */
 		Tcl_SetResult(interp, NULL, TCL_STATIC);
 		Tcl_AppendResult(interp, "unable to set public key file ", keyfile, " ",
-			         REASON(), (char *) NULL);
+		    GET_ERR_REASON(), (char *) NULL);
 		SSL_CTX_free(ctx);
 		return NULL;
 	    }
@@ -1845,7 +1853,7 @@ CTX_Init(State *statePtr, int isServer, int proto, char *keyfile, char *certfile
 		Tcl_DStringFree(&ds);
 		/* flush the passphrase which might be left in the result */
 		Tcl_SetResult(interp, NULL, TCL_STATIC);
-		Tcl_AppendResult(interp, "unable to set public key: ", REASON(), (char *) NULL);
+		Tcl_AppendResult(interp, "unable to set public key: ", GET_ERR_REASON(), (char *) NULL);
 		SSL_CTX_free(ctx);
 		return NULL;
 	    }
@@ -1875,7 +1883,7 @@ CTX_Init(State *statePtr, int isServer, int proto, char *keyfile, char *certfile
 	Tcl_DStringFree(&ds);
 	Tcl_DStringFree(&ds1);
 	/* Don't currently care if this fails */
-	Tcl_AppendResult(interp, "SSL default verify paths: ", REASON(), (char *) NULL);
+	Tcl_AppendResult(interp, "SSL default verify paths: ", GET_ERR_REASON(), (char *) NULL);
 	SSL_CTX_free(ctx);
 	return NULL;
 #endif

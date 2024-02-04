@@ -86,7 +86,7 @@ static int RAND_Random(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_
 	res = RAND_priv_bytes(out_buf, out_len);
     }
     if (!res) {
-	Tcl_AppendResult(interp, "Generate failed: ", REASON(), (char *) NULL);
+	Tcl_AppendResult(interp, "Generate failed: ", GET_ERR_REASON(), (char *) NULL);
 	Tcl_DecrRefCount(resultObj);
 	return TCL_ERROR;
     }

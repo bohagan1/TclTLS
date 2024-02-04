@@ -1,11 +1,12 @@
 /*
  * Copyright (C) 1997-2000 Matt Newman <matt@novadigm.com>
  *
- * Provides BIO layer to interface openssl to Tcl.
+ * Provides BIO layer to interface OpenSSL to TCL.
  */
 
 #include "tlsInt.h"
 
+/* Called by SSL_write() */
 static int BioWrite(BIO *bio, const char *buf, int bufLen) {
     Tcl_Channel chan;
     Tcl_Size ret;
@@ -21,7 +22,7 @@ static int BioWrite(BIO *bio, const char *buf, int bufLen) {
     tclErrno = Tcl_GetErrno();
 
     dprintf("[chan=%p] BioWrite(%d) -> %" TCL_SIZE_MODIFIER "d [tclEof=%d; tclErrno=%d]",
-	(void *) chan, bufLen, ret, tclEofChan, Tcl_GetErrno());
+	(void *) chan, bufLen, ret, tclEofChan, tclErrno);
 
     BIO_clear_flags(bio, BIO_FLAGS_WRITE | BIO_FLAGS_SHOULD_RETRY);
 
@@ -45,7 +46,7 @@ static int BioWrite(BIO *bio, const char *buf, int bufLen) {
 	}
 
     } else {
-	dprintf("Successfully wrote some data");
+	dprintf("Successfully wrote %" TCL_SIZE_MODIFIER "d bytes of data", ret);
     }
 
     if (ret != -1 || (ret == -1 && tclErrno == EAGAIN)) {
@@ -58,6 +59,7 @@ static int BioWrite(BIO *bio, const char *buf, int bufLen) {
     return((int) ret);
 }
 
+/* Called by SSL_read()*/
 static int BioRead(BIO *bio, char *buf, int bufLen) {
     Tcl_Channel chan;
     Tcl_Size ret = 0;
@@ -101,7 +103,7 @@ static int BioRead(BIO *bio, char *buf, int bufLen) {
 	}
 
     } else {
-	dprintf("Successfully read some data");
+	dprintf("Successfully read %" TCL_SIZE_MODIFIER "d bytes of data", ret);
     }
 
     if (ret != -1 || (ret == -1 && tclErrno == EAGAIN)) {
@@ -121,7 +123,7 @@ static int BioRead(BIO *bio, char *buf, int bufLen) {
 static int BioPuts(BIO *bio, const char *str) {
     dprintf("BioPuts(%p, <string:%p>) called", bio, str);
 
-    return BioWrite(bio, str, (int) strlen(str));
+    return(BioWrite(bio, str, (int) strlen(str)));
 }
 
 static long BioCtrl(BIO *bio, int cmd, long num, void *ptr) {

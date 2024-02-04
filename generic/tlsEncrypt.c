@@ -188,7 +188,7 @@ int EncryptInitialize(Tcl_Interp *interp, int type, EVP_CIPHER_CTX **ctx,
     }
 
     if(!res) {
-	Tcl_AppendResult(interp, "Initialize failed: ", REASON(), (char *) NULL);
+	Tcl_AppendResult(interp, "Initialize failed: ", GET_ERR_REASON(), (char *) NULL);
 	return TCL_ERROR;
     }
 
@@ -229,7 +229,7 @@ int EncryptUpdate(Tcl_Interp *interp, int type, EVP_CIPHER_CTX *ctx, unsigned ch
     if (res) {
 	return TCL_OK;
     } else {
-	Tcl_AppendResult(interp, "Update failed: ", REASON(), (char *) NULL);
+	Tcl_AppendResult(interp, "Update failed: ", GET_ERR_REASON(), (char *) NULL);
 	return TCL_ERROR;
     }
 }
@@ -266,7 +266,7 @@ int EncryptFinalize(Tcl_Interp *interp, int type, EVP_CIPHER_CTX *ctx, unsigned 
     if (res) {
 	return TCL_OK;
     } else {
-	Tcl_AppendResult(interp, "Finalize failed: ", REASON(), (char *) NULL);
+	Tcl_AppendResult(interp, "Finalize failed: ", GET_ERR_REASON(), (char *) NULL);
 	return TCL_ERROR;
     }
 }
@@ -410,7 +410,7 @@ int EncryptInputProc(ClientData clientData, char *buf, int toRead, int *errorCod
 		read = -1;
 	    }
 	} else {
-	    Tcl_SetChannelError(statePtr->self, Tcl_ObjPrintf("Update failed: %s", REASON()));
+	    Tcl_SetChannelError(statePtr->self, Tcl_ObjPrintf("Update failed: %s", GET_ERR_REASON()));
 	    *errorCodePtr = EINVAL;
 	    read = 0;
 	}
@@ -424,7 +424,7 @@ int EncryptInputProc(ClientData clientData, char *buf, int toRead, int *errorCod
 	if (EncryptFinalize(statePtr->interp, statePtr->type, statePtr->ctx, buf, &out_len) == TCL_OK) {
 	    read = (Tcl_Size) out_len;
 	} else {
-	    Tcl_SetChannelError(statePtr->self, Tcl_ObjPrintf("Finalize failed: %s", REASON()));
+	    Tcl_SetChannelError(statePtr->self, Tcl_ObjPrintf("Finalize failed: %s", GET_ERR_REASON()));
 	    *errorCodePtr = EINVAL;
 	    read = 0;
 	}
@@ -478,7 +478,7 @@ int EncryptInputProc(ClientData clientData, char *buf, int toRead, int *errorCod
 	}
 
     } else {
-	Tcl_SetChannelError(statePtr->self, Tcl_ObjPrintf("Update failed: %s", REASON()));
+	Tcl_SetChannelError(statePtr->self, Tcl_ObjPrintf("Update failed: %s", GET_ERR_REASON()));
 	*errorCodePtr = EINVAL;
 	write = 0;
     }

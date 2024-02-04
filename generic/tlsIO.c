@@ -135,10 +135,13 @@ int Tls_WaitForConnect(State *statePtr, int *errorCodePtr, int handshakeFailureI
 	    dprintf("Asked to wait for a TLS handshake that has already failed.  Returning soft error");
 	    *errorCodePtr = ECONNRESET;
 	}
+	Tls_Error(statePtr, "Wait for failed handshake");
 	return(-1);
     }
 
     for (;;) {
+	ERR_clear_error();
+
 	/* Not initialized yet! Also calls SSL_do_handshake. */
 	if (statePtr->flags & TLS_TCL_SERVER) {
 	    dprintf("Calling SSL_accept()");
@@ -150,18 +153,21 @@ int Tls_WaitForConnect(State *statePtr, int *errorCodePtr, int handshakeFailureI
 	}
 
 	if (err > 0) {
-	    dprintf("That seems to have gone okay");
-
+	    dprintf("Accept or connect was successful");
 	    err = BIO_flush(statePtr->bio);
 	    if (err <= 0) {
 		dprintf("Flushing the lower layers failed, this will probably terminate this session");
 	    }
+	} else {
+	    dprintf("Accept or connect failed");
 	}
 
 	rc = SSL_get_error(statePtr->ssl, err);
-
-	dprintf("Got error: %i (rc = %i)", err, rc);
-	dprintf("Got error: %s", REASON());
+	backingError = ERR_get_error();
+	if (rc != SSL_ERROR_NONE) {
+	    dprintf("Got error: %i (rc = %i)", err, rc);
+	    dprintf("Got error: %s", GET_ERR_REASON());
+	}
 
 	bioShouldRetry = 0;
 	if (err <= 0) {
@@ -183,12 +189,10 @@ int Tls_WaitForConnect(State *statePtr, int *errorCodePtr, int handshakeFailureI
 
 	    if (statePtr->flags & TLS_TCL_ASYNC) {
 		dprintf("Returning EAGAIN so that it can be retried later");
-
 		*errorCodePtr = EAGAIN;
 		return(-1);
 	    } else {
 		dprintf("Doing so now");
-
 		continue;
 	    }
 	}
@@ -199,69 +203,75 @@ int Tls_WaitForConnect(State *statePtr, int *errorCodePtr, int handshakeFailureI
 
     switch (rc) {
 	case SSL_ERROR_NONE:
-	    /* The connection is up, we are done here */
-	    dprintf("The connection is up");
+	    /* The TLS/SSL I/O operation completed */
+	    dprintf("The connection is good");
 	    *errorCodePtr = 0;
 	    break;
+
 	case SSL_ERROR_ZERO_RETURN:
+	    /* The TLS/SSL peer has closed the connection for writing by sending the close_notify alert */
 	    dprintf("SSL_ERROR_ZERO_RETURN: Connect returned an invalid value...");
 	    *errorCodePtr = EINVAL;
+	    Tls_Error(statePtr, "Peer has closed the connection for writing by sending the close_notify alert");
 	    return(-1);
-	case SSL_ERROR_SYSCALL:
-	    backingError = ERR_get_error();
 
+	case SSL_ERROR_SYSCALL:
+	    /* Some non-recoverable, fatal I/O error occurred */
+	    dprintf("SSL_ERROR_SYSCALL");
 	    if (backingError == 0 && err == 0) {
 		dprintf("EOF reached")
 		*errorCodePtr = ECONNRESET;
+		Tls_Error(statePtr, "(unexpected) EOF reached");
+
 	    } else if (backingError == 0 && err == -1) {
 		dprintf("I/O error occurred (errno = %lu)", (unsigned long) Tcl_GetErrno());
 		*errorCodePtr = Tcl_GetErrno();
 		if (*errorCodePtr == ECONNRESET) {
 		    *errorCodePtr = ECONNABORTED;
 		}
+		Tls_Error(statePtr, Tcl_ErrnoMsg(Tcl_GetErrno()));
+
 	    } else {
 		dprintf("I/O error occurred (backingError = %lu)", backingError);
 		*errorCodePtr = backingError;
 		if (*errorCodePtr == ECONNRESET) {
 		    *errorCodePtr = ECONNABORTED;
 		}
+		Tls_Error(statePtr, ERR_reason_error_string(backingError));
 	    }
 
 	    statePtr->flags |= TLS_TCL_HANDSHAKE_FAILED;
 	    return(-1);
 
 	case SSL_ERROR_SSL:
-	    dprintf("Got permanent fatal SSL error, aborting immediately");
-	    Tls_Error(statePtr, (char *)REASON());
+	    /* A non-recoverable, fatal error in the SSL library occurred, usually a protocol error */
+	    dprintf("SSL_ERROR_SSL: Got permanent fatal SSL error, aborting immediately");
+	    if (backingError != 0) {
+		Tls_Error(statePtr, ERR_reason_error_string(backingError));
+	    }
+	    if (SSL_get_verify_result(statePtr->ssl) != X509_V_OK) {
+		Tls_Error(statePtr, X509_verify_cert_error_string(SSL_get_verify_result(statePtr->ssl)));
+	    }
 	    statePtr->flags |= TLS_TCL_HANDSHAKE_FAILED;
 	    *errorCodePtr = ECONNABORTED;
 	    return(-1);
 
+	case SSL_ERROR_WANT_READ:
+	case SSL_ERROR_WANT_WRITE:
+	case SSL_ERROR_WANT_X509_LOOKUP:
 	case SSL_ERROR_WANT_CONNECT:
 	case SSL_ERROR_WANT_ACCEPT:
-	case SSL_ERROR_WANT_X509_LOOKUP:
+	case SSL_ERROR_WANT_ASYNC:
+	case SSL_ERROR_WANT_ASYNC_JOB:
+	case SSL_ERROR_WANT_CLIENT_HELLO_CB:
 	default:
-	    dprintf("We got a confusing reply: %i", rc);
-	    *errorCodePtr = Tcl_GetErrno();
+	    /* The operation did not complete and should be retried later. */
+	    dprintf("Operation did not complete, call function again later: %i", rc);
+	    *errorCodePtr = EAGAIN;
 	    dprintf("ERR(%d, %d) ", rc, *errorCodePtr);
+	    Tls_Error(statePtr, "Operation did not complete, call function again later");
 	    return(-1);
     }
-
-#if 0
-    if (statePtr->flags & TLS_TCL_SERVER) {
-	dprintf("This is an TLS server, checking the certificate for the peer");
-
-	err = SSL_get_verify_result(statePtr->ssl);
-	if (err != X509_V_OK) {
-	    dprintf("Invalid certificate, returning in failure");
-
-	    Tls_Error(statePtr, (char *)X509_verify_cert_error_string(err));
-	    statePtr->flags |= TLS_TCL_HANDSHAKE_FAILED;
-	    *errorCodePtr = ECONNABORTED;
-	    return(-1);
-	}
-    }
-#endif
 
     dprintf("Removing the \"TLS_TCL_INIT\" flag since we have completed the handshake");
     statePtr->flags &= ~TLS_TCL_INIT;
@@ -337,6 +347,7 @@ static int TlsInputProc(ClientData instanceData, char *buf, int bufSize, int *er
     dprintf("BIO_read -> %d", bytesRead);
 
     err = SSL_get_error(statePtr->ssl, bytesRead);
+    backingError = ERR_get_error();
 
 #if 0
     if (bytesRead <= 0) {
@@ -353,28 +364,45 @@ static int TlsInputProc(ClientData instanceData, char *buf, int bufSize, int *er
 	    break;
 
 	case SSL_ERROR_SSL:
-	    dprintf("SSL negotiation error, indicating that the connection has been aborted");
-
-	    Tls_Error(statePtr, TCLTLS_SSL_ERROR(statePtr->ssl, bytesRead));
+	    /* A non-recoverable, fatal error in the SSL library occurred, usually a protocol error */
+	    dprintf("SSL error, indicating that the connection has been aborted");
+	    if (backingError != 0) {
+		Tls_Error(statePtr, ERR_reason_error_string(backingError));
+	    }
 	    *errorCodePtr = ECONNABORTED;
 	    bytesRead = -1;
+
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+	    /* Unexpected EOF from the peer for OpenSSL 3.0+ */
+	    if (ERR_GET_REASON(backingError) == SSL_R_UNEXPECTED_EOF_WHILE_READING) {
+		dprintf("(Unexpected) EOF reached")
+		*errorCodePtr = 0;
+		bytesRead = 0;
+		Tls_Error(statePtr, "EOF reached");
+	    }    
+#endif
 	    break;
 
 	case SSL_ERROR_SYSCALL:
-	    backingError = ERR_get_error();
-
+	    /* Some non-recoverable, fatal I/O error occurred */
 	    if (backingError == 0 && bytesRead == 0) {
-		dprintf("EOF reached")
+		/* Unexpected EOF from the peer for OpenSSL 1.1 */
+		dprintf("(Unexpected) EOF reached")
 		*errorCodePtr = 0;
 		bytesRead = 0;
+		Tls_Error(statePtr, "EOF reached");
+
 	    } else if (backingError == 0 && bytesRead == -1) {
 		dprintf("I/O error occurred (errno = %lu)", (unsigned long) Tcl_GetErrno());
 		*errorCodePtr = Tcl_GetErrno();
 		bytesRead = -1;
+		Tls_Error(statePtr, Tcl_ErrnoMsg(Tcl_GetErrno()));
+
 	    } else {
 		dprintf("I/O error occurred (backingError = %lu)", backingError);
 		*errorCodePtr = backingError;
 		bytesRead = -1;
+		Tls_Error(statePtr, ERR_reason_error_string(backingError));
 	    }
 	    break;
 
@@ -382,12 +410,14 @@ static int TlsInputProc(ClientData instanceData, char *buf, int bufSize, int *er
 	    dprintf("Got SSL_ERROR_ZERO_RETURN, this means an EOF has been reached");
 	    bytesRead = 0;
 	    *errorCodePtr = 0;
+	    Tls_Error(statePtr, "Peer has closed the connection for writing by sending the close_notify alert");
 	    break;
 
 	case SSL_ERROR_WANT_READ:
 	    dprintf("Got SSL_ERROR_WANT_READ, mapping this to EAGAIN");
 	    bytesRead = -1;
 	    *errorCodePtr = EAGAIN;
+	    Tls_Error(statePtr, "SSL_ERROR_WANT_READ");
 	    break;
 
 	default:
@@ -488,6 +518,8 @@ static int TlsOutputProc(ClientData instanceData, const char *buf, int toWrite, 
     dprintf("BIO_write(%p, %d) -> [%d]", (void *) statePtr, toWrite, written);
 
     err = SSL_get_error(statePtr->ssl, written);
+    backingError = ERR_get_error();
+
     switch (err) {
 	case SSL_ERROR_NONE:
 	    if (written < 0) {
@@ -499,48 +531,60 @@ static int TlsOutputProc(ClientData instanceData, const char *buf, int toWrite, 
 	    dprintf("Got SSL_ERROR_WANT_WRITE, mapping it to EAGAIN");
 	    *errorCodePtr = EAGAIN;
 	    written = -1;
+	    Tls_Error(statePtr, "SSL_ERROR_WANT_WRITE");
 	    break;
 
 	case SSL_ERROR_WANT_READ:
 	    dprintf(" write R BLOCK");
+	    Tls_Error(statePtr, "SSL_ERROR_WANT_READ");
 	    break;
 
 	case SSL_ERROR_WANT_X509_LOOKUP:
 	    dprintf(" write X BLOCK");
+	    Tls_Error(statePtr, "SSL_ERROR_WANT_X509_LOOKUP");
 	    break;
 
 	case SSL_ERROR_ZERO_RETURN:
 	    dprintf(" closed");
 	    written = 0;
 	    *errorCodePtr = 0;
+	    Tls_Error(statePtr, "Peer has closed the connection for writing by sending the close_notify alert");
 	    break;
 
 	case SSL_ERROR_SYSCALL:
-	    backingError = ERR_get_error();
-
+	    /* Some non-recoverable, fatal I/O error occurred */
 	    if (backingError == 0 && written == 0) {
 		dprintf("EOF reached")
 		*errorCodePtr = 0;
 		written = 0;
+		Tls_Error(statePtr, "EOF reached");
+
 	    } else if (backingError == 0 && written == -1) {
 		dprintf("I/O error occurred (errno = %lu)", (unsigned long) Tcl_GetErrno());
 		*errorCodePtr = Tcl_GetErrno();
 		written = -1;
+		Tls_Error(statePtr, Tcl_ErrnoMsg(Tcl_GetErrno()));
+
 	    } else {
 		dprintf("I/O error occurred (backingError = %lu)", backingError);
 		*errorCodePtr = backingError;
 		written = -1;
+		Tls_Error(statePtr, ERR_reason_error_string(backingError));
 	    }
 	    break;
 
 	case SSL_ERROR_SSL:
-	    Tls_Error(statePtr, TCLTLS_SSL_ERROR(statePtr->ssl, written));
+	    /* A non-recoverable, fatal error in the SSL library occurred, usually a protocol error */
+	    dprintf("SSL error, indicating that the connection has been aborted");
+	    if (backingError != 0) {
+		Tls_Error(statePtr, ERR_reason_error_string(backingError));
+	    }
 	    *errorCodePtr = ECONNABORTED;
 	    written = -1;
 	    break;
 
 	default:
-	    dprintf(" unknown err: %d", err);
+	    dprintf("unknown error: %d", err);
 	    break;
     }
 

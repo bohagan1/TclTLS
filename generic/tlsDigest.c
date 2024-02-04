@@ -211,7 +211,7 @@ int DigestInitialize(Tcl_Interp *interp, DigestState *statePtr, Tcl_Obj *digestO
     }
 
     if (!res) {
-	Tcl_AppendResult(interp, "Initialize failed: ", REASON(), (char *) NULL);
+	Tcl_AppendResult(interp, "Initialize failed: ", GET_ERR_REASON(), (char *) NULL);
 	return TCL_ERROR;
     }
     return TCL_OK;
@@ -251,7 +251,7 @@ int DigestUpdate(DigestState *statePtr, char *buf, Tcl_Size read, int do_result)
     }
 
     if (!res && do_result) {
-	Tcl_AppendResult(statePtr->interp, "Update failed: ", REASON(), (char *) NULL);
+	Tcl_AppendResult(statePtr->interp, "Update failed: ", GET_ERR_REASON(), (char *) NULL);
 	return TCL_ERROR;
     }
     return TCL_OK;
@@ -304,7 +304,7 @@ int DigestFinalize(Tcl_Interp *interp, DigestState *statePtr, Tcl_Obj **resultOb
 
     if (!res) {
 	if (resultObj == NULL) {
-	    Tcl_AppendResult(interp, "Finalize failed: ", REASON(), (char *) NULL);
+	    Tcl_AppendResult(interp, "Finalize failed: ", GET_ERR_REASON(), (char *) NULL);
 	}
 	return TCL_ERROR;
     }
@@ -459,7 +459,7 @@ int DigestInputProc(ClientData clientData, char *buf, int toRead, int *errorCode
     if (read > 0) {
 	/* Have data */
 	if (DigestUpdate(statePtr, buf, read, 0) != TCL_OK) {
-	    Tcl_SetChannelError(statePtr->self, Tcl_ObjPrintf("Update failed: %s", REASON()));
+	    Tcl_SetChannelError(statePtr->self, Tcl_ObjPrintf("Update failed: %s", GET_ERR_REASON()));
 	    *errorCodePtr = EINVAL;
 	    return 0;
 	}
@@ -480,7 +480,7 @@ int DigestInputProc(ClientData clientData, char *buf, int toRead, int *errorCode
 	    Tcl_DecrRefCount(resultObj);
 
 	} else {
-	    Tcl_SetChannelError(statePtr->self, Tcl_ObjPrintf("Finalize failed: %s", REASON()));
+	    Tcl_SetChannelError(statePtr->self, Tcl_ObjPrintf("Finalize failed: %s", GET_ERR_REASON()));
 	    *errorCodePtr = EINVAL;
 	    read = 0;
 	}
@@ -517,7 +517,7 @@ int DigestInputProc(ClientData clientData, char *buf, int toRead, int *errorCode
 
     /* Update hash function */
     if (DigestUpdate(statePtr, buf, (Tcl_Size) toWrite, 0) != TCL_OK) {
-	Tcl_SetChannelError(statePtr->self, Tcl_ObjPrintf("Update failed: %s", REASON()));
+	Tcl_SetChannelError(statePtr->self, Tcl_ObjPrintf("Update failed: %s", GET_ERR_REASON()));
 	*errorCodePtr = EINVAL;
 	return 0;
     }

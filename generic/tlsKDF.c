@@ -131,7 +131,7 @@ static int KDF_PBKDF2(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_O
 
     /* Derive key */
     if (!PKCS5_PBKDF2_HMAC(pass, (int) pass_len, salt, (int) salt_len, iter, md, dk_len, tmpkeyiv)) {
-	Tcl_AppendResult(interp, "Key derivation failed: ", REASON(), (char *) NULL);
+	Tcl_AppendResult(interp, "Key derivation failed: ", GET_ERR_REASON(), (char *) NULL);
 	return TCL_ERROR;
     }
 
@@ -250,25 +250,25 @@ static int KDF_HKDF(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj
     }
 
     if (EVP_PKEY_derive_init(pctx) < 1) {
-	Tcl_AppendResult(interp, "Initialize failed: ", REASON(), (char *) NULL);
+	Tcl_AppendResult(interp, "Initialize failed: ", GET_ERR_REASON(), (char *) NULL);
 	goto error;
     }
 
     /* Set config parameters */
     if (EVP_PKEY_CTX_set_hkdf_md(pctx, md) < 1) {
-	Tcl_AppendResult(interp, "Set digest failed: ", REASON(), (char *) NULL);
+	Tcl_AppendResult(interp, "Set digest failed: ", GET_ERR_REASON(), (char *) NULL);
 	goto error;
     }
     if (EVP_PKEY_CTX_set1_hkdf_key(pctx, key, (int) key_len) < 1) {
-	Tcl_AppendResult(interp, "Set key failed: ", REASON(), (char *) NULL);
+	Tcl_AppendResult(interp, "Set key failed: ", GET_ERR_REASON(), (char *) NULL);
 	goto error;
     }
     if (salt != NULL && EVP_PKEY_CTX_set1_hkdf_salt(pctx, salt, (int) salt_len) < 1) {
-	Tcl_AppendResult(interp, "Set salt failed: ", REASON(), (char *) NULL);
+	Tcl_AppendResult(interp, "Set salt failed: ", GET_ERR_REASON(), (char *) NULL);
 	goto error;
     }
     if (info != NULL && EVP_PKEY_CTX_add1_hkdf_info(pctx, info, (int) info_len) < 1) {
-	Tcl_AppendResult(interp, "Set info failed: ", REASON(), (char *) NULL);
+	Tcl_AppendResult(interp, "Set info failed: ", GET_ERR_REASON(), (char *) NULL);
 	goto error;
     }
 
@@ -288,7 +288,7 @@ static int KDF_HKDF(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj
 	res = TCL_OK;
 	goto done;
     } else {
-	Tcl_AppendResult(interp, "Key derivation failed: ", REASON(), (char *) NULL);
+	Tcl_AppendResult(interp, "Key derivation failed: ", GET_ERR_REASON(), (char *) NULL);
 	Tcl_DecrRefCount(resultObj);
     }
 
@@ -398,33 +398,33 @@ static int KDF_Scrypt(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_O
     }
 
     if (EVP_PKEY_derive_init(pctx) < 1) {
-	Tcl_AppendResult(interp, "Initialize failed: ", REASON(), (char *) NULL);
+	Tcl_AppendResult(interp, "Initialize failed: ", GET_ERR_REASON(), (char *) NULL);
 	goto error;
     }
 
     /* Set config parameters */
     if (EVP_PKEY_CTX_set1_pbe_pass(pctx, pass, (int) pass_len) < 1) {
-	Tcl_AppendResult(interp, "Set key failed: ", REASON(), (char *) NULL);
+	Tcl_AppendResult(interp, "Set key failed: ", GET_ERR_REASON(), (char *) NULL);
 	goto error;
     }
     if (EVP_PKEY_CTX_set1_scrypt_salt(pctx, salt, (int) salt_len) < 1) {
-	Tcl_AppendResult(interp, "Set salt failed: ", REASON(), (char *) NULL);
+	Tcl_AppendResult(interp, "Set salt failed: ", GET_ERR_REASON(), (char *) NULL);
 	goto error;
     }
     if (N != 0 && EVP_PKEY_CTX_set_scrypt_N(pctx, N) < 1) {
-	Tcl_AppendResult(interp, "Set cost parameter (N) failed: ", REASON(), (char *) NULL);
+	Tcl_AppendResult(interp, "Set cost parameter (N) failed: ", GET_ERR_REASON(), (char *) NULL);
 	goto error;
     }
     if (r != 0 && EVP_PKEY_CTX_set_scrypt_r(pctx, r) < 1) {
-	Tcl_AppendResult(interp, "Set lock size parameter (r) failed: ", REASON(), (char *) NULL);
+	Tcl_AppendResult(interp, "Set lock size parameter (r) failed: ", GET_ERR_REASON(), (char *) NULL);
 	goto error;
    }
     if (p != 0 && EVP_PKEY_CTX_set_scrypt_p(pctx, p) < 1) {
-	Tcl_AppendResult(interp, "Set Parallelization parameter (p) failed: ", REASON(), (char *) NULL);
+	Tcl_AppendResult(interp, "Set Parallelization parameter (p) failed: ", GET_ERR_REASON(), (char *) NULL);
 	goto error;
     }
     if (maxmem != 0 && EVP_PKEY_CTX_set_scrypt_maxmem_bytes(pctx, maxmem) < 1) {
-	Tcl_AppendResult(interp, "Set max memory failed: ", REASON(), (char *) NULL);
+	Tcl_AppendResult(interp, "Set max memory failed: ", GET_ERR_REASON(), (char *) NULL);
 	goto error;
     }
 
@@ -444,7 +444,7 @@ static int KDF_Scrypt(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_O
 	goto done;
 
     } else {
-	Tcl_AppendResult(interp, "Key derivation failed: ", REASON(), (char *) NULL);
+	Tcl_AppendResult(interp, "Key derivation failed: ", GET_ERR_REASON(), (char *) NULL);
 	Tcl_DecrRefCount(resultObj);
     }
 
