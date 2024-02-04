@@ -138,7 +138,7 @@ void EncryptStateFree(EncryptState *statePtr) {
 int EncryptInitialize(Tcl_Interp *interp, int type, EVP_CIPHER_CTX **ctx,
 	Tcl_Obj *cipherObj, Tcl_Obj *keyObj, Tcl_Obj *ivObj) {
     const EVP_CIPHER *cipher;
-    char *keyString = NULL, *ivString = NULL;
+    void *keyString = NULL, *ivString = NULL;
     Tcl_Size key_len = 0, iv_len = 0;
     int res, max;
     unsigned char key[EVP_MAX_KEY_LENGTH], iv[EVP_MAX_IV_LENGTH];
@@ -158,18 +158,18 @@ int EncryptInitialize(Tcl_Interp *interp, int type, EVP_CIPHER_CTX **ctx,
     /*  Get key - Only support internally defined cipher lengths.
 	Custom ciphers can be up to size_t bytes. */
     max = EVP_CIPHER_key_length(cipher);
-    keyString = (const void *) Util_GetKey(interp, keyObj, &key_len, "key", max, FALSE);
+    keyString = Util_GetKey(interp, keyObj, &key_len, "key", max, 0);
     if (keyString != NULL) {
-	memcpy((void *) key, (const void *) keyString, (size_t) key_len);
+	memcpy((void *) key, keyString, (size_t) key_len);
     } else if (keyObj != NULL)  {
 	return TCL_ERROR;
     }
 
     /*  Get IV */
     max = EVP_CIPHER_iv_length(cipher);
-    ivString = (const void *) Util_GetIV(interp, ivObj, &iv_len, max, FALSE);
+    ivString = Util_GetIV(interp, ivObj, &iv_len, max, 0);
     if (ivString != NULL) {
-	memcpy((void *) iv, (const void *) ivString, (size_t) iv_len);
+	memcpy((void *) iv, ivString, (size_t) iv_len);
     } else if (ivObj != NULL) {
 	return TCL_ERROR;
     }
@@ -401,7 +401,7 @@ int EncryptInputProc(ClientData clientData, char *buf, int toRead, int *errorCod
     /* Update function */
     if (read > 0) {
 	/* Have data - Update function */
-	if (EncryptUpdate(statePtr->interp, statePtr->type, statePtr->ctx, buf, &out_len, in_buf, read) == TCL_OK) {
+	if (EncryptUpdate(statePtr->interp, statePtr->type, statePtr->ctx, (unsigned char *) buf, &out_len, (unsigned char *) in_buf, read) == TCL_OK) {
 	    /* If have data, put in buf, otherwise tell TCL to try again */
 	    if (out_len > 0) {
 		read = (Tcl_Size) out_len;
@@ -421,7 +421,7 @@ int EncryptInputProc(ClientData clientData, char *buf, int toRead, int *errorCod
 
     } else if (!(statePtr->flags & CHAN_EOF)) {
 	/* EOF - Finalize function and put any remaining data in buf */
-	if (EncryptFinalize(statePtr->interp, statePtr->type, statePtr->ctx, buf, &out_len) == TCL_OK) {
+	if (EncryptFinalize(statePtr->interp, statePtr->type, statePtr->ctx, (unsigned char *) buf, &out_len) == TCL_OK) {
 	    read = (Tcl_Size) out_len;
 	} else {
 	    Tcl_SetChannelError(statePtr->self, Tcl_ObjPrintf("Finalize failed: %s", GET_ERR_REASON()));
@@ -466,7 +466,7 @@ int EncryptInputProc(ClientData clientData, char *buf, int toRead, int *errorCod
     out_buf = Tcl_Alloc((Tcl_Size) toWrite+EVP_MAX_BLOCK_LENGTH);
 
     /* Update function */
-    if (EncryptUpdate(statePtr->interp, statePtr->type, statePtr->ctx, out_buf, &out_len, buf, (Tcl_Size) toWrite) == TCL_OK) {
+    if (EncryptUpdate(statePtr->interp, statePtr->type, statePtr->ctx, (unsigned char *) out_buf, &out_len, (unsigned char *) buf, (Tcl_Size) toWrite) == TCL_OK) {
 	/* If have data, output it, otherwise tell TCL to try again */
 	if (out_len > 0) {
 	    Tcl_Channel parent = Tcl_GetStackedChannel(statePtr->self);
@@ -744,7 +744,6 @@ static int EncryptChannelHandler(Tcl_Interp *interp, int type, const char *chann
     int mode; /* OR-ed combination of TCL_READABLE and TCL_WRITABLE */
     Tcl_Channel chan;
     EncryptState *statePtr;
-    (void *) digestObj;
 
     dprintf("Called");
 
@@ -864,7 +863,7 @@ int EncryptInstanceObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, T
     EncryptState *statePtr = (EncryptState *) clientData;
     int fn, out_len;
     Tcl_Size data_len = 0;
-    char *data = NULL;
+    unsigned char *data = NULL;
     Tcl_Obj *resultObj;
     unsigned char *out_buf;
     static const char *instance_fns [] = { "finalize", "update", NULL };
@@ -968,7 +967,6 @@ int EncryptCommandHandler(Tcl_Interp *interp, int type, Tcl_Obj *cmdObj,
 	Tcl_Obj *cipherObj, Tcl_Obj *digestObj, Tcl_Obj *keyObj, Tcl_Obj *ivObj) {
     EncryptState *statePtr;
     char *cmdName = Tcl_GetStringFromObj(cmdObj, (Tcl_Size *) NULL);
-    (void *) digestObj;
 
     dprintf("Called");
 
@@ -1016,7 +1014,6 @@ int EncryptDataHandler(Tcl_Interp *interp, int type, Tcl_Obj *dataObj, Tcl_Obj *
     Tcl_Size data_len = 0;
     unsigned char *data, *out_buf;
     Tcl_Obj *resultObj;
-    (void *) digestObj;
 
     dprintf("Called");
 
@@ -1087,7 +1084,6 @@ int EncryptFileHandler(Tcl_Interp *interp, int type, Tcl_Obj *inFileObj, Tcl_Obj
     Tcl_Channel in = NULL, out = NULL;
     unsigned char in_buf[BUFFER_SIZE];
     unsigned char out_buf[BUFFER_SIZE+EVP_MAX_BLOCK_LENGTH];
-    (void *) digestObj;
 
     dprintf("Called");
 

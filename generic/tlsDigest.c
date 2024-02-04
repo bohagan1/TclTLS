@@ -152,9 +152,8 @@ int DigestInitialize(Tcl_Interp *interp, DigestState *statePtr, Tcl_Obj *digestO
     int res = 0, type = statePtr->format & 0xFF0;
     const EVP_MD *md = NULL;
     const EVP_CIPHER *cipher = NULL;
-    const void *key = NULL, *iv = NULL, *salt = NULL;
+    const void *key = NULL;
     Tcl_Size key_len = 0;
-    (void *) macObj;
 
     dprintf("Called");
 
@@ -243,7 +242,7 @@ int DigestUpdate(DigestState *statePtr, char *buf, Tcl_Size read, int do_result)
         res = EVP_DigestUpdate(statePtr->ctx, buf, (size_t) read);
 	break;
     case TYPE_HMAC:
-        res = HMAC_Update(statePtr->hctx, buf, (size_t) read);
+        res = HMAC_Update(statePtr->hctx, (const unsigned char *) buf, (size_t) read);
 	break;
     case TYPE_CMAC:
         res = CMAC_Update(statePtr->cctx, buf, (size_t) read);
@@ -401,7 +400,10 @@ int DigestCloseProc(ClientData clientData, Tcl_Interp *interp) {
 
 	if (DigestFinalize(statePtr->interp, statePtr, &resultObj) == TCL_OK) {
 	    unsigned char *data = Tcl_GetByteArrayFromObj(resultObj, &toWrite);
-	    written = Tcl_WriteRaw(parent, data, toWrite);
+	    written = Tcl_WriteRaw(parent, (const char *) data, toWrite);
+            if (written != toWrite) {
+                /* Error */
+            }
 	    Tcl_DecrRefCount(resultObj);
 	}
 	statePtr->flags |= CHAN_EOF;
@@ -516,7 +518,7 @@ int DigestInputProc(ClientData clientData, char *buf, int toRead, int *errorCode
     }
 
     /* Update hash function */
-    if (DigestUpdate(statePtr, buf, (Tcl_Size) toWrite, 0) != TCL_OK) {
+    if (DigestUpdate(statePtr, (char *) buf, (Tcl_Size) toWrite, 0) != TCL_OK) {
 	Tcl_SetChannelError(statePtr->self, Tcl_ObjPrintf("Update failed: %s", GET_ERR_REASON()));
 	*errorCodePtr = EINVAL;
 	return 0;
@@ -904,7 +906,7 @@ int DigestInstanceObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tc
     DigestState *statePtr = (DigestState *) clientData;
     int fn;
     Tcl_Size data_len = 0;
-    char *data = NULL;
+    unsigned char *data = NULL;
     static const char *instance_fns [] = { "finalize", "update", NULL };
 
     dprintf("Called");
@@ -931,7 +933,7 @@ int DigestInstanceObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tc
 	}
 
 	/* Update hash function */
-	if (DigestUpdate(statePtr, data, data_len, 1) != TCL_OK) {
+	if (DigestUpdate(statePtr, (char *) data, data_len, 1) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 
@@ -1034,7 +1036,7 @@ int DigestCommandHandler(Tcl_Interp *interp, Tcl_Obj *cmdObj, Tcl_Obj *digestObj
  */
 int DigestDataHandler(Tcl_Interp *interp, Tcl_Obj *dataObj, Tcl_Obj *digestObj,
 	Tcl_Obj *cipherObj, int format, Tcl_Obj *keyObj, Tcl_Obj *macObj) {
-    char *data;
+    unsigned char *data;
     Tcl_Size data_len;
     DigestState *statePtr;
 
@@ -1055,7 +1057,7 @@ int DigestDataHandler(Tcl_Interp *interp, Tcl_Obj *dataObj, Tcl_Obj *digestObj,
 
     /* Calc Digest */
     if (DigestInitialize(interp, statePtr, digestObj, cipherObj, keyObj, macObj) != TCL_OK ||
-	DigestUpdate(statePtr, data, data_len, 1) != TCL_OK ||
+	DigestUpdate(statePtr, (char *) data, data_len, 1) != TCL_OK ||
 	DigestFinalize(interp, statePtr, NULL) != TCL_OK) {
 	DigestStateFree(statePtr);
 	return TCL_ERROR;
@@ -1120,7 +1122,7 @@ int DigestFileHandler(Tcl_Interp *interp, Tcl_Obj *inFileObj, Tcl_Obj *digestObj
     while (!Tcl_Eof(chan)) {
 	Tcl_Size len = Tcl_ReadRaw(chan, (char *) buf, BUFFER_SIZE);
 	if (len > 0) {
-	    if ((res = DigestUpdate(statePtr, &buf[0], len, 1)) != TCL_OK) {
+	    if ((res = DigestUpdate(statePtr, (char *) &buf[0], len, 1)) != TCL_OK) {
 		goto done;
 	    }
 	}

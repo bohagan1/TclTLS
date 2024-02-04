@@ -14,7 +14,7 @@ package require tls
 if {[info exists ::env(OPENSSL)]} {set ::env(path) [string cat [file join $::env(OPENSSL) bin] ";" $::env(path)]}
 
 # Constraints
-source common.tcl
+source [file join [file dirname [info script]] common.tcl]
 
 # Helper functions
 proc lcompare {list1 list2} {set m "";set u "";foreach i $list1 {if {$i ni $list2} {lappend m $i}};foreach i $list2 {if {$i ni $list1} {lappend u $i}};return [list "missing" $m "unexpected" $u]}

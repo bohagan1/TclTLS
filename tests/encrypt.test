@@ -10,9 +10,6 @@ set auto_path [concat [list [file dirname [file dirname [info script]]]] $auto_p
 
 package require tls
 
-# Constraints
-source common.tcl
-
 # Helper functions - See common.tcl
 proc read_chan {filename args} {set ch [open $filename rb];set bsize [fconfigure $ch -buffersize];set new [{*}$args -chan $ch];set dat "";while {![eof $new]} {append dat [read $new $bsize]};close $new;return $dat}
 proc write_chan {filename data args} {set ch [open $filename wb];set new [{*}$args -chan $ch];puts -nonewline $new $data;flush $new;close $new;set ch [open $filename rb];set dat [read $ch];close $ch;return $dat}

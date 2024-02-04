@@ -11,7 +11,7 @@ set auto_path [concat [list [file dirname [file dirname [info script]]]] $auto_p
 package require tls
 
 # Constraints
-source common.tcl
+::tcltest::testConstraint md4 [expr {"md4" in [::tls::digests]}]
 
 # Helper functions - See common.tcl
 proc digest_read_chan {cmd filename args} {;set ch [open $filename rb];set bsize [fconfigure $ch -buffersize];set new [$cmd {*}$args -chan $ch];while {![eof $new]} {set md [read $new $bsize]};close $new;return $md}
@@ -27,7 +27,7 @@ set test_key "Example key"
 # Test short-cut commands
 
 
-test Shortcut_Cmds-1.1 {md4 cmd} -body {
+test Shortcut_Cmds-1.1 {md4 cmd} -constraints {md4} -body {
 	::tls::md4 $test_data
     } -result {793399f792eca2752c6af3234ba70858}
 
@@ -51,7 +51,7 @@ test Shortcut_Cmds-1.5 {sha512 cmd} -body {
 # Test MD command for read channel
 
 
-test MD_Chan_Read-2.1 {md4} -body {
+test MD_Chan_Read-2.1 {md4} -constraints {md4} -body {
 	digest_read_chan ::tls::md $test_file -digest md4
     } -result {793399f792eca2752c6af3234ba70858}
 
@@ -82,7 +82,7 @@ test MD_Chan_Read-2.7 {md5 hex} -body {
 # Test MD command for write channel
 
 
-test MD_Chan_Write-3.1 {md4} -body {
+test MD_Chan_Write-3.1 {md4} -constraints {md4} -body {
 	digest_write_chan ::tls::md $test_alt_file $test_data -digest md4
     } -result {793399f792eca2752c6af3234ba70858}
 
@@ -113,7 +113,7 @@ test MD_Chan_Write-3.7 {md5 hex} -body {
 # Test MD command for object command
 
 
-test MD_Command-4.1 {md4} -body {
+test MD_Command-4.1 {md4} -constraints {md4} -body {
 	digest_accumulate $test_data ::tls::md -digest md4
     } -result {793399f792eca2752c6af3234ba70858}
 
@@ -144,7 +144,7 @@ test MD_Command-4.7 {md5 hex} -body {
 # Test MD command for data shortcut
 
 
-test MD_Shortcut-5.1 {md4} -body {
+test MD_Shortcut-5.1 {md4} -constraints {md4} -body {
 	::tls::md md4 $test_data
     } -result {793399f792eca2752c6af3234ba70858}
 
@@ -167,7 +167,7 @@ test MD_Shortcut-5.5 {sha512} -body {
 # Test MD command for data
 
 
-test MD_Data-6.1 {md4} -body {
+test MD_Data-6.1 {md4} -constraints {md4} -body {
 	::tls::md -digest md4 -data $test_data
     } -result {793399f792eca2752c6af3234ba70858}
 
@@ -198,7 +198,7 @@ test MD_Data-6.7 {md5 hex} -body {
 # Test MD command for file
 
 
-test MD_File-7.1 {md4} -body {
+test MD_File-7.1 {md4} -constraints {md4} -body {
 	::tls::md -digest md4 -file $test_file
     } -result {793399f792eca2752c6af3234ba70858}
 

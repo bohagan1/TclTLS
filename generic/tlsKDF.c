@@ -81,13 +81,13 @@ static int KDF_PBKDF2(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_O
 
 	switch(fn) {
 	case _opt_cipher:
-	    if ((cipher = Util_GetCipher(interp, objv[idx], TRUE)) == NULL) {
+	    if ((cipher = Util_GetCipher(interp, objv[idx], 1)) == NULL) {
 		return TCL_ERROR;
 	    }
 	    break;
 	case _opt_digest:
 	case _opt_hash:
-	    if ((md = Util_GetDigest(interp, objv[idx], TRUE)) == NULL) {
+	    if ((md = Util_GetDigest(interp, objv[idx], 1)) == NULL) {
 		return TCL_ERROR;
 	    }
 	    break;
@@ -98,14 +98,14 @@ static int KDF_PBKDF2(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_O
 	    break;
 	case _opt_key:
 	case _opt_password:
-	    pass = Util_GetKey(interp, objv[idx], &pass_len, command_opts[fn], 0, FALSE);
+	    pass = Util_GetKey(interp, objv[idx], &pass_len, (char *) command_opts[fn], 0, 0);
 	    break;
 	case _opt_salt:
 	    GET_OPT_BYTE_ARRAY(objv[idx], salt, &salt_len);
 	    break;
 	case _opt_length:
 	case _opt_size:
-	    if (Util_GetInt(interp, objv[idx], &dk_len, command_opts[fn], 1, buf_len) != TCL_OK) {
+	    if (Util_GetInt(interp, objv[idx], &dk_len, (char *) command_opts[fn], 1, buf_len) != TCL_OK) {
 		return TCL_ERROR;
 	    }
 	    break;
@@ -130,7 +130,7 @@ static int KDF_PBKDF2(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_O
     }
 
     /* Derive key */
-    if (!PKCS5_PBKDF2_HMAC(pass, (int) pass_len, salt, (int) salt_len, iter, md, dk_len, tmpkeyiv)) {
+    if (!PKCS5_PBKDF2_HMAC((const char *) pass, (int) pass_len, salt, (int) salt_len, iter, md, dk_len, tmpkeyiv)) {
 	Tcl_AppendResult(interp, "Key derivation failed: ", GET_ERR_REASON(), (char *) NULL);
 	return TCL_ERROR;
     }
@@ -206,7 +206,7 @@ static int KDF_HKDF(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj
 	switch(fn) {
 	case _opt_digest:
 	case _opt_hash:
-	    if ((md = Util_GetDigest(interp, objv[idx], TRUE)) == NULL) {
+	    if ((md = Util_GetDigest(interp, objv[idx], 1)) == NULL) {
 		goto error;
 	    }
 	    break;
@@ -216,7 +216,7 @@ static int KDF_HKDF(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj
 	    break;
 	case _opt_key:
 	case _opt_password:
-	    if ((key = Util_GetKey(interp, objv[idx], &key_len, command_opts[fn], 0, 1)) == NULL) {
+	    if ((key = Util_GetKey(interp, objv[idx], &key_len, (char *) command_opts[fn], 0, 1)) == NULL) {
 		goto error;
 	    }
 	    break;
@@ -225,7 +225,7 @@ static int KDF_HKDF(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj
 	    break;
 	case _opt_length:
 	case _opt_size:
-	    if (Util_GetInt(interp, objv[idx], &dk_len, command_opts[fn], 1, 0) != TCL_OK) {
+	    if (Util_GetInt(interp, objv[idx], &dk_len, (char *) command_opts[fn], 1, 0) != TCL_OK) {
 		goto error;
 	    }
 	    break;
@@ -323,7 +323,7 @@ static int KDF_Scrypt(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_O
     Tcl_Size salt_len = 0, pass_len = 0;
     int dk_len = 64, res = TCL_OK;
     Tcl_Size fn;
-    uint64_t N = 0, p = 0, r = 0, maxmem = 0;
+    Tcl_WideInt N = 0, p = 0, r = 0, maxmem = 0;
     size_t out_len;
     Tcl_Obj *resultObj;
     (void) clientData;
@@ -363,7 +363,7 @@ static int KDF_Scrypt(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_O
 	    break;
 	case _opt_length:
 	case _opt_size:
-	    if (Util_GetInt(interp, objv[idx], &dk_len, command_opts[fn], 1, 0) != TCL_OK) {
+	    if (Util_GetInt(interp, objv[idx], &dk_len, (char *) command_opts[fn], 1, 0) != TCL_OK) {
 		goto error;
 	    }
 	    break;
@@ -403,7 +403,7 @@ static int KDF_Scrypt(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_O
     }
 
     /* Set config parameters */
-    if (EVP_PKEY_CTX_set1_pbe_pass(pctx, pass, (int) pass_len) < 1) {
+    if (EVP_PKEY_CTX_set1_pbe_pass(pctx, (const char *) pass, (int) pass_len) < 1) {
 	Tcl_AppendResult(interp, "Set key failed: ", GET_ERR_REASON(), (char *) NULL);
 	goto error;
     }
@@ -411,15 +411,15 @@ static int KDF_Scrypt(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_O
 	Tcl_AppendResult(interp, "Set salt failed: ", GET_ERR_REASON(), (char *) NULL);
 	goto error;
     }
-    if (N != 0 && EVP_PKEY_CTX_set_scrypt_N(pctx, N) < 1) {
+    if (N != 0 && EVP_PKEY_CTX_set_scrypt_N(pctx, (uint64_t) N) < 1) {
 	Tcl_AppendResult(interp, "Set cost parameter (N) failed: ", GET_ERR_REASON(), (char *) NULL);
 	goto error;
     }
-    if (r != 0 && EVP_PKEY_CTX_set_scrypt_r(pctx, r) < 1) {
+    if (r != 0 && EVP_PKEY_CTX_set_scrypt_r(pctx, (uint64_t) r) < 1) {
 	Tcl_AppendResult(interp, "Set lock size parameter (r) failed: ", GET_ERR_REASON(), (char *) NULL);
 	goto error;
    }
-    if (p != 0 && EVP_PKEY_CTX_set_scrypt_p(pctx, p) < 1) {
+    if (p != 0 && EVP_PKEY_CTX_set_scrypt_p(pctx, (uint64_t) p) < 1) {
 	Tcl_AppendResult(interp, "Set Parallelization parameter (p) failed: ", GET_ERR_REASON(), (char *) NULL);
 	goto error;
     }

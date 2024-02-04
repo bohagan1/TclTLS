@@ -69,7 +69,7 @@ int CipherInfo(Tcl_Interp *interp, Tcl_Obj *nameObj) {
     const EVP_CIPHER *cipher;
     Tcl_Obj *resultObj, *listObj;
     unsigned long flags, mode;
-    unsigned char *modeName = NULL;
+    char *modeName = NULL;
     char *name = Tcl_GetStringFromObj(nameObj, (Tcl_Size *) NULL);
 
     /* Get cipher */
@@ -380,7 +380,7 @@ static int CiphersObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tc
 	Tcl_Obj *resultObj = NULL;
 
 	if (!verbose) {
-	    char *cp;
+	    const char *cp;
 	    resultObj = Tcl_NewListObj(0, NULL);
 	    if (resultObj == NULL) {
 		res = TCL_ERROR;
@@ -394,7 +394,7 @@ static int CiphersObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tc
 		/* cipher name or (NONE) */
 		cp = SSL_CIPHER_get_name(c);
 		if (cp == NULL) break;
-		Tcl_ListObjAppendElement(interp, resultObj, Tcl_NewStringObj(cp, -1));
+		Tcl_ListObjAppendElement(interp, resultObj, Tcl_NewStringObj((char *) cp, -1));
 	    }
 
 	} else {
@@ -449,10 +449,9 @@ done:
  *-------------------------------------------------------------------
  */
 int DigestInfo(Tcl_Interp *interp, Tcl_Obj *nameObj) {
-    EVP_MD *md;
+    const EVP_MD *md;
     Tcl_Obj *resultObj, *listObj;
     unsigned long flags;
-    int res = TCL_OK;
     char *name = Tcl_GetStringFromObj(nameObj, (Tcl_Size *) NULL);
 
     /* Get message digest */

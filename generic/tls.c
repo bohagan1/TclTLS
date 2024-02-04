@@ -298,9 +298,11 @@ MessageCallback(int write_p, int version, int content_type, const void *buf, siz
     case SSL3_RT_APPLICATION_DATA:
 	type = "App Data";
 	break;
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
     case DTLS1_RT_HEARTBEAT:
 	type = "Heartbeat";
 	break;
+#endif
     default:
 	type = "unknown";
     }
@@ -309,7 +311,7 @@ MessageCallback(int write_p, int version, int content_type, const void *buf, siz
     if ((bio = BIO_new(BIO_s_mem())) != NULL) {
 	int n;
 	SSL_trace(write_p, version, content_type, buf, len, ssl, (void *)bio);
-	n = BIO_read(bio, buffer, min(BIO_pending(bio), 14999));
+	n = BIO_read(bio, buffer, BIO_pending(bio) < 15000 ? BIO_pending(bio) : 14999);
 	n = (n<0) ? 0 : n;
 	buffer[n] = 0;
 	(void)BIO_flush(bio);
@@ -484,7 +486,6 @@ Tls_Error(State *statePtr, char *msg) {
 void KeyLogCallback(const SSL *ssl, const char *line) {
     char *str = getenv(SSLKEYLOGFILE);
     FILE *fd;
-    (void *) ssl;
 
     dprintf("Called");
 
@@ -597,7 +598,7 @@ PasswordCallback(char *buf, int size, int rwflag, void *udata) {
  *-------------------------------------------------------------------
  */
 static int
-SessionCallback(const SSL *ssl, SSL_SESSION *session) {
+SessionCallback(SSL *ssl, SSL_SESSION *session) {
     State *statePtr = (State*)SSL_get_app_data((SSL *)ssl);
     Tcl_Interp *interp	= statePtr->interp;
     Tcl_Obj *cmdPtr;
@@ -664,7 +665,7 @@ SessionCallback(const SSL *ssl, SSL_SESSION *session) {
  *-------------------------------------------------------------------
  */
 static int
-ALPNCallback(const SSL *ssl, const unsigned char **out, unsigned char *outlen,
+ALPNCallback(SSL *ssl, const unsigned char **out, unsigned char *outlen,
 	const unsigned char *in, unsigned int inlen, void *arg) {
     State *statePtr = (State*)arg;
     Tcl_Interp *interp	= statePtr->interp;
@@ -678,7 +679,7 @@ ALPNCallback(const SSL *ssl, const unsigned char **out, unsigned char *outlen,
     }
 
     /* Select protocol */
-    if (SSL_select_next_proto(out, outlen, statePtr->protos, statePtr->protos_len,
+    if (SSL_select_next_proto((unsigned char **) out, outlen, statePtr->protos, statePtr->protos_len,
 	in, inlen) == OPENSSL_NPN_NEGOTIATED) {
 	/* Match found */
 	res = SSL_TLSEXT_ERR_OK;
@@ -696,7 +697,7 @@ ALPNCallback(const SSL *ssl, const unsigned char **out, unsigned char *outlen,
     Tcl_ListObjAppendElement(interp, cmdPtr, Tcl_NewStringObj("alpn", -1));
     Tcl_ListObjAppendElement(interp, cmdPtr,
 	    Tcl_NewStringObj(Tcl_GetChannelName(statePtr->self), -1));
-    Tcl_ListObjAppendElement(interp, cmdPtr, Tcl_NewStringObj(*out, -1));
+    Tcl_ListObjAppendElement(interp, cmdPtr, Tcl_NewStringObj((const char *) *out, -1));
     Tcl_ListObjAppendElement(interp, cmdPtr, Tcl_NewBooleanObj(res == SSL_TLSEXT_ERR_OK));
 
     /* Eval callback command */
@@ -786,7 +787,7 @@ SNICallback(const SSL *ssl, int *alert, void *arg) {
     Tcl_Interp *interp	= statePtr->interp;
     Tcl_Obj *cmdPtr;
     int code, res;
-    char *servername = NULL;
+    const char *servername = NULL;
 
     dprintf("Called");
 
@@ -853,7 +854,7 @@ SNICallback(const SSL *ssl, int *alert, void *arg) {
  *-------------------------------------------------------------------
  */
 static int
-HelloCallback(const SSL *ssl, int *alert, void *arg) {
+HelloCallback(SSL *ssl, int *alert, void *arg) {
     State *statePtr = (State*)arg;
     Tcl_Interp *interp	= statePtr->interp;
     Tcl_Obj *cmdPtr;
@@ -2088,7 +2089,7 @@ static int ConnectionInfoObjCmd(ClientData clientData, Tcl_Interp *interp, int o
 	LAPPEND_STR(interp, objPtr, "protocol", SSL_get_version(ssl), -1);
 
 	/* Renegotiation allowed */
-	LAPPEND_BOOL(interp, objPtr, "renegotiation_allowed", SSL_get_secure_renegotiation_support(ssl));
+	LAPPEND_BOOL(interp, objPtr, "renegotiation_allowed", SSL_get_secure_renegotiation_support((SSL *) ssl));
 
 	/* Get security level */
 	LAPPEND_INT(interp, objPtr, "security_level", SSL_get_security_level(ssl));
@@ -2162,7 +2163,7 @@ static int ConnectionInfoObjCmd(ClientData clientData, Tcl_Interp *interp, int o
 	size_t len2;
 	unsigned int ulen;
 	const unsigned char *session_id, *proto;
-	char buffer[SSL_MAX_MASTER_KEY_LENGTH];
+	unsigned char buffer[SSL_MAX_MASTER_KEY_LENGTH];
 
 	/* Report the selected protocol as a result of the ALPN negotiation */
 	SSL_SESSION_get0_alpn_selected(session, &proto, &len2);
@@ -2199,8 +2200,10 @@ static int ConnectionInfoObjCmd(ClientData clientData, Tcl_Interp *interp, int o
 	LAPPEND_LONG(interp, objPtr, "lifetime", SSL_SESSION_get_ticket_lifetime_hint(session));
 
 	/* Ticket app data */
-	SSL_SESSION_get0_ticket_appdata(session, &ticket, &len2);
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
+	SSL_SESSION_get0_ticket_appdata((SSL_SESSION *) session, &ticket, &len2);
 	LAPPEND_BARRAY(interp, objPtr, "ticket_app_data", ticket, (Tcl_Size) len2);
+#endif
 
 	/* Get master key */
 	len2 = SSL_SESSION_get_master_key(session, buffer, SSL_MAX_MASTER_KEY_LENGTH);

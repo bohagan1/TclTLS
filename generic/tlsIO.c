@@ -73,7 +73,6 @@ static int TlsBlockModeProc(ClientData instanceData, int mode) {
  */
 static int TlsCloseProc(ClientData instanceData, Tcl_Interp *interp) {
     State *statePtr = (State *) instanceData;
-    (void *) interp;
 
     dprintf("TlsCloseProc(%p)", (void *) statePtr);
 
@@ -229,7 +228,7 @@ int Tls_WaitForConnect(State *statePtr, int *errorCodePtr, int handshakeFailureI
 		if (*errorCodePtr == ECONNRESET) {
 		    *errorCodePtr = ECONNABORTED;
 		}
-		Tls_Error(statePtr, Tcl_ErrnoMsg(Tcl_GetErrno()));
+		Tls_Error(statePtr, (char *) Tcl_ErrnoMsg(Tcl_GetErrno()));
 
 	    } else {
 		dprintf("I/O error occurred (backingError = %lu)", backingError);
@@ -237,7 +236,7 @@ int Tls_WaitForConnect(State *statePtr, int *errorCodePtr, int handshakeFailureI
 		if (*errorCodePtr == ECONNRESET) {
 		    *errorCodePtr = ECONNABORTED;
 		}
-		Tls_Error(statePtr, ERR_reason_error_string(backingError));
+		Tls_Error(statePtr, (char *) ERR_reason_error_string(backingError));
 	    }
 
 	    statePtr->flags |= TLS_TCL_HANDSHAKE_FAILED;
@@ -247,10 +246,10 @@ int Tls_WaitForConnect(State *statePtr, int *errorCodePtr, int handshakeFailureI
 	    /* A non-recoverable, fatal error in the SSL library occurred, usually a protocol error */
 	    dprintf("SSL_ERROR_SSL: Got permanent fatal SSL error, aborting immediately");
 	    if (backingError != 0) {
-		Tls_Error(statePtr, ERR_reason_error_string(backingError));
+		Tls_Error(statePtr, (char *) ERR_reason_error_string(backingError));
 	    }
 	    if (SSL_get_verify_result(statePtr->ssl) != X509_V_OK) {
-		Tls_Error(statePtr, X509_verify_cert_error_string(SSL_get_verify_result(statePtr->ssl)));
+		Tls_Error(statePtr, (char *) X509_verify_cert_error_string(SSL_get_verify_result(statePtr->ssl)));
 	    }
 	    statePtr->flags |= TLS_TCL_HANDSHAKE_FAILED;
 	    *errorCodePtr = ECONNABORTED;
@@ -367,7 +366,7 @@ static int TlsInputProc(ClientData instanceData, char *buf, int bufSize, int *er
 	    /* A non-recoverable, fatal error in the SSL library occurred, usually a protocol error */
 	    dprintf("SSL error, indicating that the connection has been aborted");
 	    if (backingError != 0) {
-		Tls_Error(statePtr, ERR_reason_error_string(backingError));
+		Tls_Error(statePtr, (char *) ERR_reason_error_string(backingError));
 	    }
 	    *errorCodePtr = ECONNABORTED;
 	    bytesRead = -1;
@@ -396,13 +395,13 @@ static int TlsInputProc(ClientData instanceData, char *buf, int bufSize, int *er
 		dprintf("I/O error occurred (errno = %lu)", (unsigned long) Tcl_GetErrno());
 		*errorCodePtr = Tcl_GetErrno();
 		bytesRead = -1;
-		Tls_Error(statePtr, Tcl_ErrnoMsg(Tcl_GetErrno()));
+		Tls_Error(statePtr, (char *) Tcl_ErrnoMsg(Tcl_GetErrno()));
 
 	    } else {
 		dprintf("I/O error occurred (backingError = %lu)", backingError);
 		*errorCodePtr = backingError;
 		bytesRead = -1;
-		Tls_Error(statePtr, ERR_reason_error_string(backingError));
+		Tls_Error(statePtr, (char *) ERR_reason_error_string(backingError));
 	    }
 	    break;
 
@@ -563,13 +562,13 @@ static int TlsOutputProc(ClientData instanceData, const char *buf, int toWrite, 
 		dprintf("I/O error occurred (errno = %lu)", (unsigned long) Tcl_GetErrno());
 		*errorCodePtr = Tcl_GetErrno();
 		written = -1;
-		Tls_Error(statePtr, Tcl_ErrnoMsg(Tcl_GetErrno()));
+		Tls_Error(statePtr, (char *) Tcl_ErrnoMsg(Tcl_GetErrno()));
 
 	    } else {
 		dprintf("I/O error occurred (backingError = %lu)", backingError);
 		*errorCodePtr = backingError;
 		written = -1;
-		Tls_Error(statePtr, ERR_reason_error_string(backingError));
+		Tls_Error(statePtr, (char *) ERR_reason_error_string(backingError));
 	    }
 	    break;
 
@@ -577,7 +576,7 @@ static int TlsOutputProc(ClientData instanceData, const char *buf, int toWrite, 
 	    /* A non-recoverable, fatal error in the SSL library occurred, usually a protocol error */
 	    dprintf("SSL error, indicating that the connection has been aborted");
 	    if (backingError != 0) {
-		Tls_Error(statePtr, ERR_reason_error_string(backingError));
+		Tls_Error(statePtr, (char *) ERR_reason_error_string(backingError));
 	    }
 	    *errorCodePtr = ECONNABORTED;
 	    written = -1;
@@ -944,6 +943,6 @@ static const Tcl_ChannelType tlsChannelType = {
     NULL			/* Truncate */
 };
 
-Tcl_ChannelType *Tls_ChannelType(void) {
+const Tcl_ChannelType *Tls_ChannelType(void) {
     return &tlsChannelType;
 }

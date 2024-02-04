@@ -179,7 +179,7 @@ typedef struct State {
 	BIO *bio;		/* Struct for SSL processing */
 	BIO *p_bio;		/* Parent BIO (that is layered on Tcl_Channel) */
 
-	char *protos;		/* List of supported protocols in protocol format */
+	unsigned char *protos;	/* List of supported protocols in protocol format */
 	unsigned int protos_len; /* Length of protos */
 
 	char *err;
@@ -194,7 +194,7 @@ typedef struct State {
 /*
  * Forward declarations
  */
-Tcl_ChannelType *Tls_ChannelType(void);
+const Tcl_ChannelType *Tls_ChannelType(void);
 Tcl_Channel     Tls_GetParent(State *statePtr, int maskFlags);
 
 Tcl_Obj         *Tls_NewX509Obj(Tcl_Interp *interp, X509 *cert);
