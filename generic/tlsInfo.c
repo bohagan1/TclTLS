@@ -11,6 +11,9 @@
 #include <openssl/crypto.h>
 #include <openssl/ssl.h>
 #include <openssl/safestack.h>
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+#include <openssl/provider.h>
+#endif
 
 /*
  * Valid SSL and TLS Protocol Versions
@@ -922,6 +925,47 @@ ProtocolsObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *co
 /*
  *-------------------------------------------------------------------
  *
+ * ProviderObjCmd --
+ *
+ *	Load a provider.
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ *	None.
+ *
+ *-------------------------------------------------------------------
+ */
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+static int
+ProviderObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
+    char *name;
+    (void) clientData;
+
+    dprintf("Called");
+
+    /* Validate arg count */
+    if (objc != 2) {
+	Tcl_WrongNumArgs(interp, 1, objv, "provider");
+	return TCL_ERROR;
+    }
+
+    name = Tcl_GetStringFromObj(objv[1], NULL);
+    if (!OSSL_PROVIDER_try_load(NULL, (const char *) name, 1)) {
+	Tcl_AppendResult(interp, GET_ERR_REASON(), (char *) NULL);
+	return TCL_ERROR;
+    }
+
+    return TCL_OK;
+}
+#endif
+
+/*******************************************************************/
+
+/*
+ *-------------------------------------------------------------------
+ *
  * VersionObjCmd --
  *
  *	Return a string with the OpenSSL version info.
@@ -984,6 +1028,9 @@ int Tls_InfoCommands(Tcl_Interp *interp) {
     Tcl_CreateObjCommand(interp, "tls::macs", MacsObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
     Tcl_CreateObjCommand(interp, "tls::pkeys", PkeysObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
     Tcl_CreateObjCommand(interp, "tls::protocols", ProtocolsObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+    Tcl_CreateObjCommand(interp, "tls::provider", ProviderObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
+#endif
     Tcl_CreateObjCommand(interp, "tls::version", VersionObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
     return TCL_OK;
 }
