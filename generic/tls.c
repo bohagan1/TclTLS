@@ -240,7 +240,7 @@ MessageCallback(int write_p, int version, int content_type, const void *buf, siz
     Tcl_Obj *cmdPtr;
     char *ver, *type;
     BIO *bio;
-    char buffer[15000];
+    char buffer[30000];
     buffer[0] = 0;
 
     dprintf("Called");

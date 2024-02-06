@@ -212,29 +212,48 @@ test Version-12.2 {OpenSSL} -constraints {OpenSSL} -body {
 # Error Cases
 
 
-test Error_Cases-13.1 {Cipher Too many args} -body {
+test Error_Cases-13.1 {Cipher too many args} -body {
 	::tls::cipher too many args
     } -result {wrong # args: should be "::tls::cipher ?name?"} -returnCodes {1}
 
-test Error_Cases-13.2 {Digests Too many args} -body {
+test Error_Cases-13.2 {Digests too many args} -body {
 	::tls::digests too many args
     } -result {wrong # args: should be "::tls::digests ?name?"} -returnCodes {1}
 
-test Error_Cases-13.3 {MACs Too many args} -body {
+test Error_Cases-13.3 {MACs too many args} -body {
 	::tls::macs too many args
     } -result {wrong # args: should be "::tls::macs ?name?"} -returnCodes {1}
 
-test Error_Cases-13.4 {Pkeys Too many args} -body {
+test Error_Cases-13.4 {Pkeys too many args} -body {
 	::tls::pkeys too many args
     } -result {wrong # args: should be "::tls::pkeys ?name?"} -returnCodes {1}
 
-test Error_Cases-13.5 {Protocols Too many args} -body {
+test Error_Cases-13.5 {Protocols too many args} -body {
 	::tls::protocols too many args
     } -result {wrong # args: should be "::tls::protocols"} -returnCodes {1}
 
-test Error_Cases-13.6 {Version Too many args} -body {
+test Error_Cases-13.6 {Version too many args} -body {
 	::tls::version too many args
     } -result {wrong # args: should be "::tls::version"} -returnCodes {1}
+
+# Provider command
+
+
+test Provider-14.1 {Provider too few args} -constraints {new_api} -body {
+	::tls::provider
+    } -result {wrong # args: should be "::tls:provider name"} -returnCodes {1}
+
+test Provider-14.2 {Provider too few args} -constraints {new_api} -body {
+	::tls::provider too many args
+    } -result {wrong # args: should be "::tls:provider name"} -returnCodes {1}
+
+test Provider-14.3 {Provider invalid arg} -constraints {new_api} -body {
+	::tls::provider invalid
+    } -result {could not load the shared library} -returnCodes {1}
+
+test Provider-14.4 {Provider legacy provider} -constraints {new_api} -body {
+	::tls::provider legacy
+    }
 
 # Cleanup
 ::tcltest::cleanupTests

@@ -947,7 +947,7 @@ ProviderObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *con
 
     /* Validate arg count */
     if (objc != 2) {
-	Tcl_WrongNumArgs(interp, 1, objv, "provider");
+	Tcl_WrongNumArgs(interp, 1, objv, "name");
 	return TCL_ERROR;
     }
 

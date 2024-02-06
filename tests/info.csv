@@ -78,9 +78,15 @@ Version,All,,,::tls::version,,glob,*,,,
 Version,OpenSSL,OpenSSL,,::tls::version,,glob,OpenSSL*,,,
 ,,,,,,,,,,
 command,# Error Cases,,,,,,,,,
-Error Cases,Cipher Too many args,,,::tls::cipher too many args,,,"wrong # args: should be ""::tls::cipher ?name?""",,,1
-Error Cases,Digests Too many args,,,::tls::digests too many args,,,"wrong # args: should be ""::tls::digests ?name?""",,,1
-Error Cases,MACs Too many args,,,::tls::macs too many args,,,"wrong # args: should be ""::tls::macs ?name?""",,,1
-Error Cases,Pkeys Too many args,,,::tls::pkeys too many args,,,"wrong # args: should be ""::tls::pkeys ?name?""",,,1
-Error Cases,Protocols Too many args,,,::tls::protocols too many args,,,"wrong # args: should be ""::tls::protocols""",,,1
-Error Cases,Version Too many args,,,::tls::version too many args,,,"wrong # args: should be ""::tls::version""",,,1
+Error Cases,Cipher too many args,,,::tls::cipher too many args,,,"wrong # args: should be ""::tls::cipher ?name?""",,,1
+Error Cases,Digests too many args,,,::tls::digests too many args,,,"wrong # args: should be ""::tls::digests ?name?""",,,1
+Error Cases,MACs too many args,,,::tls::macs too many args,,,"wrong # args: should be ""::tls::macs ?name?""",,,1
+Error Cases,Pkeys too many args,,,::tls::pkeys too many args,,,"wrong # args: should be ""::tls::pkeys ?name?""",,,1
+Error Cases,Protocols too many args,,,::tls::protocols too many args,,,"wrong # args: should be ""::tls::protocols""",,,1
+Error Cases,Version too many args,,,::tls::version too many args,,,"wrong # args: should be ""::tls::version""",,,1
+,,,,,,,,,,
+command,# Provider command,,,,,,,,,
+Provider,Provider too few args,new_api,,::tls::provider,,,"wrong # args: should be ""::tls:provider name""",,,1
+Provider,Provider too few args,new_api,,::tls::provider too many args,,,"wrong # args: should be ""::tls:provider name""",,,1
+Provider,Provider invalid arg,new_api,,::tls::provider invalid,,,could not load the shared library,,,1
+Provider,Provider legacy provider,new_api,,::tls::provider legacy,,,,,,
