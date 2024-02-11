@@ -52,7 +52,7 @@
 
 static SSL_CTX *CTX_Init(State *statePtr, int isServer, int proto, char *key,
 		char *certfile, unsigned char *key_asn1, unsigned char *cert_asn1,
-		int key_asn1_len, int cert_asn1_len, char *CAdir, char *CAfile,
+		int key_asn1_len, int cert_asn1_len, char *CApath, char *CAfile,
 		char *ciphers, char *ciphersuites, int level, char *DHparams);
 
 static int	TlsLibInit(int uninitialize);
@@ -192,7 +192,7 @@ InfoCallback(const SSL *ssl, int where, int ret) {
 	else					minor = "unknown";
     }
 
-    /* Create command to eval */
+    /* Create command to eval with fn, chan, major, minor, message, and type args */
     cmdPtr = Tcl_DuplicateObj(statePtr->callback);
     Tcl_ListObjAppendElement(interp, cmdPtr, Tcl_NewStringObj("info", -1));
     Tcl_ListObjAppendElement(interp, cmdPtr,
@@ -318,7 +318,7 @@ MessageCallback(int write_p, int version, int content_type, const void *buf, siz
 	BIO_free(bio);
    }
 
-    /* Create command to eval */
+    /* Create command to eval with fn, chan, direction, version, type, and message args */
     cmdPtr = Tcl_DuplicateObj(statePtr->callback);
     Tcl_ListObjAppendElement(interp, cmdPtr, Tcl_NewStringObj("message", -1));
     Tcl_ListObjAppendElement(interp, cmdPtr,
@@ -396,7 +396,7 @@ VerifyCallback(int ok, X509_STORE_CTX *ctx) {
 
     dprintf("VerifyCallback: eval callback");
 
-    /* Create command to eval */
+    /* Create command to eval with fn, chan, depth, cert info list, status, and error args */
     cmdPtr = Tcl_DuplicateObj(statePtr->vcmd);
     Tcl_ListObjAppendElement(interp, cmdPtr, Tcl_NewStringObj("verify", -1));
     Tcl_ListObjAppendElement(interp, cmdPtr,
@@ -446,7 +446,7 @@ Tls_Error(State *statePtr, char *msg) {
     if (statePtr->callback == (Tcl_Obj*)NULL)
 	return;
 
-    /* Create command to eval */
+    /* Create command to eval with fn, chan, and message args */
     cmdPtr = Tcl_DuplicateObj(statePtr->callback);
     Tcl_ListObjAppendElement(interp, cmdPtr, Tcl_NewStringObj("error", -1));
     Tcl_ListObjAppendElement(interp, cmdPtr,
@@ -536,7 +536,7 @@ PasswordCallback(char *buf, int size, int rwflag, void *udata) {
 	}
     }
 
-    /* Create command to eval */
+    /* Create command to eval with fn, rwflag, and size args */
     cmdPtr = Tcl_DuplicateObj(statePtr->password);
     Tcl_ListObjAppendElement(interp, cmdPtr, Tcl_NewStringObj("password", -1));
     Tcl_ListObjAppendElement(interp, cmdPtr, Tcl_NewIntObj(rwflag));
@@ -615,7 +615,7 @@ SessionCallback(SSL *ssl, SSL_SESSION *session) {
 	return SSL_TLSEXT_ERR_NOACK;
     }
 
-    /* Create command to eval */
+    /* Create command to eval with fn, chan, session id, session ticket, and lifetime args */
     cmdPtr = Tcl_DuplicateObj(statePtr->callback);
     Tcl_ListObjAppendElement(interp, cmdPtr, Tcl_NewStringObj("session", -1));
     Tcl_ListObjAppendElement(interp, cmdPtr,
@@ -692,7 +692,7 @@ ALPNCallback(SSL *ssl, const unsigned char **out, unsigned char *outlen,
 	return res;
     }
 
-    /* Create command to eval */
+    /* Create command to eval with fn, chan, depth, cert info list, status, and error args */
     cmdPtr = Tcl_DuplicateObj(statePtr->vcmd);
     Tcl_ListObjAppendElement(interp, cmdPtr, Tcl_NewStringObj("alpn", -1));
     Tcl_ListObjAppendElement(interp, cmdPtr,
@@ -805,7 +805,7 @@ SNICallback(const SSL *ssl, int *alert, void *arg) {
 	return SSL_TLSEXT_ERR_OK;
     }
 
-    /* Create command to eval */
+    /* Create command to eval with fn, chan, and server name args */
     cmdPtr = Tcl_DuplicateObj(statePtr->vcmd);
     Tcl_ListObjAppendElement(interp, cmdPtr, Tcl_NewStringObj("sni", -1));
     Tcl_ListObjAppendElement(interp, cmdPtr,
@@ -907,7 +907,7 @@ HelloCallback(SSL *ssl, int *alert, void *arg) {
     remaining = len;
     servername = (const char *)p;
 
-    /* Create command to eval */
+    /* Create command to eval with fn, chan, and server name args */
     cmdPtr = Tcl_DuplicateObj(statePtr->vcmd);
     Tcl_ListObjAppendElement(interp, cmdPtr, Tcl_NewStringObj("hello", -1));
     Tcl_ListObjAppendElement(interp, cmdPtr,
@@ -989,6 +989,7 @@ static int HandshakeObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, 
 	dprintf("Async set and err = EAGAIN");
 	ret = 0;
     } else if (ret < 0) {
+	long result;
 	errStr = statePtr->err;
 	Tcl_ResetResult(interp);
 	Tcl_SetErrno(err);
@@ -998,6 +999,9 @@ static int HandshakeObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, 
 	}
 
 	Tcl_AppendResult(interp, "handshake failed: ", errStr, (char *) NULL);
+	if ((result = SSL_get_verify_result(statePtr->ssl)) != X509_V_OK) {
+	    Tcl_AppendResult(interp, " due to \"", X509_verify_cert_error_string(result), "\"", (char *) NULL);
+	}
 	Tcl_SetErrorCode(interp, "TLS", "HANDSHAKE", "FAILED", (char *) NULL);
 	dprintf("Returning TCL_ERROR with handshake failed: %s", errStr);
 	return(TCL_ERROR);
@@ -1048,30 +1052,30 @@ static int
 ImportObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
     Tcl_Channel chan;		/* The channel to set a mode on. */
     State *statePtr;		/* client state for ssl socket */
-    SSL_CTX *ctx	        = NULL;
-    Tcl_Obj *cmdObj	        = NULL;
-    Tcl_Obj *passwdObj	        = NULL;
-    Tcl_Obj *vcmd	        = NULL;
+    SSL_CTX *ctx		= NULL;
+    Tcl_Obj *cmdObj		= NULL;
+    Tcl_Obj *passwdObj		= NULL;
+    Tcl_Obj *vcmd		= NULL;
     Tcl_DString upperChannelTranslation, upperChannelBlocking, upperChannelEncoding, upperChannelEOFChar;
     int idx;
     Tcl_Size fn, len;
-    int flags		        = TLS_TCL_INIT;
-    int server		        = 0;	/* is connection incoming or outgoing? */
-    char *keyfile	        = NULL;
-    char *certfile	        = NULL;
-    unsigned char *key  	= NULL;
-    Tcl_Size key_len                 = 0;
-    unsigned char *cert         = NULL;
-    Tcl_Size cert_len                = 0;
-    char *ciphers	        = NULL;
-    char *ciphersuites	        = NULL;
-    char *CAfile	        = NULL;
-    char *CAdir		        = NULL;
-    char *DHparams	        = NULL;
-    char *model		        = NULL;
-    char *servername	        = NULL;	/* hostname for Server Name Indication */
+    int flags			= TLS_TCL_INIT;
+    int server			= 0;	/* is connection incoming or outgoing? */
+    char *keyfile		= NULL;
+    char *certfile		= NULL;
+    unsigned char *key		= NULL;
+    Tcl_Size key_len		= 0;
+    unsigned char *cert		= NULL;
+    Tcl_Size cert_len		= 0;
+    char *ciphers		= NULL;
+    char *ciphersuites		= NULL;
+    char *CAfile		= NULL;
+    char *CApath		= NULL;
+    char *DHparams		= NULL;
+    char *model			= NULL;
+    char *servername		= NULL;	/* hostname for Server Name Indication */
     const unsigned char *session_id = NULL;
-    Tcl_Size sess_len                = 0;
+    Tcl_Size sess_len		= 0;
     Tcl_Obj *alpnObj		= NULL;
     int ssl2 = 0, ssl3 = 0;
     int tls1 = 1, tls1_1 = 1, tls1_2 = 1, tls1_3 = 1;
@@ -1125,7 +1129,7 @@ ImportObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const
 	    alpnObj = objv[idx];
 	    break;
 	case _opt_cadir:
-	    GET_OPT_STRING(objv[idx], CAdir, NULL);
+	    GET_OPT_STRING(objv[idx], CApath, NULL);
 	    break;
 	case _opt_cafile:
 	    GET_OPT_STRING(objv[idx], CAfile, NULL);
@@ -1227,7 +1231,7 @@ ImportObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const
     if (ciphers && !*ciphers)	        ciphers	        = NULL;
     if (ciphersuites && !*ciphersuites) ciphersuites    = NULL;
     if (CAfile && !*CAfile)	        CAfile	        = NULL;
-    if (CAdir && !*CAdir)	        CAdir	        = NULL;
+    if (CApath && !*CApath)	        CApath	        = NULL;
     if (DHparams && !*DHparams)	        DHparams        = NULL;
 
     /* new SSL state */
@@ -1289,7 +1293,7 @@ ImportObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const
 	ctx = ((State *)Tcl_GetChannelInstanceData(chan))->ctx;
     } else {
 	if ((ctx = CTX_Init(statePtr, server, proto, keyfile, certfile, key, cert, (int) key_len,
-	    (int) cert_len, CAdir, CAfile, ciphers, ciphersuites, level, DHparams)) == NULL) {
+	    (int) cert_len, CApath, CAfile, ciphers, ciphersuites, level, DHparams)) == NULL) {
 	    Tls_Free((char *) statePtr);
 	    return TCL_ERROR;
 	}
@@ -1329,6 +1333,10 @@ ImportObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const
     Tcl_SetChannelOption(interp, statePtr->self, "-encoding", Tcl_DStringValue(&upperChannelEncoding));
     Tcl_SetChannelOption(interp, statePtr->self, "-eofchar", Tcl_DStringValue(&upperChannelEOFChar));
     Tcl_SetChannelOption(interp, statePtr->self, "-blocking", Tcl_DStringValue(&upperChannelBlocking));
+    Tcl_DStringFree(&upperChannelTranslation);
+    Tcl_DStringFree(&upperChannelEncoding);
+    Tcl_DStringFree(&upperChannelEOFChar);
+    Tcl_DStringFree(&upperChannelBlocking);
 
     /*
      * SSL Initialization
@@ -1572,13 +1580,12 @@ UnimportObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *con
  */
 static SSL_CTX *
 CTX_Init(State *statePtr, int isServer, int proto, char *keyfile, char *certfile,
-    unsigned char *key, unsigned char *cert, int key_len, int cert_len, char *CAdir,
+    unsigned char *key, unsigned char *cert, int key_len, int cert_len, char *CApath,
     char *CAfile, char *ciphers, char *ciphersuites, int level, char *DHparams) {
     Tcl_Interp *interp = statePtr->interp;
     SSL_CTX *ctx = NULL;
     Tcl_DString ds;
-    Tcl_DString ds1;
-    int off = 0;
+    int off = 0, abort = 0;
     int load_private_key;
     const SSL_METHOD *method;
 
@@ -1758,7 +1765,6 @@ CTX_Init(State *statePtr, int isServer, int proto, char *keyfile, char *certfile
 	DH* dh;
 	if (DHparams != NULL) {
 	    BIO *bio;
-	    Tcl_DStringInit(&ds);
 	    bio = BIO_new_file(F2N(DHparams, &ds), "r");
 	    if (!bio) {
 		Tcl_DStringFree(&ds);
@@ -1794,8 +1800,6 @@ CTX_Init(State *statePtr, int isServer, int proto, char *keyfile, char *certfile
     if (certfile != NULL) {
 	load_private_key = 1;
 
-	Tcl_DStringInit(&ds);
-
 	if (SSL_CTX_use_certificate_file(ctx, F2N(certfile, &ds), SSL_FILETYPE_PEM) <= 0) {
 	    Tcl_DStringFree(&ds);
 	    Tcl_AppendResult(interp, "unable to set certificate file ", certfile, ": ",
@@ -1803,21 +1807,22 @@ CTX_Init(State *statePtr, int isServer, int proto, char *keyfile, char *certfile
 	    SSL_CTX_free(ctx);
 	    return NULL;
 	}
+	Tcl_DStringFree(&ds);
+
     } else if (cert != NULL) {
 	load_private_key = 1;
 	if (SSL_CTX_use_certificate_ASN1(ctx, cert_len, cert) <= 0) {
-	    Tcl_DStringFree(&ds);
 	    Tcl_AppendResult(interp, "unable to set certificate: ",
 		GET_ERR_REASON(), (char *) NULL);
 	    SSL_CTX_free(ctx);
 	    return NULL;
 	}
+
     } else {
 	certfile = (char*)X509_get_default_cert_file();
 
 	if (SSL_CTX_use_certificate_file(ctx, certfile, SSL_FILETYPE_PEM) <= 0) {
 #if 0
-	    Tcl_DStringFree(&ds);
 	    Tcl_AppendResult(interp, "unable to use default certificate file ", certfile, ": ",
 		GET_ERR_REASON(), (char *) NULL);
 	    SSL_CTX_free(ctx);
@@ -1851,7 +1856,6 @@ CTX_Init(State *statePtr, int isServer, int proto, char *keyfile, char *certfile
 
 	} else if (key != NULL) {
 	    if (SSL_CTX_use_PrivateKey_ASN1(EVP_PKEY_RSA, ctx, key,key_len) <= 0) {
-		Tcl_DStringFree(&ds);
 		/* flush the passphrase which might be left in the result */
 		Tcl_SetResult(interp, NULL, TCL_STATIC);
 		Tcl_AppendResult(interp, "unable to set public key: ", GET_ERR_REASON(), (char *) NULL);
@@ -1869,38 +1873,57 @@ CTX_Init(State *statePtr, int isServer, int proto, char *keyfile, char *certfile
 	}
     }
 
-    /* Set verification CAs */
-    Tcl_DStringInit(&ds);
-    Tcl_DStringInit(&ds1);
-    /* There is one default directory, one default file, and one default store.
-	The default CA certificates directory (and default store) is in the OpenSSL
-	certs directory. It can be overridden by the SSL_CERT_DIR env var. The
-	default CA certificates file is called cert.pem in the default OpenSSL
-	directory. It can be overridden by the SSL_CERT_FILE env var. */
-	/* int SSL_CTX_set_default_verify_dir(SSL_CTX *ctx) and int SSL_CTX_set_default_verify_file(SSL_CTX *ctx) */
-    if (!SSL_CTX_load_verify_locations(ctx, F2N(CAfile, &ds), F2N(CAdir, &ds1)) ||
-	!SSL_CTX_set_default_verify_paths(ctx)) {
-#if 0
-	Tcl_DStringFree(&ds);
-	Tcl_DStringFree(&ds1);
-	/* Don't currently care if this fails */
-	Tcl_AppendResult(interp, "SSL default verify paths: ", GET_ERR_REASON(), (char *) NULL);
-	SSL_CTX_free(ctx);
-	return NULL;
+    /* Set to use default location and file for Certificate Authority (CA) certificates. The
+     * verify path and store can be overridden by the SSL_CERT_DIR env var. The verify file can
+     * be overridden by the SSL_CERT_FILE env var. */
+    if (!SSL_CTX_set_default_verify_paths(ctx)) {
+	abort++;
+    }
+
+    /* Overrides for the CA verify path and file */
+    {
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
+	if (CApath != NULL || CAfile != NULL) {
+	    Tcl_DString ds1;
+	    if (!SSL_CTX_load_verify_locations(ctx, F2N(CAfile, &ds), F2N(CApath, &ds1))) {
+		abort++;
+	    }
+	    Tcl_DStringFree(&ds);
+	    Tcl_DStringFree(&ds1);
+
+	    /* Set list of CAs to send to client when requesting a client certificate */
+	    /* https://sourceforge.net/p/tls/bugs/57/ */
+	    /* XXX:TODO: Let the user supply values here instead of something that exists on the filesystem */
+	    STACK_OF(X509_NAME) *certNames = SSL_load_client_CA_file(F2N(CAfile, &ds));
+	    if (certNames != NULL) {
+		SSL_CTX_set_client_CA_list(ctx, certNames);
+	    }
+	    Tcl_DStringFree(&ds);
+	}
+
+#else
+	if (CApath != NULL) {
+	    if (!SSL_CTX_load_verify_dir(ctx, F2N(CApath, &ds))) {
+		abort++;
+	    }
+	    Tcl_DStringFree(&ds);
+	}
+	if (CAfile != NULL) {
+	    if (!SSL_CTX_load_verify_file(ctx, F2N(CAfile, &ds))) {
+		abort++;
+	    }
+	    Tcl_DStringFree(&ds);
+
+	    /* Set list of CAs to send to client when requesting a client certificate */
+	    STACK_OF(X509_NAME) *certNames = SSL_load_client_CA_file(F2N(CAfile, &ds));
+	    if (certNames != NULL) {
+		SSL_CTX_set_client_CA_list(ctx, certNames);
+	    }
+	    Tcl_DStringFree(&ds);
+	}
 #endif
     }
 
-    /* https://sourceforge.net/p/tls/bugs/57/ */
-    /* XXX:TODO: Let the user supply values here instead of something that exists on the filesystem */
-    if (CAfile != NULL) {
-	STACK_OF(X509_NAME) *certNames = SSL_load_client_CA_file(F2N(CAfile, &ds));
-	if (certNames != NULL) {
-	    SSL_CTX_set_client_CA_list(ctx, certNames);
-	}
-    }
-
-    Tcl_DStringFree(&ds);
-    Tcl_DStringFree(&ds1);
     return ctx;
 }
 

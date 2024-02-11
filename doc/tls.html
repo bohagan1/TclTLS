@@ -21,7 +21,7 @@ content="text/html; charset=iso-8859-1">
     </dd>
     <dd><a href="#SYNOPSIS">SYNOPSIS</a> </dd>
     <dd><dl>
-	    <dd><b>package require Tcl</b> <em>?8.5?</em></dd>
+	    <dd><b>package require Tcl</b> <em>?<b>8.5</b>?</em></dd>
 	    <dd><b>package require tls</b></dd>
 	    <dt>&nbsp;</dt>
 	    <dd><b>tls::init</b> <em>?options?</em> </dd>
@@ -53,7 +53,7 @@ for socket and I/O channel communications.</p>
 
 <h3><a name="SYNOPSIS">SYNOPSIS</a></h3>
 
-<p><b>package require Tcl 8.5</b><br>
+<p><b>package require Tcl</b> <em>?<b>8.5</b>?</em><br>
 <b>package require tls</b><br>
 <br>
 <a href="#tls::init"><b>tls::init</b> <i>?options?</i></a><br>
@@ -71,12 +71,13 @@ for socket and I/O channel communications.</p>
 
 <h3><a name="DESCRIPTION">DESCRIPTION</a></h3>
 
-<p>This extension provides a generic binding to <a
-href="http://www.openssl.org/">OpenSSL</a>, utilizing the
-<strong>Tcl_StackChannel</strong>
-API for Tcl 8.4 and higher. The sockets behave exactly the same
-as channels created using Tcl's built-in <strong>socket</strong>
-command with additional options for controlling the SSL session.
+<p>This extension provides TCL script access to secure socket communications
+using the Transport Layer Security (TLS) protocol. It provides a generic
+binding to <a href="http://www.openssl.org/">OpenSSL</a>, utilizing the
+<strong>Tcl_StackChannel</strong> API in Tcl 8.4 and higher.
+These sockets behave exactly the same as channels created using the built-in
+<strong>socket</strong> command, along with additional options for controlling
+the SSL session.
 </p>
 
 <h3><a name="COMMANDS">COMMANDS</a></h3>
@@ -461,22 +462,25 @@ invoked with the error information.
 	<dl>
 
 	<dt>
-	  <strong>error</strong> <em>channel message</em>
+	  <strong>error</strong> <em>channelId message</em>
 	</dt>
 	<dd>
-	  The <em>message</em> argument contains an error message generated
-	  by the OpenSSL function <code>ERR_reason_error_string()</code>.
+	  This form of callback is invoked whenever an error occurs during the
+	  initial connection, handshake, or I/O operations. The <em>message</em>
+	  argument can be from the Tcl_ErrnoMsg, OpenSSL function
+	  <code>ERR_reason_error_string()</code>, or a custom message.
 	</dd>
 
 	<br>
 
 	<dt>
-	  <strong>info</strong> <em>channel major minor message type</em>
+	  <strong>info</strong> <em>channelId major minor message type</em>
 	</dt>
 	<dd>
 	  This form of callback is invoked by the OpenSSL function
-	  <code>SSL_CTX_set_info_callback()</code> during connection setup
-	  and use.
+	  <code>SSL_set_info_callback()</code> during the initial connection
+	  and handshake operations. The <em>type</em> argument is new for
+	  TLS 1.8. The arguments are:
 	  <br>
 	  <ul>
 	  <li>Possible values for <em>major</em> are:
@@ -493,28 +497,33 @@ invoked with the error information.
 	</dd>
 
 	<dt>
-	  <strong>message</strong> <em>channel direction version content_type data</em>
+	  <strong>message</strong> <em>channelId direction version content_type message</em>
 	</dt>
 	<dd>
 	  This form of callback is invoked by the OpenSSL function
 	  <code>SSL_set_msg_callback()</code> whenever a message is sent or
-	  received. It is only available when
-	  OpenSSL is complied with the <em>enable-ssl-trace</em> option.
-	  Where <em>direction</em> is Sent or Received, <em>version</em> is the
-	  protocol version, <em>content_type</em> is the message content type,
-	  and <em>data</em> is more info on the message from the <code>SSL_trace</code> API.
+	  received during the initial connection, handshake, or I/O operations.
+	  It is only available when OpenSSL is complied with the
+	  <em>enable-ssl-trace</em> option. Arguments are: <em>direction</em> 
+	  is <b>Sent</b> or <b>Received</b>, <em>version</em> is the protocol
+	  version, <em>content_type</em> is the message content type, and
+	  <em>message</em> is more info from the <code>SSL_trace</code> API.
+	  This callback is new for TLS 1.8.
 	</dd>
 	<br>
 
 	<dt>
-	  <strong>session</strong> <em>channel session_id ticket lifetime</em>
+	  <strong>session</strong> <em>channelId session_id ticket lifetime</em>
 	</dt>
 	<dd>
 	  This form of callback is invoked by the OpenSSL function
-	  <code>SSL_CTX_sess_set_new_cb()</code>.
-	  Where <em>session_id</em> is the current session identifier,
-	  <em>ticket</em> is the session ticket info, and <em>lifetime</em>
-	  is the the ticket lifetime in seconds.
+	  <code>SSL_CTX_sess_set_new_cb()</code> whenever a new session id is
+	  sent by the server during the initial connection and handshake, but
+	  can also be received later if the <b>-post_handshake</b> option is
+	  used. Arguments are: <em>session_id</em> is the current
+	  session identifier, <em>ticket</em> is the session ticket info, and
+	  <em>lifetime</em> is the the ticket lifetime in seconds.
+	  This callback is new for TLS 1.8.
 	</dd>
 	<br>
 	</dl>
@@ -542,6 +551,7 @@ invoked with the error information.
 	  writing/encryption (can prompt user to confirm) and
 	  <em>size</em> is the max password length in bytes.
 	  The callback should return the password as a string.
+	  Both arguments are new for TLS 1.8.
 	</dd>
     </dd>
 
@@ -552,8 +562,9 @@ invoked with the error information.
     <dd>
 	Invokes the specified <em>callback</em> script during handshake in
 	order to validate the provided value(s). See below for the possible
-	arguments passed to the callback script.
-	To reject the value and abort connection, the callback should return 0.
+	arguments passed to the callback script. If not specified, OpenSSL
+	will accept valid certificates and extensions.
+	To reject the value and abort the connection, the callback should return 0.
 	To accept the value and continue the connection, it should return 1.
 	To reject the value, but continue the connection, it should return 2.
 
@@ -563,45 +574,50 @@ invoked with the error information.
 	<dl>
 
 	<dt>
-	  <strong>alpn</strong> <em>channel protocol match</em>
+	  <strong>alpn</strong> <em>channelId protocol match</em>
 	</dt>
 	<dd>
 	  For servers, this form of callback is invoked when the client ALPN
 	  extension is received. If <em>match</em> is true, <em>protocol</em>
-	  is the first <b>-alpn</b> specified protocol common to the both the
-	  client and server. If not, the first client specified protocol is
-	  used. Called after hello and ALPN callbacks.
+	  is the first <b>-alpn</b> option specified protocol common to both
+	  the client and server. If not, the first client specified protocol is
+	  used. It is called after the hello and ALPN callbacks.
+	  This callback is new for TLS 1.8.
 	</dd>
 
 	<br>
 
 	<dt>
-	  <strong>hello</strong> <em>channel servername</em>
+	  <strong>hello</strong> <em>channelId servername</em>
 	</dt>
 	<dd>
 	  For servers, this form of callback is invoked during client hello
-	  message processing. It is used to select an appropriate certificate to
-	  present, and make other configuration adjustments relevant to that
-	  server name and its configuration. Called before SNI and ALPN callbacks.
+	  message processing. The purpose is so the server can select the
+	  appropriate certificate to present to the client, and to make other
+	  configuration adjustments relevant to that server name and its
+	  configuration. It is called before the SNI and ALPN callbacks.
+	  This callback is new for TLS 1.8.
 	</dd>
 
 	<br>
 
 	<dt>
-	  <strong>sni</strong> <em>channel servername</em>
+	  <strong>sni</strong> <em>channelId servername</em>
 	</dt>
 	<dd>
-	  For servers, this form of callback is invoked when the SNI extension
-	  from the client is received. Where <em>servername</em> is the client
-	  provided server name from the <b>-servername</b> option. This is
-	  used when a server supports multiple names, so the right certificate
-	  can be used. Called after hello callback but before ALPN callback.
+	  For servers, this form of callback is invoked when the Server Name
+	  Indication (SNI) extension is received. The <em>servername</em>
+	  argument is the client provided server name in the <b>-servername</b>
+	  option. The purpose is so when a server supports multiple names, the
+	  right certificate can be used. It is called after the hello callback
+	  but before the ALPN callback.
+	  This callback is new for TLS 1.8.
 	</dd>
 
 	<br>
 
 	<dt>
-	  <strong>verify</strong> <em>channel depth cert status error</em>
+	  <strong>verify</strong> <em>channelId depth cert status error</em>
 	</dt>
 	<dd>
 	  This form of callback is invoked by OpenSSL when a new certificate
@@ -609,18 +625,15 @@ invoked with the error information.
 	  certificate verification results and choose whether to continue
 	  or not. It is called for each certificate in the certificate chain.
 	  <ul>
-	  <li>The <em>depth</em> argument is an integer representing the
-	  current depth on the certificate chain, with
-	  <code>0</code> as the peer certificate and higher values going
-	  up to the Certificate Authority (CA).</li>
+	  <li>The <em>depth</em> argument is the integer depth of the
+	  certificate in the certificate chain, where 0 is the peer certificate
+	  and higher values going up to the Certificate Authority (CA).</li>
 	  <li>The <em>cert</em> argument is a list of key-value pairs similar
 	  to those returned by
 	  <a href="#tls::status"><strong>tls::status</strong></a>.</li>
-	  <li>The <em>status</em> argument is an boolean representing the
-	  validity of the current certificate.
-	  A value of <code>0</code> means the certificate is deemed invalid.
-	  A value of <code>1</code> means the certificate is deemed valid.</li>
-	  <li>The <em>error</em> argument supplies the message, if any, generated
+	  <li>The <em>status</em> argument is the boolean validity of the
+	  current certificate where 0 is invalid and 1 is valid.</li>
+	  <li>The <em>error</em> argument is the error message, if any, generated
 	  by <code>X509_STORE_CTX_get_error()</code>.</li>
 	  </ul>
 	</dd>
@@ -670,7 +683,8 @@ The <strong>tls::debug</strong> variable provides some additional
 control over these reference callbacks.  Its value is zero by default.
 Higher values produce more diagnostic output, and will also force the
 verify method in <strong>tls::callback</strong> to accept the
-certificate, even when it is invalid.
+certificate, even when it is invalid if the <b>tls::validate_command</b>
+callback is used for the <b>-validatecommand</b> option.
 </p>
 
 <p>
@@ -680,18 +694,112 @@ It may be removed from future releases.
 </em>
 </p>
 
+<h4><a name="DEBUG_EXAMPLES">Debug Examples</a></h4>
+
+<p>These examples use the default Unix platform SSL certificates. For standard
+installations, -cadir and -cafile should not be needed. If your certificates
+are in non-standard locations, update -cadir or use -cafile as needed.</p>
+<br>
+Example #1: Use HTTP package
+
+
+<pre><code>
+package require http
+package require tls
+set url "https://www.tcl.tk/"
+
+http::register https 443 [list ::tls::socket -autoservername true -require true -cadir /etc/ssl/certs \
+    -command ::tls::callback -password ::tls::password -validatecommand ::tls::validate_command]
+
+# Check for error
+set token [http::geturl $url]
+if {[http::status $token] ne "ok"} {
+    puts [format "Error %s" [http::status $token]]
+}
+
+# Get web page
+set data [http::data $token]
+puts [string length $data]
+
+# Cleanup
+::http::cleanup $token
+</code></pre>
+
+Example #2: Use raw socket
+<pre><code>
+package require tls
+
+set url "www.tcl-lang.org"
+set port 443
+
+set ch [tls::socket -autoservername 1 -servername $url -request 1 -require 1 \
+    -alpn {http/1.1} -cadir /etc/ssl/certs -command ::tls::callback \
+    -password ::tls::password -validatecommand ::tls::validate_command $url $port]
+chan configure $ch -buffersize 65536
+tls::handshake $ch
+
+puts $ch "GET / HTTP/1.1"
+flush $ch
+after 500
+set data [read $ch]
+
+array set status [tls::status $ch]
+array set conn [tls::connection $ch]
+array set chan [chan configure $ch]
+close $ch
+parray status
+parray conn
+parray chan
+</code></pre>
+
+
 <h3><a name="HTTPS EXAMPLE">HTTPS EXAMPLE</a></h3>
 
-<p>This example uses a sample server.pem provided with the TLS release,
-courtesy of the <strong>OpenSSL</strong> project.</p>
+<p>These examples use the default Unix platform SSL certificates. For standard
+installations, -cadir and -cafile should not be needed. If your certificates
+are in non-standard locations, update -cadir or use -cafile as needed.</p>
+
+Example #1: Get web page
+
+<pre><code>
+package require http
+package require tls
+set url "https://www.tcl.tk/"
+
+http::register https 443 [list ::tls::socket -autoservername true -require true -cadir /etc/ssl/certs]
+
+# Check for error
+set token [http::geturl $url]
+if {[http::status $token] ne "ok"} {
+    puts [format "Error %s" [http::status $token]]
+}
+
+# Get web page
+set data [http::data $token]
+puts $data
+
+# Cleanup
+::http::cleanup $token
+</code></pre>
+
+Example #2: Download file
 
 <pre><code>
 package require http
 package require tls
 
+set url "https://wiki.tcl-lang.org/sitemap.xml"
+set filename [file tail $url]
+
 http::register https 443 [list ::tls::socket -autoservername true -require true -cadir /etc/ssl/certs]
 
-set tok [http::geturl https://www.tcl.tk/]
+# Get file
+set ch [open $filename wb]
+set token [::http::geturl $url -blocksize 65536 -channel $ch]
+
+# Cleanup
+close $ch
+::http::cleanup $token
 </code></pre>
 
 <h3><a name="SPECIAL CONSIDERATIONS">SPECIAL CONSIDERATIONS</a></h3>
@@ -704,14 +812,15 @@ protocol versions.</p>
 
 <h3><a name="SEE ALSO">SEE ALSO</a></h3>
 
-<p><strong>socket</strong>, <strong>fileevent, </strong><a
-href="http://www.openssl.org/"><strong>OpenSSL</strong></a></p>
+<p><strong>socket</strong>, <strong>fileevent</strong>, <strong>http</strong>,
+<a href="http://www.openssl.org/"><strong>OpenSSL</strong></a></p>
 
 <hr>
 
 <pre>
 Copyright &copy; 1999 Matt Newman.
 Copyright &copy; 2004 Starfish Systems.
+Copyright &copy; 2023 Brian O'Hagan.
 </pre>
 </body>
 </html>

@@ -12,6 +12,7 @@ package require tls
 
 # Constraints
 ::tcltest::testConstraint md4 [expr {"md4" in [::tls::digests]}]
+catch {tls::provider legacy}
 
 # Helper functions - See common.tcl
 proc digest_read_chan {cmd filename args} {;set ch [open $filename rb];set bsize [fconfigure $ch -buffersize];set new [$cmd {*}$args -chan $ch];while {![eof $new]} {set md [read $new $bsize]};close $new;return $md}

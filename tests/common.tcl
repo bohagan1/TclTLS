@@ -20,3 +20,9 @@ foreach protocol [::tls::protocols] {
 # Legacy OpenSSL v1.1.1 vs new v3.x
 scan [lindex [split [::tls::version]] 1] %f version
 ::tcltest::testConstraint new_api [expr {$version >= 3.0}]
+::tcltest::testConstraint old_api [expr {$version < 3.0}]
+
+# Load legacy provider
+if {$version >= 3.0} {
+    tls::provider legacy
+}
