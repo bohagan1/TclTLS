@@ -1,9 +1,11 @@
 # Auto generated from "HKDF-SHA224.txt"
+lappend auto_path [file dirname [file dirname [file dirname [file dirname [file join [pwd] [info script]]]]]]
 package require tls
 package require tcltest
 
 tcltest::testConstraint HKDF [expr {[lsearch -nocase [tls::kdfs] HKDF] > -1}]
 tcltest::testConstraint SHA224 [expr {[lsearch -nocase [tls::digests] SHA224] > -1}]
+catch {tls::provider legacy}
 
 tcltest::test KDF_HKDF-SHA224-1.1 {HKDF-SHA224} \
 	-constraints {HKDF SHA224} \

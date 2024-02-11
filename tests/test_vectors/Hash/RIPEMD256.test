@@ -1,8 +1,10 @@
 # Auto generated from "RIPEMD256.txt"
+lappend auto_path [file dirname [file dirname [file dirname [file dirname [file join [pwd] [info script]]]]]]
 package require tls
 package require tcltest
 
 tcltest::testConstraint RIPEMD256 [expr {[lsearch -nocase [tls::digests] RIPEMD256] > -1}]
+catch {tls::provider legacy}
 
 tcltest::test Hash_RIPEMD256-1.1 {RIPEMD256} \
 	-constraints RIPEMD256 \

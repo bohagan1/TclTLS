@@ -1,8 +1,10 @@
 # Auto generated from "MD2.txt"
+lappend auto_path [file dirname [file dirname [file dirname [file dirname [file join [pwd] [info script]]]]]]
 package require tls
 package require tcltest
 
 tcltest::testConstraint MD2 [expr {[lsearch -nocase [tls::digests] MD2] > -1}]
+catch {tls::provider legacy}
 
 tcltest::test Hash_MD2-1.1 {MD2} \
 	-constraints MD2 \

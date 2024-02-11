@@ -1,8 +1,10 @@
 # Auto generated from "SHA1.txt"
+lappend auto_path [file dirname [file dirname [file dirname [file dirname [file join [pwd] [info script]]]]]]
 package require tls
 package require tcltest
 
 tcltest::testConstraint SHA1 [expr {[lsearch -nocase [tls::digests] SHA1] > -1}]
+catch {tls::provider legacy}
 
 tcltest::test Hash_SHA1-1.1 {SHA1} \
 	-constraints SHA1 \

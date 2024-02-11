@@ -81,10 +81,12 @@ proc parse {group filename file_num} {
 
     # Add config info
     puts $out [format "# Auto generated from \"%s\"" [file tail $filename]]
+    puts $out [format "lappend auto_path %s" {[file dirname [file dirname [file dirname [file dirname [file join [pwd] [info script]]]]]]}]
     puts $out "package require tls"
     puts $out "package require tcltest\n"
     puts $out [format "tcltest::testConstraint %s %s" [string map [list "-" "_"] $digest] \
 	[format {[expr {[lsearch -nocase [tls::digests] %s] > -1}]} $digest]]
+    puts $out "catch {tls::provider legacy}"
     puts $out ""
 
     # Process file

@@ -1,9 +1,11 @@
 # Auto generated from "CMAC-AES-192-CBC.txt"
+lappend auto_path [file dirname [file dirname [file dirname [file dirname [file join [pwd] [info script]]]]]]
 package require tls
 package require tcltest
 
 tcltest::testConstraint CMAC [expr {[lsearch -nocase [tls::macs] CMAC] > -1}]
 tcltest::testConstraint AES_192_CBC [expr {[lsearch -nocase [tls::ciphers] AES-192-CBC] > -1}]
+catch {tls::provider legacy}
 
 tcltest::test MAC_CMAC-AES-192-CBC-1.1 {CMAC-AES-192-CBC} \
 	-constraints {CMAC  AES_192_CBC} \

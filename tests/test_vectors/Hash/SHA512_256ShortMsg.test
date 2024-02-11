@@ -1,8 +1,10 @@
 # Auto generated from "SHA512_256ShortMsg.rsp"
+lappend auto_path [file dirname [file dirname [file dirname [file dirname [file join [pwd] [info script]]]]]]
 package require tls
 package require tcltest
 
 tcltest::testConstraint SHA512_256 [expr {[lsearch -nocase [tls::digests] SHA512-256] > -1}]
+catch {tls::provider legacy}
 
 tcltest::test Hash_SHA512-256-2.1 {SHA512_256ShortMsg} \
 	-constraints SHA512_256 \

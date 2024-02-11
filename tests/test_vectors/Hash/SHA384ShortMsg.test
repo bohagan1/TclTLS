@@ -1,8 +1,10 @@
 # Auto generated from "SHA384ShortMsg.rsp"
+lappend auto_path [file dirname [file dirname [file dirname [file dirname [file join [pwd] [info script]]]]]]
 package require tls
 package require tcltest
 
 tcltest::testConstraint SHA384 [expr {[lsearch -nocase [tls::digests] SHA384] > -1}]
+catch {tls::provider legacy}
 
 tcltest::test Hash_SHA384-2.1 {SHA384ShortMsg} \
 	-constraints SHA384 \

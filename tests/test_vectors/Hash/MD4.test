@@ -1,8 +1,10 @@
 # Auto generated from "MD4.txt"
+lappend auto_path [file dirname [file dirname [file dirname [file dirname [file join [pwd] [info script]]]]]]
 package require tls
 package require tcltest
 
 tcltest::testConstraint MD4 [expr {[lsearch -nocase [tls::digests] MD4] > -1}]
+catch {tls::provider legacy}
 
 tcltest::test Hash_MD4-1.1 {MD4} \
 	-constraints MD4 \

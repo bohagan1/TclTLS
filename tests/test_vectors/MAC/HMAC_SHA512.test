@@ -1,9 +1,11 @@
 # Auto generated from "HMAC_SHA512.txt"
+lappend auto_path [file dirname [file dirname [file dirname [file dirname [file join [pwd] [info script]]]]]]
 package require tls
 package require tcltest
 
 tcltest::testConstraint HMAC [expr {[lsearch -nocase [tls::macs] HMAC] > -1}]
 tcltest::testConstraint SHA512 [expr {[lsearch -nocase [tls::digests] SHA512] > -1}]
+catch {tls::provider legacy}
 
 tcltest::test MAC_HMAC-SHA512-1.1 {HMAC_SHA512} \
 	-constraints {HMAC SHA512 } \

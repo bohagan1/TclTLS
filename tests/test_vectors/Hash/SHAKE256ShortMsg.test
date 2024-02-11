@@ -1,8 +1,10 @@
 # Auto generated from "SHAKE256ShortMsg.rsp"
+lappend auto_path [file dirname [file dirname [file dirname [file dirname [file join [pwd] [info script]]]]]]
 package require tls
 package require tcltest
 
 tcltest::testConstraint SHAKE256 [expr {[lsearch -nocase [tls::digests] SHAKE256] > -1}]
+catch {tls::provider legacy}
 
 tcltest::test Hash_SHAKE256-2.1 {SHAKE256ShortMsg} \
 	-constraints SHAKE256 \

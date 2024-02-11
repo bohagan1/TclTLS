@@ -1,9 +1,11 @@
 # Auto generated from "PBKDF2-SHA384.txt"
+lappend auto_path [file dirname [file dirname [file dirname [file dirname [file join [pwd] [info script]]]]]]
 package require tls
 package require tcltest
 
 tcltest::testConstraint PBKDF2 [expr {[lsearch -nocase [tls::kdfs] PBKDF2] > -1}]
 tcltest::testConstraint SHA384 [expr {[lsearch -nocase [tls::digests] SHA384] > -1}]
+catch {tls::provider legacy}
 
 tcltest::test KDF_PBKDF2-SHA384-1.1 {PBKDF2-SHA384} \
 	-constraints {PBKDF2 SHA384} \

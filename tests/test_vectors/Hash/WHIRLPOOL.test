@@ -1,8 +1,10 @@
 # Auto generated from "WHIRLPOOL.txt"
+lappend auto_path [file dirname [file dirname [file dirname [file dirname [file join [pwd] [info script]]]]]]
 package require tls
 package require tcltest
 
 tcltest::testConstraint WHIRLPOOL [expr {[lsearch -nocase [tls::digests] WHIRLPOOL] > -1}]
+catch {tls::provider legacy}
 
 tcltest::test Hash_WHIRLPOOL-1.1 {WHIRLPOOL} \
 	-constraints WHIRLPOOL \

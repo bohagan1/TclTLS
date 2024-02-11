@@ -1,8 +1,10 @@
 # Auto generated from "SHA256LongMsg.rsp"
+lappend auto_path [file dirname [file dirname [file dirname [file dirname [file join [pwd] [info script]]]]]]
 package require tls
 package require tcltest
 
 tcltest::testConstraint SHA256 [expr {[lsearch -nocase [tls::digests] SHA256] > -1}]
+catch {tls::provider legacy}
 
 tcltest::test Hash_SHA256-3.1 {SHA256LongMsg} \
 	-constraints SHA256 \

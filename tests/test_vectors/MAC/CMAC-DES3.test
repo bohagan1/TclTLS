@@ -1,9 +1,11 @@
 # Auto generated from "CMAC-DES3.txt"
+lappend auto_path [file dirname [file dirname [file dirname [file dirname [file join [pwd] [info script]]]]]]
 package require tls
 package require tcltest
 
 tcltest::testConstraint CMAC [expr {[lsearch -nocase [tls::macs] CMAC] > -1}]
 tcltest::testConstraint DES3 [expr {[lsearch -nocase [tls::ciphers] DES3] > -1}]
+catch {tls::provider legacy}
 
 tcltest::test MAC_CMAC-DES3-1.1 {CMAC-DES3} \
 	-constraints {CMAC  DES3} \
