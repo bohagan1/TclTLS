@@ -73,7 +73,7 @@ int CipherInfo(Tcl_Interp *interp, Tcl_Obj *nameObj) {
     Tcl_Obj *resultObj, *listObj;
     unsigned long flags, mode;
     char *modeName = NULL;
-    char *name = Tcl_GetStringFromObj(nameObj, (Tcl_Size *) NULL);
+    char *name = Tcl_GetString(nameObj);
 
     /* Get cipher */
     cipher = EVP_get_cipherbyname(name);
@@ -455,7 +455,7 @@ int DigestInfo(Tcl_Interp *interp, Tcl_Obj *nameObj) {
     const EVP_MD *md;
     Tcl_Obj *resultObj, *listObj;
     unsigned long flags;
-    char *name = Tcl_GetStringFromObj(nameObj, (Tcl_Size *) NULL);
+    char *name = Tcl_GetString(nameObj);
 
     /* Get message digest */
     md = EVP_get_digestbyname(name);
@@ -648,7 +648,7 @@ int KdfsObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *con
 int MacInfo(Tcl_Interp *interp, Tcl_Obj *nameObj) {
     Tcl_Obj *resultObj;
     int res = TCL_OK;
-    char *name = Tcl_GetStringFromObj(nameObj, (Tcl_Size *) NULL);
+    char *name = Tcl_GetString(nameObj);
 
     if (strcmp(name, "cmac") != 0 && strcmp(name, "hmac") != 0) {
 	Tcl_AppendResult(interp, "Invalid MAC \"", name, "\"", (char *) NULL);
@@ -753,7 +753,7 @@ int MacsObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *con
 int PkeyInfo(Tcl_Interp *interp, Tcl_Obj *nameObj) {
     Tcl_Obj *resultObj;
     int res = TCL_OK;
-    char *name = Tcl_GetStringFromObj(nameObj, (Tcl_Size *) NULL);
+    char *name = Tcl_GetString(nameObj);
     EVP_PKEY *pkey = NULL;
 
     if (pkey == NULL) {
@@ -951,7 +951,7 @@ ProviderObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *con
 	return TCL_ERROR;
     }
 
-    name = Tcl_GetStringFromObj(objv[1], NULL);
+    name = Tcl_GetString(objv[1]);
     if (!OSSL_PROVIDER_try_load(NULL, (const char *) name, 1)) {
 	Tcl_AppendResult(interp, GET_ERR_REASON(), (char *) NULL);
 	return TCL_ERROR;

@@ -864,7 +864,7 @@ static int DigestUnstackObjCmd(ClientData clientData, Tcl_Interp *interp, int ob
     }
 
     /* Get channel */
-    chan = Tcl_GetChannel(interp, Tcl_GetStringFromObj(objv[1], (Tcl_Size *) NULL), &mode);
+    chan = Tcl_GetChannel(interp, Tcl_GetString(objv[1]), &mode);
     if (chan == (Tcl_Channel) NULL) {
 	return TCL_ERROR;
     }
@@ -875,7 +875,7 @@ static int DigestUnstackObjCmd(ClientData clientData, Tcl_Interp *interp, int ob
     /* Check if digest channel */
     if (Tcl_GetChannelType(chan) != &digestChannelType) {
 	Tcl_AppendResult(interp, "bad channel \"", Tcl_GetChannelName(chan),
-	    "\": not a digest channel", NULL);
+	    "\": not a digest channel", (char *) NULL);
 	Tcl_SetErrorCode(interp, "TLS", "UNSTACK", "CHANNEL", "INVALID", (char *) NULL);
 	return TCL_ERROR;
     }
@@ -988,7 +988,7 @@ void DigestCommandDeleteHandler(ClientData clientData) {
 int DigestCommandHandler(Tcl_Interp *interp, Tcl_Obj *cmdObj, Tcl_Obj *digestObj,
 	Tcl_Obj *cipherObj, int format, Tcl_Obj *keyObj, Tcl_Obj *macObj) {
     DigestState *statePtr;
-    char *cmdName = Tcl_GetStringFromObj(cmdObj, (Tcl_Size *) NULL);
+    char *cmdName = Tcl_GetString(cmdObj);
 
     dprintf("Called");
 
@@ -1188,7 +1188,7 @@ static int DigestMain(int type, Tcl_Interp *interp, int objc, Tcl_Obj *const obj
     }
 
     /* Special case of first arg is digest, cipher, or mac */
-    opt = Tcl_GetStringFromObj(objv[start], (Tcl_Size *) NULL);
+    opt = Tcl_GetString(objv[start]);
     if (opt[0] != '-') {
 	switch(type) {
 	case TYPE_MD:
@@ -1208,7 +1208,7 @@ static int DigestMain(int type, Tcl_Interp *interp, int objc, Tcl_Obj *const obj
     for (int idx = start; idx < objc; idx++) {
 	/* Special case for when last arg is data */
 	if (idx == objc - 1) {
-	    opt = Tcl_GetStringFromObj(objv[idx], (Tcl_Size *) NULL);
+	    opt = Tcl_GetString(objv[idx]);
 	    if (opt[0] != '-' && dataObj == NULL) {
 		dataObj = objv[idx];
 		break;
@@ -1280,7 +1280,7 @@ static int DigestMain(int type, Tcl_Interp *interp, int objc, Tcl_Obj *const obj
 
     if (type == TYPE_MAC) {
 	if (macObj != NULL) {
-	    char *macName = Tcl_GetStringFromObj(macObj, (Tcl_Size *) NULL);
+	    char *macName = Tcl_GetString(macObj);
 	    if (strcmp(macName,"cmac") == 0) {
 		type = TYPE_CMAC;
 	    } else if (strcmp(macName,"hmac") == 0) {

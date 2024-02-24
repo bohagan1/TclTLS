@@ -821,7 +821,7 @@ static int EncryptUnstackObjCmd(ClientData clientData, Tcl_Interp *interp, int o
     }
 
     /* Get channel */
-    chan = Tcl_GetChannel(interp, Tcl_GetStringFromObj(objv[1], (Tcl_Size *) NULL), &mode);
+    chan = Tcl_GetChannel(interp, Tcl_GetString(objv[1]), &mode);
     if (chan == (Tcl_Channel) NULL) {
 	return TCL_ERROR;
     }
@@ -832,7 +832,7 @@ static int EncryptUnstackObjCmd(ClientData clientData, Tcl_Interp *interp, int o
     /* Check if encryption channel */
     if (Tcl_GetChannelType(chan) != &encryptChannelType) {
 	Tcl_AppendResult(interp, "bad channel \"", Tcl_GetChannelName(chan),
-	    "\": not a encryption channel", NULL);
+	    "\": not a encryption channel", (char *) NULL);
 	Tcl_SetErrorCode(interp, "TLS", "UNSTACK", "CHANNEL", "INVALID", (char *) NULL);
 	return TCL_ERROR;
     }
@@ -966,7 +966,7 @@ void EncryptCommandDeleteHandler(ClientData clientData) {
 int EncryptCommandHandler(Tcl_Interp *interp, int type, Tcl_Obj *cmdObj,
 	Tcl_Obj *cipherObj, Tcl_Obj *digestObj, Tcl_Obj *keyObj, Tcl_Obj *ivObj) {
     EncryptState *statePtr;
-    char *cmdName = Tcl_GetStringFromObj(cmdObj, (Tcl_Size *) NULL);
+    char *cmdName = Tcl_GetString(cmdObj);
 
     dprintf("Called");
 
@@ -1204,7 +1204,7 @@ static int EncryptMain(int type, Tcl_Interp *interp, int objc, Tcl_Obj *const ob
     }
 
     /* Special case of first arg is cipher */
-    opt = Tcl_GetStringFromObj(objv[start], (Tcl_Size *) NULL);
+    opt = Tcl_GetString(objv[start]);
     if (opt[0] != '-') {
 	switch(type) {
 	case TYPE_ENCRYPT:
@@ -1218,7 +1218,7 @@ static int EncryptMain(int type, Tcl_Interp *interp, int objc, Tcl_Obj *const ob
     for (int idx = start; idx < objc; idx++) {
 	/* Special case for when last arg is data */
 	if (idx == objc - 1) {
-	opt = Tcl_GetStringFromObj(objv[idx], (Tcl_Size *) NULL);
+	opt = Tcl_GetString(objv[idx]);
 	    if (opt[0] != '-' && dataObj == NULL) {
 		dataObj = objv[idx];
 		break;

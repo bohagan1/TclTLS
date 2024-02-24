@@ -32,7 +32,7 @@ EVP_CIPHER *Util_GetCipher(Tcl_Interp *interp, Tcl_Obj *cipherObj, int no_null) 
     char *name = NULL;
 
     if (cipherObj != NULL) {
-	name = Tcl_GetStringFromObj(cipherObj, (Tcl_Size *) NULL);
+	name = Tcl_GetString(cipherObj);
 #if OPENSSL_VERSION_NUMBER < 0x30000000L
 	cipher = EVP_get_cipherbyname(name);
 #else
@@ -67,7 +67,7 @@ EVP_MD *Util_GetDigest(Tcl_Interp *interp, Tcl_Obj *digestObj, int no_null) {
     char *name = NULL;
 
     if (digestObj != NULL) {
-	name = Tcl_GetStringFromObj(digestObj, (Tcl_Size *) NULL);
+	name = Tcl_GetString(digestObj);
 #if OPENSSL_VERSION_NUMBER < 0x30000000L
 	md = EVP_get_digestbyname(name);
 #else
@@ -171,7 +171,7 @@ EVP_MAC *Util_GetMAC(Tcl_Interp *interp, Tcl_Obj *MacObj, int no_null) {
     char *name = NULL;
 
     if (MacObj != NULL) {
-	name = Tcl_GetStringFromObj(MacObj, (Tcl_Size *) NULL);
+	name = Tcl_GetString(MacObj);
 	mac = EVP_MAC_fetch(NULL, name, NULL);
 	if (mac == NULL) {
 	    Tcl_AppendResult(interp, "invalid MAC \"", name, "\"", (char *) NULL);
