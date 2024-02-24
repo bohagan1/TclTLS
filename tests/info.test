@@ -241,11 +241,11 @@ test Error_Cases-13.6 {Version too many args} -body {
 
 test Provider-14.1 {Provider too few args} -constraints {new_api} -body {
 	::tls::provider
-    } -result {wrong # args: should be "::tls:provider name"} -returnCodes {1}
+    } -result {wrong # args: should be "::tls::provider name"} -returnCodes {1}
 
 test Provider-14.2 {Provider too few args} -constraints {new_api} -body {
 	::tls::provider too many args
-    } -result {wrong # args: should be "::tls:provider name"} -returnCodes {1}
+    } -result {wrong # args: should be "::tls::provider name"} -returnCodes {1}
 
 test Provider-14.3 {Provider invalid arg} -constraints {new_api} -body {
 	::tls::provider invalid

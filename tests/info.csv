@@ -86,7 +86,7 @@ Error Cases,Protocols too many args,,,::tls::protocols too many args,,,"wrong # 
 Error Cases,Version too many args,,,::tls::version too many args,,,"wrong # args: should be ""::tls::version""",,,1
 ,,,,,,,,,,
 command,# Provider command,,,,,,,,,
-Provider,Provider too few args,new_api,,::tls::provider,,,"wrong # args: should be ""::tls:provider name""",,,1
-Provider,Provider too few args,new_api,,::tls::provider too many args,,,"wrong # args: should be ""::tls:provider name""",,,1
+Provider,Provider too few args,new_api,,::tls::provider,,,"wrong # args: should be ""::tls::provider name""",,,1
+Provider,Provider too few args,new_api,,::tls::provider too many args,,,"wrong # args: should be ""::tls::provider name""",,,1
 Provider,Provider invalid arg,new_api,,::tls::provider invalid,,,could not load the shared library,,,1
 Provider,Provider legacy provider,new_api,,::tls::provider legacy,,,,,,
