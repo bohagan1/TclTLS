@@ -8,7 +8,7 @@ and Transport Layer Security (TLS) over Transmission Control Protocol (TCP)
 network communication channels. It utilizes either the OpenSSL or LibreSSL
 software library.
  
-Version 2.0 also provides a cryptography library providing TCL scripts access
+Version 1.9 also provides a cryptography library providing TCL scripts access
 to the crypto capabilities of the OpenSSL library.
 
 
@@ -62,11 +62,9 @@ options, plus:
   --disable-tls1_1        disable TLS1.1 protocol
   --disable-tls1_2        disable TLS1.2 protocol
   --disable-tls1_3        disable TLS1.3 protocol
-  --enable-deterministic  enable deterministic DH parameters
   --enable-ssl-fastpath   enable using the underlying file descriptor for talking directly to the SSL library
   --enable-hardening      enable hardening attempts
   --enable-static-ssl     enable static linking to the SSL library
-  --with-builtin-dh-params-size=<bits>	specify the size of the built-in, precomputed, DH params
 
 If either TCL or OpenSSL are installed in non-standard locations, the following
 configure options are available. For all options, see ./configure --help.
@@ -108,7 +106,7 @@ TLS 1.4.1    Copyright (C) 2000 Ajuba Solutions
 TLS 1.6      Copyright (C) 2008 ActiveState Software Inc.
 TLS 1.7      Copyright (C) 2016 Matt Newman, Ajuba Solutions, ActiveState
                                 Software Inc, Roy Keene <tcltls@rkeene.org>
-TLS 1.9-2.0  Copyright (C) 2023 Brian O'Hagan
+TLS 1.8      Copyright (C) 2023 Brian O'Hagan
 
 Acknowledgments
 ===============

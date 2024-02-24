@@ -177,12 +177,12 @@ TCLTLS_SSL_OPENSSL
 
 if test "${TEA_PLATFORM}" = "windows" ; then
     if test "$GCC" = "yes"; then
-	TEA_ADD_CFLAGS([${TCLTLS_SSL_CFLAGS}])
+	TEA_ADD_CFLAGS([${TCLTLS_SSL_CFLAGS} -Wno-deprecated-declarations])
 	TEA_ADD_INCLUDES([${TCLTLS_SSL_INCLUDES}])
 	TEA_ADD_LIBS([${TCLTLS_SSL_LIBS}])
     fi
 else
-	TEA_ADD_CFLAGS([${TCLTLS_SSL_CFLAGS}])
+	TEA_ADD_CFLAGS([${TCLTLS_SSL_CFLAGS} -Wno-deprecated-declarations])
 	TEA_ADD_INCLUDES([${TCLTLS_SSL_INCLUDES}])
 	TEA_ADD_LIBS([${TCLTLS_SSL_LIBS}])
 fi

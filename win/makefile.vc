@@ -76,6 +76,12 @@ pkgindex: default-pkgindex
 # since no commands are listed after it. The original targets for
 # install (from targets.vc) will remain.
 install: default-pkgindex-tea default-install default-install-docs-html
+    if exist "$(SSL_INSTALL_FOLDER)\bin\libcrypto-*-x64.dll" (
+        xcopy /c /y "$(SSL_INSTALL_FOLDER)\bin\libcrypto-*-x64.dll" "$(PRJ_INSTALL_DIR)"
+    )
+    if exist "$(SSL_INSTALL_FOLDER)\bin\libssl-*-x64.dll" (
+        xcopy /c /y "$(SSL_INSTALL_FOLDER)\bin\libssl-*-x64.dll" "$(PRJ_INSTALL_DIR)"
+    )
 
 # Test package
 test: default-test

@@ -56,7 +56,7 @@ static int BioWrite(BIO *bio, const char *buf, int bufLen) {
 	    BIO_set_retry_read(bio);
 	}
     }
-    return((int) ret);
+    return (int) ret;
 }
 
 /* Called by SSL_read()*/
@@ -117,13 +117,13 @@ static int BioRead(BIO *bio, char *buf, int bufLen) {
     dprintf("BioRead(%p, <buf>, %d) [%p] returning %" TCL_SIZE_MODIFIER "d", (void *) bio,
 	bufLen, (void *) chan, ret);
 
-    return((int) ret);
+    return (int) ret;
 }
 
 static int BioPuts(BIO *bio, const char *str) {
     dprintf("BioPuts(%p, <string:%p>) called", bio, str);
 
-    return(BioWrite(bio, str, (int) strlen(str)));
+    return BioWrite(bio, str, (int) strlen(str));
 }
 
 static long BioCtrl(BIO *bio, int cmd, long num, void *ptr) {
@@ -137,7 +137,6 @@ static long BioCtrl(BIO *bio, int cmd, long num, void *ptr) {
     switch (cmd) {
 	case BIO_CTRL_RESET:
 		dprintf("Got BIO_CTRL_RESET");
-		num = 0;
 		ret = 0;
 		break;
 	case BIO_C_FILE_SEEK:
@@ -222,7 +221,7 @@ static long BioCtrl(BIO *bio, int cmd, long num, void *ptr) {
 		ret = 0;
 		break;
     }
-    return(ret);
+    return ret;
 }
 
 static int BioNew(BIO *bio) {
@@ -231,12 +230,12 @@ static int BioNew(BIO *bio) {
     BIO_set_init(bio, 0);
     BIO_set_data(bio, NULL);
     BIO_clear_flags(bio, -1);
-    return(1);
+    return 1;
 }
 
 static int BioFree(BIO *bio) {
     if (bio == NULL) {
-	return(0);
+	return 0;
     }
 
     dprintf("BioFree(%p) called", bio);
@@ -250,7 +249,7 @@ static int BioFree(BIO *bio) {
 	BIO_set_init(bio, 0);
 	BIO_clear_flags(bio, -1);
     }
-    return(1);
+    return 1;
 }
 
 BIO *BIO_new_tcl(State *statePtr, int flags) {
@@ -280,7 +279,7 @@ BIO *BIO_new_tcl(State *statePtr, int flags) {
     if (statePtr == NULL) {
 	dprintf("Asked to setup a NULL state, just creating the initial configuration");
 
-	return(NULL);
+	return NULL;
     }
 
 #ifdef TCLTLS_SSL_USE_FASTPATH
@@ -311,7 +310,7 @@ BIO *BIO_new_tcl(State *statePtr, int flags) {
 	dprintf("We found a shortcut, this channel is backed by a socket: %i", parentChannelFdIn);
 	bio = BIO_new_socket(parentChannelFd, flags);
 	statePtr->flags |= TLS_TCL_FASTPATH;
-	return(bio);
+	return bio;
     }
 
     dprintf("Falling back to Tcl I/O for this channel");
@@ -321,5 +320,5 @@ BIO *BIO_new_tcl(State *statePtr, int flags) {
     BIO_set_data(bio, statePtr);
     BIO_set_shutdown(bio, flags);
     BIO_set_init(bio, 1);
-    return(bio);
+    return bio;
 }

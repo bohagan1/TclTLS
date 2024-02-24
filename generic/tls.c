@@ -418,7 +418,7 @@ VerifyCallback(int ok, X509_STORE_CTX *ctx) {
     dprintf("VerifyCallback: command result = %d", ok);
 
     /* statePtr->flags &= ~(TLS_TCL_CALLBACK); */
-    return(ok);	/* By default, leave verification unchanged. */
+    return ok;	/* By default, leave verification unchanged. */
 }
 
 /*
@@ -454,7 +454,7 @@ Tls_Error(State *statePtr, char *msg) {
     if (msg != NULL) {
 	Tcl_ListObjAppendElement(interp, cmdPtr, Tcl_NewStringObj(msg, -1));
 
-    } else if ((msg = Tcl_GetStringFromObj(Tcl_GetObjResult(interp), (Tcl_Size *) NULL)) != NULL) {
+    } else if ((msg = Tcl_GetString(Tcl_GetObjResult(interp))) != NULL) {
 	Tcl_ListObjAppendElement(interp, cmdPtr, Tcl_NewStringObj(msg, -1));
 
     } else {
@@ -569,7 +569,7 @@ PasswordCallback(char *buf, int size, int rwflag, void *udata) {
 	strncpy(buf, ret, (size_t) len);
 	buf[len] = '\0';
 	Tcl_Release((ClientData) interp);
-	return((int) len);
+	return (int) len;
     }
     Tcl_Release((ClientData) interp);
     return -1;
@@ -961,23 +961,23 @@ static int HandshakeObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, 
 
     if (objc != 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "channel");
-	return(TCL_ERROR);
+	return TCL_ERROR;
     }
 
     ERR_clear_error();
 
-    chan = Tcl_GetChannel(interp, Tcl_GetStringFromObj(objv[1], (Tcl_Size *) NULL), NULL);
+    chan = Tcl_GetChannel(interp, Tcl_GetString(objv[1]), NULL);
     if (chan == (Tcl_Channel) NULL) {
-	return(TCL_ERROR);
+	return TCL_ERROR;
     }
 
     /* Make sure to operate on the topmost channel */
     chan = Tcl_GetTopChannel(chan);
     if (Tcl_GetChannelType(chan) != Tls_ChannelType()) {
 	Tcl_AppendResult(interp, "bad channel \"", Tcl_GetChannelName(chan),
-	    "\": not a TLS channel", NULL);
+	    "\": not a TLS channel", (char *) NULL);
 	Tcl_SetErrorCode(interp, "TLS", "HANDSHAKE", "CHANNEL", "INVALID", (char *) NULL);
-	return(TCL_ERROR);
+	return TCL_ERROR;
     }
     statePtr = (State *)Tcl_GetChannelInstanceData(chan);
 
@@ -1004,7 +1004,7 @@ static int HandshakeObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, 
 	}
 	Tcl_SetErrorCode(interp, "TLS", "HANDSHAKE", "FAILED", (char *) NULL);
 	dprintf("Returning TCL_ERROR with handshake failed: %s", errStr);
-	return(TCL_ERROR);
+	return TCL_ERROR;
     } else {
 	if (err != 0) {
 	    dprintf("Got an error with a completed handshake: err = %i", err);
@@ -1014,7 +1014,7 @@ static int HandshakeObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, 
 
     dprintf("Returning TCL_OK with data \"%i\"", ret);
     Tcl_SetObjResult(interp, Tcl_NewIntObj(ret));
-    return(TCL_OK);
+    return TCL_OK;
 }
 
 static const char *command_opts [] = {
@@ -1105,7 +1105,7 @@ ImportObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const
 
     ERR_clear_error();
 
-    chan = Tcl_GetChannel(interp, Tcl_GetStringFromObj(objv[1], (Tcl_Size *) NULL), NULL);
+    chan = Tcl_GetChannel(interp, Tcl_GetString(objv[1]), NULL);
     if (chan == (Tcl_Channel) NULL) {
 	return TCL_ERROR;
     }
@@ -1285,7 +1285,7 @@ ImportObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const
 	chan = Tcl_GetTopChannel(chan);
 	if (Tcl_GetChannelType(chan) != Tls_ChannelType()) {
 	    Tcl_AppendResult(interp, "bad channel \"", Tcl_GetChannelName(chan),
-		"\": not a TLS channel", NULL);
+		"\": not a TLS channel", (char *) NULL);
 	    Tcl_SetErrorCode(interp, "TLS", "IMPORT", "CHANNEL", "INVALID", (char *) NULL);
 	    Tls_Free((char *) statePtr);
 	    return TCL_ERROR;
@@ -1553,7 +1553,7 @@ UnimportObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *con
 
     if (Tcl_GetChannelType(chan) != Tls_ChannelType()) {
 	Tcl_AppendResult(interp, "bad channel \"", Tcl_GetChannelName(chan),
-		"\": not a TLS channel", NULL);
+		"\": not a TLS channel", (char *) NULL);
 	    Tcl_SetErrorCode(interp, "TLS", "UNIMPORT", "CHANNEL", "INVALID", (char *) NULL);
 	return TCL_ERROR;
     }
@@ -1699,7 +1699,7 @@ CTX_Init(State *statePtr, int isServer, int proto, char *keyfile, char *certfile
 
     ctx = SSL_CTX_new(method);
     if (!ctx) {
-	return(NULL);
+	return NULL;
     }
 
     if (getenv(SSLKEYLOGFILE)) {
@@ -1765,6 +1765,8 @@ CTX_Init(State *statePtr, int isServer, int proto, char *keyfile, char *certfile
 	DH* dh;
 	if (DHparams != NULL) {
 	    BIO *bio;
+
+	    Tcl_DStringInit(&ds);
 	    bio = BIO_new_file(F2N(DHparams, &ds), "r");
 	    if (!bio) {
 		Tcl_DStringFree(&ds);
@@ -1800,6 +1802,7 @@ CTX_Init(State *statePtr, int isServer, int proto, char *keyfile, char *certfile
     if (certfile != NULL) {
 	load_private_key = 1;
 
+	Tcl_DStringInit(&ds);
 	if (SSL_CTX_use_certificate_file(ctx, F2N(certfile, &ds), SSL_FILETYPE_PEM) <= 0) {
 	    Tcl_DStringFree(&ds);
 	    Tcl_AppendResult(interp, "unable to set certificate file ", certfile, ": ",
@@ -1843,6 +1846,7 @@ CTX_Init(State *statePtr, int isServer, int proto, char *keyfile, char *certfile
 		keyfile = certfile;
 	    }
 
+	    Tcl_DStringInit(&ds);
 	    if (SSL_CTX_use_PrivateKey_file(ctx, F2N(keyfile, &ds), SSL_FILETYPE_PEM) <= 0) {
 		Tcl_DStringFree(&ds);
 		/* flush the passphrase which might be left in the result */
@@ -1885,6 +1889,9 @@ CTX_Init(State *statePtr, int isServer, int proto, char *keyfile, char *certfile
 #if OPENSSL_VERSION_NUMBER < 0x30000000L
 	if (CApath != NULL || CAfile != NULL) {
 	    Tcl_DString ds1;
+	    Tcl_DStringInit(&ds);
+	    Tcl_DStringInit(&ds1);
+
 	    if (!SSL_CTX_load_verify_locations(ctx, F2N(CAfile, &ds), F2N(CApath, &ds1))) {
 		abort++;
 	    }
@@ -1894,6 +1901,7 @@ CTX_Init(State *statePtr, int isServer, int proto, char *keyfile, char *certfile
 	    /* Set list of CAs to send to client when requesting a client certificate */
 	    /* https://sourceforge.net/p/tls/bugs/57/ */
 	    /* XXX:TODO: Let the user supply values here instead of something that exists on the filesystem */
+	    Tcl_DStringInit(&ds);
 	    STACK_OF(X509_NAME) *certNames = SSL_load_client_CA_file(F2N(CAfile, &ds));
 	    if (certNames != NULL) {
 		SSL_CTX_set_client_CA_list(ctx, certNames);
@@ -1903,18 +1911,21 @@ CTX_Init(State *statePtr, int isServer, int proto, char *keyfile, char *certfile
 
 #else
 	if (CApath != NULL) {
+	    Tcl_DStringInit(&ds);
 	    if (!SSL_CTX_load_verify_dir(ctx, F2N(CApath, &ds))) {
 		abort++;
 	    }
 	    Tcl_DStringFree(&ds);
 	}
 	if (CAfile != NULL) {
+	    Tcl_DStringInit(&ds);
 	    if (!SSL_CTX_load_verify_file(ctx, F2N(CAfile, &ds))) {
 		abort++;
 	    }
 	    Tcl_DStringFree(&ds);
 
 	    /* Set list of CAs to send to client when requesting a client certificate */
+	    Tcl_DStringInit(&ds);
 	    STACK_OF(X509_NAME) *certNames = SSL_load_client_CA_file(F2N(CAfile, &ds));
 	    if (certNames != NULL) {
 		SSL_CTX_set_client_CA_list(ctx, certNames);
@@ -1961,7 +1972,7 @@ StatusObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const
     }
 
     /* Get channel Id */
-    channelName = Tcl_GetStringFromObj(objv[(objc == 2 ? 1 : 2)], (Tcl_Size *) NULL);
+    channelName = Tcl_GetString(objv[(objc == 2 ? 1 : 2)]);
     chan = Tcl_GetChannel(interp, channelName, &mode);
     if (chan == (Tcl_Channel) NULL) {
 	return TCL_ERROR;
@@ -1971,7 +1982,7 @@ StatusObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const
     chan = Tcl_GetTopChannel(chan);
     if (Tcl_GetChannelType(chan) != Tls_ChannelType()) {
 	Tcl_AppendResult(interp, "bad channel \"", Tcl_GetChannelName(chan),
-		"\": not a TLS channel", NULL);
+		"\": not a TLS channel", (char *) NULL);
 	Tcl_SetErrorCode(interp, "TLS", "STATUS", "CHANNEL", "INVALID", (char *) NULL);
 	return TCL_ERROR;
     }
@@ -2079,21 +2090,21 @@ static int ConnectionInfoObjCmd(ClientData clientData, Tcl_Interp *interp, int o
 
     if (objc != 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "channel");
-	return(TCL_ERROR);
+	return TCL_ERROR;
     }
 
-    chan = Tcl_GetChannel(interp, Tcl_GetStringFromObj(objv[1], (Tcl_Size *) NULL), NULL);
+    chan = Tcl_GetChannel(interp, Tcl_GetString(objv[1]), NULL);
     if (chan == (Tcl_Channel) NULL) {
-	return(TCL_ERROR);
+	return TCL_ERROR;
     }
 
     /* Make sure to operate on the topmost channel */
     chan = Tcl_GetTopChannel(chan);
     if (Tcl_GetChannelType(chan) != Tls_ChannelType()) {
 	Tcl_AppendResult(interp, "bad channel \"", Tcl_GetChannelName(chan),
-	    "\": not a TLS channel", NULL);
+	    "\": not a TLS channel", (char *) NULL);
 	Tcl_SetErrorCode(interp, "TLS", "CONNECTION", "CHANNEL", "INVALID", (char *) NULL);
-	return(TCL_ERROR);
+	return TCL_ERROR;
     }
 
     objPtr = Tcl_NewListObj(0, NULL);
@@ -2448,7 +2459,7 @@ MiscObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const o
 #if OPENSSL_VERSION_NUMBER < 0x30000000L
 		    BN_free(bne);
 #endif
-		    return(TCL_ERROR);
+		    return TCL_ERROR;
 		}
 
 		X509_set_version(cert,2);
@@ -2686,7 +2697,7 @@ DLLEXPORT int Tls_Init(Tcl_Interp *interp) {
  */
 DLLEXPORT int Tls_SafeInit(Tcl_Interp *interp) {
     dprintf("Called");
-    return(Tls_Init(interp));
+    return Tls_Init(interp);
 }
 
 /*
@@ -2717,7 +2728,7 @@ static int TlsLibInit(int uninitialize) {
 	if (!initialized) {
 	    dprintf("Asked to uninitialize, but we are not initialized");
 
-	    return(TCL_OK);
+	    return TCL_OK;
 	}
 
 	dprintf("Asked to uninitialize");
@@ -2737,12 +2748,12 @@ static int TlsLibInit(int uninitialize) {
 	Tcl_MutexUnlock(&init_mx);
 #endif
 
-	return(TCL_OK);
+	return TCL_OK;
     }
 
     if (initialized) {
 	dprintf("Called, but using cached value");
-	return(status);
+	return status;
     }
 
     dprintf("Called");
@@ -2794,5 +2805,5 @@ static int TlsLibInit(int uninitialize) {
     Tcl_MutexUnlock(&init_mx);
 #endif
 
-    return(status);
+    return status;
 }

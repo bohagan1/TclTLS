@@ -9328,7 +9328,7 @@ printf "%s\n" "$opensslpkgconfigdir" >&6; }
 if test "${TEA_PLATFORM}" = "windows" ; then
     if test "$GCC" = "yes"; then
 
-    PKG_CFLAGS="$PKG_CFLAGS ${TCLTLS_SSL_CFLAGS}"
+    PKG_CFLAGS="$PKG_CFLAGS ${TCLTLS_SSL_CFLAGS} -Wno-deprecated-declarations"
 
 
 
@@ -9352,7 +9352,7 @@ if test "${TEA_PLATFORM}" = "windows" ; then
     fi
 else
 
-    PKG_CFLAGS="$PKG_CFLAGS ${TCLTLS_SSL_CFLAGS}"
+    PKG_CFLAGS="$PKG_CFLAGS ${TCLTLS_SSL_CFLAGS} -Wno-deprecated-declarations"
 
 
 
