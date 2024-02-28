@@ -295,10 +295,12 @@ int DigestFinalize(Tcl_Interp *interp, DigestState *statePtr, Tcl_Obj **resultOb
 	md_len = (int) ulen;
 	break;
     case TYPE_CMAC:
-	size_t size;
-	res = CMAC_Final(statePtr->cctx, md_buf, &size);
-	md_len = (int) size;
-	break;
+	{
+	    size_t size;
+	    res = CMAC_Final(statePtr->cctx, md_buf, &size);
+	    md_len = (int) size;
+	    break;
+	}
     }
 
     if (!res) {
