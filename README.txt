@@ -50,7 +50,7 @@ UNIX and Linux
 The standard TEA config, make and install process is supported.
 
 	$ cd tcltls
-	$ ./configure --enable-64bit --enable-deterministic --with-builtin-dh-params-size=2048
+	$ ./configure --enable-64bit
 	$ make
 	$ make test
 	$ make install

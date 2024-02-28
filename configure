@@ -9183,6 +9183,10 @@ else $as_nop
 
 fi
 
+	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for OpenSSL directory" >&5
+printf %s "checking for OpenSSL directory... " >&6; }
+	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $openssldir" >&5
+printf "%s\n" "$openssldir" >&6; }
 
 
 # Check whether --with-openssl-includedir was given.
@@ -9193,8 +9197,12 @@ then :
 
 else $as_nop
 
-			if test -n "$openssldir"; then
-				opensslincludedir="$openssldir/include/openssl"
+			if test ! -z "$openssldir"; then
+				if test -d "${openssldir}/include/openssl"; then
+					opensslincludedir="${openssldir}/include/openssl"
+				else
+					opensslincludedir="${openssldir}/include"
+				fi
 			else
 				opensslincludedir=''
 			fi
@@ -9207,7 +9215,7 @@ printf %s "checking for OpenSSL include directory... " >&6; }
 	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $opensslincludedir" >&5
 printf "%s\n" "$opensslincludedir" >&6; }
 
-		if test -n "$opensslincludedir"; then
+		if test ! -z "$opensslincludedir"; then
 		if test -f "$opensslincludedir/ssl.h"; then
 			TCLTLS_SSL_CFLAGS="-I$opensslincludedir"
 			TCLTLS_SSL_INCLUDES="-I$opensslincludedir"
@@ -9215,8 +9223,8 @@ printf "%s\n" "$opensslincludedir" >&6; }
 			as_fn_error $? "Unable to locate ssl.h" "$LINENO" 5
 		fi
 	else
-		TCLTLS_SSL_CFLAGS="-I$(includedir)/openssl"
-		TCLTLS_SSL_INCLUDES="-I$(includedir)/openssl"
+		TCLTLS_SSL_CFLAGS="-I${includedir}/openssl"
+		TCLTLS_SSL_INCLUDES="-I${includedir}/openssl"
 	fi
 
 
@@ -9228,7 +9236,7 @@ then :
 
 else $as_nop
 
-			if test -n "$openssldir"; then
+			if test ! -z "$openssldir"; then
 				if test "$do64bit" == 'yes'; then
 					openssllibdir="$openssldir/lib64"
 				else
@@ -9246,7 +9254,7 @@ printf %s "checking for OpenSSL lib directory... " >&6; }
 	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $openssllibdir" >&5
 printf "%s\n" "$openssllibdir" >&6; }
 
-		if test -n "$openssllibdir"; then
+		if test ! -z "$openssllibdir"; then
 		if test -f "$openssllibdir/libssl${SHLIB_SUFFIX}"; then
 			if test "${TCLEXT_TLS_STATIC_SSL}" == 'no'; then
 				TCLTLS_SSL_LIBS="-L$openssllibdir -lcrypto -lssl"

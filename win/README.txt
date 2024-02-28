@@ -6,7 +6,7 @@ Properties:
 - 64 bit DLL
 - VisualStudio 2015
 Note: Visual C++ 6 does not build OpenSSL (long long syntax error)
-- Cygwin32 (temporary helper, please help to replace by tclsh)
+- Git MinGW or MS WSL shell to convert tls.tcl into .h file
 - OpenSSL statically linked to TCLTLS DLL.
 Note: Dynamic linking also works but results in a DLL dependency on OPENSSL DLL's
 
@@ -38,6 +38,7 @@ set SSLCOMMON=\path\to\common\dir
 
   At Visual Studio x64 native prompt:
 
+  cd %SSLBUILD%
   set Path=%PATH%;C:\Program Files\NASM;C:\Strawberry\perl\bin
   perl ..\Configure VC-WIN64A no-shared no-filenames threads no-ssl2 no-ssl3 --api=1.1.0 --prefix="%SSLINSTALL%" --openssldir="%SSLCOMMON%" -DOPENSSL_NO_DEPRECATED
   # Not used options: no-asm no-zlib no-comp no-ui-console no-autoload-config
@@ -46,6 +47,7 @@ set SSLCOMMON=\path\to\common\dir
 
   At Visual Studio x64 native prompt:
 
+  cd %SSLBUILD%
   set Path=%PATH%;C:\Program Files\NASM;C:\Strawberry\perl\bin
   perl ..\Configure VC-WIN64A no-shared no-filenames threads no-ssl2 no-ssl3 --prefix="%SSLINSTALL%" --openssldir="%SSLCOMMON%"
   # Not used options: no-asm no-zlib no-comp no-ui-console no-autoload-config
@@ -60,8 +62,10 @@ set SSLCOMMON=\path\to\common\dir
 
 2) Build TclTLS
 
-  set BUILDDIR=\path\to\build\dir
-  set TCLINSTALL=\path\to\tcl\dir
+  set BUILDDIR=\path\to\build\tcltls
+  set TCLINSTALL=\path\to\tcl
+  set INSTALLDIR=%TCLINSTALL%\lib
+  set SSLINSTALL=\path\to\openssl\dir
 
 2a) Unzip distribution to %BUILDDIR%
 
@@ -79,7 +83,7 @@ set SSLCOMMON=\path\to\common\dir
   cd %BUILDDIR%\win
 
   nmake -f makefile.vc TCLDIR=%TCLINSTALL% SSL_INSTALL_FOLDER=%SSLINSTALL%
-  nmake -f makefile.vc install TCLDIR=c:\test\tcl8610 INSTALLDIR=%TCLINSTALL% SSL_INSTALL_FOLDER=%SSLINSTALL%
+  nmake -f makefile.vc install TCLDIR=%TCLINSTALL% INSTALLDIR=%INSTALLDIR% SSL_INSTALL_FOLDER=%SSLINSTALL%
 
 -----------------------------
 

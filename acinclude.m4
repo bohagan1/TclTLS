@@ -99,6 +99,8 @@ AC_DEFUN([TCLTLS_SSL_OPENSSL], [
 			openssldir=''
 		]
 	)
+	AC_MSG_CHECKING([for OpenSSL directory])
+	AC_MSG_RESULT($openssldir)
 
 	dnl Set SSL include files path
 	AC_ARG_WITH([openssl-includedir],
@@ -107,8 +109,12 @@ AC_DEFUN([TCLTLS_SSL_OPENSSL], [
 		), [
 			opensslincludedir="$withval"
 		], [
-			if test -n "$openssldir"; then
-				opensslincludedir="$openssldir/include/openssl"
+			if test ! -z "$openssldir"; then
+				if test -d "${openssldir}/include/openssl"; then
+					opensslincludedir="${openssldir}/include/openssl"
+				else
+					opensslincludedir="${openssldir}/include"
+				fi
 			else
 				opensslincludedir=''
 			fi
@@ -118,7 +124,7 @@ AC_DEFUN([TCLTLS_SSL_OPENSSL], [
 	AC_MSG_RESULT($opensslincludedir)
 
 	dnl Set SSL include vars
-	if test -n "$opensslincludedir"; then
+	if test ! -z "$opensslincludedir"; then
 		if test -f "$opensslincludedir/ssl.h"; then
 			TCLTLS_SSL_CFLAGS="-I$opensslincludedir"
 			TCLTLS_SSL_INCLUDES="-I$opensslincludedir"
@@ -126,8 +132,8 @@ AC_DEFUN([TCLTLS_SSL_OPENSSL], [
 			AC_MSG_ERROR([Unable to locate ssl.h])
 		fi
 	else
-		TCLTLS_SSL_CFLAGS="-I$(includedir)/openssl"
-		TCLTLS_SSL_INCLUDES="-I$(includedir)/openssl"
+		TCLTLS_SSL_CFLAGS="-I${includedir}/openssl"
+		TCLTLS_SSL_INCLUDES="-I${includedir}/openssl"
 	fi
 
 	dnl Set SSL lib files path
@@ -137,7 +143,7 @@ AC_DEFUN([TCLTLS_SSL_OPENSSL], [
 		), [
 			openssllibdir="$withval"
 		], [
-			if test -n "$openssldir"; then
+			if test ! -z "$openssldir"; then
 				if test "$do64bit" == 'yes'; then
 					openssllibdir="$openssldir/lib64"
 				else
@@ -152,7 +158,7 @@ AC_DEFUN([TCLTLS_SSL_OPENSSL], [
 	AC_MSG_RESULT($openssllibdir)
 
 	dnl Set SSL lib vars
-	if test -n "$openssllibdir"; then
+	if test ! -z "$openssllibdir"; then
 		if test -f "$openssllibdir/libssl${SHLIB_SUFFIX}"; then
 			if test "${TCLEXT_TLS_STATIC_SSL}" == 'no'; then
 				TCLTLS_SSL_LIBS="-L$openssllibdir -lcrypto -lssl"

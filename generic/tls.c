@@ -38,9 +38,6 @@
 #error "Only OpenSSL v1.1.1 or later is supported"
 #endif
 
-/*
- * External functions
- */
 
 /*
  * Forward declarations
@@ -346,7 +343,7 @@ MessageCallback(int write_p, int version, int content_type, const void *buf, siz
  *	each certificate in the cert chain.
  *
  * Checks:
- *	certificate chain is checked starting with the deepest nesting level
+ *	The certificate chain is checked starting with the deepest nesting level
  *	  (the root CA certificate) and worked upward to the peer's certificate.
  *	All signatures are valid, current time is within first and last validity time.
  *	Check that the certificate is issued by the issuer certificate issuer.
@@ -426,7 +423,7 @@ VerifyCallback(int ok, X509_STORE_CTX *ctx) {
  *
  * Tls_Error --
  *
- *	Calls callback with list of errors.
+ *	Calls callback with error message.
  *
  * Side effects:
  *	The err field of the currently operative State is set
@@ -501,9 +498,9 @@ void KeyLogCallback(const SSL *ssl, const char *line) {
  *
  * Password Callback --
  *
- *	Called when a password for a private key loading/storing a PEM
- *	certificate with encryption. Evals callback script and returns
- *	the result as the password string in buf.
+ *	Called when a password is needed for a private key when loading
+ *	or storing a PEM certificate with encryption. Evals callback
+ *	script and returns the result as the password string in buf.
  *
  * Results:
  *	None
@@ -522,15 +519,20 @@ PasswordCallback(char *buf, int size, int rwflag, void *udata) {
     Tcl_Interp *interp	= statePtr->interp;
     Tcl_Obj *cmdPtr;
     int code;
+    Tcl_Size len;
 
     dprintf("Called");
 
     /* If no callback, use default callback */
     if (statePtr->password == NULL) {
 	if (Tcl_EvalEx(interp, "tls::password", -1, TCL_EVAL_GLOBAL) == TCL_OK) {
-	    char *ret = (char *) Tcl_GetStringResult(interp);
-	    strncpy(buf, ret, (size_t) size);
-	    return (int)strlen(ret);
+	    char *ret = (char *) Tcl_GetStringFromObj(Tcl_GetObjResult(interp), &len);
+	    if (len > (Tcl_Size) size-1) {
+		len = (Tcl_Size) size-1;
+	    }
+	    strncpy(buf, ret, (size_t) len);
+	    buf[len] = '\0';
+	    return (int) len;
 	} else {
 	    return -1;
 	}
@@ -561,7 +563,6 @@ PasswordCallback(char *buf, int size, int rwflag, void *udata) {
 
     /* If successful, pass back password string and truncate if too long */
     if (code == TCL_OK) {
-	Tcl_Size len;
 	char *ret = (char *) Tcl_GetStringFromObj(Tcl_GetObjResult(interp), &len);
 	if (len > (Tcl_Size) size-1) {
 	    len = (Tcl_Size) size-1;
@@ -637,6 +638,8 @@ SessionCallback(SSL *ssl, SSL_SESSION *session) {
     Tcl_IncrRefCount(cmdPtr);
     EvalCallback(interp, statePtr, cmdPtr);
     Tcl_DecrRefCount(cmdPtr);
+
+    /* Return 0 for now until session handling is complete */
     return 0;
 }
 
@@ -1420,7 +1423,7 @@ ImportObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const
 	}
 
 	/* SSL_set_alpn_protos makes a copy of the protocol-list */
-	/* Note: This functions reverses the return value convention */
+	/* Note: This function reverses the return value convention */
 	if (SSL_set_alpn_protos(statePtr->ssl, protos, protos_len)) {
 	    Tcl_AppendResult(interp, "Set ALPN protocols failed: ", GET_ERR_REASON(), (char *) NULL);
 	    Tcl_SetErrorCode(interp, "TLS", "IMPORT", "ALPN", "FAILED", (char *) NULL);
@@ -1754,6 +1757,7 @@ CTX_Init(State *statePtr, int isServer, int proto, char *keyfile, char *certfile
     SSL_CTX_set_default_passwd_cb_userdata(ctx, (void *)statePtr);
 
     /* read a Diffie-Hellman parameters file, or use the built-in one */
+    Tcl_DStringInit(&ds);
 #ifdef OPENSSL_NO_DH
     if (DHparams != NULL) {
 	Tcl_AppendResult(interp, "DH parameter support not available", (char *) NULL);
@@ -1766,7 +1770,6 @@ CTX_Init(State *statePtr, int isServer, int proto, char *keyfile, char *certfile
 	if (DHparams != NULL) {
 	    BIO *bio;
 
-	    Tcl_DStringInit(&ds);
 	    bio = BIO_new_file(F2N(DHparams, &ds), "r");
 	    if (!bio) {
 		Tcl_DStringFree(&ds);
@@ -1802,7 +1805,6 @@ CTX_Init(State *statePtr, int isServer, int proto, char *keyfile, char *certfile
     if (certfile != NULL) {
 	load_private_key = 1;
 
-	Tcl_DStringInit(&ds);
 	if (SSL_CTX_use_certificate_file(ctx, F2N(certfile, &ds), SSL_FILETYPE_PEM) <= 0) {
 	    Tcl_DStringFree(&ds);
 	    Tcl_AppendResult(interp, "unable to set certificate file ", certfile, ": ",
@@ -1846,7 +1848,6 @@ CTX_Init(State *statePtr, int isServer, int proto, char *keyfile, char *certfile
 		keyfile = certfile;
 	    }
 
-	    Tcl_DStringInit(&ds);
 	    if (SSL_CTX_use_PrivateKey_file(ctx, F2N(keyfile, &ds), SSL_FILETYPE_PEM) <= 0) {
 		Tcl_DStringFree(&ds);
 		/* flush the passphrase which might be left in the result */
@@ -1889,7 +1890,6 @@ CTX_Init(State *statePtr, int isServer, int proto, char *keyfile, char *certfile
 #if OPENSSL_VERSION_NUMBER < 0x30000000L
 	if (CApath != NULL || CAfile != NULL) {
 	    Tcl_DString ds1;
-	    Tcl_DStringInit(&ds);
 	    Tcl_DStringInit(&ds1);
 
 	    if (!SSL_CTX_load_verify_locations(ctx, F2N(CAfile, &ds), F2N(CApath, &ds1))) {
@@ -1901,7 +1901,6 @@ CTX_Init(State *statePtr, int isServer, int proto, char *keyfile, char *certfile
 	    /* Set list of CAs to send to client when requesting a client certificate */
 	    /* https://sourceforge.net/p/tls/bugs/57/ */
 	    /* XXX:TODO: Let the user supply values here instead of something that exists on the filesystem */
-	    Tcl_DStringInit(&ds);
 	    STACK_OF(X509_NAME) *certNames = SSL_load_client_CA_file(F2N(CAfile, &ds));
 	    if (certNames != NULL) {
 		SSL_CTX_set_client_CA_list(ctx, certNames);
@@ -1911,21 +1910,18 @@ CTX_Init(State *statePtr, int isServer, int proto, char *keyfile, char *certfile
 
 #else
 	if (CApath != NULL) {
-	    Tcl_DStringInit(&ds);
 	    if (!SSL_CTX_load_verify_dir(ctx, F2N(CApath, &ds))) {
 		abort++;
 	    }
 	    Tcl_DStringFree(&ds);
 	}
 	if (CAfile != NULL) {
-	    Tcl_DStringInit(&ds);
 	    if (!SSL_CTX_load_verify_file(ctx, F2N(CAfile, &ds))) {
 		abort++;
 	    }
 	    Tcl_DStringFree(&ds);
 
 	    /* Set list of CAs to send to client when requesting a client certificate */
-	    Tcl_DStringInit(&ds);
 	    STACK_OF(X509_NAME) *certNames = SSL_load_client_CA_file(F2N(CAfile, &ds));
 	    if (certNames != NULL) {
 		SSL_CTX_set_client_CA_list(ctx, certNames);

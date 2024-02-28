@@ -10,7 +10,7 @@ command,"proc badssl {url} {set port 443;lassign [split $url "":""] url port;if 
 command,# BadSSL.com Tests,,,,,,,,,
 BadSSL,1000-sans,,,badssl 1000-sans.badssl.com,,,"handshake failed: certificate verify failed due to ""certificate has expired""",,,1
 BadSSL,10000-sans,,,badssl 10000-sans.badssl.com,,,handshake failed: excessive message size,,,1
-BadSSL,3des,,,badssl 3des.badssl.com,,,handshake failed: sslv3 alert handshake failure,,,1
+BadSSL,3des,,,badssl 3des.badssl.com,,glob,handshake failed: * alert handshake failure,,,1
 BadSSL,captive-portal,old_api,,badssl captive-portal.badssl.com,,,"handshake failed: certificate verify failed due to ""Hostname mismatch""",,,1
 BadSSL,captive-portal,new_api,,badssl captive-portal.badssl.com,,,"handshake failed: certificate verify failed due to ""hostname mismatch""",,,1
 BadSSL,cbc,,,badssl cbc.badssl.com,,,,,,
@@ -21,7 +21,8 @@ BadSSL,dh-composite,new_api,,badssl dh-composite.badssl.com,,,handshake failed: 
 BadSSL,dh-small-subgroup,,,badssl dh-small-subgroup.badssl.com,,,,,,
 BadSSL,dh480,old_api,,badssl dh480.badssl.com,,,handshake failed: dh key too small,,,1
 BadSSL,dh480,new_api,,badssl dh480.badssl.com,,,handshake failed: modulus too small,,,1
-BadSSL,dh512,,,badssl dh512.badssl.com,,,handshake failed: dh key too small,,,1
+BadSSL,dh512,old_api,,badssl dh512.badssl.com,,,handshake failed: dh key too small,,,1
+BadSSL,dh512,mac,,badssl dh512.badssl.com,,,handshake failed: unknown security bits,,,1
 BadSSL,dh1024,old_api,,badssl dh1024.badssl.com,,,,,,
 BadSSL,dh1024,new_api,,badssl dh1024.badssl.com,,,handshake failed: dh key too small,,,1
 BadSSL,dh2048,,,badssl dh2048.badssl.com,,,,,,
@@ -41,12 +42,12 @@ BadSSL,mitm-software,,,badssl mitm-software.badssl.com,,,"handshake failed: cert
 BadSSL,no-common-name,,,badssl no-common-name.badssl.com,,,"handshake failed: certificate verify failed due to ""certificate has expired""",,,1
 BadSSL,no-sct,,,badssl no-sct.badssl.com,,,"handshake failed: certificate verify failed due to ""unable to get local issuer certificate""",,,1
 BadSSL,no-subject,,,badssl no-subject.badssl.com,,,"handshake failed: certificate verify failed due to ""certificate has expired""",,,1
-BadSSL,null,,,badssl null.badssl.com,,,handshake failed: sslv3 alert handshake failure,,,1
+BadSSL,null,,,badssl null.badssl.com,,glob,handshake failed: * alert handshake failure,,,1
 BadSSL,pinning-test,,,badssl pinning-test.badssl.com,,,,,,
 BadSSL,preact-cli,,,badssl preact-cli.badssl.com,,,"handshake failed: certificate verify failed due to ""unable to get local issuer certificate""",,,1
 BadSSL,preloaded-hsts,,,badssl preloaded-hsts.badssl.com,,,,,,
-BadSSL,rc4-md5,,,badssl rc4-md5.badssl.com,,,handshake failed: sslv3 alert handshake failure,,,1
-BadSSL,rc4,,,badssl rc4.badssl.com,,,handshake failed: sslv3 alert handshake failure,,,1
+BadSSL,rc4-md5,,,badssl rc4-md5.badssl.com,,glob,handshake failed: * alert handshake failure,,,1
+BadSSL,rc4,,,badssl rc4.badssl.com,,glob,handshake failed: * alert handshake failure,,,1
 BadSSL,revoked,,,badssl revoked.badssl.com,,,"handshake failed: certificate verify failed due to ""certificate has expired""",,,1
 BadSSL,rsa2048,,,badssl rsa2048.badssl.com,,,,,,
 BadSSL,rsa4096,,,badssl rsa4096.badssl.com,,,,,,
