@@ -110,11 +110,7 @@ AC_DEFUN([TCLTLS_SSL_OPENSSL], [
 			opensslincludedir="$withval"
 		], [
 			if test ! -z "$openssldir"; then
-				if test -f "${openssldir}/include/openssl/ssl.h"; then
-					opensslincludedir="${openssldir}/include/openssl"
-				else
-					opensslincludedir="${openssldir}/include"
-				fi
+				opensslincludedir="${openssldir}/include"
 			else
 				opensslincludedir=''
 			fi
@@ -125,7 +121,7 @@ AC_DEFUN([TCLTLS_SSL_OPENSSL], [
 
 	dnl Set SSL include vars
 	if test ! -z "$opensslincludedir"; then
-		if test -f "$opensslincludedir/ssl.h"; then
+		if test -f "$opensslincludedir/openssl/ssl.h"; then
 			TCLTLS_SSL_CFLAGS="-I$opensslincludedir"
 			TCLTLS_SSL_INCLUDES="-I$opensslincludedir"
 			AC_MSG_CHECKING([for ssl.h])
@@ -231,9 +227,7 @@ AC_DEFUN([TCLTLS_SSL_OPENSSL], [
 		TCLTLS_SSL_CFLAGS=""
 	fi
 	if test -z "$TCLTLS_SSL_INCLUDES"; then
-		if test -d /usr/include/openssl; then
-			TCLTLS_SSL_INCLUDES="-I/usr/include/openssl"
-		else
+		if test -f /usr/include/openssl/ssl.h; then
 			TCLTLS_SSL_INCLUDES="-I/usr/include"
 		fi
 	fi
