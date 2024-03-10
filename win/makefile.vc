@@ -62,14 +62,17 @@ PRJ_LIBS = \
 
 # Project specific targets
 
-all:
+all: default-target
 
 clean: default-clean
+
+realclean: default-hose
 
 # We must define a pkgindex target that will create a pkgIndex.tcl
 # file in the $(OUT_DIR) directory. We can just redirect to the
 # default-pkgindex target for our sample extension.
-pkgindex: default-pkgindex
+pkgindex: default-pkgindex-tea
+
 
 # The default install target only installs binaries and scripts so add
 # an additional target for our documentation. Note this *adds* a target
