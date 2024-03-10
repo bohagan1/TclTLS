@@ -111,7 +111,7 @@ static int RAND_Random(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_
  *-------------------------------------------------------------------
  */
 int Tls_RandCommands(Tcl_Interp *interp) {
-    Tcl_CreateObjCommand(interp, "tls::random", RAND_Random, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
+    Tcl_CreateObjCommand(interp, "::tls::random", RAND_Random, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
     return TCL_OK;
 }
 

@@ -1338,9 +1338,9 @@ static int DecryptObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tc
  *-------------------------------------------------------------------
  */
 int Tls_EncryptCommands(Tcl_Interp *interp) {
-    Tcl_CreateObjCommand(interp, "tls::encrypt", EncryptObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
-    Tcl_CreateObjCommand(interp, "tls::decrypt", DecryptObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
-    Tcl_CreateObjCommand(interp, "tls::unstack2", EncryptUnstackObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
+    Tcl_CreateObjCommand(interp, "::tls::encrypt", EncryptObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
+    Tcl_CreateObjCommand(interp, "::tls::decrypt", DecryptObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
+    Tcl_CreateObjCommand(interp, "::tls::unstack2", EncryptUnstackObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
     return TCL_OK;
 }
 

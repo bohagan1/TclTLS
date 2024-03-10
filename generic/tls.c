@@ -2653,12 +2653,12 @@ DLLEXPORT int Tls_Init(Tcl_Interp *interp) {
 	return TCL_ERROR;
     }
 
-    Tcl_CreateObjCommand(interp, "tls::connection", ConnectionInfoObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
-    Tcl_CreateObjCommand(interp, "tls::handshake", HandshakeObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
-    Tcl_CreateObjCommand(interp, "tls::import", ImportObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
-    Tcl_CreateObjCommand(interp, "tls::misc", MiscObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
-    Tcl_CreateObjCommand(interp, "tls::unimport", UnimportObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
-    Tcl_CreateObjCommand(interp, "tls::status", StatusObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
+    Tcl_CreateObjCommand(interp, "::tls::connection", ConnectionInfoObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
+    Tcl_CreateObjCommand(interp, "::tls::handshake", HandshakeObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
+    Tcl_CreateObjCommand(interp, "::tls::import", ImportObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
+    Tcl_CreateObjCommand(interp, "::tls::misc", MiscObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
+    Tcl_CreateObjCommand(interp, "::tls::unimport", UnimportObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
+    Tcl_CreateObjCommand(interp, "::tls::status", StatusObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
 
     Tls_DigestCommands(interp);
     Tls_EncryptCommands(interp);
@@ -2666,8 +2666,8 @@ DLLEXPORT int Tls_Init(Tcl_Interp *interp) {
     Tls_KDFCommands(interp);
     Tls_RandCommands(interp);
 
-    if (interp) {
-	Tcl_Eval(interp, tlsTclInitScript);
+    if (interp && Tcl_Eval(interp, tlsTclInitScript) != TCL_OK) {
+	return TCL_ERROR;
     }
 
     return Tcl_PkgProvide(interp, PACKAGE_NAME, PACKAGE_VERSION);
