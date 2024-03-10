@@ -8,13 +8,67 @@ command,# Constraints,,,,,,,,,
 command,source [file join [file dirname [info script]] common.tcl],,,,,,,,,
 ,,,,,,,,,,
 command,# Helper functions,,,,,,,,,
-command,"proc lcompare {list1 list2} {set m """";set u """";foreach i $list1 {if {$i ni $list2} {lappend m $i}};foreach i $list2 {if {$i ni $list1} {lappend u $i}};return [list ""missing"" $m ""unexpected"" $u]}",,,,,,,,,
+command,"proc lcompare {list1 list2} {
+    set m """"
+    set u """"
+    foreach i $list1 {
+        if {$i ni $list2} {
+            lappend m $i
+        }
+    }
+    foreach i $list2 {
+        if {$i ni $list1} {
+            lappend u $i
+        }
+    }
+    return [list ""missing"" $m ""unexpected"" $u]
+}
+",,,,,,,,,
 command,proc exec_get {delim args} {return [split [exec openssl {*}$args] $delim]},,,,,,,,,
-command,"proc exec_get_ciphers {} {set list [list];set data [exec openssl list -cipher-algorithms];foreach line [split $data ""\n""] {foreach {cipher null alias} [split [string trim $line]] {lappend list [string tolower $cipher]}};return [lsort -unique $list]}",,,,,,,,,
-command,"proc exec_get_digests {} {set list [list];set data [exec openssl dgst -list];foreach line [split $data ""\n""] {foreach digest $line {if {[string match ""-*"" $digest]} {lappend list [string trimleft $digest ""-""]}}};return [lsort $list]}",,,,,,,,,
-command,"proc exec_get_pkeys {} {set list [list];set data [exec openssl list -public-key-methods];foreach line [split $data ""\n""] {if {![string match ""*Type:*"" $line]} {lappend list [string trim $line]}};return $list}",,,,,,,,,
+command,"proc exec_get_ciphers {} {
+    set list [list]
+    set data [exec openssl list -cipher-algorithms]
+    foreach line [split $data ""\n""] {
+        set line [string trim $line]
+        foreach {cipher ptr alias} [split [string trim $line]] {
+            lappend list [string tolower $cipher]
+        }
+    }
+    return [lsort -unique $list]
+}
+",,,,,,,,,
+command,"proc exec_get_digests {} {
+    set list [list]
+    set data [exec openssl dgst -list]
+    foreach line [split $data ""\n""] {
+        foreach digest $line {
+            if {[string match ""-*"" $digest]} {
+            lappend list [string trimleft $digest ""-""]}
+        }
+    }
+    return [lsort $list]
+}
+",,,,,,,,,
+command,"proc exec_get_pkeys {} {
+    set list [list]
+    set data [exec openssl list -public-key-methods]
+    foreach line [split $data ""\n""] {
+        set line [string trim $line]
+        if {[string match ""Type:*"" $line]} continue
+        lappend list [string trim $line]
+    }
+    return $list
+}
+",,,,,,,,,
 command,proc exec_get_macs {} {return [list cmac hmac]},,,,,,,,,
-command,proc list_tolower {list} {set result [list];foreach element $list {lappend result [string tolower $element]};return $result},,,,,,,,,
+command,"proc list_tolower {list} {
+    set result [list]
+    foreach element $list {
+        lappend result [string tolower $element]
+    }
+    return $result
+}
+",,,,,,,,,
 ,,,,,,,,,,
 command,# Test list ciphers,,,,,,,,,
 Ciphers List,All,,,lcompare [lsort [exec_get_ciphers]] [list_tolower [lsort [::tls::ciphers]]],,,missing {rc5 rc5-cbc rc5-cfb rc5-ecb rc5-ofb} unexpected {aes-128-ccm aes-128-gcm aes-192-ccm aes-192-gcm aes-256-ccm aes-256-gcm},,,
