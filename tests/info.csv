@@ -30,6 +30,8 @@ command,"proc exec_get_ciphers {} {
     set data [exec openssl list -cipher-algorithms]
     foreach line [split $data ""\n""] {
         set line [string trim $line]
+        if {$line eq ""Legacy:""} continue
+        if {$line eq ""Provided:""} break
         foreach {cipher ptr alias} [split [string trim $line]] {
             lappend list [string tolower $cipher]
         }
@@ -54,7 +56,8 @@ command,"proc exec_get_pkeys {} {
     set data [exec openssl list -public-key-methods]
     foreach line [split $data ""\n""] {
         set line [string trim $line]
-        if {[string match ""Type:*"" $line]} continue
+        if {$line eq ""Legacy:"" || [string match ""Type:*"" $line]} continue
+        if {$line eq ""Provided:""} break
         lappend list [string trim $line]
     }
     return $list
@@ -71,7 +74,7 @@ command,"proc list_tolower {list} {
 ",,,,,,,,,
 ,,,,,,,,,,
 command,# Test list ciphers,,,,,,,,,
-Ciphers List,All,,,lcompare [lsort [exec_get_ciphers]] [list_tolower [lsort [::tls::ciphers]]],,,missing {rc5 rc5-cbc rc5-cfb rc5-ecb rc5-ofb} unexpected {aes-128-ccm aes-128-gcm aes-192-ccm aes-192-gcm aes-256-ccm aes-256-gcm},,,
+Ciphers List,All,,,lcompare [lsort [exec_get_ciphers]] [list_tolower [lsort [::tls::ciphers]]],,,missing {} unexpected {aes-128-ccm aes-128-gcm aes-192-ccm aes-192-gcm aes-256-ccm aes-256-gcm},,,
 ,,,,,,,,,,
 command,# Test list ciphers for protocols,,,,,,,,,
 Ciphers By Protocol,SSL2,ssl2,,"lcompare [exec_get "":"" ciphers -ssl2] [::tls::ciphers ssl2]",,,missing {} unexpected {},,,
