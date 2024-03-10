@@ -24,7 +24,10 @@ command,"proc lcompare {list1 list2} {
     return [list ""missing"" $m ""unexpected"" $u]
 }
 ",,,,,,,,,
-command,proc exec_get {delim args} {return [split [exec openssl {*}$args] $delim]},,,,,,,,,
+command,"proc exec_get {delim args} {
+    return [split [exec openssl {*}$args] $delim]
+}
+",,,,,,,,,
 command,"proc exec_get_ciphers {} {
     set list [list]
     set data [exec openssl list -cipher-algorithms]
@@ -63,7 +66,10 @@ command,"proc exec_get_pkeys {} {
     return $list
 }
 ",,,,,,,,,
-command,proc exec_get_macs {} {return [list cmac hmac]},,,,,,,,,
+command,"proc exec_get_macs {} {
+    return [list cmac hmac]
+}
+",,,,,,,,,
 command,"proc list_tolower {list} {
     set result [list]
     foreach element $list {

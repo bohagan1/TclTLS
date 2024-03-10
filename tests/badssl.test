@@ -14,7 +14,26 @@ package require tls
 source [file join [file dirname [info script]] common.tcl]
 
 # Helper functions
-proc badssl {url} {set port 443;lassign [split $url ":"] url port;if {$port eq ""} {set port 443};set cmd [list tls::socket -autoservername 1 -require 1];if {[info exists ::env(SSL_CERT_FILE)]} {lappend cmd -cafile $::env(SSL_CERT_FILE)};lappend cmd $url $port;set ch [eval $cmd];if {[catch {tls::handshake $ch} err]} {close $ch;return -code error $err} else {close $ch}}
+proc badssl {url} {
+    set port 443
+    lassign [split $url ":"] url port
+    if {$port eq ""} {
+        set port 443
+    }
+    set cmd [list tls::socket -autoservername 1 -require 1]
+    if {[info exists ::env(SSL_CERT_FILE)]} {
+        lappend cmd -cafile $::env(SSL_CERT_FILE)
+    }
+    lappend cmd $url $port
+    set ch [eval $cmd]
+    if {[catch {tls::handshake $ch} err]} {
+        close $ch
+	return -code error $err
+    } else {
+        close $ch
+    }
+}
+
 
 # BadSSL.com Tests
 

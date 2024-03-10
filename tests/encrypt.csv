@@ -2,11 +2,52 @@
 command,package require tls,,,,,,,,,
 ,,,,,,,,,,
 command,# Helper functions - See common.tcl,,,,,,,,,
-command,"proc read_chan {filename args} {set ch [open $filename rb];set bsize [fconfigure $ch -buffersize];set new [{*}$args -chan $ch];set dat """";while {![eof $new]} {append dat [read $new $bsize]};close $new;return $dat}",,,,,,,,,
-command,proc write_chan {filename data args} {set ch [open $filename wb];set new [{*}$args -chan $ch];puts -nonewline $new $data;flush $new;close $new;set ch [open $filename rb];set dat [read $ch];close $ch;return $dat},,,,,,,,,
-command,"proc accumulate {string args} {set cmd [{*}$args -command dcmd];set ::dat """";append ::dat [$cmd update [string range $string 0 20]];append ::dat [$cmd update [string range $string 21 end]];append ::dat [$cmd finalize]}",$cmd update [string range $string 0 20];$cmd update [string range $string 21 end];return [$cmd finalize]},,,,,,,,
-command,proc get_file_hex {filename} {set ch [open $filename rb];set data [read $ch];close $ch;return [binary encode hex $data]},,,,,,,,,
-command,proc get_file_text {filename} {set ch [open $filename r];set data [read $ch];close $ch;return $data},,,,,,,,,
+command,"proc read_chan {filename args} {
+    set ch [open $filename rb]
+    set bsize [fconfigure $ch -buffersize]
+    set new [{*}$args -chan $ch]
+    set dat """"
+    while {![eof $new]} {
+        append dat [read $new $bsize]
+    }
+    close $new
+    return $dat
+}
+",,,,,,,,,
+command,"proc write_chan {filename data args} {
+    set ch [open $filename wb]
+    set new [{*}$args -chan $ch]
+    puts -nonewline $new $data
+    flush $new
+    close $new
+    set ch [open $filename rb]
+    set dat [read $ch]
+    close $ch
+    return $dat
+}
+",,,,,,,,,
+command,"proc accumulate {string args} {
+    set cmd [{*}$args -command dcmd]
+    set ::dat """"
+    append ::dat [$cmd update [string range $string 0 20]]
+    append ::dat [$cmd update [string range $string 21 end]]
+    append ::dat [$cmd finalize]
+}
+",,,,,,,,
+command,"proc get_file_hex {filename} {
+    set ch [open $filename rb]
+    set data [read $ch]
+    close $ch
+    return [binary encode hex $data]
+}
+",,,,,,,,,
+command,"proc get_file_text {filename} {
+    set ch [open $filename r]
+    set data [read $ch]
+    close $ch
+    return $data
+}
+",,,,,,,,,
 ,,,,,,,,,,
 command,"set test_data ""Example string for message digest tests.\n""",,,,,,,,,
 command,"set unencrypted_file ""unencrypted_data.dat""",,,,,,,,,

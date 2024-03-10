@@ -74,6 +74,7 @@ proc process_config_file {filename} {
 
     # Open output test file
     set out [open [format %s.test [file rootname $filename]] w]
+    fconfigure $out -encoding utf-8 -translation {auto lf}
     array set cases [list]
 
     # Add setup commands to test file

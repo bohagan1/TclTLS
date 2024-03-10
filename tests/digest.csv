@@ -6,9 +6,36 @@ command,"::tcltest::testConstraint md4 [expr {""md4"" in [::tls::digests]}]",,,,
 command,catch {tls::provider legacy},,,,,,,,,
 ,,,,,,,,,,
 command,# Helper functions - See common.tcl,,,,,,,,,
-command,proc digest_read_chan {cmd filename args} {;set ch [open $filename rb];set bsize [fconfigure $ch -buffersize];set new [$cmd {*}$args -chan $ch];while {![eof $new]} {set md [read $new $bsize]};close $new;return $md},,,,,,,,,
-command,proc digest_write_chan {cmd filename data args} {;set ch [open $filename wb];set new [$cmd {*}$args -chan $ch];puts -nonewline $new $data;flush $new;close $new;set ch [open $filename rb];set md [read $ch];close $ch;return $md},,,,,,,,,
-command,proc digest_accumulate {string args} {;set cmd [{*}$args -command dcmd]; $cmd update [string range $string 0 20];$cmd update [string range $string 21 end];return [$cmd finalize]},$cmd update [string range $string 0 20];$cmd update [string range $string 21 end];return [$cmd finalize]},,,,,,,,
+command,"proc digest_read_chan {cmd filename args} {
+    set ch [open $filename rb]
+    set bsize [fconfigure $ch -buffersize]
+    set new [$cmd {*}$args -chan $ch]
+    while {![eof $new]} {
+        set md [read $new $bsize]
+    }
+    close $new
+    return $md
+}
+",,,,,,,,,
+command,"proc digest_write_chan {cmd filename data args} {
+    set ch [open $filename wb]
+    set new [$cmd {*}$args -chan $ch]
+    puts -nonewline $new $data
+    flush $new
+    close $new
+    set ch [open $filename rb]
+    set md [read $ch]
+    close $ch
+    return $md
+}
+",,,,,,,,,
+command,"proc digest_accumulate {string args} {
+    set cmd [{*}$args -command dcmd]
+    $cmd update [string range $string 0 20]
+    $cmd update [string range $string 21 end]
+    return [$cmd finalize]
+}
+",,,,,,,,
 ,,,,,,,,,,
 command,"set test_data ""Example string for message digest tests.\n""",,,,,,,,,
 command,"set test_file ""md_data.dat""",,,,,,,,,

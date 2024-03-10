@@ -5,7 +5,26 @@ command,# Constraints,,,,,,,,,
 command,source [file join [file dirname [info script]] common.tcl],,,,,,,,,
 ,,,,,,,,,,
 command,# Helper functions,,,,,,,,,
-command,"proc badssl {url} {set port 443;lassign [split $url "":""] url port;if {$port eq """"} {set port 443};set cmd [list tls::socket -autoservername 1 -require 1];if {[info exists ::env(SSL_CERT_FILE)]} {lappend cmd -cafile $::env(SSL_CERT_FILE)};lappend cmd $url $port;set ch [eval $cmd];if {[catch {tls::handshake $ch} err]} {close $ch;return -code error $err} else {close $ch}}",,,,,,,,,
+command,"proc badssl {url} {
+    set port 443
+    lassign [split $url "":""] url port
+    if {$port eq """"} {
+        set port 443
+    }
+    set cmd [list tls::socket -autoservername 1 -require 1]
+    if {[info exists ::env(SSL_CERT_FILE)]} {
+        lappend cmd -cafile $::env(SSL_CERT_FILE)
+    }
+    lappend cmd $url $port
+    set ch [eval $cmd]
+    if {[catch {tls::handshake $ch} err]} {
+        close $ch
+	return -code error $err
+    } else {
+        close $ch
+    }
+}
+",,,,,,,,,
 ,,,,,,,,,,
 command,# BadSSL.com Tests,,,,,,,,,
 BadSSL,1000-sans,,,badssl 1000-sans.badssl.com,,,"handshake failed: certificate verify failed due to ""certificate has expired""",,,1

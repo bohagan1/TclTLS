@@ -15,9 +15,36 @@ package require tls
 catch {tls::provider legacy}
 
 # Helper functions - See common.tcl
-proc digest_read_chan {cmd filename args} {;set ch [open $filename rb];set bsize [fconfigure $ch -buffersize];set new [$cmd {*}$args -chan $ch];while {![eof $new]} {set md [read $new $bsize]};close $new;return $md}
-proc digest_write_chan {cmd filename data args} {;set ch [open $filename wb];set new [$cmd {*}$args -chan $ch];puts -nonewline $new $data;flush $new;close $new;set ch [open $filename rb];set md [read $ch];close $ch;return $md}
-proc digest_accumulate {string args} {;set cmd [{*}$args -command dcmd]; $cmd update [string range $string 0 20];$cmd update [string range $string 21 end];return [$cmd finalize]}
+proc digest_read_chan {cmd filename args} {
+    set ch [open $filename rb]
+    set bsize [fconfigure $ch -buffersize]
+    set new [$cmd {*}$args -chan $ch]
+    while {![eof $new]} {
+        set md [read $new $bsize]
+    }
+    close $new
+    return $md
+}
+
+proc digest_write_chan {cmd filename data args} {
+    set ch [open $filename wb]
+    set new [$cmd {*}$args -chan $ch]
+    puts -nonewline $new $data
+    flush $new
+    close $new
+    set ch [open $filename rb]
+    set md [read $ch]
+    close $ch
+    return $md
+}
+
+proc digest_accumulate {string args} {
+    set cmd [{*}$args -command dcmd]
+    $cmd update [string range $string 0 20]
+    $cmd update [string range $string 21 end]
+    return [$cmd finalize]
+}
+
 
 set test_data "Example string for message digest tests.\n"
 set test_file "md_data.dat"
