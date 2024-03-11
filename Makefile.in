@@ -160,7 +160,7 @@ PKG_CFLAGS	= @PKG_CFLAGS@
 DEFS		= @DEFS@ $(PKG_CFLAGS)
 
 # Move pkgIndex.tcl to 'BINARIES' var if it is generated in the Makefile
-CONFIG_CLEAN_FILES = Makefile pkgIndex.tcl generic/tls.tcl.h
+CONFIG_CLEAN_FILES = Makefile pkgIndex.tcl generic/tls.tcl.h tlsUuid.h
 CLEANFILES	= @CLEANFILES@
 
 CPPFLAGS	= @CPPFLAGS@
@@ -322,6 +322,8 @@ tls.tcl.h: @srcdir@/library/tls.tcl Makefile
 	rm -f tls.tcl.h.new.1
 	mv tls.tcl.h.new.2 @srcdir@/generic/tls.tcl.h
 
+tls.o:	tlsUuid.h
+
 $(srcdir)/manifest.uuid:
 	printf "git-" >$(srcdir)/manifest.uuid
 	(cd $(srcdir); git rev-parse HEAD >>$(srcdir)/manifest.uuid || \
@@ -373,8 +375,8 @@ dist: dist-clean
 
 	# Extension files
 	$(DIST_INSTALL_DATA) $(srcdir)/ChangeLog \
-		$(srcdir)/license.terms $(srcdir)/README.txt \
-		$(srcdir)/pkgIndex.tcl.in $(DIST_DIR)/
+		$(srcdir)/license.terms $(srcdir)/manifest.uuid \
+		$(srcdir)/README.txt $(srcdir)/pkgIndex.tcl.in $(DIST_DIR)/
 
 	# TEA files
 	$(INSTALL_DATA_DIR) $(DIST_DIR)/tclconfig
@@ -385,7 +387,7 @@ dist: dist-clean
 	$(INSTALL_DATA_DIR) $(DIST_DIR)/win
 	$(DIST_INSTALL_DATA) \
 		$(srcdir)/win/README.txt $(srcdir)/win/*.vc \
-		$(srcdir)/win/nmakehlp.c $(DIST_DIR)/win/
+		$(srcdir)/win/nmakehlp.c $(srcdir)/win/*.in $(DIST_DIR)/win/
 
 	list='build demos doc generic library macosx tests unix'; \
 	for p in $$list; do \

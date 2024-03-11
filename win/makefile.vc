@@ -65,13 +65,22 @@ PRJ_LIBS = \
 all: default-target
 
 clean: default-clean
+	@if exist $(WIN_DIR)\tlsUuid.h del $(WIN_DIR)\tlsUuid.h
 
 realclean: default-hose
+	@if exist $(WIN_DIR)\tlsUuid.h del $(WIN_DIR)\tlsUuid.h
 
 # We must define a pkgindex target that will create a pkgIndex.tcl
 # file in the $(OUT_DIR) directory. We can just redirect to the
 # default-pkgindex target for our sample extension.
 pkgindex: default-pkgindex-tea
+
+$(ROOT)\manifest.uuid:
+   copy $(WIN_DIR)\gitmanifest.in $(ROOT)\manifest.uuid
+   git rev-parse HEAD >>$(ROOT)\manifest.uuid
+
+$(WIN_DIR)\tlsUuid.h:	$(ROOT)\manifest.uuid
+	copy $(WIN_DIR)\tlsUuid.h.in+$(ROOT)\manifest.uuid $(WIN_DIR)\tlsUuid.h
 
 
 # The default install target only installs binaries and scripts so add
@@ -85,6 +94,9 @@ install: default-pkgindex-tea default-install default-install-docs-html
     if exist "$(SSL_INSTALL_FOLDER)\bin\libssl-*-x64.dll" (
         xcopy /c /y "$(SSL_INSTALL_FOLDER)\bin\libssl-*-x64.dll" "$(PRJ_INSTALL_DIR)"
     )
+
+# Explicit dependency rules
+$(GENERICDIR)\tls.c: $(WIN_DIR)\tlsUuid.h
 
 # Test package
 test: default-test
