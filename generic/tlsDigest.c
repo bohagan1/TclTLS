@@ -25,9 +25,10 @@ const char *hex = "0123456789abcdef";
 #define CHAN_EOF	0x10
 #define READ_DELAY	5
 
-/* Digest format and operation */
+/* Digest format (bits 0-3) and operation (bits 4-7) */
 #define BIN_FORMAT	0x01
 #define HEX_FORMAT	0x02
+/*#define B64_FORMAT	0x04*/
 #define IS_XOF		0x08
 #define TYPE_MD		0x10
 #define TYPE_HMAC	0x20
@@ -47,6 +48,7 @@ typedef struct DigestState {
 	int watchMask;		/* Current WatchProc mask */
 	int mode;		/* Current mode of parent channel */
 	int format;		/* Digest format and operation */
+	int length;		/* Digest length in bytes */
 
 	Tcl_Interp *interp;	/* Current interpreter */
 	EVP_MD_CTX *ctx;	/* MD Context */
@@ -70,7 +72,7 @@ typedef struct DigestState {
  *
  *-------------------------------------------------------------------
  */
-DigestState *DigestStateNew(Tcl_Interp *interp, int format) {
+DigestState *DigestStateNew(Tcl_Interp *interp, int format, int length) {
     DigestState *statePtr;
 
     statePtr = (DigestState *) ckalloc((unsigned) sizeof(DigestState));
@@ -82,6 +84,7 @@ DigestState *DigestStateNew(Tcl_Interp *interp, int format) {
 	statePtr->watchMask = 0;	/* Current WatchProc mask */
 	statePtr->mode	= 0;		/* Current mode of parent channel */
 	statePtr->format = format;	/* Digest format and operation */
+	statePtr->length = length;	/* Digest length in bytes */
 	statePtr->interp = interp;	/* Current interpreter */
 	statePtr->ctx = NULL;		/* MD Context */
 	statePtr->hctx = NULL;		/* HMAC Context */
@@ -158,21 +161,32 @@ int DigestInitialize(Tcl_Interp *interp, DigestState *statePtr, Tcl_Obj *digestO
     dprintf("Called");
 
     /* Get digest */
-    md = Util_GetDigest(interp, digestObj, type != TYPE_CMAC);
-    if (md == NULL && type != TYPE_CMAC) {
-	return TCL_ERROR;
+    if (type != TYPE_CMAC) {
+	md = Util_GetDigest(interp, digestObj, type != TYPE_CMAC);
+	if (md != NULL) {
+	    /* Is XOF */
+	    if (EVP_MD_flags(md) & EVP_MD_FLAG_XOF) {
+		statePtr->format = statePtr->format | IS_XOF;
+	    }
+	} else {
+	    return TCL_ERROR;
+	}
     }
 
     /* Get cipher */
-    cipher = Util_GetCipher(interp, cipherObj, type == TYPE_CMAC);
-    if (cipher == NULL && type == TYPE_CMAC) {
-	return TCL_ERROR;
+    if (type == TYPE_CMAC) {
+	cipher = Util_GetCipher(interp, cipherObj, type == TYPE_CMAC);
+	if (cipher == NULL) {
+	    return TCL_ERROR;
+	}
     }
 
     /* Get key */
-    key = (const void *) Util_GetKey(interp, keyObj, &key_len, "key", 0, type != TYPE_MD);
-    if (key == NULL && type != TYPE_MD) {
-	return TCL_ERROR;
+    if (type != TYPE_MD) {
+	key = (const void *) Util_GetKey(interp, keyObj, &key_len, "key", 0, type != TYPE_MD);
+	if (key == NULL) {
+	    return TCL_ERROR;
+	}
     }
 
     /* Create contexts */
@@ -196,7 +210,7 @@ int DigestInitialize(Tcl_Interp *interp, DigestState *statePtr, Tcl_Obj *digestO
 	return TCL_ERROR;
     }
 
-    /* Initialize cryptography function */
+    /* Initialize hash function */
     switch(type) {
     case TYPE_MD:
 	res = EVP_DigestInit_ex(statePtr->ctx, md, NULL);
@@ -237,6 +251,7 @@ int DigestUpdate(DigestState *statePtr, char *buf, Tcl_Size read, int do_result)
 
     dprintf("Called");
 
+    /* Update hash function */
     switch(statePtr->format & 0xFF0) {
     case TYPE_MD:
         res = EVP_DigestUpdate(statePtr->ctx, buf, (size_t) read);
@@ -279,15 +294,17 @@ int DigestFinalize(Tcl_Interp *interp, DigestState *statePtr, Tcl_Obj **resultOb
 
     dprintf("Called");
 
-    /* Finalize cryptography function and get result */
+    /* Finalize hash function and get result */
     switch(type) {
     case TYPE_MD:
-	if (!(statePtr->format & IS_XOF)) {
+	if (!(statePtr->format & IS_XOF) || statePtr->length == 0) {
+	    /* Non XOF or XOF with default length */
 	    res = EVP_DigestFinal_ex(statePtr->ctx, md_buf, &ulen);
 	    md_len = (int) ulen;
 	} else {
-	    res = EVP_DigestFinalXOF(statePtr->ctx, md_buf, (size_t) EVP_MAX_MD_SIZE);
-	    md_len = EVP_MAX_MD_SIZE;
+	    /* XOF with custom length */
+	    md_len = statePtr->length < EVP_MAX_MD_SIZE ? statePtr->length : EVP_MAX_MD_SIZE;
+	    res = EVP_DigestFinalXOF(statePtr->ctx, md_buf, (size_t) md_len);
 	}
 	break;
     case TYPE_HMAC:
@@ -296,9 +313,9 @@ int DigestFinalize(Tcl_Interp *interp, DigestState *statePtr, Tcl_Obj **resultOb
 	break;
     case TYPE_CMAC:
 	{
-	    size_t size;
-	    res = CMAC_Final(statePtr->cctx, md_buf, &size);
-	    md_len = (int) size;
+	    size_t length;
+	    res = CMAC_Final(statePtr->cctx, md_buf, &length);
+	    md_len = (int) length;
 	    break;
 	}
     }
@@ -782,7 +799,7 @@ static const Tcl_ChannelType digestChannelType = {
  *----------------------------------------------------------------------
  */
 static int DigestChannelHandler(Tcl_Interp *interp, const char *channel, Tcl_Obj *digestObj,
-	Tcl_Obj *cipherObj, int format, Tcl_Obj *keyObj, Tcl_Obj *macObj) {
+	Tcl_Obj *cipherObj, int format, Tcl_Obj *keyObj, Tcl_Obj *macObj, int length) {
     int mode; /* OR-ed combination of TCL_READABLE and TCL_WRITABLE */
     Tcl_Channel chan;
     DigestState *statePtr;
@@ -811,7 +828,7 @@ static int DigestChannelHandler(Tcl_Interp *interp, const char *channel, Tcl_Obj
     }
 
     /* Create state data structure */
-    if ((statePtr = DigestStateNew(interp, format)) == NULL) {
+    if ((statePtr = DigestStateNew(interp, format, length)) == NULL) {
 	Tcl_AppendResult(interp, "Memory allocation error", (char *) NULL);
 	return TCL_ERROR;
     }
@@ -988,14 +1005,14 @@ void DigestCommandDeleteHandler(ClientData clientData) {
  *-------------------------------------------------------------------
  */
 int DigestCommandHandler(Tcl_Interp *interp, Tcl_Obj *cmdObj, Tcl_Obj *digestObj,
-	Tcl_Obj *cipherObj, int format, Tcl_Obj *keyObj, Tcl_Obj *macObj) {
+	Tcl_Obj *cipherObj, int format, Tcl_Obj *keyObj, Tcl_Obj *macObj, int length) {
     DigestState *statePtr;
     char *cmdName = Tcl_GetString(cmdObj);
 
     dprintf("Called");
 
     /* Create state data structure */
-    if ((statePtr = DigestStateNew(interp, format)) == NULL) {
+    if ((statePtr = DigestStateNew(interp, format, length)) == NULL) {
 	Tcl_AppendResult(interp, "Memory allocation error", (char *) NULL);
 	return TCL_ERROR;
     }
@@ -1037,7 +1054,7 @@ int DigestCommandHandler(Tcl_Interp *interp, Tcl_Obj *cmdObj, Tcl_Obj *digestObj
  *-------------------------------------------------------------------
  */
 int DigestDataHandler(Tcl_Interp *interp, Tcl_Obj *dataObj, Tcl_Obj *digestObj,
-	Tcl_Obj *cipherObj, int format, Tcl_Obj *keyObj, Tcl_Obj *macObj) {
+	Tcl_Obj *cipherObj, int format, Tcl_Obj *keyObj, Tcl_Obj *macObj, int length) {
     unsigned char *data;
     Tcl_Size data_len;
     DigestState *statePtr;
@@ -1052,7 +1069,7 @@ int DigestDataHandler(Tcl_Interp *interp, Tcl_Obj *dataObj, Tcl_Obj *digestObj,
     }
 
     /* Create state data structure */
-    if ((statePtr = DigestStateNew(interp, format)) == NULL) {
+    if ((statePtr = DigestStateNew(interp, format, length)) == NULL) {
 	Tcl_AppendResult(interp, "Memory allocation error", (char *) NULL);
 	return TCL_ERROR;
     }
@@ -1088,7 +1105,7 @@ int DigestDataHandler(Tcl_Interp *interp, Tcl_Obj *dataObj, Tcl_Obj *digestObj,
  *-------------------------------------------------------------------
  */
 int DigestFileHandler(Tcl_Interp *interp, Tcl_Obj *inFileObj, Tcl_Obj *digestObj,
-	Tcl_Obj *cipherObj, int format, Tcl_Obj *keyObj, Tcl_Obj *macObj) {
+	Tcl_Obj *cipherObj, int format, Tcl_Obj *keyObj, Tcl_Obj *macObj, int length) {
     DigestState *statePtr;
     Tcl_Channel chan = NULL;
     unsigned char buf[BUFFER_SIZE];
@@ -1097,7 +1114,7 @@ int DigestFileHandler(Tcl_Interp *interp, Tcl_Obj *inFileObj, Tcl_Obj *digestObj
     dprintf("Called");
 
     /* Create state data structure */
-    if ((statePtr = DigestStateNew(interp, format)) == NULL) {
+    if ((statePtr = DigestStateNew(interp, format, length)) == NULL) {
 	Tcl_AppendResult(interp, "Memory allocation error", (char *) NULL);
 	return TCL_ERROR;
     }
@@ -1148,11 +1165,12 @@ done:
 
 static const char *command_opts [] = { "-bin", "-binary", "-hex", "-hexadecimal",
     "-chan", "-channel", "-cipher", "-command", "-data", "-digest", "-file", "-filename",
-    "-hash", "-key", "-mac", NULL};
+    "-hash", "-key", "-length", "-mac", "-size", NULL};
 
 enum _command_opts {
     _opt_bin, _opt_binary, _opt_hex, _opt_hexadecimal, _opt_chan, _opt_channel, _opt_cipher,
-    _opt_command, _opt_data, _opt_digest, _opt_file, _opt_filename, _opt_hash, _opt_key, _opt_mac
+    _opt_command, _opt_data, _opt_digest, _opt_file, _opt_filename, _opt_hash, _opt_key,
+    _opt_length, _opt_mac, _opt_size
 };
 
 /*
@@ -1172,7 +1190,9 @@ enum _command_opts {
  *-------------------------------------------------------------------
  */
 static int DigestMain(int type, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
-    int start = 1, format = HEX_FORMAT, res = TCL_OK;
+    int format = HEX_FORMAT; /* Output format */
+    int length = 0; /* MD length, where 0=default size */
+    int start = 1, res = TCL_OK;
     Tcl_Size fn;
     Tcl_Obj *cipherObj = NULL, *cmdObj = NULL, *dataObj = NULL, *digestObj = NULL;
     Tcl_Obj *fileObj = NULL, *keyObj = NULL, *macObj = NULL;
@@ -1263,6 +1283,14 @@ static int DigestMain(int type, Tcl_Interp *interp, int objc, Tcl_Obj *const obj
 	case _opt_key:
 	    keyObj = objv[idx];
 	    break;
+	case _opt_length:
+	case _opt_size:
+    	    GET_OPT_INT(objv[idx], &length);
+	    if (length < 1 || length > EVP_MAX_MD_SIZE) {
+		Tcl_AppendResult(interp, "Invalid length", (char *) NULL);
+		return TCL_ERROR;
+	    }
+	    break;
 	case _opt_mac:
 	    macObj = objv[idx];
 	    break;
@@ -1280,6 +1308,7 @@ static int DigestMain(int type, Tcl_Interp *interp, int objc, Tcl_Obj *const obj
 	}
     }
 
+    /* Convert MAC to CMAC or HMAC type */
     if (type == TYPE_MAC) {
 	if (macObj != NULL) {
 	    char *macName = Tcl_GetString(macObj);
@@ -1299,15 +1328,20 @@ static int DigestMain(int type, Tcl_Interp *interp, int objc, Tcl_Obj *const obj
 
     /* Calc digest on file, stacked channel, using instance command, or data blob */
     if (fileObj != NULL) {
-	res = DigestFileHandler(interp, fileObj, digestObj, cipherObj, format | type, keyObj, macObj);
+	res = DigestFileHandler(interp, fileObj, digestObj, cipherObj, format | type, keyObj,
+	    macObj, length);
     } else if (channel != NULL) {
-	res = DigestChannelHandler(interp, channel, digestObj, cipherObj, format | type, keyObj, macObj);
+	res = DigestChannelHandler(interp, channel, digestObj, cipherObj, format | type, keyObj,
+	    macObj, length);
     } else if (cmdObj != NULL) {
-	res = DigestCommandHandler(interp, cmdObj, digestObj, cipherObj, format | type, keyObj, macObj);
+	res = DigestCommandHandler(interp, cmdObj, digestObj, cipherObj, format | type, keyObj,
+	    macObj, length);
     } else if (dataObj != NULL) {
-	res = DigestDataHandler(interp, dataObj, digestObj, cipherObj, format | type, keyObj, macObj);
+	res = DigestDataHandler(interp, dataObj, digestObj, cipherObj, format | type, keyObj,
+	    macObj, length);
     } else {
-	Tcl_AppendResult(interp, "No operation: Use -channel, -command, -data, or -file option", (char *) NULL);
+	Tcl_AppendResult(interp, "No operation: Use -channel, -command, -data, or -file option",
+	    (char *) NULL);
 	res = TCL_ERROR;
     }
     return res;
@@ -1376,7 +1410,7 @@ static int MACObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Ob
 
     digestObj = Tcl_NewStringObj(digestName, -1);
     Tcl_IncrRefCount(digestObj);
-    res = DigestDataHandler(interp, dataObj, digestObj, NULL, format, NULL, NULL);
+    res = DigestDataHandler(interp, dataObj, digestObj, NULL, format, NULL, NULL, EVP_MAX_MD_SIZE);
     Tcl_DecrRefCount(digestObj);
     return res;
 }
@@ -1423,6 +1457,7 @@ int SHA512ObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *c
  */
 int Tls_DigestCommands(Tcl_Interp *interp) {
     Tcl_CreateObjCommand(interp, "::tls::digest", MdObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
+    Tcl_CreateObjCommand(interp, "::tls::hash", MdObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
     Tcl_CreateObjCommand(interp, "::tls::md", MdObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
     Tcl_CreateObjCommand(interp, "::tls::cmac", CMACObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
     Tcl_CreateObjCommand(interp, "::tls::hmac", HMACObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
