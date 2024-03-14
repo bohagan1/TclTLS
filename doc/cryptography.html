@@ -206,9 +206,10 @@ and integrity of messages and data.</p>
 <dl>
     <dt><a name="-length"><strong>-length</strong> <em>integer</em></a></dt>
     <dt><a name="-size"><strong>-size</strong> <em>integer</em></a></dt>
-    <dd>Set the output hash or KDF length in bytes. Used by KDFs, KMAC128, and
-    KMAC256 to specify an output length in bytes. The default size
-    for KMAC128 is 32 bytes and KMAC256 is 64 bytes.</dd>
+    <dd>Set the output length in bytes. Used by KDFs, KMAC128 and KMAC256 MACs,
+    and SHAKE128 and SHAKE256 XOF hashes. The default length for KMAC128 is 32
+    bytes and KMAC256 is 64 bytes. The default length for SHAKE128 is 16 bytes
+    and SHAKE256 is 32 bytes.</dd>
 </dl>
 
 <dl>
@@ -354,7 +355,8 @@ These commands provide information about the available ciphers, digests, etc. an
 	<tr><td><b>type</b></td><td>Base type of this cipher or undefined if none.<td></tr>
 	<tr><td><b>provider</b></td><td>Provider of the cipher. OpenSSL 3.0+ only.<td></tr>
 	<tr><td><b>mode</b></td><td>Block cipher mode or <b>stream</b> for a stream cipher.<td></tr>
-	<tr><td><b>flags</b></td><td>Flags associated with the cipher. Includes: Variable Length, AEAD Cipher, Non FIPS Allow, etc.<td></tr>
+	<tr><td><b>flags</b></td><td>Flags associated with the cipher. Includes:
+	Variable Length, AEAD Cipher, Non FIPS Allow, etc.<td></tr>
     </table></blockquote>
 
     <dt><a name="tls::ciphers"><strong>tls::ciphers</strong>
@@ -381,7 +383,8 @@ These commands provide information about the available ciphers, digests, etc. an
 	<tr><td><b>provider</b></td><td>Provider of the digest. OpenSSL 3.0+ only.<td></tr>
 	<tr><td><b>type</b></td><td>Base type of this digest or undefined if none.<td></tr>
 	<tr><td><b>pkey_type</b></td><td>Pkey associated with digest.<td></tr>
-	<tr><td><b>flags</b></td><td>Flags associated with the digest. Includes: One-shot, XOF, etc.<td></tr>
+	<tr><td><b>flags</b></td><td>Flags associated with the digest. Includes:
+	One-shot (only one update (no incremental) allowed), XOF (variable length), etc.<td></tr>
     </table></blockquote>
 
     <dt><a name="tls::kdfs"><strong>tls::kdfs</strong></a></dt>
@@ -443,9 +446,10 @@ These commands calculate a message digest or message authentication code for dat
 	<em>?</em><b>-mac</b><em>? name</em>
 	<b>-cipher</b> <em>name</em>
 	<b>-digest</b> <em>name</em>
-	<b>-key</b> <em>key ?</em>
-	<b>-bin</b>|<b>-hex</b>
-	<em>?[</em><b>-chan</b> <em>channelId |</em> <b>-command</b> <em>cmdName |</em>
+	<b>-key</b> <em>key</em>
+	<em>?</em><b>-bin</b>|<b>-hex</b><em>?</em>
+	<em>?</em><b>-length</b>|<b>-size</b> <em>length?</em>
+	<em>[</em><b>-chan</b> <em>channelId |</em> <b>-command</b> <em>cmdName |</em>
 	<b>-file</b> <em>filename | ?</em><b>-data</b><em>? data]</em></a></dt>
     <dd>(OpenSSL 3.0+) Calculate the Message Authentication Code (MAC) where
 	<em>key</em> is a shared key and output the result per the I/O options
@@ -455,8 +459,9 @@ These commands calculate a message digest or message authentication code for dat
 
     <dt><a name="tls::md"><strong>tls::md</strong>
 	<em>?</em><b>-digest</b><em>? name</em>
-	<em>?</em><b>-bin</b>|<b>-hex</b>
-	<em>?[</em><b>-chan</b> <em>channelId |</em> <b>-command</b> <em>cmdName |</em>
+	<em>?</em><b>-bin</b>|<b>-hex</b><em>?</em>
+	<em>?</em><b>-length</b>|<b>-size</b> <em>length?</em>
+	<em>[</em><b>-chan</b> <em>channelId |</em> <b>-command</b> <em>cmdName |</em>
 	<b>-file</b> <em>filename | ?</em><b>-data</b><em>? data]</em></a></dt>
     <dd>Calculate the message digest (MD) using hash function <em>name</em>
 	and output the result per the I/O options in the specified format.
@@ -528,14 +533,14 @@ These commands are a more secure way to generate keys and ivs for use by the
 	<b>-key</b> <em>string</em>
 	<em>?</em><b>-info</b> <em>string?</em>
 	<em>?</em><b>-salt</b> <em>string?</em>
-	<em>?</em><b>-size</b> <em>derived_length?</em></a></dt>
-    <dd>Derive a key of size <i>size</i> using the HMAC-based Extract-and-Expand
+	<em>?</em><b>-length</b>|<b>-size</b> <em>length?</em></a></dt>
+    <dd>Derive a key of size <i>length</i> using the HMAC-based Extract-and-Expand
 	Key Derivation Function (HKDF).
 	See <a href="#OPTIONS"><b>options</b></a> for usage info. </dd>
 
     <dt><a name="tls::pbkdf2"><strong>tls::pbkdf2</strong>
 	<em>[</em><b>-cipher</b> <em>cipher |</em>
-	<b>-size</b> <em>derived_length]</em>
+	<b>-length</b> <em>length]</em>
 	<b>-digest</b> <em>digest</em>
 	<em>?</em><b>-iterations</b> <em>count?</em>
 	<em>?</em><b>-password</b> <em>string?</em>
@@ -545,7 +550,7 @@ These commands are a more secure way to generate keys and ivs for use by the
 	See <a href="#OPTIONS"><b>options</b></a> for usage info. If <b>-cipher</b>
 	is specified, then the derived key and iv sized for that cipher are
 	returned as a key-value list. If not or if <b>-size</b> is specified,
-	then the derived key (DK) of <em>size</em> bytes is returned.</dd>
+	then the derived key (DK) of <em>length</em> bytes is returned.</dd>
 
     <dt><a name="tls::scrypt"><strong>tls::scrypt</strong>
 	<b>-password</b> <em>string</em>
@@ -553,10 +558,10 @@ These commands are a more secure way to generate keys and ivs for use by the
 	<em>?</em><b>-N</b> <em>costParameter?</em>
 	<em>?</em><b>-r</b> <em>blockSize?</em>
 	<em>?</em><b>-p</b> <em>parallelization?</em>
-	<em>?</em><b>-size</b> <em>derived_length?</em></a></dt>
-    <dd>Derive a key of size <i>size</i> using the scrypt password based key derivation function.
-	See <a href="#OPTIONS"><b>options</b></a> for usage info. 
-	See RFC 7914 for more details. Can consume a large amount of memory.
+	<em>?</em><b>-length</b>|<b>-size</b> <em>length?</em></a></dt>
+    <dd>Derive a key of size <i>length</i> using the scrypt password based key
+	derivation function. See <a href="#OPTIONS"><b>options</b></a> for usage
+	info. See RFC 7914 for more details. Can consume a large amount of memory.
 	RAM used is roughly (128 * N * r * p) bytes. Memory is limited to
 	1025 MiB. The custom options are:</dd>
     <blockquote><table>
@@ -603,7 +608,17 @@ These commands provide access to the OpenSSL providers.
 
 <p>The following is a list of the terminology used in this package along with
 brief definitions. For more details, please consult with the OpenSSL documentation.</p>
-
+<table>
+<tr><td>AAD</td><td>Additional Authenticated Data<td></tr>
+<tr><td>AEAD</td><td>Authenticated Encryption with Associated Data<td></tr>
+<tr><td>IV</td><td>Initialization vector<td></tr>
+<tr><td>KDF</td><td>Key Derivation Function<td></tr>
+<tr><td>MAC</td><td>Message Authenticated Code<td></tr>
+<tr><td>MD</td><td>Message Digest<td></tr>
+<tr><td>SHA</td><td>Secure Hash Algorithm<td></tr>
+<tr><td>TLS</td><td>Transport Layer Security<td></tr>
+<tr><td>XOF</td><td>Extendable-Output Function (aka variable length)<td></tr>
+</table>
 
 <br>
 <h3><a name="EXAMPLES">EXAMPLES</a></h3>
@@ -611,12 +626,7 @@ brief definitions. For more details, please consult with the OpenSSL documentati
 <p>TBS</p>
 
 <pre><code>
-package require http
-package require tls
-
-http::register https 443 [list ::tls::socket -autoservername true -require true -cadir /etc/ssl/certs]
-
-set tok [http::geturl https://www.tcl.tk/]
+TBD
 </code></pre>
 
 <br>
