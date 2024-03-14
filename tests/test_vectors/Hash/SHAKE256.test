@@ -9,19 +9,19 @@ catch {tls::provider legacy}
 tcltest::test Hash_SHAKE256-1.1 {SHAKE256} \
 	-constraints SHAKE256 \
 	-setup {set data ""} \
-	-body {tls::digest -digest SHAKE256 -data $data} \
+	-body {tls::digest -digest SHAKE256 -data $data -length 64} \
 	-match exact -result 46b9dd2b0ba88d13233b3feb743eeb243fcd52ea62b81b82b50c27646ed5762fd75dc4ddd8c0f200cb05019d67b592f6fc821c49479ab48640292eacb3b7c4be
 
 tcltest::test Hash_SHAKE256-1.2 {SHAKE256} \
 	-constraints SHAKE256 \
 	-setup {set data "The quick brown fox jumps over the lazy dog"} \
-	-body {tls::digest -digest SHAKE256 -data $data} \
+	-body {tls::digest -digest SHAKE256 -data $data -length 64} \
 	-match exact -result 2f671343d9b2e1604dc9dcf0753e5fe15c7c64a0d283cbbf722d411a0e36f6ca1d01d1369a23539cd80f7c054b6e5daf9c962cad5b8ed5bd11998b40d5734442
 
 tcltest::test Hash_SHAKE256-1.3 {SHAKE256} \
 	-constraints SHAKE256 \
 	-setup {set data [binary decode hex [string repeat a3 200]]} \
-	-body {tls::digest -digest SHAKE256 -data $data} \
+	-body {tls::digest -digest SHAKE256 -data $data -length 64} \
 	-match exact -result cd8a920ed141aa0407a22d59288652e9d9f1a7ee0c1e7c1ca699424da84a904d2d700caae7396ece96604440577da4f3aa22aeb8857f961c4cd8e06f0ae6610b
 
 # Cleanup

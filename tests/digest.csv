@@ -35,7 +35,7 @@ command,"proc digest_accumulate {string args} {
     $cmd update [string range $string 21 end]
     return [$cmd finalize]
 }
-",,,,,,,,
+",,,,,,,,,
 ,,,,,,,,,,
 command,"set test_data ""Example string for message digest tests.\n""",,,,,,,,,
 command,"set test_file ""md_data.dat""",,,,,,,,,
@@ -109,7 +109,7 @@ MD Errors,Too many args,,,::tls::md too many command line args to pass the test 
 MD Errors,Invalid digest,,,::tls::md bogus data,,,"invalid digest ""bogus""",,,1
 MD Errors,Invalid digest Arg,,,::tls::md -digest bogus -data data,,,"invalid digest ""bogus""",,,1
 MD Errors,No digest,,,::tls::md -hex -data value,,,no digest,,,1
-MD Errors,Invalid option,,,::tls::md -digest sha256 -bogus value,,,"bad option ""-bogus"": must be -bin, -binary, -hex, -hexadecimal, -chan, -channel, -cipher, -command, -data, -digest, -file, -filename, -hash, -key, or -mac",,,1
+MD Errors,Invalid option,,,::tls::md -digest sha256 -bogus value,,,"bad option ""-bogus"": must be -bin, -binary, -hex, -hexadecimal, -chan, -channel, -cipher, -command, -data, -digest, -file, -filename, -hash, -key, -length, -mac, or -size",,,1
 MD Errors,Invalid file,,,::tls::md -digest sha256 -file bogus,,,"couldn't open ""bogus"": no such file or directory",,,1
 MD Errors,Invalid channel,,,::tls::md -digest sha256 -channel bogus,,,"can not find channel named ""bogus""",,,1
 MD Errors,No operation,,,::tls::md -digest sha256 -bin,,,"No operation: Use -channel, -command, -data, or -file option",,,1

@@ -279,7 +279,7 @@ test MD_Errors-8.5 {No digest} -body {
 
 test MD_Errors-8.6 {Invalid option} -body {
 	::tls::md -digest sha256 -bogus value
-    } -result {bad option "-bogus": must be -bin, -binary, -hex, -hexadecimal, -chan, -channel, -cipher, -command, -data, -digest, -file, -filename, -hash, -key, or -mac} -returnCodes {1}
+    } -result {bad option "-bogus": must be -bin, -binary, -hex, -hexadecimal, -chan, -channel, -cipher, -command, -data, -digest, -file, -filename, -hash, -key, -length, -mac, or -size} -returnCodes {1}
 
 test MD_Errors-8.7 {Invalid file} -body {
 	::tls::md -digest sha256 -file bogus

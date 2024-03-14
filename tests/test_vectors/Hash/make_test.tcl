@@ -6,7 +6,7 @@
 # Create test case and output to test file
 #
 proc do_test {group tail file_num tc digest params} {
-    array set config [list Msg "" Repeat 1]
+    array set config [list Msg "" Repeat 1 Length ""]
     array set config $params
 
     # Test info
@@ -36,8 +36,14 @@ proc do_test {group tail file_num tc digest params} {
     }
     append line " \\\n\t"
 
+    if {$config(Length) ne ""} {
+	set opts [format " -length %d" $config(Length)]
+    } else {
+	set opts ""
+    }
+
     # Test body
-    append line [format {-body {tls::digest -digest %s -data $data}} $digest]
+    append line [format {-body {tls::digest -digest %s -data $data%s}} $digest $opts]
     append line " \\\n\t"
 
     # Test cleanup
