@@ -41,4 +41,4 @@ if {[package vsatisfies [package require tcltest] 2.5-]} {
 }
 
 #  Exit code: 0=all passed, 1=one or more failed
-exit $::exitCode
+return $::exitCode
