@@ -247,10 +247,10 @@ unsigned char *Util_GetBinaryArray(Tcl_Interp *interp, Tcl_Obj *dataObj, Tcl_Siz
     }
 
     if (*len < min) {
-	Tcl_SetObjResult(interp, Tcl_ObjPrintf("Invalid length for \"%s\": must be >= %d", name, min));
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf("Invalid length for \"%s\": must be >= %" TCL_SIZE_MODIFIER "d", name, min));
 	return NULL;
     } else if (max > 0 && *len > max) {
-	Tcl_SetObjResult(interp, Tcl_ObjPrintf("Invalid length for \"%s\": must be <= %d", name, max));
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf("Invalid length for \"%s\": must be <= %" TCL_SIZE_MODIFIER "d", name, max));
 	return NULL;
     }
     return data;

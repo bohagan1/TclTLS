@@ -1279,7 +1279,7 @@ ImportObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const
 	/* Get the "model" context */
 	chan = Tcl_GetChannel(interp, model, &mode);
 	if (chan == (Tcl_Channel) NULL) {
-	    Tls_Free((char *) statePtr);
+	    Tls_Free((tls_free_type *) statePtr);
 	    return TCL_ERROR;
 	}
 
@@ -1291,14 +1291,14 @@ ImportObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const
 	    Tcl_AppendResult(interp, "bad channel \"", Tcl_GetChannelName(chan),
 		"\": not a TLS channel", (char *) NULL);
 	    Tcl_SetErrorCode(interp, "TLS", "IMPORT", "CHANNEL", "INVALID", (char *) NULL);
-	    Tls_Free((char *) statePtr);
+	    Tls_Free((tls_free_type *) statePtr);
 	    return TCL_ERROR;
 	}
 	ctx = ((State *)Tcl_GetChannelInstanceData(chan))->ctx;
     } else {
 	if ((ctx = CTX_Init(statePtr, server, proto, keyfile, certfile, key, cert, (int) key_len,
 	    (int) cert_len, CApath, CAfile, ciphers, ciphersuites, level, DHparams)) == NULL) {
-	    Tls_Free((char *) statePtr);
+	    Tls_Free((tls_free_type *) statePtr);
 	    return TCL_ERROR;
 	}
     }
@@ -1329,7 +1329,7 @@ ImportObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const
 	/*
 	 * No use of Tcl_EventuallyFree because no possible Tcl_Preserve.
 	 */
-	Tls_Free((char *) statePtr);
+	Tls_Free((tls_free_type *) statePtr);
 	return TCL_ERROR;
     }
 
@@ -1350,7 +1350,7 @@ ImportObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const
 	/* SSL library error */
 	Tcl_AppendResult(interp, "couldn't construct ssl session: ", GET_ERR_REASON(), (char *) NULL);
 	    Tcl_SetErrorCode(interp, "TLS", "IMPORT", "INIT", "FAILED", (char *) NULL);
-	Tls_Free((char *) statePtr);
+	Tls_Free((tls_free_type *) statePtr);
 	return TCL_ERROR;
     }
 
@@ -1361,7 +1361,7 @@ ImportObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const
 	if (!SSL_set_tlsext_host_name(statePtr->ssl, servername) && require) {
 	    Tcl_AppendResult(interp, "Set SNI extension failed: ", GET_ERR_REASON(), (char *) NULL);
 	    Tcl_SetErrorCode(interp, "TLS", "IMPORT", "SNI", "FAILED", (char *) NULL);
-	    Tls_Free((char *) statePtr);
+	    Tls_Free((tls_free_type *) statePtr);
 	    return TCL_ERROR;
 	}
 
@@ -1370,7 +1370,7 @@ ImportObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const
 	if (!SSL_add1_host(statePtr->ssl, servername)) {
 	    Tcl_AppendResult(interp, "Set DNS hostname failed: ", GET_ERR_REASON(), (char *) NULL);
 	    Tcl_SetErrorCode(interp, "TLS", "IMPORT", "HOSTNAME", "FAILED", (char *) NULL);
-	    Tls_Free((char *) statePtr);
+	    Tls_Free((tls_free_type *) statePtr);
 	    return TCL_ERROR;
 	}
     }
@@ -1381,7 +1381,7 @@ ImportObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const
 	if (!SSL_SESSION_set1_id_context(SSL_get_session(statePtr->ssl), session_id, (unsigned int) sess_len)) {
 	    Tcl_AppendResult(interp, "Resume session failed: ", GET_ERR_REASON(), (char *) NULL);
 	    Tcl_SetErrorCode(interp, "TLS", "IMPORT", "SESSION", "FAILED", (char *) NULL);
-	    Tls_Free((char *) statePtr);
+	    Tls_Free((tls_free_type *) statePtr);
 	    return TCL_ERROR;
 	}
     }
@@ -1397,7 +1397,7 @@ ImportObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const
 	Tcl_Obj **list;
 
 	if (Tcl_ListObjGetElements(interp, alpnObj, &cnt, &list) != TCL_OK) {
-	    Tls_Free((char *) statePtr);
+	    Tls_Free((tls_free_type *) statePtr);
 	    return TCL_ERROR;
 	}
 
@@ -1407,7 +1407,7 @@ ImportObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const
 	    if (len > 255) {
 		Tcl_AppendResult(interp, "ALPN protocol names too long", (char *) NULL);
 		Tcl_SetErrorCode(interp, "TLS", "IMPORT", "ALPN", "FAILED", (char *) NULL);
-		Tls_Free((char *) statePtr);
+		Tls_Free((tls_free_type *) statePtr);
 		return TCL_ERROR;
 	    }
 	    protos_len += 1 + (int) len;
@@ -1428,7 +1428,7 @@ ImportObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const
 	if (SSL_set_alpn_protos(statePtr->ssl, protos, protos_len)) {
 	    Tcl_AppendResult(interp, "Set ALPN protocols failed: ", GET_ERR_REASON(), (char *) NULL);
 	    Tcl_SetErrorCode(interp, "TLS", "IMPORT", "ALPN", "FAILED", (char *) NULL);
-	    Tls_Free((char *) statePtr);
+	    Tls_Free((tls_free_type *) statePtr);
 	    ckfree(protos);
 	    return TCL_ERROR;
 	}
@@ -2538,7 +2538,7 @@ MiscObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const o
  *-------------------------------------------------------------------
  */
 void
-Tls_Free(char *blockPtr) {
+Tls_Free(tls_free_type *blockPtr) {
     State *statePtr = (State *)blockPtr;
 
     dprintf("Called");

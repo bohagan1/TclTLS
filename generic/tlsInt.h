@@ -191,6 +191,12 @@ typedef struct State {
 #endif /* Tcl_GetStackedChannel */
 #endif /* USE_TCL_STUBS */
 
+#if TCL_MAJOR_VERSION < 9
+    typedef char tls_free_type;
+#else
+    typedef void tls_free_type;
+#endif
+
 /*
  * Forward declarations
  */
@@ -200,7 +206,7 @@ Tcl_Channel     Tls_GetParent(State *statePtr, int maskFlags);
 Tcl_Obj         *Tls_NewX509Obj(Tcl_Interp *interp, X509 *cert);
 Tcl_Obj		*Tls_NewCAObj(Tcl_Interp *interp, const SSL *ssl, int peer);
 void            Tls_Error(State *statePtr, char *msg);
-void            Tls_Free(char *blockPtr);
+void            Tls_Free(tls_free_type *blockPtr);
 void            Tls_Clean(State *statePtr);
 int             Tls_WaitForConnect(State *statePtr, int *errorCodePtr, int handshakeFailureIsPermanent);
 int             Tls_DigestCommands(Tcl_Interp *interp);
