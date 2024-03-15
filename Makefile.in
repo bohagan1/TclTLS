@@ -382,7 +382,7 @@ dist: dist-clean
 	$(INSTALL_DATA_DIR) $(DIST_DIR)/tclconfig
 	$(DIST_INSTALL_DATA) $(srcdir)/tclconfig/README.txt \
 		$(srcdir)/tclconfig/tcl.m4 $(srcdir)/tclconfig/install-sh \
-		$(srcdir)/license.terms $(DIST_DIR)/tclconfig/
+		$(srcdir)/tclconfig/license.terms $(DIST_DIR)/tclconfig/
 
 	$(INSTALL_DATA_DIR) $(DIST_DIR)/win
 	$(DIST_INSTALL_DATA) \
@@ -419,7 +419,7 @@ distclean: clean
 	-rm -f *.tab.c
 	-rm -f $(CONFIG_CLEAN_FILES)
 	-rm -f config.cache config.log config.status
-	-rm -R autom4te.cache
+	-rm -fR autom4te.cache
 
 #========================================================================
 # Install binary object libraries.  On Windows this includes both .dll and
