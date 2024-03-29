@@ -1,0 +1,10 @@
+# AES-256-ECB
+# From NIST SP_800-38A Appendix F.1
+
+
+# ECB-AES256.Encrypt and ECB-AES256.Decrypt 
+Klen = 32
+Len = 64
+Key = 603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4
+Plaintext = 6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e5130c81c46a35ce411e5fbc1191a0a52eff69f2445df4f9b17ad2b417be66c3710
+Ciphertext = f3eed1bdb5d2a03c064b5a7e3db181f8591ccb10d410ed26dc5ba74a31362870b6ed21b99ca6f4f9f153e7b1beafed1d23304b7a39f9f3ff067d8d8f9e24ecc7

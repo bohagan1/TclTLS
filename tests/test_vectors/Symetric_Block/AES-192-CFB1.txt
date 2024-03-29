@@ -1,0 +1,14 @@
+# AES-192-CFB1
+# From NIST SP_800-38A Appendix F.3
+
+
+# CFB1-AES192.Encrypt and CFB1-AES192.Decrypt 
+Klen = 24
+Ilen = 16
+Len = 2
+Key = 8e73b0f7da0e6452c810f32b809079e562f8ead2522c6b7b
+IV = 000102030405060708090a0b0c0d0e0f
+# b:0110101111000001
+Plaintext = 6bc1
+# b:1001001101011001
+Ciphertext = 9359

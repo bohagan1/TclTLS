@@ -1,0 +1,12 @@
+# AES-128-CFB8
+# From NIST SP_800-38A Appendix F.3
+
+
+# CFB8-AES128.Encrypt and CFB8-AES128.Decrypt 
+Klen = 16
+Ilen = 16
+Len = 18
+Key = 2b7e151628aed2a6abf7158809cf4f3c
+IV = 000102030405060708090a0b0c0d0e0f
+Plaintext = 6bc1bee22e409f96e93d7e117393172aae2d
+Ciphertext = 3b79424c9c0dd436bace9e0ed4586a4f32b9

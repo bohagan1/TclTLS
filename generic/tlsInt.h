@@ -37,6 +37,7 @@
 #	define CONST86
 #   endif
 #endif
+
 /*
  * Backwards compatibility for size type change
  */

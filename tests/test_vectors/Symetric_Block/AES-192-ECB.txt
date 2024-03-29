@@ -1,0 +1,10 @@
+# AES-192-ECB
+# From NIST SP_800-38A Appendix F.1
+
+
+# ECB-AES192.Encrypt and ECB-AES192.Decrypt 
+Klen = 24
+Len = 64
+Key = 8e73b0f7da0e6452c810f32b809079e562f8ead2522c6b7b
+Plaintext = 6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e5130c81c46a35ce411e5fbc1191a0a52eff69f2445df4f9b17ad2b417be66c3710
+Ciphertext = bd334f1d6e45f25ff712a214571fa5cc974104846d0ad3ad7734ecb3ecee4eefef7afd2270e2e60adce0ba2face6444e9a4b41ba738d6c72fb16691603c18e0e
