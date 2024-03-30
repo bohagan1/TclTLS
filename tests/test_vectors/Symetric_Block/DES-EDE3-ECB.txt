@@ -1,0 +1,17 @@
+# DES-EDE3-ECB (3DES)
+# From FIPS Pub 46-3
+
+
+# ECB-TDES.Encrypt and ECB-TDES.Decrypt 
+Klen = 24
+Len = 32
+Key = 0123456789abcdef23456789abcdef01456789abcdef0123
+Plaintext = 6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e51
+Ciphertext = 714772f339841d34267fcc4bd2949cc3ee11c22a576a303876183f99c0b6de87
+
+# ECB-TDES.Encrypt and ECB-TDES.Decrypt 
+Klen = 24
+Len = 32
+Key = 0123456789abcdef23456789abcdef010123456789abcdef
+Plaintext = 6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e51
+Ciphertext = 06ede3d82884090aff322c19f0518486730576972a666e58b6c88cf107340d3d

@@ -1,0 +1,21 @@
+# DES-EDE3-OFB (3DES)
+# From FIPS Pub 46-3
+
+
+# OFB-TDES.Encrypt and OFB-TDES.Decrypt 
+Klen = 24
+Ilen = 8
+Len = 32
+Key = 0123456789abcdef23456789abcdef01456789abcdef0123
+IV = f69f2445df4f9b17
+Plaintext = 6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e51
+Ciphertext = 078bb74e59ce7ed6267e120692667da1a58662d7e04cbc642144d55c03db5aee
+
+# OFB-TDES.Encrypt and OFB-TDES.Decrypt 
+Klen = 24
+Ilen = 8
+Len = 32
+Key = 0123456789abcdef23456789abcdef010123456789abcdef
+IV = f69f2445df4f9b17
+Plaintext = 6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e51
+Ciphertext = 6195b9c2c39909c53334ba77ffdccc80e485e85f0a63e7646d8d732e33241f94

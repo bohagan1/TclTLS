@@ -1,0 +1,43 @@
+# Auto generated from "DES-EDE3-CFB1.txt"
+lappend auto_path [file dirname [file dirname [file dirname [file dirname [file join [pwd] [info script]]]]]]
+package require tls
+package require tcltest
+
+catch {tls::provider legacy}
+tcltest::testConstraint DES_EDE3_CFB1 [expr {[lsearch -nocase [tls::ciphers] DES-EDE3-CFB1] > -1}]
+
+tcltest::test Block_DES-EDE3-CFB1-1.1 {Encrypt DES-EDE3-CFB1} \
+	-constraints DES_EDE3_CFB1 \
+	-body {binary encode hex [tls::encrypt -cipher DES-EDE3-CFB1 -padding 0 \
+		 -key [binary decode hex 0123456789abcdef23456789abcdef01456789abcdef0123] \
+		 -iv [binary decode hex f69f2445df4f9b17] \
+		 -data [binary decode hex 6b]]} \
+	-match exact -result 5c
+
+tcltest::test Block_DES-EDE3-CFB1-1.2 {Decrypt DES-EDE3-CFB1} \
+	-constraints DES_EDE3_CFB1 \
+	-body {binary encode hex [tls::decrypt -cipher DES-EDE3-CFB1 -padding 0 \
+		 -key [binary decode hex 0123456789abcdef23456789abcdef01456789abcdef0123] \
+		 -iv [binary decode hex f69f2445df4f9b17] \
+		 -data [binary decode hex 5c]]} \
+	-match exact -result 6b
+
+tcltest::test Block_DES-EDE3-CFB1-1.3 {Encrypt DES-EDE3-CFB1} \
+	-constraints DES_EDE3_CFB1 \
+	-body {binary encode hex [tls::encrypt -cipher DES-EDE3-CFB1 -padding 0 \
+		 -key [binary decode hex 0123456789abcdef23456789abcdef010123456789abcdef] \
+		 -iv [binary decode hex f69f2445df4f9b17] \
+		 -data [binary decode hex 6b]]} \
+	-match exact -result 66
+
+tcltest::test Block_DES-EDE3-CFB1-1.4 {Decrypt DES-EDE3-CFB1} \
+	-constraints DES_EDE3_CFB1 \
+	-body {binary encode hex [tls::decrypt -cipher DES-EDE3-CFB1 -padding 0 \
+		 -key [binary decode hex 0123456789abcdef23456789abcdef010123456789abcdef] \
+		 -iv [binary decode hex f69f2445df4f9b17] \
+		 -data [binary decode hex 66]]} \
+	-match exact -result 6b
+
+# Cleanup
+::tcltest::cleanupTests
+return

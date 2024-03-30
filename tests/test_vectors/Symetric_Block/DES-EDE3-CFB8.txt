@@ -1,0 +1,21 @@
+# DES-EDE3-CFB1 (3DES)
+# From FIPS Pub 46-3
+
+
+# CFB8-TDES.Encrypt and CFB8-TDES.Decrypt 
+Klen = 24
+Ilen = 8
+Len = 8
+Key = 0123456789abcdef23456789abcdef01456789abcdef0123
+IV = f69f2445df4f9b17
+Plaintext = 6bc1bee22e409f96
+Ciphertext = 07951b729dc23ab4
+
+# CFB8-TDES.Encrypt and CFB8-TDES.Decrypt 
+Klen = 24
+Ilen = 8
+Len = 8
+Key = 0123456789abcdef23456789abcdef010123456789abcdef
+IV = f69f2445df4f9b17
+Plaintext = 6bc1bee22e409f96
+Ciphertext = 61d86d9aee9693fd

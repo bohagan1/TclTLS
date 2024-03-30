@@ -1,0 +1,21 @@
+# DES-EDE3-CTR (3DES)
+# From FIPS Pub 46-3
+
+
+# CTR-TDES.Encrypt and CTR-TDES.Decrypt 
+Klen = 24
+Ilen = 8
+Len = 32
+Key = 0123456789abcdef23456789abcdef01456789abcdef0123
+IV = f69f2445df4f9b17
+Plaintext = 6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e51
+Ciphertext = 078bb74e59ce7ed619aa11d25004fb65a03cedf1ba0b09baa3bc81b8f69c1da9
+
+# CTR-TDES.Encrypt and CTR-TDES.Decrypt 
+Klen = 24
+Ilen = 8
+Len = 32
+Key = 0123456789abcdef23456789abcdef010123456789abcdef
+IV = f69f2445df4f9b17
+Plaintext = 6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e51
+Ciphertext = 6195b9c2c39909c5dbdf92dadbad5a5d1568482bf25c42c96d3853a8e71b010e

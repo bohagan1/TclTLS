@@ -1,0 +1,21 @@
+# DES-EDE3-CBC (3DES)
+# From FIPS Pub 46-3
+
+
+# CBC-TDES.Encrypt and CBC-TDES.Decrypt 
+Klen = 24
+Ilen = 8
+Len = 32
+Key = 0123456789abcdef23456789abcdef01456789abcdef0123
+IV = f69f2445df4f9b17
+Plaintext = 6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e51
+Ciphertext = 2079c3d53aa763e193b79e2569ab5262516570481f25b50f73c0bda85c8e0da7
+
+# CBC-TDES.Encrypt and CBC-TDES.Decrypt 
+Klen = 24
+Ilen = 8
+Len = 32
+Key = 0123456789abcdef23456789abcdef010123456789abcdef
+IV = f69f2445df4f9b17
+Plaintext = 6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e51
+Ciphertext = 7401ce1eab6d003caff84bf47b36cc2154f0238f9ffecd8f6acf118392b45581
