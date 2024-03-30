@@ -1,0 +1,27 @@
+# Auto generated from "AES-192-CBC.txt"
+lappend auto_path [file dirname [file dirname [file dirname [file dirname [file join [pwd] [info script]]]]]]
+package require tls
+package require tcltest
+
+catch {tls::provider legacy}
+tcltest::testConstraint AES_192_CBC [expr {[lsearch -nocase [tls::ciphers] AES-192-CBC] > -1}]
+
+tcltest::test Block_AES-192-CBC-1.1 {Encrypt AES-192-CBC} \
+	-constraints AES_192_CBC \
+	-body {binary encode hex [tls::encrypt -cipher AES-192-CBC -padding 0 \
+		 -key [binary decode hex 8e73b0f7da0e6452c810f32b809079e562f8ead2522c6b7b] \
+		 -iv [binary decode hex 000102030405060708090a0b0c0d0e0f] \
+		 -data [binary decode hex 6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e5130c81c46a35ce411e5fbc1191a0a52eff69f2445df4f9b17ad2b417be66c3710]]} \
+	-match exact -result 4f021db243bc633d7178183a9fa071e8b4d9ada9ad7dedf4e5e738763f69145a571b242012fb7ae07fa9baac3df102e008b0e27988598881d920a9e64f5615cd
+
+tcltest::test Block_AES-192-CBC-1.2 {Decrypt AES-192-CBC} \
+	-constraints AES_192_CBC \
+	-body {binary encode hex [tls::decrypt -cipher AES-192-CBC -padding 0 \
+		 -key [binary decode hex 8e73b0f7da0e6452c810f32b809079e562f8ead2522c6b7b] \
+		 -iv [binary decode hex 000102030405060708090a0b0c0d0e0f] \
+		 -data [binary decode hex 4f021db243bc633d7178183a9fa071e8b4d9ada9ad7dedf4e5e738763f69145a571b242012fb7ae07fa9baac3df102e008b0e27988598881d920a9e64f5615cd]]} \
+	-match exact -result 6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e5130c81c46a35ce411e5fbc1191a0a52eff69f2445df4f9b17ad2b417be66c3710
+
+# Cleanup
+::tcltest::cleanupTests
+return

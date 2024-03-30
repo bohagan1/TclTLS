@@ -1,0 +1,27 @@
+# Auto generated from "AES-128-CFB1.txt"
+lappend auto_path [file dirname [file dirname [file dirname [file dirname [file join [pwd] [info script]]]]]]
+package require tls
+package require tcltest
+
+catch {tls::provider legacy}
+tcltest::testConstraint AES_128_CFB1 [expr {[lsearch -nocase [tls::ciphers] AES-128-CFB1] > -1}]
+
+tcltest::test Block_AES-128-CFB1-1.1 {Encrypt AES-128-CFB1} \
+	-constraints AES_128_CFB1 \
+	-body {binary encode hex [tls::encrypt -cipher AES-128-CFB1 -padding 0 \
+		 -key [binary decode hex 2b7e151628aed2a6abf7158809cf4f3c] \
+		 -iv [binary decode hex 000102030405060708090a0b0c0d0e0f] \
+		 -data [binary decode hex 6bc1]]} \
+	-match exact -result 68b3
+
+tcltest::test Block_AES-128-CFB1-1.2 {Decrypt AES-128-CFB1} \
+	-constraints AES_128_CFB1 \
+	-body {binary encode hex [tls::decrypt -cipher AES-128-CFB1 -padding 0 \
+		 -key [binary decode hex 2b7e151628aed2a6abf7158809cf4f3c] \
+		 -iv [binary decode hex 000102030405060708090a0b0c0d0e0f] \
+		 -data [binary decode hex 68b3]]} \
+	-match exact -result 6bc1
+
+# Cleanup
+::tcltest::cleanupTests
+return

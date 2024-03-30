@@ -1,0 +1,27 @@
+# Auto generated from "AES-192-CTR.txt"
+lappend auto_path [file dirname [file dirname [file dirname [file dirname [file join [pwd] [info script]]]]]]
+package require tls
+package require tcltest
+
+catch {tls::provider legacy}
+tcltest::testConstraint AES_192_CTR [expr {[lsearch -nocase [tls::ciphers] AES-192-CTR] > -1}]
+
+tcltest::test Block_AES-192-CTR-1.1 {Encrypt AES-192-CTR} \
+	-constraints AES_192_CTR \
+	-body {binary encode hex [tls::encrypt -cipher AES-192-CTR -padding 0 \
+		 -key [binary decode hex 8e73b0f7da0e6452c810f32b809079e562f8ead2522c6b7b] \
+		 -iv [binary decode hex f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff] \
+		 -data [binary decode hex 6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e5130c81c46a35ce411e5fbc1191a0a52eff69f2445df4f9b17ad2b417be66c3710]]} \
+	-match exact -result 1abc932417521ca24f2b0459fe7e6e0b090339ec0aa6faefd5ccc2c6f4ce8e941e36b26bd1ebc670d1bd1d665620abf74f78a7f6d29809585a97daec58c6b050
+
+tcltest::test Block_AES-192-CTR-1.2 {Decrypt AES-192-CTR} \
+	-constraints AES_192_CTR \
+	-body {binary encode hex [tls::decrypt -cipher AES-192-CTR -padding 0 \
+		 -key [binary decode hex 8e73b0f7da0e6452c810f32b809079e562f8ead2522c6b7b] \
+		 -iv [binary decode hex f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff] \
+		 -data [binary decode hex 1abc932417521ca24f2b0459fe7e6e0b090339ec0aa6faefd5ccc2c6f4ce8e941e36b26bd1ebc670d1bd1d665620abf74f78a7f6d29809585a97daec58c6b050]]} \
+	-match exact -result 6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e5130c81c46a35ce411e5fbc1191a0a52eff69f2445df4f9b17ad2b417be66c3710
+
+# Cleanup
+::tcltest::cleanupTests
+return

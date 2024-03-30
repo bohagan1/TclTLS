@@ -1,0 +1,27 @@
+# Auto generated from "AES-256-OFB.txt"
+lappend auto_path [file dirname [file dirname [file dirname [file dirname [file join [pwd] [info script]]]]]]
+package require tls
+package require tcltest
+
+catch {tls::provider legacy}
+tcltest::testConstraint AES_256_OFB [expr {[lsearch -nocase [tls::ciphers] AES-256-OFB] > -1}]
+
+tcltest::test Block_AES-256-OFB-1.1 {Encrypt AES-256-OFB} \
+	-constraints AES_256_OFB \
+	-body {binary encode hex [tls::encrypt -cipher AES-256-OFB -padding 0 \
+		 -key [binary decode hex 603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4] \
+		 -iv [binary decode hex 000102030405060708090a0b0c0d0e0f] \
+		 -data [binary decode hex 6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e5130c81c46a35ce411e5fbc1191a0a52eff69f2445df4f9b17ad2b417be66c3710]]} \
+	-match exact -result dc7e84bfda79164b7ecd8486985d38604febdc6740d20b3ac88f6ad82a4fb08d71ab47a086e86eedf39d1c5bba97c4080126141d67f37be8538f5a8be740e484
+
+tcltest::test Block_AES-256-OFB-1.2 {Decrypt AES-256-OFB} \
+	-constraints AES_256_OFB \
+	-body {binary encode hex [tls::decrypt -cipher AES-256-OFB -padding 0 \
+		 -key [binary decode hex 603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4] \
+		 -iv [binary decode hex 000102030405060708090a0b0c0d0e0f] \
+		 -data [binary decode hex dc7e84bfda79164b7ecd8486985d38604febdc6740d20b3ac88f6ad82a4fb08d71ab47a086e86eedf39d1c5bba97c4080126141d67f37be8538f5a8be740e484]]} \
+	-match exact -result 6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e5130c81c46a35ce411e5fbc1191a0a52eff69f2445df4f9b17ad2b417be66c3710
+
+# Cleanup
+::tcltest::cleanupTests
+return

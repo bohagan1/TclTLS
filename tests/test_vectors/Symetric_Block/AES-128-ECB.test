@@ -1,0 +1,25 @@
+# Auto generated from "AES-128-ECB.txt"
+lappend auto_path [file dirname [file dirname [file dirname [file dirname [file join [pwd] [info script]]]]]]
+package require tls
+package require tcltest
+
+catch {tls::provider legacy}
+tcltest::testConstraint AES_128_ECB [expr {[lsearch -nocase [tls::ciphers] AES-128-ECB] > -1}]
+
+tcltest::test Block_AES-128-ECB-1.1 {Encrypt AES-128-ECB} \
+	-constraints AES_128_ECB \
+	-body {binary encode hex [tls::encrypt -cipher AES-128-ECB -padding 0 \
+		 -key [binary decode hex 2b7e151628aed2a6abf7158809cf4f3c] \
+		 -data [binary decode hex 6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e5130c81c46a35ce411e5fbc1191a0a52eff69f2445df4f9b17ad2b417be66c3710]]} \
+	-match exact -result 3ad77bb40d7a3660a89ecaf32466ef97f5d3d58503b9699de785895a96fdbaaf43b1cd7f598ece23881b00e3ed0306887b0c785e27e8ad3f8223207104725dd4
+
+tcltest::test Block_AES-128-ECB-1.2 {Decrypt AES-128-ECB} \
+	-constraints AES_128_ECB \
+	-body {binary encode hex [tls::decrypt -cipher AES-128-ECB -padding 0 \
+		 -key [binary decode hex 2b7e151628aed2a6abf7158809cf4f3c] \
+		 -data [binary decode hex 3ad77bb40d7a3660a89ecaf32466ef97f5d3d58503b9699de785895a96fdbaaf43b1cd7f598ece23881b00e3ed0306887b0c785e27e8ad3f8223207104725dd4]]} \
+	-match exact -result 6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e5130c81c46a35ce411e5fbc1191a0a52eff69f2445df4f9b17ad2b417be66c3710
+
+# Cleanup
+::tcltest::cleanupTests
+return

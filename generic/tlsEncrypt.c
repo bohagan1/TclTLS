@@ -136,7 +136,7 @@ void EncryptStateFree(EncryptState *statePtr) {
  *-------------------------------------------------------------------
  */
 int EncryptInitialize(Tcl_Interp *interp, int type, EVP_CIPHER_CTX **ctx,
-	Tcl_Obj *cipherObj, Tcl_Obj *keyObj, Tcl_Obj *ivObj) {
+	Tcl_Obj *cipherObj, Tcl_Obj *keyObj, Tcl_Obj *ivObj, int padding) {
     const EVP_CIPHER *cipher;
     void *keyString = NULL, *ivString = NULL;
     Tcl_Size key_len = 0, iv_len = 0;
@@ -180,15 +180,32 @@ int EncryptInitialize(Tcl_Interp *interp, int type, EVP_CIPHER_CTX **ctx,
 	return TCL_ERROR;
     }
 
-    /* Initialize the operation. Need appropriate key and iv size. */
+    /* Initialize the operation */
     if (type == TYPE_ENCRYPT) {
-	res = EVP_EncryptInit_ex(*ctx, cipher, NULL, key, iv);
+	res = EVP_EncryptInit_ex(*ctx, cipher, NULL, NULL, NULL);
     } else {
-	res = EVP_DecryptInit_ex(*ctx, cipher, NULL, key, iv);
+	res = EVP_DecryptInit_ex(*ctx, cipher, NULL, NULL, NULL);
     }
 
     if(!res) {
 	Tcl_AppendResult(interp, "Initialize failed: ", GET_ERR_REASON(), (char *) NULL);
+	return TCL_ERROR;
+    }
+
+    /* Turn off PKCS#7 padding */
+    if (!padding) {
+	EVP_CIPHER_CTX_set_padding(*ctx, padding);
+    }
+
+    /* Set key and IV */
+    if (type == TYPE_ENCRYPT) {
+	res = EVP_EncryptInit_ex(*ctx, NULL, NULL, key, iv);
+    } else {
+	res = EVP_DecryptInit_ex(*ctx, NULL, NULL, key, iv);
+    }
+
+    if(!res) {
+	Tcl_AppendResult(interp, "Set key and IV failed: ", GET_ERR_REASON(), (char *) NULL);
 	return TCL_ERROR;
     }
 
@@ -740,7 +757,7 @@ static const Tcl_ChannelType encryptChannelType = {
  *----------------------------------------------------------------------
  */
 static int EncryptChannelHandler(Tcl_Interp *interp, int type, const char *channel,
-	Tcl_Obj *cipherObj, Tcl_Obj *digestObj, Tcl_Obj *keyObj, Tcl_Obj *ivObj) {
+	Tcl_Obj *cipherObj, Tcl_Obj *digestObj, Tcl_Obj *keyObj, Tcl_Obj *ivObj, int padding) {
     int mode; /* OR-ed combination of TCL_READABLE and TCL_WRITABLE */
     Tcl_Channel chan;
     EncryptState *statePtr;
@@ -774,7 +791,7 @@ static int EncryptChannelHandler(Tcl_Interp *interp, int type, const char *chann
     statePtr->mode = mode;
 
     /* Initialize function */
-    if (EncryptInitialize(interp, type, &statePtr->ctx, cipherObj, keyObj, ivObj) != TCL_OK) {
+    if (EncryptInitialize(interp, type, &statePtr->ctx, cipherObj, keyObj, ivObj, padding) != TCL_OK) {
 	EncryptStateFree(statePtr);
 	return TCL_ERROR;
     }
@@ -963,8 +980,8 @@ void EncryptCommandDeleteHandler(ClientData clientData) {
  *
  *-------------------------------------------------------------------
  */
-int EncryptCommandHandler(Tcl_Interp *interp, int type, Tcl_Obj *cmdObj,
-	Tcl_Obj *cipherObj, Tcl_Obj *digestObj, Tcl_Obj *keyObj, Tcl_Obj *ivObj) {
+int EncryptCommandHandler(Tcl_Interp *interp, int type, Tcl_Obj *cmdObj, Tcl_Obj *cipherObj,
+	Tcl_Obj *digestObj, Tcl_Obj *keyObj, Tcl_Obj *ivObj, int padding) {
     EncryptState *statePtr;
     char *cmdName = Tcl_GetString(cmdObj);
 
@@ -976,7 +993,7 @@ int EncryptCommandHandler(Tcl_Interp *interp, int type, Tcl_Obj *cmdObj,
     }
 
     /* Initialize function */
-    if (EncryptInitialize(interp, type, &statePtr->ctx, cipherObj, keyObj, ivObj) != TCL_OK) {
+    if (EncryptInitialize(interp, type, &statePtr->ctx, cipherObj, keyObj, ivObj, padding) != TCL_OK) {
 	EncryptStateFree(statePtr);
 	return TCL_ERROR;
     }
@@ -1008,7 +1025,7 @@ int EncryptCommandHandler(Tcl_Interp *interp, int type, Tcl_Obj *cmdObj,
  *-------------------------------------------------------------------
  */
 int EncryptDataHandler(Tcl_Interp *interp, int type, Tcl_Obj *dataObj, Tcl_Obj *cipherObj,
-	Tcl_Obj *digestObj, Tcl_Obj *keyObj, Tcl_Obj *ivObj) {
+	Tcl_Obj *digestObj, Tcl_Obj *keyObj, Tcl_Obj *ivObj, int padding) {
     EVP_CIPHER_CTX *ctx = NULL;
     int out_len = 0, len = 0, res = TCL_OK;
     Tcl_Size data_len = 0;
@@ -1034,7 +1051,7 @@ int EncryptDataHandler(Tcl_Interp *interp, int type, Tcl_Obj *dataObj, Tcl_Obj *
     }
 
     /* Perform operation */
-    if (EncryptInitialize(interp, type, &ctx, cipherObj, keyObj, ivObj) != TCL_OK ||
+    if (EncryptInitialize(interp, type, &ctx, cipherObj, keyObj, ivObj, padding) != TCL_OK ||
 	EncryptUpdate(interp, type, ctx, out_buf, &out_len, data, data_len) != TCL_OK ||
 	EncryptFinalize(interp, type, ctx, out_buf+out_len, &len) != TCL_OK) {
 	res = TCL_ERROR;
@@ -1078,7 +1095,7 @@ done:
  *-------------------------------------------------------------------
  */
 int EncryptFileHandler(Tcl_Interp *interp, int type, Tcl_Obj *inFileObj, Tcl_Obj *outFileObj,
-	Tcl_Obj *cipherObj, Tcl_Obj *digestObj, Tcl_Obj *keyObj, Tcl_Obj *ivObj) {
+	Tcl_Obj *cipherObj, Tcl_Obj *digestObj, Tcl_Obj *keyObj, Tcl_Obj *ivObj, int padding) {
     EVP_CIPHER_CTX *ctx = NULL;
     int total = 0, res, out_len = 0, len;
     Tcl_Channel in = NULL, out = NULL;
@@ -1099,7 +1116,7 @@ int EncryptFileHandler(Tcl_Interp *interp, int type, Tcl_Obj *inFileObj, Tcl_Obj
     }
 
     /* Initialize operation */
-    if ((res = EncryptInitialize(interp, type, &ctx, cipherObj, keyObj, ivObj)) != TCL_OK) {
+    if ((res = EncryptInitialize(interp, type, &ctx, cipherObj, keyObj, ivObj, padding)) != TCL_OK) {
 	goto done;
     }
 
@@ -1163,11 +1180,11 @@ done:
 
 static const char *command_opts [] = {
     "-chan", "-channel", "-cipher", "-command", "-data", "-digest", "-infile", "-filename",
-    "-outfile", "-hash", "-iv", "-key", "-mac", NULL};
+    "-outfile", "-hash", "-iv", "-key", "-mac", "-padding", NULL};
 
 enum _command_opts {
     _opt_chan, _opt_channel, _opt_cipher, _opt_command, _opt_data, _opt_digest, _opt_infile,
-    _opt_filename, _opt_outfile, _opt_hash, _opt_iv, _opt_key, _opt_mac
+    _opt_filename, _opt_outfile, _opt_hash, _opt_iv, _opt_key, _opt_mac, _opt_padding
 };
 
 /*
@@ -1189,7 +1206,7 @@ static int EncryptMain(int type, Tcl_Interp *interp, int objc, Tcl_Obj *const ob
     Tcl_Obj *cipherObj = NULL, *cmdObj = NULL, *dataObj = NULL, *digestObj = NULL;
     Tcl_Obj *inFileObj = NULL, *outFileObj = NULL, *keyObj = NULL, *ivObj = NULL, *macObj = NULL;
     const char *channel = NULL, *opt;
-    int res, start = 1;
+    int res, start = 1, padding = 1;
     Tcl_Size fn;
 
     dprintf("Called");
@@ -1199,7 +1216,7 @@ static int EncryptMain(int type, Tcl_Interp *interp, int objc, Tcl_Obj *const ob
 
     /* Validate arg count */
     if (objc < 3 || objc > 12) {
-	Tcl_WrongNumArgs(interp, 1, objv, "?-cipher? name ?-digest name? -key key ?-iv string? ?-mac name? [-channel chan | -command cmdName | -infile filename -outfile filename | ?-data? data]");
+	Tcl_WrongNumArgs(interp, 1, objv, "?-cipher? name ?-digest name? -key key ?-iv string? ?-mac name? ?-padding boolean? [-channel chan | -command cmdName | -infile filename -outfile filename | ?-data? data]");
 	return TCL_ERROR;
     }
 
@@ -1270,6 +1287,9 @@ static int EncryptMain(int type, Tcl_Interp *interp, int objc, Tcl_Obj *const ob
 	case _opt_mac:
 	    macObj = objv[idx];
 	    break;
+	case _opt_padding:
+    	    GET_OPT_BOOL(objv[idx], &padding);
+	    break;
 	}
     }
 
@@ -1283,13 +1303,13 @@ static int EncryptMain(int type, Tcl_Interp *interp, int objc, Tcl_Obj *const ob
 
     /* Perform encryption function on file, stacked channel, using instance command, or data blob */
     if (inFileObj != NULL && outFileObj != NULL) {
-	res = EncryptFileHandler(interp, type, inFileObj, outFileObj, cipherObj, digestObj, keyObj, ivObj);
+	res = EncryptFileHandler(interp, type, inFileObj, outFileObj, cipherObj, digestObj, keyObj, ivObj, padding);
     } else if (channel != NULL) {
-	res = EncryptChannelHandler(interp, type, channel, cipherObj, digestObj, keyObj, ivObj);
+	res = EncryptChannelHandler(interp, type, channel, cipherObj, digestObj, keyObj, ivObj, padding);
     } else if (cmdObj != NULL) {
-	res = EncryptCommandHandler(interp, type, cmdObj, cipherObj, digestObj, keyObj, ivObj);
+	res = EncryptCommandHandler(interp, type, cmdObj, cipherObj, digestObj, keyObj, ivObj, padding);
     } else if (dataObj != NULL) {
-	res = EncryptDataHandler(interp, type, dataObj, cipherObj, digestObj, keyObj, ivObj);
+	res = EncryptDataHandler(interp, type, dataObj, cipherObj, digestObj, keyObj, ivObj, padding);
     } else {
 	Tcl_AppendResult(interp, "No operation specified: Use -channel, -command, -data, or -infile option", (char *) NULL);
 	res = TCL_ERROR;

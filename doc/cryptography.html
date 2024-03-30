@@ -159,9 +159,9 @@ and integrity of messages and data.</p>
 <dl>
     <dt><a name="-iv"><strong>-iv</strong> <em>string</em></a></dt>
     <dd>Initialization vector (IV) to use. Required for some ciphers and GMAC.
-    Other MACs use a fixed IV.
-    Cipher modes CBC, CFB, and OFB all need an IV, while ECB and CTR modes do not.
-    A new, random IV should be created for each use. Think of the IV as a nonce
+    Other MACs use a fixed IV. Cipher modes CBC, CFB, and OFB all need an IV,
+    while ECB and CTR modes do not. A new, random IV should (must for OFB) be
+    created for each use. Think of the IV as a nonce
     (number used once), it's public but random and unpredictable. See the
    <a href="#tls::cipher"><b>tls::cipher</b></a> for iv_length and when
    required (length > 0). Max is 16 bytes. If not set, it will default to \x00
@@ -173,7 +173,8 @@ and integrity of messages and data.</p>
     <dd>Encryption key to use for cryptography function. Can be a binary or
     text string. Longer keys provide better protection. Used by ciphers, HMAC,
     some CMAC, and some KDF implementations. If the length of the key is &lt;
-    <b>key_length</b> it will be padded. Max is 64 bytes. If &gt; key_length, it will be rejected.
+    <b>key_length</b> it will be padded. Max is 64 bytes. If &gt; key_length,
+    it will be rejected.
     See the <a href="#tls::cipher"><b>tls::cipher</b></a> for key_length.</dd>
 </dl>
 
@@ -181,6 +182,13 @@ and integrity of messages and data.</p>
     <dt><a name="-mac"><strong>-mac</strong> <em>name</em></a></dt>
     <dd>Name of Message Authentication Code (MAC) to use.
     See <a href="#tls::mac"><b>tls::macs</b></a> command for the valid values.</dd>
+</dl>
+
+<dl>
+    <dt><a name="-padding"><strong>-padding</strong> <em>boolean</em></a></dt>
+    <dd>Specifies whether to use PKCS#7 padding or not for block ciphers. If
+    true, 1 to block size number of pad bytes will be added to the output to
+    pad to the next block size. Default is true.</dd>
 </dl>
 
 <dl>
@@ -609,15 +617,22 @@ These commands provide access to the OpenSSL providers.
 <p>The following is a list of the terminology used in this package along with
 brief definitions. For more details, please consult with the OpenSSL documentation.</p>
 <table>
-<tr><td>AAD</td><td>Additional Authenticated Data<td></tr>
-<tr><td>AEAD</td><td>Authenticated Encryption with Associated Data<td></tr>
-<tr><td>IV</td><td>Initialization vector<td></tr>
-<tr><td>KDF</td><td>Key Derivation Function<td></tr>
-<tr><td>MAC</td><td>Message Authenticated Code<td></tr>
-<tr><td>MD</td><td>Message Digest<td></tr>
-<tr><td>SHA</td><td>Secure Hash Algorithm<td></tr>
-<tr><td>TLS</td><td>Transport Layer Security<td></tr>
-<tr><td>XOF</td><td>Extendable-Output Function (aka variable length)<td></tr>
+<tr><td>AAD</td><td>Additional Authenticated Data</td></tr>
+<tr><td>AEAD</td><td>Authenticated Encryption with Associated Data</td></tr>
+<tr><td>AES</td><td>Advanced Encryption Standard</td></tr>
+<tr><td>CBC</td><td>AES Cipher Block Chaining mode</td></tr>
+<tr><td>CFB</td><td>AES Cipher Feedback mode</td></tr>
+<tr><td>CTR</td><td>AES Counter mode</td></tr>
+<tr><td>ECB</td><td>AES Electronic Codebook mode</td></tr>
+<tr><td>IV</td><td>Initialization vector</td></tr>
+<tr><td>KDF</td><td>Key Derivation Function</td></tr>
+<tr><td>MAC</td><td>Message Authenticated Code</td></tr>
+<tr><td>MD</td><td>Message Digest</td></tr>
+<tr><td>OFB</td><td>AES Output Feedback mode</td></tr>
+<tr><td>SHA</td><td>Secure Hash Algorithm</td></tr>
+<tr><td>SSL</td><td>Secure Sockets Layer</td></tr>
+<tr><td>TLS</td><td>Transport Layer Security</td></tr>
+<tr><td>XOF</td><td>Extendable-Output Function (aka variable length)</td></tr>
 </table>
 
 <br>
