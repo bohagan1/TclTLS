@@ -1,0 +1,22 @@
+# DES-ECB
+# From FIPS Pub 81 Appendix B
+
+
+# ECB-DES.Encrypt and ECB-DES.Decrypt 
+Klen = 8
+Len = 8
+Key = 0123456789abcdef
+Plaintext = 4e6f772069732074
+Ciphertext = 3fa40e8a984d4815
+
+Klen = 8
+Len = 8
+Key = 0123456789abcdef
+Plaintext = 68652074696d6520
+Ciphertext = 6a271787ab8883f9
+
+Klen = 8
+Len = 8
+Key = 0123456789abcdef
+Plaintext = 666f7220616c6c20
+Ciphertext = 893d51ec4b563b53

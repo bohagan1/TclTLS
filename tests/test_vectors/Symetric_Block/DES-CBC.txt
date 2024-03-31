@@ -1,0 +1,13 @@
+# DES-CBC
+# From FIPS Pub 81 Appendix C
+
+
+# CBC-DES.Encrypt and CBC-DES.Decrypt 
+Klen = 8
+Ilen = 8
+Len = 24
+Key = 0123456789abcdef
+IV = 1234567890abcdef
+#Plaintext = "Now is the time for all "
+Plaintext = 4e6f77206973207468652074696d6520666f7220616c6c20
+Ciphertext = e5c7cdde872bf27c43e934008c389c0f683788499a7c05f6

@@ -1,0 +1,27 @@
+# Auto generated from "DES-CFB.txt"
+lappend auto_path [file dirname [file dirname [file dirname [file dirname [file join [pwd] [info script]]]]]]
+package require tls
+package require tcltest
+
+catch {tls::provider legacy}
+tcltest::testConstraint DES_CFB [expr {[lsearch -nocase [tls::ciphers] DES-CFB] > -1}]
+
+tcltest::test Block_DES-CFB-1.1 {Encrypt DES-CFB} \
+	-constraints DES_CFB \
+	-body {binary encode hex [tls::encrypt -cipher DES-CFB -padding 0 \
+		 -key [binary decode hex 0123456789abcdef] \
+		 -iv [binary decode hex 1234567890abcdef] \
+		 -data [binary decode hex 4e6f77206973207468652074696d6520666f7220616c6c20]]} \
+	-match exact -result f3096249c7f46e51a69e839b1a92f78403467133898ea622
+
+tcltest::test Block_DES-CFB-1.2 {Decrypt DES-CFB} \
+	-constraints DES_CFB \
+	-body {binary encode hex [tls::decrypt -cipher DES-CFB -padding 0 \
+		 -key [binary decode hex 0123456789abcdef] \
+		 -iv [binary decode hex 1234567890abcdef] \
+		 -data [binary decode hex f3096249c7f46e51a69e839b1a92f78403467133898ea622]]} \
+	-match exact -result 4e6f77206973207468652074696d6520666f7220616c6c20
+
+# Cleanup
+::tcltest::cleanupTests
+return

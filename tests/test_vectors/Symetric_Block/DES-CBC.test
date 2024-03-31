@@ -1,0 +1,27 @@
+# Auto generated from "DES-CBC.txt"
+lappend auto_path [file dirname [file dirname [file dirname [file dirname [file join [pwd] [info script]]]]]]
+package require tls
+package require tcltest
+
+catch {tls::provider legacy}
+tcltest::testConstraint DES_CBC [expr {[lsearch -nocase [tls::ciphers] DES-CBC] > -1}]
+
+tcltest::test Block_DES-CBC-1.1 {Encrypt DES-CBC} \
+	-constraints DES_CBC \
+	-body {binary encode hex [tls::encrypt -cipher DES-CBC -padding 0 \
+		 -key [binary decode hex 0123456789abcdef] \
+		 -iv [binary decode hex 1234567890abcdef] \
+		 -data [binary decode hex 4e6f77206973207468652074696d6520666f7220616c6c20]]} \
+	-match exact -result e5c7cdde872bf27c43e934008c389c0f683788499a7c05f6
+
+tcltest::test Block_DES-CBC-1.2 {Decrypt DES-CBC} \
+	-constraints DES_CBC \
+	-body {binary encode hex [tls::decrypt -cipher DES-CBC -padding 0 \
+		 -key [binary decode hex 0123456789abcdef] \
+		 -iv [binary decode hex 1234567890abcdef] \
+		 -data [binary decode hex e5c7cdde872bf27c43e934008c389c0f683788499a7c05f6]]} \
+	-match exact -result 4e6f77206973207468652074696d6520666f7220616c6c20
+
+# Cleanup
+::tcltest::cleanupTests
+return

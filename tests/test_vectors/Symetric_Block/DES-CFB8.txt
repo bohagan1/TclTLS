@@ -1,0 +1,13 @@
+# DES-CFB8
+# From FIPS Pub 81 Appendix D2
+
+
+# CFB8-DES.Encrypt and CFB8-DES.Decrypt 
+Klen = 8
+Ilen = 8
+Len = 10
+Key = 0123456789abcdef
+IV = 1234567890abcdef
+#Plaintext = "Now is the"
+Plaintext = 4e6f7720697320746865
+Ciphertext = f31fda07011462ee187f

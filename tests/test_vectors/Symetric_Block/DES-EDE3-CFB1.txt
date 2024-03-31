@@ -5,7 +5,7 @@
 # CFB1-TDES.Encrypt and CFB1-TDES.Decrypt 
 Klen = 24
 Ilen = 8
-Len = 2
+Len = 1
 Key = 0123456789abcdef23456789abcdef01456789abcdef0123
 IV = f69f2445df4f9b17
 # 01101011
@@ -16,7 +16,7 @@ Ciphertext = 5c
 # CFB1-TDES.Encrypt and CFB1-TDES.Decrypt 
 Klen = 24
 Ilen = 8
-Len = 2
+Len = 1
 Key = 0123456789abcdef23456789abcdef010123456789abcdef
 IV = f69f2445df4f9b17
 # 01101011

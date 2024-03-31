@@ -1,0 +1,13 @@
+# DES-CFB
+# From FIPS Pub 81 Appendix D3
+
+
+# CFB-DES.Encrypt and CFB-DES.Decrypt 
+Klen = 8
+Ilen = 8
+Len = 24
+Key = 0123456789abcdef
+IV = 1234567890abcdef
+#Plaintext = "Now is the time for all "
+Plaintext = 4e6f77206973207468652074696d6520666f7220616c6c20
+Ciphertext = f3096249c7f46e51a69e839b1a92f78403467133898ea622

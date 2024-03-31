@@ -1,0 +1,14 @@
+# DES-CFB1
+# From FIPS Pub 81 Appendix D1
+
+
+# CFB1-DES.Encrypt and CFB1-DES.Decrypt 
+Klen = 8
+Ilen = 8
+Len = 3
+Key = 0123456789abcdef
+IV = 1234567890abcdef
+# 010011100110111101110111
+Plaintext = 4e6f77
+# 110011010001111011001001
+Ciphertext = cd1ec9

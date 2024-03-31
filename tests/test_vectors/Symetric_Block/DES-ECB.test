@@ -1,0 +1,53 @@
+# Auto generated from "DES-ECB.txt"
+lappend auto_path [file dirname [file dirname [file dirname [file dirname [file join [pwd] [info script]]]]]]
+package require tls
+package require tcltest
+
+catch {tls::provider legacy}
+tcltest::testConstraint DES_ECB [expr {[lsearch -nocase [tls::ciphers] DES-ECB] > -1}]
+
+tcltest::test Block_DES-ECB-1.1 {Encrypt DES-ECB} \
+	-constraints DES_ECB \
+	-body {binary encode hex [tls::encrypt -cipher DES-ECB -padding 0 \
+		 -key [binary decode hex 0123456789abcdef] \
+		 -data [binary decode hex 4e6f772069732074]]} \
+	-match exact -result 3fa40e8a984d4815
+
+tcltest::test Block_DES-ECB-1.2 {Decrypt DES-ECB} \
+	-constraints DES_ECB \
+	-body {binary encode hex [tls::decrypt -cipher DES-ECB -padding 0 \
+		 -key [binary decode hex 0123456789abcdef] \
+		 -data [binary decode hex 3fa40e8a984d4815]]} \
+	-match exact -result 4e6f772069732074
+
+tcltest::test Block_DES-ECB-1.3 {Encrypt DES-ECB} \
+	-constraints DES_ECB \
+	-body {binary encode hex [tls::encrypt -cipher DES-ECB -padding 0 \
+		 -key [binary decode hex 0123456789abcdef] \
+		 -data [binary decode hex 68652074696d6520]]} \
+	-match exact -result 6a271787ab8883f9
+
+tcltest::test Block_DES-ECB-1.4 {Decrypt DES-ECB} \
+	-constraints DES_ECB \
+	-body {binary encode hex [tls::decrypt -cipher DES-ECB -padding 0 \
+		 -key [binary decode hex 0123456789abcdef] \
+		 -data [binary decode hex 6a271787ab8883f9]]} \
+	-match exact -result 68652074696d6520
+
+tcltest::test Block_DES-ECB-1.5 {Encrypt DES-ECB} \
+	-constraints DES_ECB \
+	-body {binary encode hex [tls::encrypt -cipher DES-ECB -padding 0 \
+		 -key [binary decode hex 0123456789abcdef] \
+		 -data [binary decode hex 666f7220616c6c20]]} \
+	-match exact -result 893d51ec4b563b53
+
+tcltest::test Block_DES-ECB-1.6 {Decrypt DES-ECB} \
+	-constraints DES_ECB \
+	-body {binary encode hex [tls::decrypt -cipher DES-ECB -padding 0 \
+		 -key [binary decode hex 0123456789abcdef] \
+		 -data [binary decode hex 893d51ec4b563b53]]} \
+	-match exact -result 666f7220616c6c20
+
+# Cleanup
+::tcltest::cleanupTests
+return

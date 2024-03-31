@@ -1,0 +1,14 @@
+# DES-OFB1
+# From FIPS Pub 81 Appendix E
+
+
+# OFB1-DES.Encrypt and OFB1-DES.Decrypt 
+Klen = 8
+Ilen = 8
+Len = 3
+Key = 0123456789abcdef
+IV = 1234567890abcdef
+# 010011100110111101110111
+Plaintext = 4e6f77
+# 111000111101001101001011
+Ciphertext = e3d34b

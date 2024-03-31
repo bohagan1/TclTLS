@@ -51,6 +51,10 @@ proc do_test {group cipher file_num tc params fn} {
     foreach key $list2 {
 	if {[info exists config($key)]} {
 	    set result $config($key)
+	    # Convert hex to lowercase
+	    if {[string index $result 0] ne "\""} {
+		set result [string tolower $result]
+	    }
 	}
     }
     
