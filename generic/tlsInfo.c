@@ -72,30 +72,46 @@ int CipherInfo(Tcl_Interp *interp, Tcl_Obj *nameObj) {
     const EVP_CIPHER *cipher;
     Tcl_Obj *resultObj, *listObj;
     unsigned long flags, mode;
+    int res = TCL_OK;
     char *modeName = NULL;
     char *name = Tcl_GetString(nameObj);
 
     /* Get cipher */
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
     cipher = EVP_get_cipherbyname(name);
+#else
+    cipher = EVP_CIPHER_fetch(NULL, name, NULL);
+#endif
 
     if (cipher == NULL) {
 	Tcl_AppendResult(interp, "Invalid cipher \"", name, "\"", (char *) NULL);
 	return TCL_ERROR;
     }
 
-    /* Get properties */
+    /* Create result object */
     resultObj = Tcl_NewListObj(0, NULL);
     if (resultObj == NULL) {
-	return TCL_ERROR;
+	res = TCL_ERROR;
+	goto done;
     }
+
+    /* Get properties */
     LAPPEND_STR(interp, resultObj, "nid", OBJ_nid2ln(EVP_CIPHER_nid(cipher)), -1);
     LAPPEND_STR(interp, resultObj, "name", EVP_CIPHER_name(cipher), -1);
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
     LAPPEND_STR(interp, resultObj, "description", "", -1);
+#else
+    LAPPEND_STR(interp, resultObj, "description", EVP_CIPHER_get0_description(cipher), -1);
+#endif
     LAPPEND_INT(interp, resultObj, "block_size", EVP_CIPHER_block_size(cipher));
     LAPPEND_INT(interp, resultObj, "key_length", EVP_CIPHER_key_length(cipher));
     LAPPEND_INT(interp, resultObj, "iv_length", EVP_CIPHER_iv_length(cipher));
     LAPPEND_STR(interp, resultObj, "type", OBJ_nid2ln(EVP_CIPHER_type(cipher)), -1);
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
     LAPPEND_STR(interp, resultObj, "provider", "", -1);
+#else
+    LAPPEND_STR(interp, resultObj, "provider", OSSL_PROVIDER_get0_name(EVP_CIPHER_get0_provider(cipher)), -1);
+#endif
     flags = EVP_CIPHER_flags(cipher);
     mode  = EVP_CIPHER_mode(cipher);
 
@@ -158,6 +174,7 @@ int CipherInfo(Tcl_Interp *interp, Tcl_Obj *nameObj) {
 	int tag_len = 0;
 
 	EVP_EncryptInit_ex(ctx, cipher, NULL, NULL, NULL);
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
 	if (mode == EVP_CIPH_GCM_MODE || mode == EVP_CIPH_OCB_MODE) {
 	    tag_len = EVP_GCM_TLS_TAG_LEN; /* EVP_MAX_AEAD_TAG_LENGTH */
 	} else if (mode == EVP_CIPH_CCM_MODE) {
@@ -165,6 +182,9 @@ int CipherInfo(Tcl_Interp *interp, Tcl_Obj *nameObj) {
 	} else if (cipher == EVP_get_cipherbyname("chacha20-poly1305")) {
 	    tag_len = EVP_CHACHAPOLY_TLS_TAG_LEN; /* POLY1305_BLOCK_SIZE */
 	}
+#else
+	tag_len = EVP_CIPHER_CTX_get_tag_length(ctx);
+#endif
 	EVP_CIPHER_CTX_free(ctx);
 	LAPPEND_INT(interp, resultObj, "tag_length", tag_len);
     }
@@ -179,7 +199,12 @@ int CipherInfo(Tcl_Interp *interp, Tcl_Obj *nameObj) {
     }
 
     Tcl_SetObjResult(interp, resultObj);
-    return TCL_OK;
+
+done:
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+    EVP_CIPHER_free(cipher);
+#endif
+    return res;
 }
 
 /*
@@ -455,10 +480,15 @@ int DigestInfo(Tcl_Interp *interp, Tcl_Obj *nameObj) {
     const EVP_MD *md;
     Tcl_Obj *resultObj, *listObj;
     unsigned long flags;
+    int res = TCL_OK;
     char *name = Tcl_GetString(nameObj);
 
     /* Get message digest */
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
     md = EVP_get_digestbyname(name);
+#else
+    md = EVP_MD_fetch(NULL, name, NULL);
+#endif
 
     if (md == NULL) {
 	Tcl_AppendResult(interp, "Invalid digest \"", name, "\"", (char *) NULL);
@@ -468,15 +498,24 @@ int DigestInfo(Tcl_Interp *interp, Tcl_Obj *nameObj) {
     /* Get properties */
     resultObj = Tcl_NewListObj(0, NULL);
     if (resultObj == NULL) {
-	return TCL_ERROR;
+	res = TCL_ERROR;
+	goto done;
     }
     LAPPEND_STR(interp, resultObj, "name", EVP_MD_name(md), -1);
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
     LAPPEND_STR(interp, resultObj, "description", "", -1);
+#else
+    LAPPEND_STR(interp, resultObj, "description", EVP_MD_get0_description(md), -1);
+#endif
     LAPPEND_INT(interp, resultObj, "size", EVP_MD_size(md));
     LAPPEND_INT(interp, resultObj, "block_size", EVP_MD_block_size(md));
-    LAPPEND_STR(interp, resultObj, "provider", "", -1);
     LAPPEND_STR(interp, resultObj, "type", OBJ_nid2ln(EVP_MD_type(md)), -1);
     LAPPEND_STR(interp, resultObj, "pkey_type", OBJ_nid2ln(EVP_MD_pkey_type(md)), -1);
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
+    LAPPEND_STR(interp, resultObj, "provider", "", -1);
+#else
+    LAPPEND_STR(interp, resultObj, "provider", OSSL_PROVIDER_get0_name(EVP_MD_get0_provider(md)), -1);
+#endif
     flags = EVP_MD_flags(md);
 
     /* Flags */
@@ -490,7 +529,12 @@ int DigestInfo(Tcl_Interp *interp, Tcl_Obj *nameObj) {
     LAPPEND_OBJ(interp, resultObj, "flags", listObj);
 
     Tcl_SetObjResult(interp, resultObj);
-    return TCL_OK;
+
+done:
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+    EVP_MD_free(md);
+#endif
+    return res;
 }
 
 /*
@@ -650,21 +694,42 @@ int MacInfo(Tcl_Interp *interp, Tcl_Obj *nameObj) {
     int res = TCL_OK;
     char *name = Tcl_GetString(nameObj);
 
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
     if (strcmp(name, "cmac") != 0 && strcmp(name, "hmac") != 0) {
 	Tcl_AppendResult(interp, "Invalid MAC \"", name, "\"", (char *) NULL);
 	return TCL_ERROR;
     }
+#else
+    EVP_MAC *mac = EVP_MAC_fetch(NULL, name, NULL);
+
+    if (mac == NULL) {
+	Tcl_AppendResult(interp, "Invalid MAC \"", name, "\"", (char *) NULL);
+	return TCL_ERROR;
+    }
+#endif
 
     /* Get properties */
     resultObj = Tcl_NewListObj(0, NULL);
     if (resultObj == NULL) {
-	return TCL_ERROR;
+	res = TCL_ERROR;
+	goto done;
     }
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
     LAPPEND_STR(interp, resultObj, "name", name, -1);
     LAPPEND_STR(interp, resultObj, "description", "", -1);
     LAPPEND_STR(interp, resultObj, "provider", "", -1);
+#else
+    LAPPEND_STR(interp, resultObj, "name", EVP_MAC_get0_name(mac), -1);
+    LAPPEND_STR(interp, resultObj, "description", EVP_MAC_get0_description(mac), -1);
+    LAPPEND_STR(interp, resultObj, "provider", OSSL_PROVIDER_get0_name(EVP_MAC_get0_provider(mac)), -1);
+#endif
 
     Tcl_SetObjResult(interp, resultObj);
+
+done:
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+    EVP_MAC_free(mac);
+#endif
     return res;
 }
 
@@ -764,16 +829,27 @@ int PkeyInfo(Tcl_Interp *interp, Tcl_Obj *nameObj) {
     /* Get properties */
     resultObj = Tcl_NewListObj(0, NULL);
     if (resultObj == NULL) {
-	return TCL_ERROR;
+	res = TCL_ERROR;
+	goto done;
     }
     LAPPEND_STR(interp, resultObj, "name", OBJ_nid2ln(EVP_PKEY_id(pkey)), -1);
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
     LAPPEND_STR(interp, resultObj, "description", "", -1);
+#else
+    LAPPEND_STR(interp, resultObj, "description", EVP_PKEY_get0_description(pkey), -1);
+#endif
     LAPPEND_INT(interp, resultObj, "size", EVP_PKEY_size(pkey));
     LAPPEND_INT(interp, resultObj, "bits", EVP_PKEY_bits(pkey));
     LAPPEND_INT(interp, resultObj, "security_bits", EVP_PKEY_security_bits(pkey));
     LAPPEND_STR(interp, resultObj, "baseId", OBJ_nid2ln(EVP_PKEY_base_id(pkey)), -1);
-    LAPPEND_STR(interp, resultObj, "provider", "", -1);
     LAPPEND_STR(interp, resultObj, "type", OBJ_nid2ln(EVP_PKEY_type(EVP_PKEY_id(pkey))), -1);
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
+    LAPPEND_STR(interp, resultObj, "provider", "", -1);
+#else
+    LAPPEND_STR(interp, resultObj, "provider", OSSL_PROVIDER_get0_name(EVP_PKEY_get0_provider(pkey)), -1);
+    LAPPEND_STR(interp, resultObj, "type_name", EVP_PKEY_get0_type_name(pkey), -1);
+    LAPPEND_BOOL(interp, resultObj, "can_sign", EVP_PKEY_can_sign(pkey));
+#endif
 
     {
 	int pnid;
@@ -783,6 +859,11 @@ int PkeyInfo(Tcl_Interp *interp, Tcl_Obj *nameObj) {
     }
 
     Tcl_SetObjResult(interp, resultObj);
+
+done:
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+    EVP_PKEY_free(pkey);
+#endif
     return res;
 }
 
