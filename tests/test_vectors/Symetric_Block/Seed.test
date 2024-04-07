@@ -1,0 +1,67 @@
+# Auto generated from "Seed.txt"
+lappend auto_path [file dirname [file dirname [file dirname [file dirname [file join [pwd] [info script]]]]]]
+package require tls
+package require tcltest
+
+catch {tls::provider legacy}
+tcltest::testConstraint Seed [expr {[lsearch -nocase [tls::ciphers] Seed] > -1}]
+
+tcltest::test Symetric_Block_Seed-1.1 {Encrypt Seed} \
+	-constraints Seed \
+	-body {binary encode hex [tls::encrypt -cipher Seed -padding 0 \
+		 -key [binary decode hex 00000000000000000000000000000000] \
+		 -data [binary decode hex 000102030405060708090A0B0C0D0E0F]]} \
+	-match exact -result 5ebac6e0054e166819aff1cc6d346cdb
+
+tcltest::test Symetric_Block_Seed-1.2 {Decrypt Seed} \
+	-constraints Seed \
+	-body {binary encode hex [tls::decrypt -cipher Seed -padding 0 \
+		 -key [binary decode hex 00000000000000000000000000000000] \
+		 -data [binary decode hex 5EBAC6E0054E166819AFF1CC6D346CDB]]} \
+	-match exact -result 000102030405060708090a0b0c0d0e0f
+
+tcltest::test Symetric_Block_Seed-1.3 {Encrypt Seed} \
+	-constraints Seed \
+	-body {binary encode hex [tls::encrypt -cipher Seed -padding 0 \
+		 -key [binary decode hex 000102030405060708090A0B0C0D0E0F] \
+		 -data [binary decode hex 00000000000000000000000000000000]]} \
+	-match exact -result c11f22f20140505084483597e4370f43
+
+tcltest::test Symetric_Block_Seed-1.4 {Decrypt Seed} \
+	-constraints Seed \
+	-body {binary encode hex [tls::decrypt -cipher Seed -padding 0 \
+		 -key [binary decode hex 000102030405060708090A0B0C0D0E0F] \
+		 -data [binary decode hex C11F22F20140505084483597E4370F43]]} \
+	-match exact -result 00000000000000000000000000000000
+
+tcltest::test Symetric_Block_Seed-1.5 {Encrypt Seed} \
+	-constraints Seed \
+	-body {binary encode hex [tls::encrypt -cipher Seed -padding 0 \
+		 -key [binary decode hex 4706480851E61BE85D74BFB3FD956185] \
+		 -data [binary decode hex 83A2F8A288641FB9A4E9A5CC2F131C7D]]} \
+	-match exact -result ee54d13ebcae706d226bc3142cd40d4a
+
+tcltest::test Symetric_Block_Seed-1.6 {Decrypt Seed} \
+	-constraints Seed \
+	-body {binary encode hex [tls::decrypt -cipher Seed -padding 0 \
+		 -key [binary decode hex 4706480851E61BE85D74BFB3FD956185] \
+		 -data [binary decode hex EE54D13EBCAE706D226BC3142CD40D4A]]} \
+	-match exact -result 83a2f8a288641fb9a4e9a5cc2f131c7d
+
+tcltest::test Symetric_Block_Seed-1.7 {Encrypt Seed} \
+	-constraints Seed \
+	-body {binary encode hex [tls::encrypt -cipher Seed -padding 0 \
+		 -key [binary decode hex 28DBC3BC49FFD87DCFA509B11D422BE7] \
+		 -data [binary decode hex B41E6BE2EBA84A148E2EED84593C5EC7]]} \
+	-match exact -result 9b9b7bfcd1813cb95d0b3618f40f5122
+
+tcltest::test Symetric_Block_Seed-1.8 {Decrypt Seed} \
+	-constraints Seed \
+	-body {binary encode hex [tls::decrypt -cipher Seed -padding 0 \
+		 -key [binary decode hex 28DBC3BC49FFD87DCFA509B11D422BE7] \
+		 -data [binary decode hex 9B9B7BFCD1813CB95D0B3618F40F5122]]} \
+	-match exact -result b41e6be2eba84a148e2eed84593c5ec7
+
+# Cleanup
+::tcltest::cleanupTests
+return
