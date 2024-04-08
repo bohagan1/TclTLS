@@ -2,14 +2,14 @@
 # From NBS SP 500-20 and NIST SP 800-20
 
 
-# CBC-DES.Encrypt and CBC-DES.Decrypt 
+# NIST 800-17
 Klen = 8
 Len = 8
 Key = 10316E028C8F3B4A
 Plaintext = 0000000000000000
 Ciphertext = 82DCBAFBDEAB6602
 
-# SP 500-20 Appendix B: The DES Test SeT
+# SP 500-20 Appendix B: The DES Test Set
 # SP 800-20 Table A.1
 Klen = 8
 Len = 8
@@ -38,342 +38,6 @@ Ciphertext = 1000000000000000
 Klen = 8
 Len = 8
 Key = 0101010101010101
-Plaintext = 20B9E767B2FB1456
-Ciphertext = 0800000000000000
-
-Klen = 8
-Len = 8
-Key = 0101010101010101
-Plaintext = 55579380D77138EF
-Ciphertext = 0400000000000000
-
-Klen = 8
-Len = 8
-Key = 0101010101010101
-Plaintext = 6CC5DEFAAF04512F
-Ciphertext = 0200000000000000
-
-Klen = 8
-Len = 8
-Key = 0101010101010101
-Plaintext = 0D9F279BA5D87260
-Ciphertext = 0100000000000000
-
-Klen = 8
-Len = 8
-Key = 0101010101010101
-Plaintext = D9031B0271BD5A0A
-Ciphertext = 0080000000000000
-
-Klen = 8
-Len = 8
-Key = 0101010101010101
-Plaintext = 424250B37C3DD951
-Ciphertext = 0040000000000000
-
-Klen = 8
-Len = 8
-Key = 0101010101010101
-Plaintext = B8061B7ECD9A21E5
-Ciphertext = 0020000000000000
-
-Klen = 8
-Len = 8
-Key = 0101010101010101
-Plaintext = F15D0F286B65BD28
-Ciphertext = 0010000000000000
-
-Klen = 8
-Len = 8
-Key = 0101010101010101
-Plaintext = ADD0CC8D6E5DEBA1
-Ciphertext = 0008000000000000
-
-Klen = 8
-Len = 8
-Key = 0101010101010101
-Plaintext = E6D5F82752AD63D1
-Ciphertext = 0004000000000000
-
-Klen = 8
-Len = 8
-Key = 0101010101010101
-Plaintext = ECBFE3BD3F591A5E
-Ciphertext = 0002000000000000
-
-Klen = 8
-Len = 8
-Key = 0101010101010101
-Plaintext = F356834379D165CD
-Ciphertext = 0001000000000000
-
-Klen = 8
-Len = 8
-Key = 0101010101010101
-Plaintext = 2B9F982F20037FA9
-Ciphertext = 0000800000000000
-
-Klen = 8
-Len = 8
-Key = 0101010101010101
-Plaintext = 889DE068A16F0BE6
-Ciphertext = 0000400000000000
-
-Klen = 8
-Len = 8
-Key = 0101010101010101
-Plaintext = E19E275D846A1298
-Ciphertext = 0000200000000000
-
-Klen = 8
-Len = 8
-Key = 0101010101010101
-Plaintext = 329A8ED523D71AEC
-Ciphertext = 0000100000000000
-
-Klen = 8
-Len = 8
-Key = 0101010101010101
-Plaintext = E7FCE22557D23C97
-Ciphertext = 0000080000000000
-
-Klen = 8
-Len = 8
-Key = 0101010101010101
-Plaintext = 12A9F5817FF2D65D
-Ciphertext = 0000040000000000
-
-Klen = 8
-Len = 8
-Key = 0101010101010101
-Plaintext = A484C3AD38DC9C19
-Ciphertext = 0000020000000000
-
-Klen = 8
-Len = 8
-Key = 0101010101010101
-Plaintext = FBE00A8A1EF8AD72
-Ciphertext = 0000010000000000
-
-Klen = 8
-Len = 8
-Key = 0101010101010101
-Plaintext = 750D079407521363
-Ciphertext = 0000008000000000
-
-Klen = 8
-Len = 8
-Key = 0101010101010101
-Plaintext = 64FEED9C724C2FAF
-Ciphertext = 0000004000000000
-
-Klen = 8
-Len = 8
-Key = 0101010101010101
-Plaintext = F02B263B328E2B60
-Ciphertext = 0000002000000000
-
-Klen = 8
-Len = 8
-Key = 0101010101010101
-Plaintext = 9D64555A9A10B852
-Ciphertext = 0000001000000000
-
-Klen = 8
-Len = 8
-Key = 0101010101010101
-Plaintext = D106FF0BED5255D7
-Ciphertext = 0000000800000000
-
-Klen = 8
-Len = 8
-Key = 0101010101010101
-Plaintext = E1652C6B138C64A5
-Ciphertext = 0000000400000000
-
-Klen = 8
-Len = 8
-Key = 0101010101010101
-Plaintext = E428581186EC8F46
-Ciphertext = 0000000200000000
-
-Klen = 8
-Len = 8
-Key = 0101010101010101
-Plaintext = AEB5F5EDE22D1A36
-Ciphertext = 0000000100000000
-
-Klen = 8
-Len = 8
-Key = 0101010101010101
-Plaintext = E943D7568AEC0C5C
-Ciphertext = 0000000080000000
-
-Klen = 8
-Len = 8
-Key = 0101010101010101
-Plaintext = DF98C8276F54B04B
-Ciphertext = 0000000040000000
-
-Klen = 8
-Len = 8
-Key = 0101010101010101
-Plaintext = B160E4680F6C696F
-Ciphertext = 0000000020000000
-
-Klen = 8
-Len = 8
-Key = 0101010101010101
-Plaintext = FA0752B07D9C4AB8
-Ciphertext = 0000000010000000
-
-Klen = 8
-Len = 8
-Key = 0101010101010101
-Plaintext = CA3A2B036DBC8502
-Ciphertext = 0000000008000000
-
-Klen = 8
-Len = 8
-Key = 0101010101010101
-Plaintext = 5E0905517BB59BCF
-Ciphertext = 0000000004000000
-
-Klen = 8
-Len = 8
-Key = 0101010101010101
-Plaintext = 814EEB3B91D90726
-Ciphertext = 0000000002000000
-
-Klen = 8
-Len = 8
-Key = 0101010101010101
-Plaintext = 4D49DB1532919C9F
-Ciphertext = 0000000001000000
-
-Klen = 8
-Len = 8
-Key = 0101010101010101
-Plaintext = 25EB5FC3F8CF0621
-Ciphertext = 0000000000800000
-
-Klen = 8
-Len = 8
-Key = 0101010101010101
-Plaintext = AB6A20C0620D1C6F
-Ciphertext = 0000000000400000
-
-Klen = 8
-Len = 8
-Key = 0101010101010101
-Plaintext = 79E90DBC98F92CCA
-Ciphertext = 0000000000200000
-
-Klen = 8
-Len = 8
-Key = 0101010101010101
-Plaintext = 866ECEDD8072BB0E
-Ciphertext = 0000000000100000
-
-Klen = 8
-Len = 8
-Key = 0101010101010101
-Plaintext = 8B54536F2F3E64A8
-Ciphertext = 0000000000080000
-
-Klen = 8
-Len = 8
-Key = 0101010101010101
-Plaintext = EA51D3975595B86B
-Ciphertext = 0000000000040000
-
-Klen = 8
-Len = 8
-Key = 0101010101010101
-Plaintext = CAFFC6AC4542DE31
-Ciphertext = 0000000000020000
-
-Klen = 8
-Len = 8
-Key = 0101010101010101
-Plaintext = 8DD45A2DDF90796C
-Ciphertext = 0000000000010000
-
-Klen = 8
-Len = 8
-Key = 0101010101010101
-Plaintext = 1029D55E880EC2D0
-Ciphertext = 0000000000008000
-
-Klen = 8
-Len = 8
-Key = 0101010101010101
-Plaintext = 5D86CB23639DBEA9
-Ciphertext = 0000000000004000
-
-Klen = 8
-Len = 8
-Key = 0101010101010101
-Plaintext = 1D1CA853AE7C0C5F
-Ciphertext = 0000000000002000
-
-Klen = 8
-Len = 8
-Key = 0101010101010101
-Plaintext = CE332329248F3228
-Ciphertext = 0000000000001000
-
-Klen = 8
-Len = 8
-Key = 0101010101010101
-Plaintext = 8405D1ABE24FB942
-Ciphertext = 0000000000000800
-
-Klen = 8
-Len = 8
-Key = 0101010101010101
-Plaintext = E643D78090CA4207
-Ciphertext = 0000000000000400
-
-Klen = 8
-Len = 8
-Key = 0101010101010101
-Plaintext = 48221B9937748A23
-Ciphertext = 0000000000000200
-
-Klen = 8
-Len = 8
-Key = 0101010101010101
-Plaintext = DD7C0BBD61FAFD54
-Ciphertext = 0000000000000100
-
-Klen = 8
-Len = 8
-Key = 0101010101010101
-Plaintext = 2FBC291A570DB5C4
-Ciphertext = 0000000000000080
-
-Klen = 8
-Len = 8
-Key = 0101010101010101
-Plaintext = E07C30D7E4E26E12
-Ciphertext = 0000000000000040
-
-Klen = 8
-Len = 8
-Key = 0101010101010101
-Plaintext = 0953E2258E8E90A1
-Ciphertext = 0000000000000020
-
-Klen = 8
-Len = 8
-Key = 0101010101010101
-Plaintext = 5B711BC4CEEBF2EE
-Ciphertext = 0000000000000010
-
-Klen = 8
-Len = 8
-Key = 0101010101010101
 Plaintext = CC083F1E6D9E85F6
 Ciphertext = 0000000000000008
 
@@ -395,7 +59,629 @@ Key = 0101010101010101
 Plaintext = 166B40B44ABA4BD6
 Ciphertext = 0000000000000001
 
+
+# NIST SP 800-20 Table A.2
+Count = 0
+Klen = 8
+Len = 8
+Key = 8001010101010101
+Plaintext = 0000000000000000
+Ciphertext = 95A8D72813DAA94D
+
+Count = 1
+Klen = 8
+Len = 8
+Key = 4001010101010101
+Plaintext = 0000000000000000
+Ciphertext = 0EEC1487DD8C26D5
+
+Count = 2
+Klen = 8
+Len = 8
+Key = 2001010101010101
+Plaintext = 0000000000000000
+Ciphertext = 7AD16FFB79C45926
+
+Count = 3
+Klen = 8
+Len = 8
+Key = 1001010101010101
+Plaintext = 0000000000000000
+Ciphertext = D3746294CA6A6CF3
+
+Count = 4
+Klen = 8
+Len = 8
+Key = 0801010101010101
+Plaintext = 0000000000000000
+Ciphertext = 809F5F873C1FD761
+
+Count = 5
+Klen = 8
+Len = 8
+Key = 0401010101010101
+Plaintext = 0000000000000000
+Ciphertext = C02FAFFEC989D1FC
+
+Count = 6
+Klen = 8
+Len = 8
+Key = 0201010101010101
+Plaintext = 0000000000000000
+Ciphertext = 4615AA1D33E72F10
+
+Count = 7
+Klen = 8
+Len = 8
+Key = 0180010101010101
+Plaintext = 0000000000000000
+Ciphertext = 2055123350C00858
+
+Count = 8
+Klen = 8
+Len = 8
+Key = 0140010101010101
+Plaintext = 0000000000000000
+Ciphertext = DF3B99D6577397C8
+
+Count = 9
+Klen = 8
+Len = 8
+Key = 0120010101010101
+Plaintext = 0000000000000000
+Ciphertext = 31FE17369B5288C9
+
+Count = 10
+Klen = 8
+Len = 8
+Key = 0110010101010101
+Plaintext = 0000000000000000
+Ciphertext = DFDD3CC64DAE1642
+
+Count = 11
+Klen = 8
+Len = 8
+Key = 0108010101010101
+Plaintext = 0000000000000000
+Ciphertext = 178C83CE2B399D94
+
+Count = 12
+Klen = 8
+Len = 8
+Key = 0104010101010101
+Plaintext = 0000000000000000
+Ciphertext = 50F636324A9B7F80
+
+Count = 13
+Klen = 8
+Len = 8
+Key = 0102010101010101
+Plaintext = 0000000000000000
+Ciphertext = A8468EE3BC18F06D
+
+Count = 14
+Klen = 8
+Len = 8
+Key = 0101800101010101
+Plaintext = 0000000000000000
+Ciphertext = A2DC9E92FD3CDE92
+
+Count = 15
+Klen = 8
+Len = 8
+Key = 0101400101010101
+Plaintext = 0000000000000000
+Ciphertext = CAC09F797D031287
+
+Count = 16
+Klen = 8
+Len = 8
+Key = 0101200101010101
+Plaintext = 0000000000000000
+Ciphertext = 90BA680B22AEB525
+
+Count = 17
+Klen = 8
+Len = 8
+Key = 0101100101010101
+Plaintext = 0000000000000000
+Ciphertext = CE7A24F350E280B6
+
+Count = 18
+Klen = 8
+Len = 8
+Key = 0101080101010101
+Plaintext = 0000000000000000
+Ciphertext = 882BFF0AA01A0B87
+
+Count = 19
+Klen = 8
+Len = 8
+Key = 0101040101010101
+Plaintext = 0000000000000000
+Ciphertext = 25610288924511C2
+
+Count = 20
+Klen = 8
+Len = 8
+Key = 0101020101010101
+Plaintext = 0000000000000000
+Ciphertext = C71516C29C75D170
+
+Count = 21
+Klen = 8
+Len = 8
+Key = 0101018001010101
+Plaintext = 0000000000000000
+Ciphertext = 5199C29A52C9F059
+
+Count = 22
+Klen = 8
+Len = 8
+Key = 0101014001010101
+Plaintext = 0000000000000000
+Ciphertext = C22F0A294A71F29F
+
+Count = 23
+Klen = 8
+Len = 8
+Key = 0101012001010101
+Plaintext = 0000000000000000
+Ciphertext = EE371483714C02EA
+
+Count = 24
+Klen = 8
+Len = 8
+Key = 0101011001010101
+Plaintext = 0000000000000000
+Ciphertext = A81FBD448F9E522F
+
+Count = 25
+Klen = 8
+Len = 8
+Key = 0101010801010101
+Plaintext = 0000000000000000
+Ciphertext = 4F644C92E192DFED
+
+Count = 26
+Klen = 8
+Len = 8
+Key = 0101010401010101
+Plaintext = 0000000000000000
+Ciphertext = 1AFA9A66A6DF92AE
+
+Count = 27
+Klen = 8
+Len = 8
+Key = 0101010201010101
+Plaintext = 0000000000000000
+Ciphertext = B3C1CC715CB879D8
+
+Count = 28
+Klen = 8
+Len = 8
+Key = 0101010180010101
+Plaintext = 0000000000000000
+Ciphertext = 19D032E64AB0BD8B
+
+Count = 29
+Klen = 8
+Len = 8
+Key = 0101010140010101
+Plaintext = 0000000000000000
+Ciphertext = 3CFAA7A7DC8720DC
+
+Count = 30
+Klen = 8
+Len = 8
+Key = 0101010120010101
+Plaintext = 0000000000000000
+Ciphertext = B7265F7F447AC6F3
+
+Count = 31
+Klen = 8
+Len = 8
+Key = 0101010110010101
+Plaintext = 0000000000000000
+Ciphertext = 9DB73B3C0D163F54
+
+Count = 32
+Klen = 8
+Len = 8
+Key = 0101010108010101
+Plaintext = 0000000000000000
+Ciphertext = 8181B65BABF4A975
+
+Count = 33
+Klen = 8
+Len = 8
+Key = 0101010104010101
+Plaintext = 0000000000000000
+Ciphertext = 93C9B64042EAA240
+
+Count = 34
+Klen = 8
+Len = 8
+Key = 0101010102010101
+Plaintext = 0000000000000000
+Ciphertext = 5570530829705592
+
+Count = 35
+Klen = 8
+Len = 8
+Key = 0101010101800101
+Plaintext = 0000000000000000
+Ciphertext = 8638809E878787A0
+
+Count = 36
+Klen = 8
+Len = 8
+Key = 0101010101400101
+Plaintext = 0000000000000000
+Ciphertext = 41B9A79AF79AC208
+
+Count = 37
+Klen = 8
+Len = 8
+Key = 0101010101200101
+Plaintext = 0000000000000000
+Ciphertext = 7A9BE42F2009A892
+
+Count = 38
+Klen = 8
+Len = 8
+Key = 0101010101100101
+Plaintext = 0000000000000000
+Ciphertext = 29038D56BA6D2745
+
+Count = 39
+Klen = 8
+Len = 8
+Key = 0101010101080101
+Plaintext = 0000000000000000
+Ciphertext = 5495C6ABF1E5DF51
+
+Count = 40
+Klen = 8
+Len = 8
+Key = 0101010101040101
+Plaintext = 0000000000000000
+Ciphertext = AE13DBD561488933
+
+Count = 41
+Klen = 8
+Len = 8
+Key = 0101010101020101
+Plaintext = 0000000000000000
+Ciphertext = 024D1FFA8904E389
+
+Count = 42
+Klen = 8
+Len = 8
+Key = 0101010101018001
+Plaintext = 0000000000000000
+Ciphertext = D1399712F99BF02E
+
+Count = 43
+Klen = 8
+Len = 8
+Key = 0101010101014001
+Plaintext = 0000000000000000
+Ciphertext = 14C1D7C1CFFEC79E
+
+Count = 44
+Klen = 8
+Len = 8
+Key = 0101010101012001
+Plaintext = 0000000000000000
+Ciphertext = 1DE5279DAE3BED6F
+
+Count = 45
+Klen = 8
+Len = 8
+Key = 0101010101011001
+Plaintext = 0000000000000000
+Ciphertext = E941A33F85501303
+
+Count = 46
+Klen = 8
+Len = 8
+Key = 0101010101010801
+Plaintext = 0000000000000000
+Ciphertext = DA99DBBC9A03F379
+
+Count = 47
+Klen = 8
+Len = 8
+Key = 0101010101010401
+Plaintext = 0000000000000000
+Ciphertext = B7FC92F91D8E92E9
+
+Count = 48
+Klen = 8
+Len = 8
+Key = 0101010101010201
+Plaintext = 0000000000000000
+Ciphertext = AE8E5CAA3CA04E85
+
+Count = 49
+Klen = 8
+Len = 8
+Key = 0101010101010180
+Plaintext = 0000000000000000
+Ciphertext = 9CC62DF43B6EED74
+
+Count = 50
+Klen = 8
+Len = 8
+Key = 0101010101010140
+Plaintext = 0000000000000000
+Ciphertext = D863DBB5C59A91A0
+
+Count = 51
+Klen = 8
+Len = 8
+Key = 0101010101010120
+Plaintext = 0000000000000000
+Ciphertext = A1AB2190545B91D7
+
+Count = 52
+Klen = 8
+Len = 8
+Key = 0101010101010110
+Plaintext = 0000000000000000
+Ciphertext = 0875041E64C570F7
+
+Count = 53
+Klen = 8
+Len = 8
+Key = 0101010101010108
+Plaintext = 0000000000000000
+Ciphertext = 5A594528BEBEF1CC
+
+Count = 54
+Klen = 8
+Len = 8
+Key = 0101010101010104
+Plaintext = 0000000000000000
+Ciphertext = FCDB3291DE21F0C0
+
+Count = 55
+Klen = 8
+Len = 8
+Key = 0101010101010102
+Plaintext = 0000000000000000
+Ciphertext = 869EFD7F9F265A09
+
+
+# NIST SP 800-20 Table A.3
+Count = 0
+Klen = 8
+Len = 8
+Key = 1046913489980131
+Plaintext = 0000000000000000
+Ciphertext = 88D55E54F54C97B4
+
+Count = 1
+Klen = 8
+Len = 8
+Key = 1007103489988020
+Plaintext = 0000000000000000
+Ciphertext = 0C0CC00C83EA48FD
+
+Count = 2
+Klen = 8
+Len = 8
+Key = 10071034C8980120
+Plaintext = 0000000000000000
+Ciphertext = 83BC8EF3A6570183
+
+Count = 3
+Klen = 8
+Len = 8
+Key = 1046103489988020
+Plaintext = 0000000000000000
+Ciphertext = DF725DCAD94EA2E9
+
+Count = 4
+Klen = 8
+Len = 8
+Key = 1086911519190101
+Plaintext = 0000000000000000
+Ciphertext = E652B53B550BE8B0
+
+Count = 5
+Klen = 8
+Len = 8
+Key = 1086911519580101
+Plaintext = 0000000000000000
+Ciphertext = AF527120C485CBB0
+
+Count = 6
+Klen = 8
+Len = 8
+Key = 5107B01519580101
+Plaintext = 0000000000000000
+Ciphertext = 0F04CE393DB926D5
+
+Count = 7
+Klen = 8
+Len = 8
+Key = 1007B01519190101
+Plaintext = 0000000000000000
+Ciphertext = C9F00FFC74079067
+
+Count = 8
+Klen = 8
+Len = 8
+Key = 3107915498080101
+Plaintext = 0000000000000000
+Ciphertext = 7CFD82A593252B4E
+
+Count = 9
+Klen = 8
+Len = 8
+Key = 3107919498080101
+Plaintext = 0000000000000000
+Ciphertext = CB49A2F9E91363E3
+
+Count = 10
+Klen = 8
+Len = 8
+Key = 10079115B9080140
+Plaintext = 0000000000000000
+Ciphertext = 00B588BE70D23F56
+
+Count = 11
+Klen = 8
+Len = 8
+Key = 3107911598080140
+Plaintext = 0000000000000000
+Ciphertext = 406A9A6AB43399AE
+
+Count = 12
+Klen = 8
+Len = 8
+Key = 1007D01589980101
+Plaintext = 0000000000000000
+Ciphertext = 6CB773611DCA9ADA
+
+Count = 13
+Klen = 8
+Len = 8
+Key = 9107911589980101
+Plaintext = 0000000000000000
+Ciphertext = 67FD21C17DBB5D70
+
+Count = 14
+Klen = 8
+Len = 8
+Key = 9107D01589190101
+Plaintext = 0000000000000000
+Ciphertext = 9592CB4110430787
+
+Count = 15
+Klen = 8
+Len = 8
+Key = 1007D01598980120
+Plaintext = 0000000000000000
+Ciphertext = A6B7FF68A318DDD3
+
+Count = 16
+Klen = 8
+Len = 8
+Key = 1007940498190101
+Plaintext = 0000000000000000
+Ciphertext = 4D102196C914CA16
+
+Count = 17
+Klen = 8
+Len = 8
+Key = 0107910491190401
+Plaintext = 0000000000000000
+Ciphertext = 2DFA9F4573594965
+
+Count = 18
+Klen = 8
+Len = 8
+Key = 0107910491190101
+Plaintext = 0000000000000000
+Ciphertext = B46604816C0E0774
+
+Count = 19
+Klen = 8
+Len = 8
+Key = 0107940491190401
+Plaintext = 0000000000000000
+Ciphertext = 6E7E6221A4F34E87
+
+Count = 20
+Klen = 8
+Len = 8
+Key = 19079210981A0101
+Plaintext = 0000000000000000
+Ciphertext = AA85E74643233199
+
+Count = 21
+Klen = 8
+Len = 8
+Key = 1007911998190801
+Plaintext = 0000000000000000
+Ciphertext = 2E5A19DB4D1962D6
+
+Count = 22
+Klen = 8
+Len = 8
+Key = 10079119981A0801
+Plaintext = 0000000000000000
+Ciphertext = 23A866A809D30894
+
+Count = 23
+Klen = 8
+Len = 8
+Key = 1007921098190101
+Plaintext = 0000000000000000
+Ciphertext = D812D961F017D320
+
+Count = 24
+Klen = 8
+Len = 8
+Key = 100791159819010B
+Plaintext = 0000000000000000
+Ciphertext = 055605816E58608F
+
+Count = 25
+Klen = 8
+Len = 8
+Key = 1004801598190101
+Plaintext = 0000000000000000
+Ciphertext = ABD88E8B1B7716F1
+
+Count = 26
+Klen = 8
+Len = 8
+Key = 1004801598190102
+Plaintext = 0000000000000000
+Ciphertext = 537AC95BE69DA1E1
+
+Count = 27
+Klen = 8
+Len = 8
+Key = 1004801598190108
+Plaintext = 0000000000000000
+Ciphertext = AED0F6AE3C25CDD8
+
+Count = 28
+Klen = 8
+Len = 8
+Key = 1002911598100104
+Plaintext = 0000000000000000
+Ciphertext = B3E35A5EE53E7B8D
+
+Count = 29
+Klen = 8
+Len = 8
+Key = 1002911598190104
+Plaintext = 0000000000000000
+Ciphertext = 61C79C71921A2EF8
+
+Count = 30
+Klen = 8
+Len = 8
+Key = 1002911598100201
+Plaintext = 0000000000000000
+Ciphertext = E2F5728F0995013C
+
+Count = 31
+Klen = 8
+Len = 8
+Key = 1002911698100101
+Plaintext = 0000000000000000
+Ciphertext = 1AEAC39A61F0A464
+
+
 # 19 Key data pairs which exercise every S-box entry.
+# NIST SP 800-20 Table A.4
 Klen = 8
 Len = 8
 Key = 7CA110454A1A6E57
@@ -509,17 +795,3 @@ Len = 8
 Key = 1C587F1C13924FEF
 Plaintext = 305532286D6F295A
 Ciphertext = 63FAC0D034D9F793
-
-# NIST 800-17
-Klen = 8
-Len = 8
-Key = 10316E028C8F3B4A
-Plaintext = 0000000000000000
-Ciphertext = 82DCBAFBDEAB6602
-
-# SP 800-20 Table A.2
-Klen = 8
-Len = 8
-Key = 0101010101010101
-Plaintext = 0000000000000000
-Ciphertext = 8000000000000000
