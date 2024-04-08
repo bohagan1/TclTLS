@@ -1,0 +1,1411 @@
+# Auto generated from "IDEA-ECB.txt"
+lappend auto_path [file dirname [file dirname [file dirname [file dirname [file join [pwd] [info script]]]]]]
+package require tls
+package require tcltest
+
+catch {tls::provider legacy}
+tcltest::testConstraint IDEA_ECB [expr {[lsearch -nocase [tls::ciphers] IDEA-ECB] > -1}]
+
+tcltest::test Symetric_Block_IDEA-ECB-1.1 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 80000000000000000000000000000000] \
+		 -data [binary decode hex 0000000000000000]]} \
+	-match exact -result b1f5f7f87901370f
+
+tcltest::test Symetric_Block_IDEA-ECB-1.2 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 80000000000000000000000000000000] \
+		 -data [binary decode hex B1F5F7F87901370F]]} \
+	-match exact -result 0000000000000000
+
+tcltest::test Symetric_Block_IDEA-ECB-1.3 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 40000000000000000000000000000000] \
+		 -data [binary decode hex 0000000000000000]]} \
+	-match exact -result b3927dffb6358626
+
+tcltest::test Symetric_Block_IDEA-ECB-1.4 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 40000000000000000000000000000000] \
+		 -data [binary decode hex B3927DFFB6358626]]} \
+	-match exact -result 0000000000000000
+
+tcltest::test Symetric_Block_IDEA-ECB-1.5 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 20000000000000000000000000000000] \
+		 -data [binary decode hex 0000000000000000]]} \
+	-match exact -result e987e0029fb99785
+
+tcltest::test Symetric_Block_IDEA-ECB-1.6 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 20000000000000000000000000000000] \
+		 -data [binary decode hex E987E0029FB99785]]} \
+	-match exact -result 0000000000000000
+
+tcltest::test Symetric_Block_IDEA-ECB-1.7 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 10000000000000000000000000000000] \
+		 -data [binary decode hex 0000000000000000]]} \
+	-match exact -result 754a03ce08db7daa
+
+tcltest::test Symetric_Block_IDEA-ECB-1.8 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 10000000000000000000000000000000] \
+		 -data [binary decode hex 754A03CE08DB7DAA]]} \
+	-match exact -result 0000000000000000
+
+tcltest::test Symetric_Block_IDEA-ECB-1.9 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 00000000000000000000000000000008] \
+		 -data [binary decode hex 0000000000000000]]} \
+	-match exact -result f59d85f90a42b871
+
+tcltest::test Symetric_Block_IDEA-ECB-1.10 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 00000000000000000000000000000008] \
+		 -data [binary decode hex F59D85F90A42B871]]} \
+	-match exact -result 0000000000000000
+
+tcltest::test Symetric_Block_IDEA-ECB-1.11 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 00000000000000000000000000000004] \
+		 -data [binary decode hex 0000000000000000]]} \
+	-match exact -result 24853f38c6c7bc3f
+
+tcltest::test Symetric_Block_IDEA-ECB-1.12 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 00000000000000000000000000000004] \
+		 -data [binary decode hex 24853F38C6C7BC3F]]} \
+	-match exact -result 0000000000000000
+
+tcltest::test Symetric_Block_IDEA-ECB-1.13 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 00000000000000000000000000000002] \
+		 -data [binary decode hex 0000000000000000]]} \
+	-match exact -result 41518093035e12e9
+
+tcltest::test Symetric_Block_IDEA-ECB-1.14 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 00000000000000000000000000000002] \
+		 -data [binary decode hex 41518093035E12E9]]} \
+	-match exact -result 0000000000000000
+
+tcltest::test Symetric_Block_IDEA-ECB-1.15 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 00000000000000000000000000000001] \
+		 -data [binary decode hex 0000000000000000]]} \
+	-match exact -result c57adbde27bc26cf
+
+tcltest::test Symetric_Block_IDEA-ECB-1.16 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 00000000000000000000000000000001] \
+		 -data [binary decode hex C57ADBDE27BC26CF]]} \
+	-match exact -result 0000000000000000
+
+tcltest::test Symetric_Block_IDEA-ECB-1.17 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 00000000000000000000000000000000] \
+		 -data [binary decode hex 8000000000000000]]} \
+	-match exact -result 8001000180008000
+
+tcltest::test Symetric_Block_IDEA-ECB-1.18 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 00000000000000000000000000000000] \
+		 -data [binary decode hex 8001000180008000]]} \
+	-match exact -result 8000000000000000
+
+tcltest::test Symetric_Block_IDEA-ECB-1.19 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 00000000000000000000000000000000] \
+		 -data [binary decode hex 4000000000000000]]} \
+	-match exact -result c00180014000c000
+
+tcltest::test Symetric_Block_IDEA-ECB-1.20 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 00000000000000000000000000000000] \
+		 -data [binary decode hex C00180014000C000]]} \
+	-match exact -result 4000000000000000
+
+tcltest::test Symetric_Block_IDEA-ECB-1.21 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 00000000000000000000000000000000] \
+		 -data [binary decode hex 2000000000000000]]} \
+	-match exact -result 6001c00120006000
+
+tcltest::test Symetric_Block_IDEA-ECB-1.22 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 00000000000000000000000000000000] \
+		 -data [binary decode hex 6001C00120006000]]} \
+	-match exact -result 2000000000000000
+
+tcltest::test Symetric_Block_IDEA-ECB-1.23 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 00000000000000000000000000000000] \
+		 -data [binary decode hex 1000000000000000]]} \
+	-match exact -result 3001600190003000
+
+tcltest::test Symetric_Block_IDEA-ECB-1.24 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 00000000000000000000000000000000] \
+		 -data [binary decode hex 3001600190003000]]} \
+	-match exact -result 1000000000000000
+
+tcltest::test Symetric_Block_IDEA-ECB-1.25 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 00000000000000000000000000000000] \
+		 -data [binary decode hex 0000000000000008]]} \
+	-match exact -result 064101610470fcc8
+
+tcltest::test Symetric_Block_IDEA-ECB-1.26 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 00000000000000000000000000000000] \
+		 -data [binary decode hex 064101610470FCC8]]} \
+	-match exact -result 0000000000000008
+
+tcltest::test Symetric_Block_IDEA-ECB-1.27 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 00000000000000000000000000000000] \
+		 -data [binary decode hex 0000000000000004]]} \
+	-match exact -result 032100b10238fe64
+
+tcltest::test Symetric_Block_IDEA-ECB-1.28 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 00000000000000000000000000000000] \
+		 -data [binary decode hex 032100B10238FE64]]} \
+	-match exact -result 0000000000000004
+
+tcltest::test Symetric_Block_IDEA-ECB-1.29 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 00000000000000000000000000000000] \
+		 -data [binary decode hex 0000000000000002]]} \
+	-match exact -result 01910059011cff32
+
+tcltest::test Symetric_Block_IDEA-ECB-1.30 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 00000000000000000000000000000000] \
+		 -data [binary decode hex 01910059011CFF32]]} \
+	-match exact -result 0000000000000002
+
+tcltest::test Symetric_Block_IDEA-ECB-1.31 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 00000000000000000000000000000000] \
+		 -data [binary decode hex 0000000000000001]]} \
+	-match exact -result 0013fff500120009
+
+tcltest::test Symetric_Block_IDEA-ECB-1.32 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 00000000000000000000000000000000] \
+		 -data [binary decode hex 0013FFF500120009]]} \
+	-match exact -result 0000000000000001
+
+tcltest::test Symetric_Block_IDEA-ECB-1.33 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 00000000000000000000000000000000] \
+		 -data [binary decode hex 0000000000000000]]} \
+	-match exact -result 0001000100000000
+
+tcltest::test Symetric_Block_IDEA-ECB-1.34 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 00000000000000000000000000000000] \
+		 -data [binary decode hex 0001000100000000]]} \
+	-match exact -result 0000000000000000
+
+tcltest::test Symetric_Block_IDEA-ECB-1.35 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 01010101010101010101010101010101] \
+		 -data [binary decode hex 0101010101010101]]} \
+	-match exact -result e3f8aff7a3795615
+
+tcltest::test Symetric_Block_IDEA-ECB-1.36 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 01010101010101010101010101010101] \
+		 -data [binary decode hex E3F8AFF7A3795615]]} \
+	-match exact -result 0101010101010101
+
+tcltest::test Symetric_Block_IDEA-ECB-1.37 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 02020202020202020202020202020202] \
+		 -data [binary decode hex 0202020202020202]]} \
+	-match exact -result 93d8c66f869189b9
+
+tcltest::test Symetric_Block_IDEA-ECB-1.38 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 02020202020202020202020202020202] \
+		 -data [binary decode hex 93D8C66F869189B9]]} \
+	-match exact -result 0202020202020202
+
+tcltest::test Symetric_Block_IDEA-ECB-1.39 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 03030303030303030303030303030303] \
+		 -data [binary decode hex 0303030303030303]]} \
+	-match exact -result 4fdd60e349a14800
+
+tcltest::test Symetric_Block_IDEA-ECB-1.40 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 03030303030303030303030303030303] \
+		 -data [binary decode hex 4FDD60E349A14800]]} \
+	-match exact -result 0303030303030303
+
+tcltest::test Symetric_Block_IDEA-ECB-1.41 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 04040404040404040404040404040404] \
+		 -data [binary decode hex 0404040404040404]]} \
+	-match exact -result 3d6f7a5ea045e71d
+
+tcltest::test Symetric_Block_IDEA-ECB-1.42 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 04040404040404040404040404040404] \
+		 -data [binary decode hex 3D6F7A5EA045E71D]]} \
+	-match exact -result 0404040404040404
+
+tcltest::test Symetric_Block_IDEA-ECB-1.43 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 05050505050505050505050505050505] \
+		 -data [binary decode hex 0505050505050505]]} \
+	-match exact -result 13e677db2aa285d9
+
+tcltest::test Symetric_Block_IDEA-ECB-1.44 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 05050505050505050505050505050505] \
+		 -data [binary decode hex 13E677DB2AA285D9]]} \
+	-match exact -result 0505050505050505
+
+tcltest::test Symetric_Block_IDEA-ECB-1.45 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 06060606060606060606060606060606] \
+		 -data [binary decode hex 0606060606060606]]} \
+	-match exact -result ffd372957fd5c0d9
+
+tcltest::test Symetric_Block_IDEA-ECB-1.46 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 06060606060606060606060606060606] \
+		 -data [binary decode hex FFD372957FD5C0D9]]} \
+	-match exact -result 0606060606060606
+
+tcltest::test Symetric_Block_IDEA-ECB-1.47 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 07070707070707070707070707070707] \
+		 -data [binary decode hex 0707070707070707]]} \
+	-match exact -result b970bcab7dfe96a7
+
+tcltest::test Symetric_Block_IDEA-ECB-1.48 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 07070707070707070707070707070707] \
+		 -data [binary decode hex B970BCAB7DFE96A7]]} \
+	-match exact -result 0707070707070707
+
+tcltest::test Symetric_Block_IDEA-ECB-1.49 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 08080808080808080808080808080808] \
+		 -data [binary decode hex 0808080808080808]]} \
+	-match exact -result 283d4e47a1205bd5
+
+tcltest::test Symetric_Block_IDEA-ECB-1.50 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 08080808080808080808080808080808] \
+		 -data [binary decode hex 283D4E47A1205BD5]]} \
+	-match exact -result 0808080808080808
+
+tcltest::test Symetric_Block_IDEA-ECB-1.51 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 09090909090909090909090909090909] \
+		 -data [binary decode hex 0909090909090909]]} \
+	-match exact -result c060df27cf6e0a0b
+
+tcltest::test Symetric_Block_IDEA-ECB-1.52 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 09090909090909090909090909090909] \
+		 -data [binary decode hex C060DF27CF6E0A0B]]} \
+	-match exact -result 0909090909090909
+
+tcltest::test Symetric_Block_IDEA-ECB-1.53 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A] \
+		 -data [binary decode hex 0A0A0A0A0A0A0A0A]]} \
+	-match exact -result 7d0ff198726e70f1
+
+tcltest::test Symetric_Block_IDEA-ECB-1.54 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A] \
+		 -data [binary decode hex 7D0FF198726E70F1]]} \
+	-match exact -result 0a0a0a0a0a0a0a0a
+
+tcltest::test Symetric_Block_IDEA-ECB-1.55 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 0B0B0B0B0B0B0B0B0B0B0B0B0B0B0B0B] \
+		 -data [binary decode hex 0B0B0B0B0B0B0B0B]]} \
+	-match exact -result a419a578f1d35f3e
+
+tcltest::test Symetric_Block_IDEA-ECB-1.56 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 0B0B0B0B0B0B0B0B0B0B0B0B0B0B0B0B] \
+		 -data [binary decode hex A419A578F1D35F3E]]} \
+	-match exact -result 0b0b0b0b0b0b0b0b
+
+tcltest::test Symetric_Block_IDEA-ECB-1.57 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C] \
+		 -data [binary decode hex 0C0C0C0C0C0C0C0C]]} \
+	-match exact -result aad7e526e2580a70
+
+tcltest::test Symetric_Block_IDEA-ECB-1.58 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C] \
+		 -data [binary decode hex AAD7E526E2580A70]]} \
+	-match exact -result 0c0c0c0c0c0c0c0c
+
+tcltest::test Symetric_Block_IDEA-ECB-1.59 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 0D0D0D0D0D0D0D0D0D0D0D0D0D0D0D0D] \
+		 -data [binary decode hex 0D0D0D0D0D0D0D0D]]} \
+	-match exact -result b2fd0fd4be361d56
+
+tcltest::test Symetric_Block_IDEA-ECB-1.60 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 0D0D0D0D0D0D0D0D0D0D0D0D0D0D0D0D] \
+		 -data [binary decode hex B2FD0FD4BE361D56]]} \
+	-match exact -result 0d0d0d0d0d0d0d0d
+
+tcltest::test Symetric_Block_IDEA-ECB-1.61 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 0E0E0E0E0E0E0E0E0E0E0E0E0E0E0E0E] \
+		 -data [binary decode hex 0E0E0E0E0E0E0E0E]]} \
+	-match exact -result 40271eadea9f08e1
+
+tcltest::test Symetric_Block_IDEA-ECB-1.62 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 0E0E0E0E0E0E0E0E0E0E0E0E0E0E0E0E] \
+		 -data [binary decode hex 40271EADEA9F08E1]]} \
+	-match exact -result 0e0e0e0e0e0e0e0e
+
+tcltest::test Symetric_Block_IDEA-ECB-1.63 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F] \
+		 -data [binary decode hex 0F0F0F0F0F0F0F0F]]} \
+	-match exact -result c0b13df73b24f9b3
+
+tcltest::test Symetric_Block_IDEA-ECB-1.64 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F] \
+		 -data [binary decode hex C0B13DF73B24F9B3]]} \
+	-match exact -result 0f0f0f0f0f0f0f0f
+
+tcltest::test Symetric_Block_IDEA-ECB-1.65 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0] \
+		 -data [binary decode hex F0F0F0F0F0F0F0F0]]} \
+	-match exact -result 1aaff239fefa4f4f
+
+tcltest::test Symetric_Block_IDEA-ECB-1.66 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0] \
+		 -data [binary decode hex 1AAFF239FEFA4F4F]]} \
+	-match exact -result f0f0f0f0f0f0f0f0
+
+tcltest::test Symetric_Block_IDEA-ECB-1.67 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex F1F1F1F1F1F1F1F1F1F1F1F1F1F1F1F1] \
+		 -data [binary decode hex F1F1F1F1F1F1F1F1]]} \
+	-match exact -result 5475cb058eec4990
+
+tcltest::test Symetric_Block_IDEA-ECB-1.68 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex F1F1F1F1F1F1F1F1F1F1F1F1F1F1F1F1] \
+		 -data [binary decode hex 5475CB058EEC4990]]} \
+	-match exact -result f1f1f1f1f1f1f1f1
+
+tcltest::test Symetric_Block_IDEA-ECB-1.69 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex F2F2F2F2F2F2F2F2F2F2F2F2F2F2F2F2] \
+		 -data [binary decode hex F2F2F2F2F2F2F2F2]]} \
+	-match exact -result e9e66f99002b96c7
+
+tcltest::test Symetric_Block_IDEA-ECB-1.70 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex F2F2F2F2F2F2F2F2F2F2F2F2F2F2F2F2] \
+		 -data [binary decode hex E9E66F99002B96C7]]} \
+	-match exact -result f2f2f2f2f2f2f2f2
+
+tcltest::test Symetric_Block_IDEA-ECB-1.71 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex F3F3F3F3F3F3F3F3F3F3F3F3F3F3F3F3] \
+		 -data [binary decode hex F3F3F3F3F3F3F3F3]]} \
+	-match exact -result c67076d06a3c184c
+
+tcltest::test Symetric_Block_IDEA-ECB-1.72 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex F3F3F3F3F3F3F3F3F3F3F3F3F3F3F3F3] \
+		 -data [binary decode hex C67076D06A3C184C]]} \
+	-match exact -result f3f3f3f3f3f3f3f3
+
+tcltest::test Symetric_Block_IDEA-ECB-1.73 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex F4F4F4F4F4F4F4F4F4F4F4F4F4F4F4F4] \
+		 -data [binary decode hex F4F4F4F4F4F4F4F4]]} \
+	-match exact -result 3705aee3d95ef7d6
+
+tcltest::test Symetric_Block_IDEA-ECB-1.74 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex F4F4F4F4F4F4F4F4F4F4F4F4F4F4F4F4] \
+		 -data [binary decode hex 3705AEE3D95EF7D6]]} \
+	-match exact -result f4f4f4f4f4f4f4f4
+
+tcltest::test Symetric_Block_IDEA-ECB-1.75 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex F5F5F5F5F5F5F5F5F5F5F5F5F5F5F5F5] \
+		 -data [binary decode hex F5F5F5F5F5F5F5F5]]} \
+	-match exact -result 9e8b984dd82c4061
+
+tcltest::test Symetric_Block_IDEA-ECB-1.76 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex F5F5F5F5F5F5F5F5F5F5F5F5F5F5F5F5] \
+		 -data [binary decode hex 9E8B984DD82C4061]]} \
+	-match exact -result f5f5f5f5f5f5f5f5
+
+tcltest::test Symetric_Block_IDEA-ECB-1.77 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex F6F6F6F6F6F6F6F6F6F6F6F6F6F6F6F6] \
+		 -data [binary decode hex F6F6F6F6F6F6F6F6]]} \
+	-match exact -result 4738c2be9cdd7a95
+
+tcltest::test Symetric_Block_IDEA-ECB-1.78 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex F6F6F6F6F6F6F6F6F6F6F6F6F6F6F6F6] \
+		 -data [binary decode hex 4738C2BE9CDD7A95]]} \
+	-match exact -result f6f6f6f6f6f6f6f6
+
+tcltest::test Symetric_Block_IDEA-ECB-1.79 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7] \
+		 -data [binary decode hex F7F7F7F7F7F7F7F7]]} \
+	-match exact -result 8e13c368f53e55af
+
+tcltest::test Symetric_Block_IDEA-ECB-1.80 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7] \
+		 -data [binary decode hex 8E13C368F53E55AF]]} \
+	-match exact -result f7f7f7f7f7f7f7f7
+
+tcltest::test Symetric_Block_IDEA-ECB-1.81 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex F8F8F8F8F8F8F8F8F8F8F8F8F8F8F8F8] \
+		 -data [binary decode hex F8F8F8F8F8F8F8F8]]} \
+	-match exact -result 69269091d1f6d10f
+
+tcltest::test Symetric_Block_IDEA-ECB-1.82 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex F8F8F8F8F8F8F8F8F8F8F8F8F8F8F8F8] \
+		 -data [binary decode hex 69269091D1F6D10F]]} \
+	-match exact -result f8f8f8f8f8f8f8f8
+
+tcltest::test Symetric_Block_IDEA-ECB-1.83 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex F9F9F9F9F9F9F9F9F9F9F9F9F9F9F9F9] \
+		 -data [binary decode hex F9F9F9F9F9F9F9F9]]} \
+	-match exact -result d039cdc8f806d0db
+
+tcltest::test Symetric_Block_IDEA-ECB-1.84 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex F9F9F9F9F9F9F9F9F9F9F9F9F9F9F9F9] \
+		 -data [binary decode hex D039CDC8F806D0DB]]} \
+	-match exact -result f9f9f9f9f9f9f9f9
+
+tcltest::test Symetric_Block_IDEA-ECB-1.85 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex FAFAFAFAFAFAFAFAFAFAFAFAFAFAFAFA] \
+		 -data [binary decode hex FAFAFAFAFAFAFAFA]]} \
+	-match exact -result 52009461e4f37f47
+
+tcltest::test Symetric_Block_IDEA-ECB-1.86 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex FAFAFAFAFAFAFAFAFAFAFAFAFAFAFAFA] \
+		 -data [binary decode hex 52009461E4F37F47]]} \
+	-match exact -result fafafafafafafafa
+
+tcltest::test Symetric_Block_IDEA-ECB-1.87 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex FBFBFBFBFBFBFBFBFBFBFBFBFBFBFBFB] \
+		 -data [binary decode hex FBFBFBFBFBFBFBFB]]} \
+	-match exact -result 08b02b3f76889032
+
+tcltest::test Symetric_Block_IDEA-ECB-1.88 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex FBFBFBFBFBFBFBFBFBFBFBFBFBFBFBFB] \
+		 -data [binary decode hex 08B02B3F76889032]]} \
+	-match exact -result fbfbfbfbfbfbfbfb
+
+tcltest::test Symetric_Block_IDEA-ECB-1.89 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex FCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFC] \
+		 -data [binary decode hex FCFCFCFCFCFCFCFC]]} \
+	-match exact -result 77e9d9405d35f1cc
+
+tcltest::test Symetric_Block_IDEA-ECB-1.90 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex FCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFC] \
+		 -data [binary decode hex 77E9D9405D35F1CC]]} \
+	-match exact -result fcfcfcfcfcfcfcfc
+
+tcltest::test Symetric_Block_IDEA-ECB-1.91 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex FDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFD] \
+		 -data [binary decode hex FDFDFDFDFDFDFDFD]]} \
+	-match exact -result 1a10e3f318aeda9a
+
+tcltest::test Symetric_Block_IDEA-ECB-1.92 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex FDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFD] \
+		 -data [binary decode hex 1A10E3F318AEDA9A]]} \
+	-match exact -result fdfdfdfdfdfdfdfd
+
+tcltest::test Symetric_Block_IDEA-ECB-1.93 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex FEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFE] \
+		 -data [binary decode hex FEFEFEFEFEFEFEFE]]} \
+	-match exact -result dc6d99012dc01e0b
+
+tcltest::test Symetric_Block_IDEA-ECB-1.94 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex FEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFE] \
+		 -data [binary decode hex DC6D99012DC01E0B]]} \
+	-match exact -result fefefefefefefefe
+
+tcltest::test Symetric_Block_IDEA-ECB-1.95 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF] \
+		 -data [binary decode hex FFFFFFFFFFFFFFFF]]} \
+	-match exact -result cd1ab2c1211041fb
+
+tcltest::test Symetric_Block_IDEA-ECB-1.96 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF] \
+		 -data [binary decode hex CD1AB2C1211041FB]]} \
+	-match exact -result ffffffffffffffff
+
+tcltest::test Symetric_Block_IDEA-ECB-1.97 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 000102030405060708090A0B0C0D0E0F] \
+		 -data [binary decode hex 0011223344556677]]} \
+	-match exact -result f526ab9a62c0d258
+
+tcltest::test Symetric_Block_IDEA-ECB-1.98 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 000102030405060708090A0B0C0D0E0F] \
+		 -data [binary decode hex F526AB9A62C0D258]]} \
+	-match exact -result 0011223344556677
+
+tcltest::test Symetric_Block_IDEA-ECB-1.99 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 2BD6459F82C5B300952C49104881FF48] \
+		 -data [binary decode hex EA024714AD5C4D84]]} \
+	-match exact -result c8fb51d3516627a8
+
+tcltest::test Symetric_Block_IDEA-ECB-1.100 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 2BD6459F82C5B300952C49104881FF48] \
+		 -data [binary decode hex C8FB51D3516627A8]]} \
+	-match exact -result ea024714ad5c4d84
+
+tcltest::test Symetric_Block_IDEA-ECB-1.101 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 80000000000000000000000000000000] \
+		 -data [binary decode hex 78071EE87F0130E8]]} \
+	-match exact -result 0000000000000000
+
+tcltest::test Symetric_Block_IDEA-ECB-1.102 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 80000000000000000000000000000000] \
+		 -data [binary decode hex 0000000000000000]]} \
+	-match exact -result 78071ee87f0130e8
+
+tcltest::test Symetric_Block_IDEA-ECB-1.103 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 40000000000000000000000000000000] \
+		 -data [binary decode hex 98AA167965B52792]]} \
+	-match exact -result 0000000000000000
+
+tcltest::test Symetric_Block_IDEA-ECB-1.104 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 40000000000000000000000000000000] \
+		 -data [binary decode hex 0000000000000000]]} \
+	-match exact -result 98aa167965b52792
+
+tcltest::test Symetric_Block_IDEA-ECB-1.105 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 20000000000000000000000000000000] \
+		 -data [binary decode hex 20BC104058293C2D]]} \
+	-match exact -result 0000000000000000
+
+tcltest::test Symetric_Block_IDEA-ECB-1.106 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 20000000000000000000000000000000] \
+		 -data [binary decode hex 0000000000000000]]} \
+	-match exact -result 20bc104058293c2d
+
+tcltest::test Symetric_Block_IDEA-ECB-1.107 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 10000000000000000000000000000000] \
+		 -data [binary decode hex 6050001FFA1A0219]]} \
+	-match exact -result 0000000000000000
+
+tcltest::test Symetric_Block_IDEA-ECB-1.108 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 10000000000000000000000000000000] \
+		 -data [binary decode hex 0000000000000000]]} \
+	-match exact -result 6050001ffa1a0219
+
+tcltest::test Symetric_Block_IDEA-ECB-1.109 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 00000000000000000000000000000008] \
+		 -data [binary decode hex C1DF2DDB127CDFE1]]} \
+	-match exact -result 0000000000000000
+
+tcltest::test Symetric_Block_IDEA-ECB-1.110 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 00000000000000000000000000000008] \
+		 -data [binary decode hex 0000000000000000]]} \
+	-match exact -result c1df2ddb127cdfe1
+
+tcltest::test Symetric_Block_IDEA-ECB-1.111 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 00000000000000000000000000000004] \
+		 -data [binary decode hex 8A1495E062113BE9]]} \
+	-match exact -result 0000000000000000
+
+tcltest::test Symetric_Block_IDEA-ECB-1.112 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 00000000000000000000000000000004] \
+		 -data [binary decode hex 0000000000000000]]} \
+	-match exact -result 8a1495e062113be9
+
+tcltest::test Symetric_Block_IDEA-ECB-1.113 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 00000000000000000000000000000002] \
+		 -data [binary decode hex 8A2AD21859D1E3E1]]} \
+	-match exact -result 0000000000000000
+
+tcltest::test Symetric_Block_IDEA-ECB-1.114 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 00000000000000000000000000000002] \
+		 -data [binary decode hex 0000000000000000]]} \
+	-match exact -result 8a2ad21859d1e3e1
+
+tcltest::test Symetric_Block_IDEA-ECB-1.115 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 00000000000000000000000000000001] \
+		 -data [binary decode hex F61D37EC1C099DE5]]} \
+	-match exact -result 0000000000000000
+
+tcltest::test Symetric_Block_IDEA-ECB-1.116 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 00000000000000000000000000000001] \
+		 -data [binary decode hex 0000000000000000]]} \
+	-match exact -result f61d37ec1c099de5
+
+tcltest::test Symetric_Block_IDEA-ECB-1.117 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 00000000000000000000000000000000] \
+		 -data [binary decode hex 8001000180008000]]} \
+	-match exact -result 8000000000000000
+
+tcltest::test Symetric_Block_IDEA-ECB-1.118 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 00000000000000000000000000000000] \
+		 -data [binary decode hex 8000000000000000]]} \
+	-match exact -result 8001000180008000
+
+tcltest::test Symetric_Block_IDEA-ECB-1.119 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 00000000000000000000000000000000] \
+		 -data [binary decode hex C00180014000C000]]} \
+	-match exact -result 4000000000000000
+
+tcltest::test Symetric_Block_IDEA-ECB-1.120 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 00000000000000000000000000000000] \
+		 -data [binary decode hex 4000000000000000]]} \
+	-match exact -result c00180014000c000
+
+tcltest::test Symetric_Block_IDEA-ECB-1.121 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 00000000000000000000000000000000] \
+		 -data [binary decode hex 6001C00120006000]]} \
+	-match exact -result 2000000000000000
+
+tcltest::test Symetric_Block_IDEA-ECB-1.122 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 00000000000000000000000000000000] \
+		 -data [binary decode hex 2000000000000000]]} \
+	-match exact -result 6001c00120006000
+
+tcltest::test Symetric_Block_IDEA-ECB-1.123 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 00000000000000000000000000000000] \
+		 -data [binary decode hex 3001600190003000]]} \
+	-match exact -result 1000000000000000
+
+tcltest::test Symetric_Block_IDEA-ECB-1.124 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 00000000000000000000000000000000] \
+		 -data [binary decode hex 1000000000000000]]} \
+	-match exact -result 3001600190003000
+
+tcltest::test Symetric_Block_IDEA-ECB-1.125 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 00000000000000000000000000000000] \
+		 -data [binary decode hex 064101610470FCC8]]} \
+	-match exact -result 0000000000000008
+
+tcltest::test Symetric_Block_IDEA-ECB-1.126 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 00000000000000000000000000000000] \
+		 -data [binary decode hex 0000000000000008]]} \
+	-match exact -result 064101610470fcc8
+
+tcltest::test Symetric_Block_IDEA-ECB-1.127 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 00000000000000000000000000000000] \
+		 -data [binary decode hex 032100B10238FE64]]} \
+	-match exact -result 0000000000000004
+
+tcltest::test Symetric_Block_IDEA-ECB-1.128 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 00000000000000000000000000000000] \
+		 -data [binary decode hex 0000000000000004]]} \
+	-match exact -result 032100b10238fe64
+
+tcltest::test Symetric_Block_IDEA-ECB-1.129 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 00000000000000000000000000000000] \
+		 -data [binary decode hex 01910059011CFF32]]} \
+	-match exact -result 0000000000000002
+
+tcltest::test Symetric_Block_IDEA-ECB-1.130 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 00000000000000000000000000000000] \
+		 -data [binary decode hex 0000000000000002]]} \
+	-match exact -result 01910059011cff32
+
+tcltest::test Symetric_Block_IDEA-ECB-1.131 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 00000000000000000000000000000000] \
+		 -data [binary decode hex 0013FFF500120009]]} \
+	-match exact -result 0000000000000001
+
+tcltest::test Symetric_Block_IDEA-ECB-1.132 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 00000000000000000000000000000000] \
+		 -data [binary decode hex 0000000000000001]]} \
+	-match exact -result 0013fff500120009
+
+tcltest::test Symetric_Block_IDEA-ECB-1.133 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 00000000000000000000000000000000] \
+		 -data [binary decode hex 0001000100000000]]} \
+	-match exact -result 0000000000000000
+
+tcltest::test Symetric_Block_IDEA-ECB-1.134 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 00000000000000000000000000000000] \
+		 -data [binary decode hex 0000000000000000]]} \
+	-match exact -result 0001000100000000
+
+tcltest::test Symetric_Block_IDEA-ECB-1.135 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 01010101010101010101010101010101] \
+		 -data [binary decode hex 6D33179CE8B3C1FA]]} \
+	-match exact -result 0101010101010101
+
+tcltest::test Symetric_Block_IDEA-ECB-1.136 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 01010101010101010101010101010101] \
+		 -data [binary decode hex 0101010101010101]]} \
+	-match exact -result 6d33179ce8b3c1fa
+
+tcltest::test Symetric_Block_IDEA-ECB-1.137 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 02020202020202020202020202020202] \
+		 -data [binary decode hex DF163E38AD71A489]]} \
+	-match exact -result 0202020202020202
+
+tcltest::test Symetric_Block_IDEA-ECB-1.138 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 02020202020202020202020202020202] \
+		 -data [binary decode hex 0202020202020202]]} \
+	-match exact -result df163e38ad71a489
+
+tcltest::test Symetric_Block_IDEA-ECB-1.139 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 03030303030303030303030303030303] \
+		 -data [binary decode hex A74AB61FE64CCD14]]} \
+	-match exact -result 0303030303030303
+
+tcltest::test Symetric_Block_IDEA-ECB-1.140 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 03030303030303030303030303030303] \
+		 -data [binary decode hex 0303030303030303]]} \
+	-match exact -result a74ab61fe64ccd14
+
+tcltest::test Symetric_Block_IDEA-ECB-1.141 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 04040404040404040404040404040404] \
+		 -data [binary decode hex DECD1268CE7B3CD5]]} \
+	-match exact -result 0404040404040404
+
+tcltest::test Symetric_Block_IDEA-ECB-1.142 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 04040404040404040404040404040404] \
+		 -data [binary decode hex 0404040404040404]]} \
+	-match exact -result decd1268ce7b3cd5
+
+tcltest::test Symetric_Block_IDEA-ECB-1.143 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 05050505050505050505050505050505] \
+		 -data [binary decode hex E2F73C827CC38E67]]} \
+	-match exact -result 0505050505050505
+
+tcltest::test Symetric_Block_IDEA-ECB-1.144 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 05050505050505050505050505050505] \
+		 -data [binary decode hex 0505050505050505]]} \
+	-match exact -result e2f73c827cc38e67
+
+tcltest::test Symetric_Block_IDEA-ECB-1.145 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 06060606060606060606060606060606] \
+		 -data [binary decode hex FA93BE07E3B0E09C]]} \
+	-match exact -result 0606060606060606
+
+tcltest::test Symetric_Block_IDEA-ECB-1.146 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 06060606060606060606060606060606] \
+		 -data [binary decode hex 0606060606060606]]} \
+	-match exact -result fa93be07e3b0e09c
+
+tcltest::test Symetric_Block_IDEA-ECB-1.147 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 07070707070707070707070707070707] \
+		 -data [binary decode hex AB246AC5AADE1B14]]} \
+	-match exact -result 0707070707070707
+
+tcltest::test Symetric_Block_IDEA-ECB-1.148 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 07070707070707070707070707070707] \
+		 -data [binary decode hex 0707070707070707]]} \
+	-match exact -result ab246ac5aade1b14
+
+tcltest::test Symetric_Block_IDEA-ECB-1.149 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 08080808080808080808080808080808] \
+		 -data [binary decode hex AC0C17067C0DA182]]} \
+	-match exact -result 0808080808080808
+
+tcltest::test Symetric_Block_IDEA-ECB-1.150 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 08080808080808080808080808080808] \
+		 -data [binary decode hex 0808080808080808]]} \
+	-match exact -result ac0c17067c0da182
+
+tcltest::test Symetric_Block_IDEA-ECB-1.151 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 09090909090909090909090909090909] \
+		 -data [binary decode hex EE0EA8A773BE26C6]]} \
+	-match exact -result 0909090909090909
+
+tcltest::test Symetric_Block_IDEA-ECB-1.152 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 09090909090909090909090909090909] \
+		 -data [binary decode hex 0909090909090909]]} \
+	-match exact -result ee0ea8a773be26c6
+
+tcltest::test Symetric_Block_IDEA-ECB-1.153 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A] \
+		 -data [binary decode hex 95BF40E823FB39C1]]} \
+	-match exact -result 0a0a0a0a0a0a0a0a
+
+tcltest::test Symetric_Block_IDEA-ECB-1.154 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A0A] \
+		 -data [binary decode hex 0A0A0A0A0A0A0A0A]]} \
+	-match exact -result 95bf40e823fb39c1
+
+tcltest::test Symetric_Block_IDEA-ECB-1.155 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 0B0B0B0B0B0B0B0B0B0B0B0B0B0B0B0B] \
+		 -data [binary decode hex EB316AA4993C68C6]]} \
+	-match exact -result 0b0b0b0b0b0b0b0b
+
+tcltest::test Symetric_Block_IDEA-ECB-1.156 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 0B0B0B0B0B0B0B0B0B0B0B0B0B0B0B0B] \
+		 -data [binary decode hex 0B0B0B0B0B0B0B0B]]} \
+	-match exact -result eb316aa4993c68c6
+
+tcltest::test Symetric_Block_IDEA-ECB-1.157 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C] \
+		 -data [binary decode hex E2C7D821AC4AD86C]]} \
+	-match exact -result 0c0c0c0c0c0c0c0c
+
+tcltest::test Symetric_Block_IDEA-ECB-1.158 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C0C] \
+		 -data [binary decode hex 0C0C0C0C0C0C0C0C]]} \
+	-match exact -result e2c7d821ac4ad86c
+
+tcltest::test Symetric_Block_IDEA-ECB-1.159 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 0D0D0D0D0D0D0D0D0D0D0D0D0D0D0D0D] \
+		 -data [binary decode hex 7514A54BA6CFA933]]} \
+	-match exact -result 0d0d0d0d0d0d0d0d
+
+tcltest::test Symetric_Block_IDEA-ECB-1.160 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 0D0D0D0D0D0D0D0D0D0D0D0D0D0D0D0D] \
+		 -data [binary decode hex 0D0D0D0D0D0D0D0D]]} \
+	-match exact -result 7514a54ba6cfa933
+
+tcltest::test Symetric_Block_IDEA-ECB-1.161 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 0E0E0E0E0E0E0E0E0E0E0E0E0E0E0E0E] \
+		 -data [binary decode hex 2E5A8279A756DEF4]]} \
+	-match exact -result 0e0e0e0e0e0e0e0e
+
+tcltest::test Symetric_Block_IDEA-ECB-1.162 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 0E0E0E0E0E0E0E0E0E0E0E0E0E0E0E0E] \
+		 -data [binary decode hex 0E0E0E0E0E0E0E0E]]} \
+	-match exact -result 2e5a8279a756def4
+
+tcltest::test Symetric_Block_IDEA-ECB-1.163 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F] \
+		 -data [binary decode hex F124018C83415FF3]]} \
+	-match exact -result 0f0f0f0f0f0f0f0f
+
+tcltest::test Symetric_Block_IDEA-ECB-1.164 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F] \
+		 -data [binary decode hex 0F0F0F0F0F0F0F0F]]} \
+	-match exact -result f124018c83415ff3
+
+tcltest::test Symetric_Block_IDEA-ECB-1.165 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0] \
+		 -data [binary decode hex 89951D70270C9B17]]} \
+	-match exact -result f0f0f0f0f0f0f0f0
+
+tcltest::test Symetric_Block_IDEA-ECB-1.166 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0] \
+		 -data [binary decode hex F0F0F0F0F0F0F0F0]]} \
+	-match exact -result 89951d70270c9b17
+
+tcltest::test Symetric_Block_IDEA-ECB-1.167 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex F1F1F1F1F1F1F1F1F1F1F1F1F1F1F1F1] \
+		 -data [binary decode hex 2A775028D170B29C]]} \
+	-match exact -result f1f1f1f1f1f1f1f1
+
+tcltest::test Symetric_Block_IDEA-ECB-1.168 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex F1F1F1F1F1F1F1F1F1F1F1F1F1F1F1F1] \
+		 -data [binary decode hex F1F1F1F1F1F1F1F1]]} \
+	-match exact -result 2a775028d170b29c
+
+tcltest::test Symetric_Block_IDEA-ECB-1.169 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex F2F2F2F2F2F2F2F2F2F2F2F2F2F2F2F2] \
+		 -data [binary decode hex 9A4CF8B7C599EF4A]]} \
+	-match exact -result f2f2f2f2f2f2f2f2
+
+tcltest::test Symetric_Block_IDEA-ECB-1.170 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex F2F2F2F2F2F2F2F2F2F2F2F2F2F2F2F2] \
+		 -data [binary decode hex F2F2F2F2F2F2F2F2]]} \
+	-match exact -result 9a4cf8b7c599ef4a
+
+tcltest::test Symetric_Block_IDEA-ECB-1.171 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex F3F3F3F3F3F3F3F3F3F3F3F3F3F3F3F3] \
+		 -data [binary decode hex F9966866D43965CD]]} \
+	-match exact -result f3f3f3f3f3f3f3f3
+
+tcltest::test Symetric_Block_IDEA-ECB-1.172 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex F3F3F3F3F3F3F3F3F3F3F3F3F3F3F3F3] \
+		 -data [binary decode hex F3F3F3F3F3F3F3F3]]} \
+	-match exact -result f9966866d43965cd
+
+tcltest::test Symetric_Block_IDEA-ECB-1.173 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex F4F4F4F4F4F4F4F4F4F4F4F4F4F4F4F4] \
+		 -data [binary decode hex 80E41CCC7641E959]]} \
+	-match exact -result f4f4f4f4f4f4f4f4
+
+tcltest::test Symetric_Block_IDEA-ECB-1.174 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex F4F4F4F4F4F4F4F4F4F4F4F4F4F4F4F4] \
+		 -data [binary decode hex F4F4F4F4F4F4F4F4]]} \
+	-match exact -result 80e41ccc7641e959
+
+tcltest::test Symetric_Block_IDEA-ECB-1.175 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex F5F5F5F5F5F5F5F5F5F5F5F5F5F5F5F5] \
+		 -data [binary decode hex 0B7C702996413B45]]} \
+	-match exact -result f5f5f5f5f5f5f5f5
+
+tcltest::test Symetric_Block_IDEA-ECB-1.176 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex F5F5F5F5F5F5F5F5F5F5F5F5F5F5F5F5] \
+		 -data [binary decode hex F5F5F5F5F5F5F5F5]]} \
+	-match exact -result 0b7c702996413b45
+
+tcltest::test Symetric_Block_IDEA-ECB-1.177 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex F6F6F6F6F6F6F6F6F6F6F6F6F6F6F6F6] \
+		 -data [binary decode hex EB69BC3BF5B3FEA5]]} \
+	-match exact -result f6f6f6f6f6f6f6f6
+
+tcltest::test Symetric_Block_IDEA-ECB-1.178 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex F6F6F6F6F6F6F6F6F6F6F6F6F6F6F6F6] \
+		 -data [binary decode hex F6F6F6F6F6F6F6F6]]} \
+	-match exact -result eb69bc3bf5b3fea5
+
+tcltest::test Symetric_Block_IDEA-ECB-1.179 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7] \
+		 -data [binary decode hex 36BF2856E58435EA]]} \
+	-match exact -result f7f7f7f7f7f7f7f7
+
+tcltest::test Symetric_Block_IDEA-ECB-1.180 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7F7] \
+		 -data [binary decode hex F7F7F7F7F7F7F7F7]]} \
+	-match exact -result 36bf2856e58435ea
+
+tcltest::test Symetric_Block_IDEA-ECB-1.181 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex F8F8F8F8F8F8F8F8F8F8F8F8F8F8F8F8] \
+		 -data [binary decode hex 1CD03F0A40A7B20C]]} \
+	-match exact -result f8f8f8f8f8f8f8f8
+
+tcltest::test Symetric_Block_IDEA-ECB-1.182 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex F8F8F8F8F8F8F8F8F8F8F8F8F8F8F8F8] \
+		 -data [binary decode hex F8F8F8F8F8F8F8F8]]} \
+	-match exact -result 1cd03f0a40a7b20c
+
+tcltest::test Symetric_Block_IDEA-ECB-1.183 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex F9F9F9F9F9F9F9F9F9F9F9F9F9F9F9F9] \
+		 -data [binary decode hex F56AF83339036916]]} \
+	-match exact -result f9f9f9f9f9f9f9f9
+
+tcltest::test Symetric_Block_IDEA-ECB-1.184 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex F9F9F9F9F9F9F9F9F9F9F9F9F9F9F9F9] \
+		 -data [binary decode hex F9F9F9F9F9F9F9F9]]} \
+	-match exact -result f56af83339036916
+
+tcltest::test Symetric_Block_IDEA-ECB-1.185 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex FAFAFAFAFAFAFAFAFAFAFAFAFAFAFAFA] \
+		 -data [binary decode hex 3114B9E8F15EA604]]} \
+	-match exact -result fafafafafafafafa
+
+tcltest::test Symetric_Block_IDEA-ECB-1.186 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex FAFAFAFAFAFAFAFAFAFAFAFAFAFAFAFA] \
+		 -data [binary decode hex FAFAFAFAFAFAFAFA]]} \
+	-match exact -result 3114b9e8f15ea604
+
+tcltest::test Symetric_Block_IDEA-ECB-1.187 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex FBFBFBFBFBFBFBFBFBFBFBFBFBFBFBFB] \
+		 -data [binary decode hex 55BC49104267BD78]]} \
+	-match exact -result fbfbfbfbfbfbfbfb
+
+tcltest::test Symetric_Block_IDEA-ECB-1.188 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex FBFBFBFBFBFBFBFBFBFBFBFBFBFBFBFB] \
+		 -data [binary decode hex FBFBFBFBFBFBFBFB]]} \
+	-match exact -result 55bc49104267bd78
+
+tcltest::test Symetric_Block_IDEA-ECB-1.189 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex FCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFC] \
+		 -data [binary decode hex 1A578AB6029071AE]]} \
+	-match exact -result fcfcfcfcfcfcfcfc
+
+tcltest::test Symetric_Block_IDEA-ECB-1.190 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex FCFCFCFCFCFCFCFCFCFCFCFCFCFCFCFC] \
+		 -data [binary decode hex FCFCFCFCFCFCFCFC]]} \
+	-match exact -result 1a578ab6029071ae
+
+tcltest::test Symetric_Block_IDEA-ECB-1.191 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex FDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFD] \
+		 -data [binary decode hex 1C2292FA2BDF8F40]]} \
+	-match exact -result fdfdfdfdfdfdfdfd
+
+tcltest::test Symetric_Block_IDEA-ECB-1.192 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex FDFDFDFDFDFDFDFDFDFDFDFDFDFDFDFD] \
+		 -data [binary decode hex FDFDFDFDFDFDFDFD]]} \
+	-match exact -result 1c2292fa2bdf8f40
+
+tcltest::test Symetric_Block_IDEA-ECB-1.193 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex FEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFE] \
+		 -data [binary decode hex C7E3F87FFE503CC3]]} \
+	-match exact -result fefefefefefefefe
+
+tcltest::test Symetric_Block_IDEA-ECB-1.194 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex FEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFE] \
+		 -data [binary decode hex FEFEFEFEFEFEFEFE]]} \
+	-match exact -result c7e3f87ffe503cc3
+
+tcltest::test Symetric_Block_IDEA-ECB-1.195 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF] \
+		 -data [binary decode hex 28886D814399E782]]} \
+	-match exact -result ffffffffffffffff
+
+tcltest::test Symetric_Block_IDEA-ECB-1.196 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF] \
+		 -data [binary decode hex FFFFFFFFFFFFFFFF]]} \
+	-match exact -result 28886d814399e782
+
+tcltest::test Symetric_Block_IDEA-ECB-1.197 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 000102030405060708090A0B0C0D0E0F] \
+		 -data [binary decode hex DB2D4A92AA68273F]]} \
+	-match exact -result 0011223344556677
+
+tcltest::test Symetric_Block_IDEA-ECB-1.198 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 000102030405060708090A0B0C0D0E0F] \
+		 -data [binary decode hex 0011223344556677]]} \
+	-match exact -result db2d4a92aa68273f
+
+tcltest::test Symetric_Block_IDEA-ECB-1.199 {Encrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::encrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 2BD6459F82C5B300952C49104881FF48] \
+		 -data [binary decode hex F129A6601EF62A47]]} \
+	-match exact -result ea024714ad5c4d84
+
+tcltest::test Symetric_Block_IDEA-ECB-1.200 {Decrypt IDEA-ECB} \
+	-constraints IDEA_ECB \
+	-body {binary encode hex [tls::decrypt -cipher IDEA-ECB -padding 0 \
+		 -key [binary decode hex 2BD6459F82C5B300952C49104881FF48] \
+		 -data [binary decode hex EA024714AD5C4D84]]} \
+	-match exact -result f129a6601ef62a47
+
+# Cleanup
+::tcltest::cleanupTests
+return

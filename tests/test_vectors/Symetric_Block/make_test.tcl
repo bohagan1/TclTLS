@@ -5,12 +5,12 @@
 #
 # Create test case and output to test file
 #
-proc do_test {group cipher file_num tc params fn} {
+proc do_test {group cipher test_num tc params fn} {
     array set config [list Key "" IV "" Msg "" Repeat 1 Length ""]
     array set config $params
 
     # Test info
-    set line [format "tcltest::test %s-%d.%d {%s %s} \\\n\t" $group $file_num $tc [string totitle $fn] $cipher]
+    set line [format "tcltest::test %s-%d.%d {%s %s} \\\n\t" $group $test_num $tc [string totitle $fn] $cipher]
 
     # Test constraints
     append line [format "-constraints %s \\\n\t" [string map [list "-" "_"] $cipher]]
@@ -68,7 +68,7 @@ proc do_test {group cipher file_num tc params fn} {
 #
 # Parse test vector file and get test cases config info
 #
-proc parse {group filename file_num cipher} {
+proc parse {group filename test_num cipher} {
     set tc 0
     set params [list]
 
@@ -105,9 +105,9 @@ proc parse {group filename file_num cipher} {
 	} elseif {$len == 0} {
 	    if {[llength $params] > 0} {
 		# Do test if end of params
-		puts $out [do_test $group $cipher $file_num [incr tc] $params encrypt]
+		puts $out [do_test $group $cipher $test_num [incr tc] $params encrypt]
 		puts $out ""
-		puts $out [do_test $group $cipher $file_num [incr tc] $params decrypt]
+		puts $out [do_test $group $cipher $test_num [incr tc] $params decrypt]
 		puts $out ""
 		set params [list]
 	    } else {
@@ -127,7 +127,7 @@ proc parse {group filename file_num cipher} {
 
     # Handle last test case
     if {[llength $params] > 0} {
-	puts $out [do_test $group $cipher $file_num [incr tc] $params]
+	puts $out [do_test $group $cipher $test_num [incr tc] $params]
 	puts $out ""
     }
     
@@ -141,7 +141,7 @@ proc parse {group filename file_num cipher} {
 # Read all config files in directory
 #
 proc main {path} {
-    set file_num 0
+    set test_num 0
     set group [file rootname [file tail $path]]
 
     foreach filename [glob -directory $path *.txt] {

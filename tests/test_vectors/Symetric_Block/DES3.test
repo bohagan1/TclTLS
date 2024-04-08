@@ -6,7 +6,7 @@ package require tcltest
 catch {tls::provider legacy}
 tcltest::testConstraint DES3 [expr {[lsearch -nocase [tls::ciphers] DES3] > -1}]
 
-tcltest::test Block_DES3-1.1 {Encrypt DES3} \
+tcltest::test Symetric_Block_DES3-1.1 {Encrypt DES3} \
 	-constraints DES3 \
 	-body {binary encode hex [tls::encrypt -cipher DES3 -padding 0 \
 		 -key [binary decode hex 0123456789abcdef23456789abcdef01456789abcdef0123] \
@@ -14,7 +14,7 @@ tcltest::test Block_DES3-1.1 {Encrypt DES3} \
 		 -data [binary decode hex 6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e51]]} \
 	-match exact -result 2079c3d53aa763e193b79e2569ab5262516570481f25b50f73c0bda85c8e0da7
 
-tcltest::test Block_DES3-1.2 {Decrypt DES3} \
+tcltest::test Symetric_Block_DES3-1.2 {Decrypt DES3} \
 	-constraints DES3 \
 	-body {binary encode hex [tls::decrypt -cipher DES3 -padding 0 \
 		 -key [binary decode hex 0123456789abcdef23456789abcdef01456789abcdef0123] \
@@ -22,7 +22,7 @@ tcltest::test Block_DES3-1.2 {Decrypt DES3} \
 		 -data [binary decode hex 2079c3d53aa763e193b79e2569ab5262516570481f25b50f73c0bda85c8e0da7]]} \
 	-match exact -result 6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e51
 
-tcltest::test Block_DES3-1.3 {Encrypt DES3} \
+tcltest::test Symetric_Block_DES3-1.3 {Encrypt DES3} \
 	-constraints DES3 \
 	-body {binary encode hex [tls::encrypt -cipher DES3 -padding 0 \
 		 -key [binary decode hex 0123456789abcdef23456789abcdef010123456789abcdef] \
@@ -30,7 +30,7 @@ tcltest::test Block_DES3-1.3 {Encrypt DES3} \
 		 -data [binary decode hex 6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e51]]} \
 	-match exact -result 7401ce1eab6d003caff84bf47b36cc2154f0238f9ffecd8f6acf118392b45581
 
-tcltest::test Block_DES3-1.4 {Decrypt DES3} \
+tcltest::test Symetric_Block_DES3-1.4 {Decrypt DES3} \
 	-constraints DES3 \
 	-body {binary encode hex [tls::decrypt -cipher DES3 -padding 0 \
 		 -key [binary decode hex 0123456789abcdef23456789abcdef010123456789abcdef] \

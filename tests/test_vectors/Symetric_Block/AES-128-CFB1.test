@@ -6,7 +6,7 @@ package require tcltest
 catch {tls::provider legacy}
 tcltest::testConstraint AES_128_CFB1 [expr {[lsearch -nocase [tls::ciphers] AES-128-CFB1] > -1}]
 
-tcltest::test Block_AES-128-CFB1-1.1 {Encrypt AES-128-CFB1} \
+tcltest::test Symetric_Block_AES-128-CFB1-1.1 {Encrypt AES-128-CFB1} \
 	-constraints AES_128_CFB1 \
 	-body {binary encode hex [tls::encrypt -cipher AES-128-CFB1 -padding 0 \
 		 -key [binary decode hex 2b7e151628aed2a6abf7158809cf4f3c] \
@@ -14,7 +14,7 @@ tcltest::test Block_AES-128-CFB1-1.1 {Encrypt AES-128-CFB1} \
 		 -data [binary decode hex 6bc1]]} \
 	-match exact -result 68b3
 
-tcltest::test Block_AES-128-CFB1-1.2 {Decrypt AES-128-CFB1} \
+tcltest::test Symetric_Block_AES-128-CFB1-1.2 {Decrypt AES-128-CFB1} \
 	-constraints AES_128_CFB1 \
 	-body {binary encode hex [tls::decrypt -cipher AES-128-CFB1 -padding 0 \
 		 -key [binary decode hex 2b7e151628aed2a6abf7158809cf4f3c] \

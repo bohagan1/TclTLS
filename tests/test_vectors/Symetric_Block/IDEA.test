@@ -1,0 +1,165 @@
+# Auto generated from "IDEA.txt"
+lappend auto_path [file dirname [file dirname [file dirname [file dirname [file join [pwd] [info script]]]]]]
+package require tls
+package require tcltest
+
+catch {tls::provider legacy}
+tcltest::testConstraint IDEA [expr {[lsearch -nocase [tls::ciphers] IDEA] > -1}]
+
+tcltest::test Symetric_Block_IDEA-1.1 {Encrypt IDEA} \
+	-constraints IDEA \
+	-body {binary encode hex [tls::encrypt -cipher IDEA -padding 0 \
+		 -key [binary decode hex 00010002000300040005000600070008] \
+		 -data [binary decode hex 0000000100020003]]} \
+	-match exact -result 11fbed2b01986de5
+
+tcltest::test Symetric_Block_IDEA-1.2 {Decrypt IDEA} \
+	-constraints IDEA \
+	-body {binary encode hex [tls::decrypt -cipher IDEA -padding 0 \
+		 -key [binary decode hex 00010002000300040005000600070008] \
+		 -data [binary decode hex 11fbed2b01986de5]]} \
+	-match exact -result 0000000100020003
+
+tcltest::test Symetric_Block_IDEA-1.3 {Encrypt IDEA} \
+	-constraints IDEA \
+	-body {binary encode hex [tls::encrypt -cipher IDEA -padding 0 \
+		 -key [binary decode hex 00010002000300040005000600070008] \
+		 -data [binary decode hex 0102030405060708]]} \
+	-match exact -result 540e5fea18c2f8b1
+
+tcltest::test Symetric_Block_IDEA-1.4 {Decrypt IDEA} \
+	-constraints IDEA \
+	-body {binary encode hex [tls::decrypt -cipher IDEA -padding 0 \
+		 -key [binary decode hex 00010002000300040005000600070008] \
+		 -data [binary decode hex 540e5fea18c2f8b1]]} \
+	-match exact -result 0102030405060708
+
+tcltest::test Symetric_Block_IDEA-1.5 {Encrypt IDEA} \
+	-constraints IDEA \
+	-body {binary encode hex [tls::encrypt -cipher IDEA -padding 0 \
+		 -key [binary decode hex 00010002000300040005000600070008] \
+		 -data [binary decode hex 0019324b647d96af]]} \
+	-match exact -result 9f0a0ab6e10ced78
+
+tcltest::test Symetric_Block_IDEA-1.6 {Decrypt IDEA} \
+	-constraints IDEA \
+	-body {binary encode hex [tls::decrypt -cipher IDEA -padding 0 \
+		 -key [binary decode hex 00010002000300040005000600070008] \
+		 -data [binary decode hex 9f0a0ab6e10ced78]]} \
+	-match exact -result 0019324b647d96af
+
+tcltest::test Symetric_Block_IDEA-1.7 {Encrypt IDEA} \
+	-constraints IDEA \
+	-body {binary encode hex [tls::encrypt -cipher IDEA -padding 0 \
+		 -key [binary decode hex 00010002000300040005000600070008] \
+		 -data [binary decode hex f5202d5b9c671b08]]} \
+	-match exact -result cf18fd7355e2c5c5
+
+tcltest::test Symetric_Block_IDEA-1.8 {Decrypt IDEA} \
+	-constraints IDEA \
+	-body {binary encode hex [tls::decrypt -cipher IDEA -padding 0 \
+		 -key [binary decode hex 00010002000300040005000600070008] \
+		 -data [binary decode hex cf18fd7355e2c5c5]]} \
+	-match exact -result f5202d5b9c671b08
+
+tcltest::test Symetric_Block_IDEA-1.9 {Encrypt IDEA} \
+	-constraints IDEA \
+	-body {binary encode hex [tls::encrypt -cipher IDEA -padding 0 \
+		 -key [binary decode hex 00010002000300040005000600070008] \
+		 -data [binary decode hex fae6d2beaa96826e]]} \
+	-match exact -result 85df52005608193d
+
+tcltest::test Symetric_Block_IDEA-1.10 {Decrypt IDEA} \
+	-constraints IDEA \
+	-body {binary encode hex [tls::decrypt -cipher IDEA -padding 0 \
+		 -key [binary decode hex 00010002000300040005000600070008] \
+		 -data [binary decode hex 85df52005608193d]]} \
+	-match exact -result fae6d2beaa96826e
+
+tcltest::test Symetric_Block_IDEA-1.11 {Encrypt IDEA} \
+	-constraints IDEA \
+	-body {binary encode hex [tls::encrypt -cipher IDEA -padding 0 \
+		 -key [binary decode hex 00010002000300040005000600070008] \
+		 -data [binary decode hex 0a141e28323c4650]]} \
+	-match exact -result 2f7de750212fb734
+
+tcltest::test Symetric_Block_IDEA-1.12 {Decrypt IDEA} \
+	-constraints IDEA \
+	-body {binary encode hex [tls::decrypt -cipher IDEA -padding 0 \
+		 -key [binary decode hex 00010002000300040005000600070008] \
+		 -data [binary decode hex 2f7de750212fb734]]} \
+	-match exact -result 0a141e28323c4650
+
+tcltest::test Symetric_Block_IDEA-1.13 {Encrypt IDEA} \
+	-constraints IDEA \
+	-body {binary encode hex [tls::encrypt -cipher IDEA -padding 0 \
+		 -key [binary decode hex 00010002000300040005000600070008] \
+		 -data [binary decode hex 050a0f14191e2328]]} \
+	-match exact -result 7b7314925de59c09
+
+tcltest::test Symetric_Block_IDEA-1.14 {Decrypt IDEA} \
+	-constraints IDEA \
+	-body {binary encode hex [tls::decrypt -cipher IDEA -padding 0 \
+		 -key [binary decode hex 00010002000300040005000600070008] \
+		 -data [binary decode hex 7b7314925de59c09]]} \
+	-match exact -result 050a0f14191e2328
+
+tcltest::test Symetric_Block_IDEA-1.15 {Encrypt IDEA} \
+	-constraints IDEA \
+	-body {binary encode hex [tls::encrypt -cipher IDEA -padding 0 \
+		 -key [binary decode hex 0005000a000f00140019001e00230028] \
+		 -data [binary decode hex 0102030405060708]]} \
+	-match exact -result 3ec04780beff6e20
+
+tcltest::test Symetric_Block_IDEA-1.16 {Decrypt IDEA} \
+	-constraints IDEA \
+	-body {binary encode hex [tls::decrypt -cipher IDEA -padding 0 \
+		 -key [binary decode hex 0005000a000f00140019001e00230028] \
+		 -data [binary decode hex 3ec04780beff6e20]]} \
+	-match exact -result 0102030405060708
+
+tcltest::test Symetric_Block_IDEA-1.17 {Encrypt IDEA} \
+	-constraints IDEA \
+	-body {binary encode hex [tls::encrypt -cipher IDEA -padding 0 \
+		 -key [binary decode hex 3a984e2000195db32ee501c8c47cea60] \
+		 -data [binary decode hex 0102030405060708]]} \
+	-match exact -result 97bcd8200780da86
+
+tcltest::test Symetric_Block_IDEA-1.18 {Decrypt IDEA} \
+	-constraints IDEA \
+	-body {binary encode hex [tls::decrypt -cipher IDEA -padding 0 \
+		 -key [binary decode hex 3a984e2000195db32ee501c8c47cea60] \
+		 -data [binary decode hex 97bcd8200780da86]]} \
+	-match exact -result 0102030405060708
+
+tcltest::test Symetric_Block_IDEA-1.19 {Encrypt IDEA} \
+	-constraints IDEA \
+	-body {binary encode hex [tls::encrypt -cipher IDEA -padding 0 \
+		 -key [binary decode hex 006400c8012c019001f4025802bc0320] \
+		 -data [binary decode hex 05320a6414c819fa]]} \
+	-match exact -result 65be87e7a2538aed
+
+tcltest::test Symetric_Block_IDEA-1.20 {Decrypt IDEA} \
+	-constraints IDEA \
+	-body {binary encode hex [tls::decrypt -cipher IDEA -padding 0 \
+		 -key [binary decode hex 006400c8012c019001f4025802bc0320] \
+		 -data [binary decode hex 65be87e7a2538aed]]} \
+	-match exact -result 05320a6414c819fa
+
+tcltest::test Symetric_Block_IDEA-1.21 {Encrypt IDEA} \
+	-constraints IDEA \
+	-body {binary encode hex [tls::encrypt -cipher IDEA -padding 0 \
+		 -key [binary decode hex 9d4075c103bc322afb03e7be6ab30006] \
+		 -data [binary decode hex 0808080808080808]]} \
+	-match exact -result f5db1ac45e5ef9f9
+
+tcltest::test Symetric_Block_IDEA-1.22 {Decrypt IDEA} \
+	-constraints IDEA \
+	-body {binary encode hex [tls::decrypt -cipher IDEA -padding 0 \
+		 -key [binary decode hex 9d4075c103bc322afb03e7be6ab30006] \
+		 -data [binary decode hex f5db1ac45e5ef9f9]]} \
+	-match exact -result 0808080808080808
+
+# Cleanup
+::tcltest::cleanupTests
+return

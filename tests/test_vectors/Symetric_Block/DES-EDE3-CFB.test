@@ -6,7 +6,7 @@ package require tcltest
 catch {tls::provider legacy}
 tcltest::testConstraint DES_EDE3_CFB [expr {[lsearch -nocase [tls::ciphers] DES-EDE3-CFB] > -1}]
 
-tcltest::test Block_DES-EDE3-CFB-1.1 {Encrypt DES-EDE3-CFB} \
+tcltest::test Symetric_Block_DES-EDE3-CFB-1.1 {Encrypt DES-EDE3-CFB} \
 	-constraints DES_EDE3_CFB \
 	-body {binary encode hex [tls::encrypt -cipher DES-EDE3-CFB -padding 0 \
 		 -key [binary decode hex 0123456789abcdef23456789abcdef01456789abcdef0123] \
@@ -14,7 +14,7 @@ tcltest::test Block_DES-EDE3-CFB-1.1 {Encrypt DES-EDE3-CFB} \
 		 -data [binary decode hex 6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e51]]} \
 	-match exact -result 078bb74e59ce7ed67666de9cf95eaf3fe9ed6bb460f451528a5f9fe4ed710918
 
-tcltest::test Block_DES-EDE3-CFB-1.2 {Decrypt DES-EDE3-CFB} \
+tcltest::test Symetric_Block_DES-EDE3-CFB-1.2 {Decrypt DES-EDE3-CFB} \
 	-constraints DES_EDE3_CFB \
 	-body {binary encode hex [tls::decrypt -cipher DES-EDE3-CFB -padding 0 \
 		 -key [binary decode hex 0123456789abcdef23456789abcdef01456789abcdef0123] \
@@ -22,7 +22,7 @@ tcltest::test Block_DES-EDE3-CFB-1.2 {Decrypt DES-EDE3-CFB} \
 		 -data [binary decode hex 078bb74e59ce7ed67666de9cf95eaf3fe9ed6bb460f451528a5f9fe4ed710918]]} \
 	-match exact -result 6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e51
 
-tcltest::test Block_DES-EDE3-CFB-1.3 {Encrypt DES-EDE3-CFB} \
+tcltest::test Symetric_Block_DES-EDE3-CFB-1.3 {Encrypt DES-EDE3-CFB} \
 	-constraints DES_EDE3_CFB \
 	-body {binary encode hex [tls::encrypt -cipher DES-EDE3-CFB -padding 0 \
 		 -key [binary decode hex 0123456789abcdef23456789abcdef010123456789abcdef] \
@@ -30,7 +30,7 @@ tcltest::test Block_DES-EDE3-CFB-1.3 {Encrypt DES-EDE3-CFB} \
 		 -data [binary decode hex 6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e51]]} \
 	-match exact -result 6195b9c2c39909c52ef313667b5a66af688672a3993aeae55b931ae24ee24c5c
 
-tcltest::test Block_DES-EDE3-CFB-1.4 {Decrypt DES-EDE3-CFB} \
+tcltest::test Symetric_Block_DES-EDE3-CFB-1.4 {Decrypt DES-EDE3-CFB} \
 	-constraints DES_EDE3_CFB \
 	-body {binary encode hex [tls::decrypt -cipher DES-EDE3-CFB -padding 0 \
 		 -key [binary decode hex 0123456789abcdef23456789abcdef010123456789abcdef] \

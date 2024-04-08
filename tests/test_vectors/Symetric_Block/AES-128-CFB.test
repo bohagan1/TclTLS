@@ -6,7 +6,7 @@ package require tcltest
 catch {tls::provider legacy}
 tcltest::testConstraint AES_128_CFB [expr {[lsearch -nocase [tls::ciphers] AES-128-CFB] > -1}]
 
-tcltest::test Block_AES-128-CFB-1.1 {Encrypt AES-128-CFB} \
+tcltest::test Symetric_Block_AES-128-CFB-1.1 {Encrypt AES-128-CFB} \
 	-constraints AES_128_CFB \
 	-body {binary encode hex [tls::encrypt -cipher AES-128-CFB -padding 0 \
 		 -key [binary decode hex 2b7e151628aed2a6abf7158809cf4f3c] \
@@ -14,7 +14,7 @@ tcltest::test Block_AES-128-CFB-1.1 {Encrypt AES-128-CFB} \
 		 -data [binary decode hex 6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e5130c81c46a35ce411e5fbc1191a0a52eff69f2445df4f9b17ad2b417be66c3710]]} \
 	-match exact -result 3b3fd92eb72dad20333449f8e83cfb4ac8a64537a0b3a93fcde3cdad9f1ce58b26751f67a3cbb140b1808cf187a4f4dfc04b05357c5d1c0eeac4c66f9ff7f2e6
 
-tcltest::test Block_AES-128-CFB-1.2 {Decrypt AES-128-CFB} \
+tcltest::test Symetric_Block_AES-128-CFB-1.2 {Decrypt AES-128-CFB} \
 	-constraints AES_128_CFB \
 	-body {binary encode hex [tls::decrypt -cipher AES-128-CFB -padding 0 \
 		 -key [binary decode hex 2b7e151628aed2a6abf7158809cf4f3c] \

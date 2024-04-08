@@ -6,7 +6,7 @@ package require tcltest
 catch {tls::provider legacy}
 tcltest::testConstraint DES_CBC [expr {[lsearch -nocase [tls::ciphers] DES-CBC] > -1}]
 
-tcltest::test Block_DES-CBC-1.1 {Encrypt DES-CBC} \
+tcltest::test Symetric_Block_DES-CBC-1.1 {Encrypt DES-CBC} \
 	-constraints DES_CBC \
 	-body {binary encode hex [tls::encrypt -cipher DES-CBC -padding 0 \
 		 -key [binary decode hex 0123456789abcdef] \
@@ -14,7 +14,7 @@ tcltest::test Block_DES-CBC-1.1 {Encrypt DES-CBC} \
 		 -data [binary decode hex 4e6f77206973207468652074696d6520666f7220616c6c20]]} \
 	-match exact -result e5c7cdde872bf27c43e934008c389c0f683788499a7c05f6
 
-tcltest::test Block_DES-CBC-1.2 {Decrypt DES-CBC} \
+tcltest::test Symetric_Block_DES-CBC-1.2 {Decrypt DES-CBC} \
 	-constraints DES_CBC \
 	-body {binary encode hex [tls::decrypt -cipher DES-CBC -padding 0 \
 		 -key [binary decode hex 0123456789abcdef] \

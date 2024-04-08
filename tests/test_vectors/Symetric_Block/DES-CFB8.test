@@ -6,7 +6,7 @@ package require tcltest
 catch {tls::provider legacy}
 tcltest::testConstraint DES_CFB8 [expr {[lsearch -nocase [tls::ciphers] DES-CFB8] > -1}]
 
-tcltest::test Block_DES-CFB8-1.1 {Encrypt DES-CFB8} \
+tcltest::test Symetric_Block_DES-CFB8-1.1 {Encrypt DES-CFB8} \
 	-constraints DES_CFB8 \
 	-body {binary encode hex [tls::encrypt -cipher DES-CFB8 -padding 0 \
 		 -key [binary decode hex 0123456789abcdef] \
@@ -14,7 +14,7 @@ tcltest::test Block_DES-CFB8-1.1 {Encrypt DES-CFB8} \
 		 -data [binary decode hex 4e6f7720697320746865]]} \
 	-match exact -result f31fda07011462ee187f
 
-tcltest::test Block_DES-CFB8-1.2 {Decrypt DES-CFB8} \
+tcltest::test Symetric_Block_DES-CFB8-1.2 {Decrypt DES-CFB8} \
 	-constraints DES_CFB8 \
 	-body {binary encode hex [tls::decrypt -cipher DES-CFB8 -padding 0 \
 		 -key [binary decode hex 0123456789abcdef] \
