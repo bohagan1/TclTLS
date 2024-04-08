@@ -1,0 +1,25 @@
+# Auto generated from "ARIA192.txt"
+lappend auto_path [file dirname [file dirname [file dirname [file dirname [file join [pwd] [info script]]]]]]
+package require tls
+package require tcltest
+
+catch {tls::provider legacy}
+tcltest::testConstraint ARIA192 [expr {[lsearch -nocase [tls::ciphers] ARIA192] > -1}]
+
+tcltest::test Symetric_Block_ARIA192-1.1 {Encrypt ARIA192} \
+	-constraints ARIA192 \
+	-body {binary encode hex [tls::encrypt -cipher ARIA192 -padding 0 \
+		 -key [binary decode hex 000102030405060708090a0b0c0d0e0f1011121314151617] \
+		 -data [binary decode hex 00112233445566778899aabbccddeeff]]} \
+	-match exact -result 26449c1805dbe7aa25a468ce263a9e79
+
+tcltest::test Symetric_Block_ARIA192-1.2 {Decrypt ARIA192} \
+	-constraints ARIA192 \
+	-body {binary encode hex [tls::decrypt -cipher ARIA192 -padding 0 \
+		 -key [binary decode hex 000102030405060708090a0b0c0d0e0f1011121314151617] \
+		 -data [binary decode hex 26449c1805dbe7aa25a468ce263a9e79]]} \
+	-match exact -result 00112233445566778899aabbccddeeff
+
+# Cleanup
+::tcltest::cleanupTests
+return

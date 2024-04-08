@@ -1,0 +1,6 @@
+# ARIA128 cipher from RFC 5794
+
+# A.1.  128-Bit Key
+Key = 000102030405060708090a0b0c0d0e0f
+Plaintext = 00112233445566778899aabbccddeeff
+Ciphertext = d718fbd6ab644c739da95f3be6451778

@@ -1,0 +1,25 @@
+# Auto generated from "ARIA128.txt"
+lappend auto_path [file dirname [file dirname [file dirname [file dirname [file join [pwd] [info script]]]]]]
+package require tls
+package require tcltest
+
+catch {tls::provider legacy}
+tcltest::testConstraint ARIA128 [expr {[lsearch -nocase [tls::ciphers] ARIA128] > -1}]
+
+tcltest::test Symetric_Block_ARIA128-1.1 {Encrypt ARIA128} \
+	-constraints ARIA128 \
+	-body {binary encode hex [tls::encrypt -cipher ARIA128 -padding 0 \
+		 -key [binary decode hex 000102030405060708090a0b0c0d0e0f] \
+		 -data [binary decode hex 00112233445566778899aabbccddeeff]]} \
+	-match exact -result d718fbd6ab644c739da95f3be6451778
+
+tcltest::test Symetric_Block_ARIA128-1.2 {Decrypt ARIA128} \
+	-constraints ARIA128 \
+	-body {binary encode hex [tls::decrypt -cipher ARIA128 -padding 0 \
+		 -key [binary decode hex 000102030405060708090a0b0c0d0e0f] \
+		 -data [binary decode hex d718fbd6ab644c739da95f3be6451778]]} \
+	-match exact -result 00112233445566778899aabbccddeeff
+
+# Cleanup
+::tcltest::cleanupTests
+return

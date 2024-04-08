@@ -1,0 +1,6 @@
+# ARIA256 cipher from RFC 5794
+
+# A.3.  256-Bit Key
+Key = 000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f
+Plaintext = 00112233445566778899aabbccddeeff
+Ciphertext = f92bd7c79fb72e2f2b8f80c1972d24fc
