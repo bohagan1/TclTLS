@@ -7,14 +7,14 @@ catch {tls::provider legacy}
 tcltest::testConstraint rc4_80 [expr {[lsearch -nocase [tls::ciphers] rc4-80] > -1}]
 
 
-tcltest::test Stream_rc4_80-1.1 {Encrypt rc4-80 offset 0} \
+tcltest::test Symetric_Stream_rc4_80-1.1 {Encrypt rc4-80 offset 0} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 0102030405060708090a] \
 		-data [binary decode hex 00000000000000000000000000000000]] 0 15]} \
 	-match exact -result ede3b04643e586cc907dc21851709902
 
 
-tcltest::test Stream_rc4_80-1.2 {Decrypt rc4-80 offset 0} \
+tcltest::test Symetric_Stream_rc4_80-1.2 {Decrypt rc4-80 offset 0} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::decrypt -cipher rc4-80 -padding 0 -key [binary decode hex 0102030405060708090a] \
 		-data [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 0102030405060708090a] \
@@ -22,14 +22,14 @@ tcltest::test Stream_rc4_80-1.2 {Decrypt rc4-80 offset 0} \
 	-match exact -result 00000000000000000000000000000000
 
 
-tcltest::test Stream_rc4_80-1.3 {Encrypt rc4-80 offset 16} \
+tcltest::test Symetric_Stream_rc4_80-1.3 {Encrypt rc4-80 offset 16} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 0102030405060708090a] \
 		-data [string repeat [binary decode hex 00000000000000000000000000000000] 2]] 16 31]} \
 	-match exact -result 03516ba78f413beb223aa5d4d2df6711
 
 
-tcltest::test Stream_rc4_80-1.4 {Decrypt rc4-80 offset 16} \
+tcltest::test Symetric_Stream_rc4_80-1.4 {Decrypt rc4-80 offset 16} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::decrypt -cipher rc4-80 -padding 0 -key [binary decode hex 0102030405060708090a] \
 		-data [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 0102030405060708090a] \
@@ -37,14 +37,14 @@ tcltest::test Stream_rc4_80-1.4 {Decrypt rc4-80 offset 16} \
 	-match exact -result 00000000000000000000000000000000
 
 
-tcltest::test Stream_rc4_80-1.5 {Encrypt rc4-80 offset 240} \
+tcltest::test Symetric_Stream_rc4_80-1.5 {Encrypt rc4-80 offset 240} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 0102030405060708090a] \
 		-data [string repeat [binary decode hex 00000000000000000000000000000000] 16]] 240 255]} \
 	-match exact -result 3cfd6cb58ee0fdde640176ad0000044d
 
 
-tcltest::test Stream_rc4_80-1.6 {Decrypt rc4-80 offset 240} \
+tcltest::test Symetric_Stream_rc4_80-1.6 {Decrypt rc4-80 offset 240} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::decrypt -cipher rc4-80 -padding 0 -key [binary decode hex 0102030405060708090a] \
 		-data [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 0102030405060708090a] \
@@ -52,14 +52,14 @@ tcltest::test Stream_rc4_80-1.6 {Decrypt rc4-80 offset 240} \
 	-match exact -result 00000000000000000000000000000000
 
 
-tcltest::test Stream_rc4_80-1.7 {Encrypt rc4-80 offset 256} \
+tcltest::test Symetric_Stream_rc4_80-1.7 {Encrypt rc4-80 offset 256} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 0102030405060708090a] \
 		-data [string repeat [binary decode hex 00000000000000000000000000000000] 17]] 256 271]} \
 	-match exact -result 48532b21fb6079c9114c0ffd9c04a1ad
 
 
-tcltest::test Stream_rc4_80-1.8 {Decrypt rc4-80 offset 256} \
+tcltest::test Symetric_Stream_rc4_80-1.8 {Decrypt rc4-80 offset 256} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::decrypt -cipher rc4-80 -padding 0 -key [binary decode hex 0102030405060708090a] \
 		-data [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 0102030405060708090a] \
@@ -67,14 +67,14 @@ tcltest::test Stream_rc4_80-1.8 {Decrypt rc4-80 offset 256} \
 	-match exact -result 00000000000000000000000000000000
 
 
-tcltest::test Stream_rc4_80-1.9 {Encrypt rc4-80 offset 496} \
+tcltest::test Symetric_Stream_rc4_80-1.9 {Encrypt rc4-80 offset 496} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 0102030405060708090a] \
 		-data [string repeat [binary decode hex 00000000000000000000000000000000] 32]] 496 511]} \
 	-match exact -result 3e8cea98017109979084b1ef92f99d86
 
 
-tcltest::test Stream_rc4_80-1.10 {Decrypt rc4-80 offset 496} \
+tcltest::test Symetric_Stream_rc4_80-1.10 {Decrypt rc4-80 offset 496} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::decrypt -cipher rc4-80 -padding 0 -key [binary decode hex 0102030405060708090a] \
 		-data [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 0102030405060708090a] \
@@ -82,14 +82,14 @@ tcltest::test Stream_rc4_80-1.10 {Decrypt rc4-80 offset 496} \
 	-match exact -result 00000000000000000000000000000000
 
 
-tcltest::test Stream_rc4_80-1.11 {Encrypt rc4-80 offset 512} \
+tcltest::test Symetric_Stream_rc4_80-1.11 {Encrypt rc4-80 offset 512} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 0102030405060708090a] \
 		-data [string repeat [binary decode hex 00000000000000000000000000000000] 33]] 512 527]} \
 	-match exact -result e20fb49bdb337ee48b8d8dc0f4afeffe
 
 
-tcltest::test Stream_rc4_80-1.12 {Decrypt rc4-80 offset 512} \
+tcltest::test Symetric_Stream_rc4_80-1.12 {Decrypt rc4-80 offset 512} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::decrypt -cipher rc4-80 -padding 0 -key [binary decode hex 0102030405060708090a] \
 		-data [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 0102030405060708090a] \
@@ -97,14 +97,14 @@ tcltest::test Stream_rc4_80-1.12 {Decrypt rc4-80 offset 512} \
 	-match exact -result 00000000000000000000000000000000
 
 
-tcltest::test Stream_rc4_80-1.13 {Encrypt rc4-80 offset 752} \
+tcltest::test Symetric_Stream_rc4_80-1.13 {Encrypt rc4-80 offset 752} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 0102030405060708090a] \
 		-data [string repeat [binary decode hex 00000000000000000000000000000000] 48]] 752 767]} \
 	-match exact -result 5c2521eacd7966f15e056544bea0d315
 
 
-tcltest::test Stream_rc4_80-1.14 {Decrypt rc4-80 offset 752} \
+tcltest::test Symetric_Stream_rc4_80-1.14 {Decrypt rc4-80 offset 752} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::decrypt -cipher rc4-80 -padding 0 -key [binary decode hex 0102030405060708090a] \
 		-data [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 0102030405060708090a] \
@@ -112,14 +112,14 @@ tcltest::test Stream_rc4_80-1.14 {Decrypt rc4-80 offset 752} \
 	-match exact -result 00000000000000000000000000000000
 
 
-tcltest::test Stream_rc4_80-1.15 {Encrypt rc4-80 offset 768} \
+tcltest::test Symetric_Stream_rc4_80-1.15 {Encrypt rc4-80 offset 768} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 0102030405060708090a] \
 		-data [string repeat [binary decode hex 00000000000000000000000000000000] 49]] 768 783]} \
 	-match exact -result e067a7031931a246a6c3875d2f678acb
 
 
-tcltest::test Stream_rc4_80-1.16 {Decrypt rc4-80 offset 768} \
+tcltest::test Symetric_Stream_rc4_80-1.16 {Decrypt rc4-80 offset 768} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::decrypt -cipher rc4-80 -padding 0 -key [binary decode hex 0102030405060708090a] \
 		-data [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 0102030405060708090a] \
@@ -127,14 +127,14 @@ tcltest::test Stream_rc4_80-1.16 {Decrypt rc4-80 offset 768} \
 	-match exact -result 00000000000000000000000000000000
 
 
-tcltest::test Stream_rc4_80-1.17 {Encrypt rc4-80 offset 1008} \
+tcltest::test Symetric_Stream_rc4_80-1.17 {Encrypt rc4-80 offset 1008} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 0102030405060708090a] \
 		-data [string repeat [binary decode hex 00000000000000000000000000000000] 64]] 1008 1023]} \
 	-match exact -result a64f70af88ae56b6f87581c0e23e6b08
 
 
-tcltest::test Stream_rc4_80-1.18 {Decrypt rc4-80 offset 1008} \
+tcltest::test Symetric_Stream_rc4_80-1.18 {Decrypt rc4-80 offset 1008} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::decrypt -cipher rc4-80 -padding 0 -key [binary decode hex 0102030405060708090a] \
 		-data [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 0102030405060708090a] \
@@ -142,14 +142,14 @@ tcltest::test Stream_rc4_80-1.18 {Decrypt rc4-80 offset 1008} \
 	-match exact -result 00000000000000000000000000000000
 
 
-tcltest::test Stream_rc4_80-1.19 {Encrypt rc4-80 offset 1024} \
+tcltest::test Symetric_Stream_rc4_80-1.19 {Encrypt rc4-80 offset 1024} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 0102030405060708090a] \
 		-data [string repeat [binary decode hex 00000000000000000000000000000000] 65]] 1024 1039]} \
 	-match exact -result f449031de312814ec6f319291f4a0516
 
 
-tcltest::test Stream_rc4_80-1.20 {Decrypt rc4-80 offset 1024} \
+tcltest::test Symetric_Stream_rc4_80-1.20 {Decrypt rc4-80 offset 1024} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::decrypt -cipher rc4-80 -padding 0 -key [binary decode hex 0102030405060708090a] \
 		-data [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 0102030405060708090a] \
@@ -157,14 +157,14 @@ tcltest::test Stream_rc4_80-1.20 {Decrypt rc4-80 offset 1024} \
 	-match exact -result 00000000000000000000000000000000
 
 
-tcltest::test Stream_rc4_80-1.21 {Encrypt rc4-80 offset 1520} \
+tcltest::test Symetric_Stream_rc4_80-1.21 {Encrypt rc4-80 offset 1520} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 0102030405060708090a] \
 		-data [string repeat [binary decode hex 00000000000000000000000000000000] 96]] 1520 1535]} \
 	-match exact -result bdae85924b3cb1d0a2e33a30c6d79599
 
 
-tcltest::test Stream_rc4_80-1.22 {Decrypt rc4-80 offset 1520} \
+tcltest::test Symetric_Stream_rc4_80-1.22 {Decrypt rc4-80 offset 1520} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::decrypt -cipher rc4-80 -padding 0 -key [binary decode hex 0102030405060708090a] \
 		-data [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 0102030405060708090a] \
@@ -172,14 +172,14 @@ tcltest::test Stream_rc4_80-1.22 {Decrypt rc4-80 offset 1520} \
 	-match exact -result 00000000000000000000000000000000
 
 
-tcltest::test Stream_rc4_80-1.23 {Encrypt rc4-80 offset 1536} \
+tcltest::test Symetric_Stream_rc4_80-1.23 {Encrypt rc4-80 offset 1536} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 0102030405060708090a] \
 		-data [string repeat [binary decode hex 00000000000000000000000000000000] 97]] 1536 1551]} \
 	-match exact -result 8a0feddbac865a09bcd127fb562ed60a
 
 
-tcltest::test Stream_rc4_80-1.24 {Decrypt rc4-80 offset 1536} \
+tcltest::test Symetric_Stream_rc4_80-1.24 {Decrypt rc4-80 offset 1536} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::decrypt -cipher rc4-80 -padding 0 -key [binary decode hex 0102030405060708090a] \
 		-data [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 0102030405060708090a] \
@@ -187,14 +187,14 @@ tcltest::test Stream_rc4_80-1.24 {Decrypt rc4-80 offset 1536} \
 	-match exact -result 00000000000000000000000000000000
 
 
-tcltest::test Stream_rc4_80-1.25 {Encrypt rc4-80 offset 2032} \
+tcltest::test Symetric_Stream_rc4_80-1.25 {Encrypt rc4-80 offset 2032} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 0102030405060708090a] \
 		-data [string repeat [binary decode hex 00000000000000000000000000000000] 128]] 2032 2047]} \
 	-match exact -result b55a0a5b51a12a8be34899c3e047511a
 
 
-tcltest::test Stream_rc4_80-1.26 {Decrypt rc4-80 offset 2032} \
+tcltest::test Symetric_Stream_rc4_80-1.26 {Decrypt rc4-80 offset 2032} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::decrypt -cipher rc4-80 -padding 0 -key [binary decode hex 0102030405060708090a] \
 		-data [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 0102030405060708090a] \
@@ -202,14 +202,14 @@ tcltest::test Stream_rc4_80-1.26 {Decrypt rc4-80 offset 2032} \
 	-match exact -result 00000000000000000000000000000000
 
 
-tcltest::test Stream_rc4_80-1.27 {Encrypt rc4-80 offset 2048} \
+tcltest::test Symetric_Stream_rc4_80-1.27 {Encrypt rc4-80 offset 2048} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 0102030405060708090a] \
 		-data [string repeat [binary decode hex 00000000000000000000000000000000] 129]] 2048 2063]} \
 	-match exact -result d9a09cea3ce75fe39698070317a71339
 
 
-tcltest::test Stream_rc4_80-1.28 {Decrypt rc4-80 offset 2048} \
+tcltest::test Symetric_Stream_rc4_80-1.28 {Decrypt rc4-80 offset 2048} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::decrypt -cipher rc4-80 -padding 0 -key [binary decode hex 0102030405060708090a] \
 		-data [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 0102030405060708090a] \
@@ -217,14 +217,14 @@ tcltest::test Stream_rc4_80-1.28 {Decrypt rc4-80 offset 2048} \
 	-match exact -result 00000000000000000000000000000000
 
 
-tcltest::test Stream_rc4_80-1.29 {Encrypt rc4-80 offset 3056} \
+tcltest::test Symetric_Stream_rc4_80-1.29 {Encrypt rc4-80 offset 3056} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 0102030405060708090a] \
 		-data [string repeat [binary decode hex 00000000000000000000000000000000] 192]] 3056 3071]} \
 	-match exact -result 552225ed1177f44584ac8cfa6c4eb5fc
 
 
-tcltest::test Stream_rc4_80-1.30 {Decrypt rc4-80 offset 3056} \
+tcltest::test Symetric_Stream_rc4_80-1.30 {Decrypt rc4-80 offset 3056} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::decrypt -cipher rc4-80 -padding 0 -key [binary decode hex 0102030405060708090a] \
 		-data [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 0102030405060708090a] \
@@ -232,14 +232,14 @@ tcltest::test Stream_rc4_80-1.30 {Decrypt rc4-80 offset 3056} \
 	-match exact -result 00000000000000000000000000000000
 
 
-tcltest::test Stream_rc4_80-1.31 {Encrypt rc4-80 offset 3072} \
+tcltest::test Symetric_Stream_rc4_80-1.31 {Encrypt rc4-80 offset 3072} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 0102030405060708090a] \
 		-data [string repeat [binary decode hex 00000000000000000000000000000000] 193]] 3072 3087]} \
 	-match exact -result 7e82cbabfc95381b080998442129c2f8
 
 
-tcltest::test Stream_rc4_80-1.32 {Decrypt rc4-80 offset 3072} \
+tcltest::test Symetric_Stream_rc4_80-1.32 {Decrypt rc4-80 offset 3072} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::decrypt -cipher rc4-80 -padding 0 -key [binary decode hex 0102030405060708090a] \
 		-data [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 0102030405060708090a] \
@@ -247,14 +247,14 @@ tcltest::test Stream_rc4_80-1.32 {Decrypt rc4-80 offset 3072} \
 	-match exact -result 00000000000000000000000000000000
 
 
-tcltest::test Stream_rc4_80-1.33 {Encrypt rc4-80 offset 4080} \
+tcltest::test Symetric_Stream_rc4_80-1.33 {Encrypt rc4-80 offset 4080} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 0102030405060708090a] \
 		-data [string repeat [binary decode hex 00000000000000000000000000000000] 256]] 4080 4095]} \
 	-match exact -result 1f135ed14ce60a91369d2322bef25e3c
 
 
-tcltest::test Stream_rc4_80-1.34 {Decrypt rc4-80 offset 4080} \
+tcltest::test Symetric_Stream_rc4_80-1.34 {Decrypt rc4-80 offset 4080} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::decrypt -cipher rc4-80 -padding 0 -key [binary decode hex 0102030405060708090a] \
 		-data [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 0102030405060708090a] \
@@ -262,14 +262,14 @@ tcltest::test Stream_rc4_80-1.34 {Decrypt rc4-80 offset 4080} \
 	-match exact -result 00000000000000000000000000000000
 
 
-tcltest::test Stream_rc4_80-1.35 {Encrypt rc4-80 offset 4096} \
+tcltest::test Symetric_Stream_rc4_80-1.35 {Encrypt rc4-80 offset 4096} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 0102030405060708090a] \
 		-data [string repeat [binary decode hex 00000000000000000000000000000000] 257]] 4096 4111]} \
 	-match exact -result 08b6be45124a43e2eb77953f84dc8553
 
 
-tcltest::test Stream_rc4_80-1.36 {Decrypt rc4-80 offset 4096} \
+tcltest::test Symetric_Stream_rc4_80-1.36 {Decrypt rc4-80 offset 4096} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::decrypt -cipher rc4-80 -padding 0 -key [binary decode hex 0102030405060708090a] \
 		-data [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 0102030405060708090a] \
@@ -277,14 +277,14 @@ tcltest::test Stream_rc4_80-1.36 {Decrypt rc4-80 offset 4096} \
 	-match exact -result 00000000000000000000000000000000
 
 
-tcltest::test Stream_rc4_80-1.37 {Encrypt rc4-80 offset 0} \
+tcltest::test Symetric_Stream_rc4_80-1.37 {Encrypt rc4-80 offset 0} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 8b37641910833222772a] \
 		-data [binary decode hex 00000000000000000000000000000000]] 0 15]} \
 	-match exact -result ab65c26eddb287600db2fda10d1e605c
 
 
-tcltest::test Stream_rc4_80-1.38 {Decrypt rc4-80 offset 0} \
+tcltest::test Symetric_Stream_rc4_80-1.38 {Decrypt rc4-80 offset 0} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::decrypt -cipher rc4-80 -padding 0 -key [binary decode hex 8b37641910833222772a] \
 		-data [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 8b37641910833222772a] \
@@ -292,14 +292,14 @@ tcltest::test Stream_rc4_80-1.38 {Decrypt rc4-80 offset 0} \
 	-match exact -result 00000000000000000000000000000000
 
 
-tcltest::test Stream_rc4_80-1.39 {Encrypt rc4-80 offset 16} \
+tcltest::test Symetric_Stream_rc4_80-1.39 {Encrypt rc4-80 offset 16} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 8b37641910833222772a] \
 		-data [string repeat [binary decode hex 00000000000000000000000000000000] 2]] 16 31]} \
 	-match exact -result bb759010c29658f2c72d93a2d16d2930
 
 
-tcltest::test Stream_rc4_80-1.40 {Decrypt rc4-80 offset 16} \
+tcltest::test Symetric_Stream_rc4_80-1.40 {Decrypt rc4-80 offset 16} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::decrypt -cipher rc4-80 -padding 0 -key [binary decode hex 8b37641910833222772a] \
 		-data [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 8b37641910833222772a] \
@@ -307,14 +307,14 @@ tcltest::test Stream_rc4_80-1.40 {Decrypt rc4-80 offset 16} \
 	-match exact -result 00000000000000000000000000000000
 
 
-tcltest::test Stream_rc4_80-1.41 {Encrypt rc4-80 offset 240} \
+tcltest::test Symetric_Stream_rc4_80-1.41 {Encrypt rc4-80 offset 240} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 8b37641910833222772a] \
 		-data [string repeat [binary decode hex 00000000000000000000000000000000] 16]] 240 255]} \
 	-match exact -result b901e8036ed1c383cd3c4c4dd0a6ab05
 
 
-tcltest::test Stream_rc4_80-1.42 {Decrypt rc4-80 offset 240} \
+tcltest::test Symetric_Stream_rc4_80-1.42 {Decrypt rc4-80 offset 240} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::decrypt -cipher rc4-80 -padding 0 -key [binary decode hex 8b37641910833222772a] \
 		-data [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 8b37641910833222772a] \
@@ -322,14 +322,14 @@ tcltest::test Stream_rc4_80-1.42 {Decrypt rc4-80 offset 240} \
 	-match exact -result 00000000000000000000000000000000
 
 
-tcltest::test Stream_rc4_80-1.43 {Encrypt rc4-80 offset 256} \
+tcltest::test Symetric_Stream_rc4_80-1.43 {Encrypt rc4-80 offset 256} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 8b37641910833222772a] \
 		-data [string repeat [binary decode hex 00000000000000000000000000000000] 17]] 256 271]} \
 	-match exact -result 3d25ce4922924c55f064943353d78a6c
 
 
-tcltest::test Stream_rc4_80-1.44 {Decrypt rc4-80 offset 256} \
+tcltest::test Symetric_Stream_rc4_80-1.44 {Decrypt rc4-80 offset 256} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::decrypt -cipher rc4-80 -padding 0 -key [binary decode hex 8b37641910833222772a] \
 		-data [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 8b37641910833222772a] \
@@ -337,14 +337,14 @@ tcltest::test Stream_rc4_80-1.44 {Decrypt rc4-80 offset 256} \
 	-match exact -result 00000000000000000000000000000000
 
 
-tcltest::test Stream_rc4_80-1.45 {Encrypt rc4-80 offset 496} \
+tcltest::test Symetric_Stream_rc4_80-1.45 {Encrypt rc4-80 offset 496} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 8b37641910833222772a] \
 		-data [string repeat [binary decode hex 00000000000000000000000000000000] 32]] 496 511]} \
 	-match exact -result 12c1aa44bbf87e75e611f69b2c38f49b
 
 
-tcltest::test Stream_rc4_80-1.46 {Decrypt rc4-80 offset 496} \
+tcltest::test Symetric_Stream_rc4_80-1.46 {Decrypt rc4-80 offset 496} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::decrypt -cipher rc4-80 -padding 0 -key [binary decode hex 8b37641910833222772a] \
 		-data [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 8b37641910833222772a] \
@@ -352,14 +352,14 @@ tcltest::test Stream_rc4_80-1.46 {Decrypt rc4-80 offset 496} \
 	-match exact -result 00000000000000000000000000000000
 
 
-tcltest::test Stream_rc4_80-1.47 {Encrypt rc4-80 offset 512} \
+tcltest::test Symetric_Stream_rc4_80-1.47 {Encrypt rc4-80 offset 512} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 8b37641910833222772a] \
 		-data [string repeat [binary decode hex 00000000000000000000000000000000] 33]] 512 527]} \
 	-match exact -result 28f2b3434b65c09877470044c6ea170d
 
 
-tcltest::test Stream_rc4_80-1.48 {Decrypt rc4-80 offset 512} \
+tcltest::test Symetric_Stream_rc4_80-1.48 {Decrypt rc4-80 offset 512} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::decrypt -cipher rc4-80 -padding 0 -key [binary decode hex 8b37641910833222772a] \
 		-data [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 8b37641910833222772a] \
@@ -367,14 +367,14 @@ tcltest::test Stream_rc4_80-1.48 {Decrypt rc4-80 offset 512} \
 	-match exact -result 00000000000000000000000000000000
 
 
-tcltest::test Stream_rc4_80-1.49 {Encrypt rc4-80 offset 752} \
+tcltest::test Symetric_Stream_rc4_80-1.49 {Encrypt rc4-80 offset 752} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 8b37641910833222772a] \
 		-data [string repeat [binary decode hex 00000000000000000000000000000000] 48]] 752 767]} \
 	-match exact -result bd9ef822de5288196134cf8af7839304
 
 
-tcltest::test Stream_rc4_80-1.50 {Decrypt rc4-80 offset 752} \
+tcltest::test Symetric_Stream_rc4_80-1.50 {Decrypt rc4-80 offset 752} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::decrypt -cipher rc4-80 -padding 0 -key [binary decode hex 8b37641910833222772a] \
 		-data [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 8b37641910833222772a] \
@@ -382,14 +382,14 @@ tcltest::test Stream_rc4_80-1.50 {Decrypt rc4-80 offset 752} \
 	-match exact -result 00000000000000000000000000000000
 
 
-tcltest::test Stream_rc4_80-1.51 {Encrypt rc4-80 offset 768} \
+tcltest::test Symetric_Stream_rc4_80-1.51 {Encrypt rc4-80 offset 768} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 8b37641910833222772a] \
 		-data [string repeat [binary decode hex 00000000000000000000000000000000] 49]] 768 783]} \
 	-match exact -result 67559c23f052158470a296f725735a32
 
 
-tcltest::test Stream_rc4_80-1.52 {Decrypt rc4-80 offset 768} \
+tcltest::test Symetric_Stream_rc4_80-1.52 {Decrypt rc4-80 offset 768} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::decrypt -cipher rc4-80 -padding 0 -key [binary decode hex 8b37641910833222772a] \
 		-data [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 8b37641910833222772a] \
@@ -397,14 +397,14 @@ tcltest::test Stream_rc4_80-1.52 {Decrypt rc4-80 offset 768} \
 	-match exact -result 00000000000000000000000000000000
 
 
-tcltest::test Stream_rc4_80-1.53 {Encrypt rc4-80 offset 1008} \
+tcltest::test Symetric_Stream_rc4_80-1.53 {Encrypt rc4-80 offset 1008} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 8b37641910833222772a] \
 		-data [string repeat [binary decode hex 00000000000000000000000000000000] 64]] 1008 1023]} \
 	-match exact -result 8bab26fbc2c12b0f13e2ab185eabf241
 
 
-tcltest::test Stream_rc4_80-1.54 {Decrypt rc4-80 offset 1008} \
+tcltest::test Symetric_Stream_rc4_80-1.54 {Decrypt rc4-80 offset 1008} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::decrypt -cipher rc4-80 -padding 0 -key [binary decode hex 8b37641910833222772a] \
 		-data [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 8b37641910833222772a] \
@@ -412,14 +412,14 @@ tcltest::test Stream_rc4_80-1.54 {Decrypt rc4-80 offset 1008} \
 	-match exact -result 00000000000000000000000000000000
 
 
-tcltest::test Stream_rc4_80-1.55 {Encrypt rc4-80 offset 1024} \
+tcltest::test Symetric_Stream_rc4_80-1.55 {Encrypt rc4-80 offset 1024} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 8b37641910833222772a] \
 		-data [string repeat [binary decode hex 00000000000000000000000000000000] 65]] 1024 1039]} \
 	-match exact -result 31185a6d696f0cfa9b42808b38e132a2
 
 
-tcltest::test Stream_rc4_80-1.56 {Decrypt rc4-80 offset 1024} \
+tcltest::test Symetric_Stream_rc4_80-1.56 {Decrypt rc4-80 offset 1024} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::decrypt -cipher rc4-80 -padding 0 -key [binary decode hex 8b37641910833222772a] \
 		-data [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 8b37641910833222772a] \
@@ -427,14 +427,14 @@ tcltest::test Stream_rc4_80-1.56 {Decrypt rc4-80 offset 1024} \
 	-match exact -result 00000000000000000000000000000000
 
 
-tcltest::test Stream_rc4_80-1.57 {Encrypt rc4-80 offset 1520} \
+tcltest::test Symetric_Stream_rc4_80-1.57 {Encrypt rc4-80 offset 1520} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 8b37641910833222772a] \
 		-data [string repeat [binary decode hex 00000000000000000000000000000000] 96]] 1520 1535]} \
 	-match exact -result 564d3dae183c5234c8af1e51061c44b5
 
 
-tcltest::test Stream_rc4_80-1.58 {Decrypt rc4-80 offset 1520} \
+tcltest::test Symetric_Stream_rc4_80-1.58 {Decrypt rc4-80 offset 1520} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::decrypt -cipher rc4-80 -padding 0 -key [binary decode hex 8b37641910833222772a] \
 		-data [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 8b37641910833222772a] \
@@ -442,14 +442,14 @@ tcltest::test Stream_rc4_80-1.58 {Decrypt rc4-80 offset 1520} \
 	-match exact -result 00000000000000000000000000000000
 
 
-tcltest::test Stream_rc4_80-1.59 {Encrypt rc4-80 offset 1536} \
+tcltest::test Symetric_Stream_rc4_80-1.59 {Encrypt rc4-80 offset 1536} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 8b37641910833222772a] \
 		-data [string repeat [binary decode hex 00000000000000000000000000000000] 97]] 1536 1551]} \
 	-match exact -result 3c0778a7b5f72d3c23a3135c7d67b9f4
 
 
-tcltest::test Stream_rc4_80-1.60 {Decrypt rc4-80 offset 1536} \
+tcltest::test Symetric_Stream_rc4_80-1.60 {Decrypt rc4-80 offset 1536} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::decrypt -cipher rc4-80 -padding 0 -key [binary decode hex 8b37641910833222772a] \
 		-data [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 8b37641910833222772a] \
@@ -457,14 +457,14 @@ tcltest::test Stream_rc4_80-1.60 {Decrypt rc4-80 offset 1536} \
 	-match exact -result 00000000000000000000000000000000
 
 
-tcltest::test Stream_rc4_80-1.61 {Encrypt rc4-80 offset 2032} \
+tcltest::test Symetric_Stream_rc4_80-1.61 {Encrypt rc4-80 offset 2032} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 8b37641910833222772a] \
 		-data [string repeat [binary decode hex 00000000000000000000000000000000] 128]] 2032 2047]} \
 	-match exact -result f34369890fcf16fb517dcaae4463b2dd
 
 
-tcltest::test Stream_rc4_80-1.62 {Decrypt rc4-80 offset 2032} \
+tcltest::test Symetric_Stream_rc4_80-1.62 {Decrypt rc4-80 offset 2032} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::decrypt -cipher rc4-80 -padding 0 -key [binary decode hex 8b37641910833222772a] \
 		-data [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 8b37641910833222772a] \
@@ -472,14 +472,14 @@ tcltest::test Stream_rc4_80-1.62 {Decrypt rc4-80 offset 2032} \
 	-match exact -result 00000000000000000000000000000000
 
 
-tcltest::test Stream_rc4_80-1.63 {Encrypt rc4-80 offset 2048} \
+tcltest::test Symetric_Stream_rc4_80-1.63 {Encrypt rc4-80 offset 2048} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 8b37641910833222772a] \
 		-data [string repeat [binary decode hex 00000000000000000000000000000000] 129]] 2048 2063]} \
 	-match exact -result 02f31c81e8200731b899b028e791bfa7
 
 
-tcltest::test Stream_rc4_80-1.64 {Decrypt rc4-80 offset 2048} \
+tcltest::test Symetric_Stream_rc4_80-1.64 {Decrypt rc4-80 offset 2048} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::decrypt -cipher rc4-80 -padding 0 -key [binary decode hex 8b37641910833222772a] \
 		-data [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 8b37641910833222772a] \
@@ -487,14 +487,14 @@ tcltest::test Stream_rc4_80-1.64 {Decrypt rc4-80 offset 2048} \
 	-match exact -result 00000000000000000000000000000000
 
 
-tcltest::test Stream_rc4_80-1.65 {Encrypt rc4-80 offset 3056} \
+tcltest::test Symetric_Stream_rc4_80-1.65 {Encrypt rc4-80 offset 3056} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 8b37641910833222772a] \
 		-data [string repeat [binary decode hex 00000000000000000000000000000000] 192]] 3056 3071]} \
 	-match exact -result 72da646283228c14300853701795616f
 
 
-tcltest::test Stream_rc4_80-1.66 {Decrypt rc4-80 offset 3056} \
+tcltest::test Symetric_Stream_rc4_80-1.66 {Decrypt rc4-80 offset 3056} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::decrypt -cipher rc4-80 -padding 0 -key [binary decode hex 8b37641910833222772a] \
 		-data [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 8b37641910833222772a] \
@@ -502,14 +502,14 @@ tcltest::test Stream_rc4_80-1.66 {Decrypt rc4-80 offset 3056} \
 	-match exact -result 00000000000000000000000000000000
 
 
-tcltest::test Stream_rc4_80-1.67 {Encrypt rc4-80 offset 3072} \
+tcltest::test Symetric_Stream_rc4_80-1.67 {Encrypt rc4-80 offset 3072} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 8b37641910833222772a] \
 		-data [string repeat [binary decode hex 00000000000000000000000000000000] 193]] 3072 3087]} \
 	-match exact -result 4e0a8c6f7934a788e2265e81d6d0c8f4
 
 
-tcltest::test Stream_rc4_80-1.68 {Decrypt rc4-80 offset 3072} \
+tcltest::test Symetric_Stream_rc4_80-1.68 {Decrypt rc4-80 offset 3072} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::decrypt -cipher rc4-80 -padding 0 -key [binary decode hex 8b37641910833222772a] \
 		-data [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 8b37641910833222772a] \
@@ -517,14 +517,14 @@ tcltest::test Stream_rc4_80-1.68 {Decrypt rc4-80 offset 3072} \
 	-match exact -result 00000000000000000000000000000000
 
 
-tcltest::test Stream_rc4_80-1.69 {Encrypt rc4-80 offset 4080} \
+tcltest::test Symetric_Stream_rc4_80-1.69 {Encrypt rc4-80 offset 4080} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 8b37641910833222772a] \
 		-data [string repeat [binary decode hex 00000000000000000000000000000000] 256]] 4080 4095]} \
 	-match exact -result 438dd5eafea0111b6f36b4b938da2a68
 
 
-tcltest::test Stream_rc4_80-1.70 {Decrypt rc4-80 offset 4080} \
+tcltest::test Symetric_Stream_rc4_80-1.70 {Decrypt rc4-80 offset 4080} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::decrypt -cipher rc4-80 -padding 0 -key [binary decode hex 8b37641910833222772a] \
 		-data [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 8b37641910833222772a] \
@@ -532,14 +532,14 @@ tcltest::test Stream_rc4_80-1.70 {Decrypt rc4-80 offset 4080} \
 	-match exact -result 00000000000000000000000000000000
 
 
-tcltest::test Stream_rc4_80-1.71 {Encrypt rc4-80 offset 4096} \
+tcltest::test Symetric_Stream_rc4_80-1.71 {Encrypt rc4-80 offset 4096} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 8b37641910833222772a] \
 		-data [string repeat [binary decode hex 00000000000000000000000000000000] 257]] 4096 4111]} \
 	-match exact -result 5f6bfc73815874d97100f086979357d8
 
 
-tcltest::test Stream_rc4_80-1.72 {Decrypt rc4-80 offset 4096} \
+tcltest::test Symetric_Stream_rc4_80-1.72 {Decrypt rc4-80 offset 4096} \
 	-constraints rc4_80 \
 	-body {binary encode hex [string range [tls::decrypt -cipher rc4-80 -padding 0 -key [binary decode hex 8b37641910833222772a] \
 		-data [tls::encrypt -cipher rc4-80 -padding 0 -key [binary decode hex 8b37641910833222772a] \

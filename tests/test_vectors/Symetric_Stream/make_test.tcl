@@ -13,9 +13,6 @@ proc get_value {type data {count 1}} {
     if {$type eq "s" && $count > 1} {
 	set data [format {[string repeat %s %d]} $data $count]
     }
-    if {[string length $data] == 0} {
-	set data {""}
-    }
     return $data
 }
 
@@ -23,13 +20,13 @@ proc get_value {type data {count 1}} {
 # Create test case and output to test file
 #
 proc do_test {group cipher test_num tc params fn} {
-    array set config [list Key "" Repeat 1 Length "" Offset 0 end end Plaintext {""} Ciphertext {""}]
+    array set config [list key "" repeat 1 length "" offset 0 end end plaintext {""} ciphertext {""}]
     array set config $params
-    set end [expr {$config(Offset) + [string length $config(Plaintext)]/2 - 1}]
+    set end [expr {$config(offset) + [string length $config(plaintext)]/2 - 1}]
 
     # Test info
     set line [format "\ntcltest::test %s_%s-%d.%d {%s %s offset %d}" [string map [list "-" "_"] \
-	$group] [string map [list "-" "_"] $cipher] $test_num $tc [string totitle $fn] $cipher $config(Offset)]
+	$group] [string map [list "-" "_"] $cipher] $test_num $tc [string totitle $fn] $cipher $config(offset)]
 
     # Test constraints
     append line [format " \\\n\t-constraints %s" [string map [list "-" "_"] $cipher]]
@@ -37,22 +34,22 @@ proc do_test {group cipher test_num tc params fn} {
     # Test body
     if {$fn eq "encrypt"} {
 	set cmd [format "tls::encrypt -cipher %s -padding 0 -key %s \\\n\t\t-data %s" $cipher \
-	    [get_value s $config(Key)] [get_value s $config(Plaintext) $config(Repeat)]]
+	    [get_value s $config(key)] [get_value s $config(plaintext) $config(repeat)]]
   
-	append line " \\\n\t" [format {-body {binary encode hex [string range [%s] %d %d]}} $cmd $config(Offset) $end] " \\\n\t"
+	append line " \\\n\t" [format {-body {binary encode hex [string range [%s] %d %d]}} $cmd $config(offset) $end] " \\\n\t"
     } else {
 	set ecmd [format "tls::encrypt -cipher %s -padding 0 -key %s \\\n\t\t-data %s" $cipher \
-	    [get_value s $config(Key)] [get_value s $config(Plaintext) $config(Repeat)]]
+	    [get_value s $config(key)] [get_value s $config(plaintext) $config(repeat)]]
 	set cmd [format "tls::decrypt -cipher %s -padding 0 -key %s \\\n\t\t-data \[%s\]" $cipher \
-	    [get_value s $config(Key)] $ecmd]
-	append line " \\\n\t" [format {-body {binary encode hex [string range [%s] %d %d]}} $cmd $config(Offset) $end] " \\\n\t"
+	    [get_value s $config(key)] $ecmd]
+	append line " \\\n\t" [format {-body {binary encode hex [string range [%s] %d %d]}} $cmd $config(offset) $end] " \\\n\t"
     }
 
     # Test result
     if {$fn eq "encrypt"} {
-	append line [format {-match exact -result %s} $config(Ciphertext)]
+	append line [format {-match exact -result %s} $config(ciphertext)]
     } else {
-	append line [format {-match exact -result %s} $config(Plaintext)]
+	append line [format {-match exact -result %s} $config(plaintext)]
     }
     return $line
 }
@@ -112,7 +109,7 @@ proc parse {group filename test_num cipher} {
 	    if {$index > -1} {
 		set key [string trim [string range $line 0 [incr index -1]]]
 		set value [string trim [string range $line [incr index 2] end]]
-		lappend params $key $value
+		lappend params [string tolower $key] $value
 	    }
 	}
     }

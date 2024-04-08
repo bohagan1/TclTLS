@@ -3,10 +3,24 @@
 #
 
 #
+# Get string or hex string value
+#
+proc get_value {type data {count 1}} {
+    # Handle hex string
+    if {$type eq "s" && [string length $data] > 0 && [string index $data 0] ne "\""} {
+	set data [format {[binary decode hex %s]} $data]
+    }
+    if {$type eq "s" && $count > 1} {
+	set data [format {[string repeat %s %d]} $data $count]
+    }
+    return $data
+}
+
+#
 # Create test case and output to test file
 #
 proc do_test {group cipher test_num tc params fn} {
-    array set config [list Key "" IV "" Msg "" Repeat 1 Length ""]
+    array set config [list repeat 1]
     array set config $params
 
     # Test info
@@ -19,25 +33,22 @@ proc do_test {group cipher test_num tc params fn} {
     set cmd [format "tls::%s -cipher %s -padding 0 \\\n\t\t" $fn $cipher]
 
     if {$fn eq "encrypt"} {
-	set list1 [list Msg Data Plaintext PLAINTEXT]
-	set list2 [list Output Ciphertext CIPHERTEXT]
+	set list1 [list plaintext msg data]
+	set list2 [list ciphertext output result]
     } else {
-	set list1 [list Output Ciphertext CIPHERTEXT]
-	set list2 [list Msg Data Plaintext PLAINTEXT]
+	set list1 [list ciphertext output result]
+	set list2 [list plaintext msg data]
     }
 
     # Add test parameters
-    foreach {param names type} [list -key [list Key key KEY] s -iv [list IV iv] s -data $list1 s] {
+    foreach {param names type} [list -key [list key] s -iv [list iv nonce] s -data $list1 s] {
 	foreach name $names {
 	    if {[info exists config($name)]} {
-		set data $config($name)
-		# Handle hex string
-		if {$type eq "s" && [string length $data] > 0 && [string index $data 0] ne "\""} {
-		    set data [format {[binary decode hex %s]} $data]
-		}
-		if {[string length $data] > 0} {
+		set data [get_value $type $config($name)]
+		if {$data ne ""} {
 		    append cmd " " $param " " $data " \\\n\t\t"
 		}
+		break
 	    }
 	}
     }
@@ -47,18 +58,12 @@ proc do_test {group cipher test_num tc params fn} {
     # Test cleanup
 
     # Test result
-    set result ""
     foreach key $list2 {
 	if {[info exists config($key)]} {
-	    set result $config($key)
-	    # Convert hex to lowercase
-	    if {[string index $result 0] ne "\""} {
-		set result [string tolower $result]
-	    }
+	    append line [format {-match exact -result %s} [string tolower $config($key)]]
+	    break
 	}
     }
-    
-    append line [format {-match exact -result %s} $result]
 
     # Return codes
     #append line { -returnCodes 0}
@@ -120,14 +125,16 @@ proc parse {group filename test_num cipher} {
 	    if {$index > -1} {
 		set key [string trim [string range $line 0 [expr {$index - 1}]]]
 		set value [string trim [string range $line [expr {$index + 1}] end]]
-		lappend params $key $value
+		lappend params [string tolower $key] $value
 	    }
 	}
     }
 
     # Handle last test case
     if {[llength $params] > 0} {
-	puts $out [do_test $group $cipher $test_num [incr tc] $params]
+	puts $out [do_test $group $cipher $test_num [incr tc] $params encrypt]
+	puts $out ""
+	puts $out [do_test $group $cipher $test_num [incr tc] $params decrypt]
 	puts $out ""
     }
     
