@@ -1,0 +1,81 @@
+# Auto generated from "CAMELLIA-128-ECB.txt"
+lappend auto_path [file dirname [file dirname [file dirname [file dirname [file join [pwd] [info script]]]]]]
+package require tls
+package require tcltest
+
+catch {tls::provider legacy}
+tcltest::testConstraint CAMELLIA_128_ECB [expr {[lsearch -nocase [tls::ciphers] CAMELLIA-128-ECB] > -1}]
+
+tcltest::test Symetric_Block_CAMELLIA-128-ECB-1.1 {Encrypt CAMELLIA-128-ECB} \
+	-constraints CAMELLIA_128_ECB \
+	-body {binary encode hex [tls::encrypt -cipher CAMELLIA-128-ECB -padding 0 \
+		 -key [binary decode hex 000102030405060708090A0B0C0D0E0F] \
+		 -data [binary decode hex 00112233445566778899AABBCCDDEEFF]]} \
+	-match exact -result 77cf412067af8270613529149919546f
+
+tcltest::test Symetric_Block_CAMELLIA-128-ECB-1.2 {Decrypt CAMELLIA-128-ECB} \
+	-constraints CAMELLIA_128_ECB \
+	-body {binary encode hex [tls::decrypt -cipher CAMELLIA-128-ECB -padding 0 \
+		 -key [binary decode hex 000102030405060708090A0B0C0D0E0F] \
+		 -data [binary decode hex 77CF412067AF8270613529149919546F]]} \
+	-match exact -result 00112233445566778899aabbccddeeff
+
+tcltest::test Symetric_Block_CAMELLIA-128-ECB-1.3 {Encrypt CAMELLIA-128-ECB} \
+	-constraints CAMELLIA_128_ECB \
+	-body {binary encode hex [tls::encrypt -cipher CAMELLIA-128-ECB -padding 0 \
+		 -key [binary decode hex 2B7E151628AED2A6ABF7158809CF4F3C] \
+		 -data [binary decode hex 6BC1BEE22E409F96E93D7E117393172A]]} \
+	-match exact -result 432fc5dcd628115b7c388d770b270c96
+
+tcltest::test Symetric_Block_CAMELLIA-128-ECB-1.4 {Decrypt CAMELLIA-128-ECB} \
+	-constraints CAMELLIA_128_ECB \
+	-body {binary encode hex [tls::decrypt -cipher CAMELLIA-128-ECB -padding 0 \
+		 -key [binary decode hex 2B7E151628AED2A6ABF7158809CF4F3C] \
+		 -data [binary decode hex 432FC5DCD628115B7C388D770B270C96]]} \
+	-match exact -result 6bc1bee22e409f96e93d7e117393172a
+
+tcltest::test Symetric_Block_CAMELLIA-128-ECB-1.5 {Encrypt CAMELLIA-128-ECB} \
+	-constraints CAMELLIA_128_ECB \
+	-body {binary encode hex [tls::encrypt -cipher CAMELLIA-128-ECB -padding 0 \
+		 -key [binary decode hex 2B7E151628AED2A6ABF7158809CF4F3C] \
+		 -data [binary decode hex AE2D8A571E03AC9C9EB76FAC45AF8E51]]} \
+	-match exact -result 0be1f14023782a22e8384c5abb7fab2b
+
+tcltest::test Symetric_Block_CAMELLIA-128-ECB-1.6 {Decrypt CAMELLIA-128-ECB} \
+	-constraints CAMELLIA_128_ECB \
+	-body {binary encode hex [tls::decrypt -cipher CAMELLIA-128-ECB -padding 0 \
+		 -key [binary decode hex 2B7E151628AED2A6ABF7158809CF4F3C] \
+		 -data [binary decode hex 0BE1F14023782A22E8384C5ABB7FAB2B]]} \
+	-match exact -result ae2d8a571e03ac9c9eb76fac45af8e51
+
+tcltest::test Symetric_Block_CAMELLIA-128-ECB-1.7 {Encrypt CAMELLIA-128-ECB} \
+	-constraints CAMELLIA_128_ECB \
+	-body {binary encode hex [tls::encrypt -cipher CAMELLIA-128-ECB -padding 0 \
+		 -key [binary decode hex 2B7E151628AED2A6ABF7158809CF4F3C] \
+		 -data [binary decode hex 30C81C46A35CE411E5FBC1191A0A52EF]]} \
+	-match exact -result a0a1abcd1893ab6fe0fe5b65df5f8636
+
+tcltest::test Symetric_Block_CAMELLIA-128-ECB-1.8 {Decrypt CAMELLIA-128-ECB} \
+	-constraints CAMELLIA_128_ECB \
+	-body {binary encode hex [tls::decrypt -cipher CAMELLIA-128-ECB -padding 0 \
+		 -key [binary decode hex 2B7E151628AED2A6ABF7158809CF4F3C] \
+		 -data [binary decode hex A0A1ABCD1893AB6FE0FE5B65DF5F8636]]} \
+	-match exact -result 30c81c46a35ce411e5fbc1191a0a52ef
+
+tcltest::test Symetric_Block_CAMELLIA-128-ECB-1.9 {Encrypt CAMELLIA-128-ECB} \
+	-constraints CAMELLIA_128_ECB \
+	-body {binary encode hex [tls::encrypt -cipher CAMELLIA-128-ECB -padding 0 \
+		 -key [binary decode hex 2B7E151628AED2A6ABF7158809CF4F3C] \
+		 -data [binary decode hex F69F2445DF4F9B17AD2B417BE66C3710]]} \
+	-match exact -result e61925e0d5dfaa9bb29f815b3076e51a
+
+tcltest::test Symetric_Block_CAMELLIA-128-ECB-1.10 {Decrypt CAMELLIA-128-ECB} \
+	-constraints CAMELLIA_128_ECB \
+	-body {binary encode hex [tls::decrypt -cipher CAMELLIA-128-ECB -padding 0 \
+		 -key [binary decode hex 2B7E151628AED2A6ABF7158809CF4F3C] \
+		 -data [binary decode hex E61925E0D5DFAA9BB29F815B3076E51A]]} \
+	-match exact -result f69f2445df4f9b17ad2b417be66c3710
+
+# Cleanup
+::tcltest::cleanupTests
+return

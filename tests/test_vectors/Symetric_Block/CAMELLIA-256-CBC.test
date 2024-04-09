@@ -1,0 +1,75 @@
+# Auto generated from "CAMELLIA-256-CBC.txt"
+lappend auto_path [file dirname [file dirname [file dirname [file dirname [file join [pwd] [info script]]]]]]
+package require tls
+package require tcltest
+
+catch {tls::provider legacy}
+tcltest::testConstraint CAMELLIA_256_CBC [expr {[lsearch -nocase [tls::ciphers] CAMELLIA-256-CBC] > -1}]
+
+tcltest::test Symetric_Block_CAMELLIA-256-CBC-1.1 {Encrypt CAMELLIA-256-CBC} \
+	-constraints CAMELLIA_256_CBC \
+	-body {binary encode hex [tls::encrypt -cipher CAMELLIA-256-CBC -padding 0 \
+		 -key [binary decode hex 603DEB1015CA71BE2B73AEF0857D77811F352C073B6108D72D9810A30914DFF4] \
+		 -iv [binary decode hex 000102030405060708090A0B0C0D0E0F] \
+		 -data [binary decode hex 6BC1BEE22E409F96E93D7E117393172A]]} \
+	-match exact -result e6cfa35fc02b134a4d2c0b6737ac3eda
+
+tcltest::test Symetric_Block_CAMELLIA-256-CBC-1.2 {Decrypt CAMELLIA-256-CBC} \
+	-constraints CAMELLIA_256_CBC \
+	-body {binary encode hex [tls::decrypt -cipher CAMELLIA-256-CBC -padding 0 \
+		 -key [binary decode hex 603DEB1015CA71BE2B73AEF0857D77811F352C073B6108D72D9810A30914DFF4] \
+		 -iv [binary decode hex 000102030405060708090A0B0C0D0E0F] \
+		 -data [binary decode hex E6CFA35FC02B134A4D2C0B6737AC3EDA]]} \
+	-match exact -result 6bc1bee22e409f96e93d7e117393172a
+
+tcltest::test Symetric_Block_CAMELLIA-256-CBC-1.3 {Encrypt CAMELLIA-256-CBC} \
+	-constraints CAMELLIA_256_CBC \
+	-body {binary encode hex [tls::encrypt -cipher CAMELLIA-256-CBC -padding 0 \
+		 -key [binary decode hex 603DEB1015CA71BE2B73AEF0857D77811F352C073B6108D72D9810A30914DFF4] \
+		 -iv [binary decode hex E6CFA35FC02B134A4D2C0B6737AC3EDA] \
+		 -data [binary decode hex AE2D8A571E03AC9C9EB76FAC45AF8E51]]} \
+	-match exact -result 36cbeb73bd504b4070b1b7de2b21eb50
+
+tcltest::test Symetric_Block_CAMELLIA-256-CBC-1.4 {Decrypt CAMELLIA-256-CBC} \
+	-constraints CAMELLIA_256_CBC \
+	-body {binary encode hex [tls::decrypt -cipher CAMELLIA-256-CBC -padding 0 \
+		 -key [binary decode hex 603DEB1015CA71BE2B73AEF0857D77811F352C073B6108D72D9810A30914DFF4] \
+		 -iv [binary decode hex E6CFA35FC02B134A4D2C0B6737AC3EDA] \
+		 -data [binary decode hex 36CBEB73BD504B4070B1B7DE2B21EB50]]} \
+	-match exact -result ae2d8a571e03ac9c9eb76fac45af8e51
+
+tcltest::test Symetric_Block_CAMELLIA-256-CBC-1.5 {Encrypt CAMELLIA-256-CBC} \
+	-constraints CAMELLIA_256_CBC \
+	-body {binary encode hex [tls::encrypt -cipher CAMELLIA-256-CBC -padding 0 \
+		 -key [binary decode hex 603DEB1015CA71BE2B73AEF0857D77811F352C073B6108D72D9810A30914DFF4] \
+		 -iv [binary decode hex 36CBEB73BD504B4070B1B7DE2B21EB50] \
+		 -data [binary decode hex 30C81C46A35CE411E5FBC1191A0A52EF]]} \
+	-match exact -result e31a6055297d96ca3330cdf1b1860a83
+
+tcltest::test Symetric_Block_CAMELLIA-256-CBC-1.6 {Decrypt CAMELLIA-256-CBC} \
+	-constraints CAMELLIA_256_CBC \
+	-body {binary encode hex [tls::decrypt -cipher CAMELLIA-256-CBC -padding 0 \
+		 -key [binary decode hex 603DEB1015CA71BE2B73AEF0857D77811F352C073B6108D72D9810A30914DFF4] \
+		 -iv [binary decode hex 36CBEB73BD504B4070B1B7DE2B21EB50] \
+		 -data [binary decode hex E31A6055297D96CA3330CDF1B1860A83]]} \
+	-match exact -result 30c81c46a35ce411e5fbc1191a0a52ef
+
+tcltest::test Symetric_Block_CAMELLIA-256-CBC-1.7 {Encrypt CAMELLIA-256-CBC} \
+	-constraints CAMELLIA_256_CBC \
+	-body {binary encode hex [tls::encrypt -cipher CAMELLIA-256-CBC -padding 0 \
+		 -key [binary decode hex 603DEB1015CA71BE2B73AEF0857D77811F352C073B6108D72D9810A30914DFF4] \
+		 -iv [binary decode hex E31A6055297D96CA3330CDF1B1860A83] \
+		 -data [binary decode hex F69F2445DF4F9B17AD2B417BE66C3710]]} \
+	-match exact -result 5d563f6d1cccf236051c0c5c1c58f28f
+
+tcltest::test Symetric_Block_CAMELLIA-256-CBC-1.8 {Decrypt CAMELLIA-256-CBC} \
+	-constraints CAMELLIA_256_CBC \
+	-body {binary encode hex [tls::decrypt -cipher CAMELLIA-256-CBC -padding 0 \
+		 -key [binary decode hex 603DEB1015CA71BE2B73AEF0857D77811F352C073B6108D72D9810A30914DFF4] \
+		 -iv [binary decode hex E31A6055297D96CA3330CDF1B1860A83] \
+		 -data [binary decode hex 5D563F6D1CCCF236051C0C5C1C58F28F]]} \
+	-match exact -result f69f2445df4f9b17ad2b417be66c3710
+
+# Cleanup
+::tcltest::cleanupTests
+return

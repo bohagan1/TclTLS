@@ -1,0 +1,75 @@
+# Auto generated from "CAMELLIA-192-CBC.txt"
+lappend auto_path [file dirname [file dirname [file dirname [file dirname [file join [pwd] [info script]]]]]]
+package require tls
+package require tcltest
+
+catch {tls::provider legacy}
+tcltest::testConstraint CAMELLIA_192_CBC [expr {[lsearch -nocase [tls::ciphers] CAMELLIA-192-CBC] > -1}]
+
+tcltest::test Symetric_Block_CAMELLIA-192-CBC-1.1 {Encrypt CAMELLIA-192-CBC} \
+	-constraints CAMELLIA_192_CBC \
+	-body {binary encode hex [tls::encrypt -cipher CAMELLIA-192-CBC -padding 0 \
+		 -key [binary decode hex 8E73B0F7DA0E6452C810F32B809079E562F8EAD2522C6B7B] \
+		 -iv [binary decode hex 000102030405060708090A0B0C0D0E0F] \
+		 -data [binary decode hex 6BC1BEE22E409F96E93D7E117393172A]]} \
+	-match exact -result 2a4830ab5ac4a1a2405955fd2195cf93
+
+tcltest::test Symetric_Block_CAMELLIA-192-CBC-1.2 {Decrypt CAMELLIA-192-CBC} \
+	-constraints CAMELLIA_192_CBC \
+	-body {binary encode hex [tls::decrypt -cipher CAMELLIA-192-CBC -padding 0 \
+		 -key [binary decode hex 8E73B0F7DA0E6452C810F32B809079E562F8EAD2522C6B7B] \
+		 -iv [binary decode hex 000102030405060708090A0B0C0D0E0F] \
+		 -data [binary decode hex 2A4830AB5AC4A1A2405955FD2195CF93]]} \
+	-match exact -result 6bc1bee22e409f96e93d7e117393172a
+
+tcltest::test Symetric_Block_CAMELLIA-192-CBC-1.3 {Encrypt CAMELLIA-192-CBC} \
+	-constraints CAMELLIA_192_CBC \
+	-body {binary encode hex [tls::encrypt -cipher CAMELLIA-192-CBC -padding 0 \
+		 -key [binary decode hex 8E73B0F7DA0E6452C810F32B809079E562F8EAD2522C6B7B] \
+		 -iv [binary decode hex 2A4830AB5AC4A1A2405955FD2195CF93] \
+		 -data [binary decode hex AE2D8A571E03AC9C9EB76FAC45AF8E51]]} \
+	-match exact -result 5d5a869bd14ce54264f892a6dd2ec3d5
+
+tcltest::test Symetric_Block_CAMELLIA-192-CBC-1.4 {Decrypt CAMELLIA-192-CBC} \
+	-constraints CAMELLIA_192_CBC \
+	-body {binary encode hex [tls::decrypt -cipher CAMELLIA-192-CBC -padding 0 \
+		 -key [binary decode hex 8E73B0F7DA0E6452C810F32B809079E562F8EAD2522C6B7B] \
+		 -iv [binary decode hex 2A4830AB5AC4A1A2405955FD2195CF93] \
+		 -data [binary decode hex 5D5A869BD14CE54264F892A6DD2EC3D5]]} \
+	-match exact -result ae2d8a571e03ac9c9eb76fac45af8e51
+
+tcltest::test Symetric_Block_CAMELLIA-192-CBC-1.5 {Encrypt CAMELLIA-192-CBC} \
+	-constraints CAMELLIA_192_CBC \
+	-body {binary encode hex [tls::encrypt -cipher CAMELLIA-192-CBC -padding 0 \
+		 -key [binary decode hex 8E73B0F7DA0E6452C810F32B809079E562F8EAD2522C6B7B] \
+		 -iv [binary decode hex 5D5A869BD14CE54264F892A6DD2EC3D5] \
+		 -data [binary decode hex 30C81C46A35CE411E5FBC1191A0A52EF]]} \
+	-match exact -result 37d359c3349836d884e310addf68c449
+
+tcltest::test Symetric_Block_CAMELLIA-192-CBC-1.6 {Decrypt CAMELLIA-192-CBC} \
+	-constraints CAMELLIA_192_CBC \
+	-body {binary encode hex [tls::decrypt -cipher CAMELLIA-192-CBC -padding 0 \
+		 -key [binary decode hex 8E73B0F7DA0E6452C810F32B809079E562F8EAD2522C6B7B] \
+		 -iv [binary decode hex 5D5A869BD14CE54264F892A6DD2EC3D5] \
+		 -data [binary decode hex 37D359C3349836D884E310ADDF68C449]]} \
+	-match exact -result 30c81c46a35ce411e5fbc1191a0a52ef
+
+tcltest::test Symetric_Block_CAMELLIA-192-CBC-1.7 {Encrypt CAMELLIA-192-CBC} \
+	-constraints CAMELLIA_192_CBC \
+	-body {binary encode hex [tls::encrypt -cipher CAMELLIA-192-CBC -padding 0 \
+		 -key [binary decode hex 8E73B0F7DA0E6452C810F32B809079E562F8EAD2522C6B7B] \
+		 -iv [binary decode hex 37D359C3349836D884E310ADDF68C449] \
+		 -data [binary decode hex F69F2445DF4F9B17AD2B417BE66C3710]]} \
+	-match exact -result 01faaa930b4ab9916e9668e1428c6b08
+
+tcltest::test Symetric_Block_CAMELLIA-192-CBC-1.8 {Decrypt CAMELLIA-192-CBC} \
+	-constraints CAMELLIA_192_CBC \
+	-body {binary encode hex [tls::decrypt -cipher CAMELLIA-192-CBC -padding 0 \
+		 -key [binary decode hex 8E73B0F7DA0E6452C810F32B809079E562F8EAD2522C6B7B] \
+		 -iv [binary decode hex 37D359C3349836D884E310ADDF68C449] \
+		 -data [binary decode hex 01FAAA930B4AB9916E9668E1428C6B08]]} \
+	-match exact -result f69f2445df4f9b17ad2b417be66c3710
+
+# Cleanup
+::tcltest::cleanupTests
+return
