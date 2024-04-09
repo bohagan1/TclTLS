@@ -1,0 +1,43 @@
+# Auto generated from "SM4-CFB.txt"
+lappend auto_path [file dirname [file dirname [file dirname [file dirname [file join [pwd] [info script]]]]]]
+package require tls
+package require tcltest
+
+catch {tls::provider legacy}
+tcltest::testConstraint SM4_CFB [expr {[lsearch -nocase [tls::ciphers] SM4-CFB] > -1}]
+
+tcltest::test Symetric_Block_SM4-CFB-1.1 {Encrypt SM4-CFB} \
+	-constraints SM4_CFB \
+	-body {binary encode hex [tls::encrypt -cipher SM4-CFB -padding 0 \
+		 -key [binary decode hex 0123456789ABCDEFFEDCBA9876543210] \
+		 -iv [binary decode hex 000102030405060708090A0B0C0D0E0F] \
+		 -data [binary decode hex AAAAAAAABBBBBBBBCCCCCCCCDDDDDDDDEEEEEEEEFFFFFFFFAAAAAAAABBBBBBBB]]} \
+	-match exact -result ac3236cb861dd316e6413b4e3c7524b769d4c54ed433b9a0346009beb37b2b3f
+
+tcltest::test Symetric_Block_SM4-CFB-1.2 {Decrypt SM4-CFB} \
+	-constraints SM4_CFB \
+	-body {binary encode hex [tls::decrypt -cipher SM4-CFB -padding 0 \
+		 -key [binary decode hex 0123456789ABCDEFFEDCBA9876543210] \
+		 -iv [binary decode hex 000102030405060708090A0B0C0D0E0F] \
+		 -data [binary decode hex AC3236CB861DD316E6413B4E3C7524B769D4C54ED433B9A0346009BEB37B2B3F]]} \
+	-match exact -result aaaaaaaabbbbbbbbccccccccddddddddeeeeeeeeffffffffaaaaaaaabbbbbbbb
+
+tcltest::test Symetric_Block_SM4-CFB-1.3 {Encrypt SM4-CFB} \
+	-constraints SM4_CFB \
+	-body {binary encode hex [tls::encrypt -cipher SM4-CFB -padding 0 \
+		 -key [binary decode hex FEDCBA98765432100123456789ABCDEF] \
+		 -iv [binary decode hex 000102030405060708090A0B0C0D0E0F] \
+		 -data [binary decode hex AAAAAAAABBBBBBBBCCCCCCCCDDDDDDDDEEEEEEEEFFFFFFFFAAAAAAAABBBBBBBB]]} \
+	-match exact -result 5dcccd25a84ba16560d7f265887068490d9b86ff20c3bfe115ffa02ca6192cc5
+
+tcltest::test Symetric_Block_SM4-CFB-1.4 {Decrypt SM4-CFB} \
+	-constraints SM4_CFB \
+	-body {binary encode hex [tls::decrypt -cipher SM4-CFB -padding 0 \
+		 -key [binary decode hex FEDCBA98765432100123456789ABCDEF] \
+		 -iv [binary decode hex 000102030405060708090A0B0C0D0E0F] \
+		 -data [binary decode hex 5DCCCD25A84BA16560D7F265887068490D9B86FF20C3BFE115FFA02CA6192CC5]]} \
+	-match exact -result aaaaaaaabbbbbbbbccccccccddddddddeeeeeeeeffffffffaaaaaaaabbbbbbbb
+
+# Cleanup
+::tcltest::cleanupTests
+return

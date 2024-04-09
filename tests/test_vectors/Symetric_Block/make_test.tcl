@@ -20,7 +20,7 @@ proc get_value {type data {count 1}} {
 # Create test case and output to test file
 #
 proc do_test {group cipher test_num tc params fn} {
-    array set config [list repeat 1]
+    array set config [list iterations 1 repeat 1]
     array set config $params
 
     # Test info
@@ -46,7 +46,11 @@ proc do_test {group cipher test_num tc params fn} {
 	    if {[info exists config($name)]} {
 		set data [get_value $type $config($name)]
 		if {$data ne ""} {
-		    append cmd " " $param " " $data " \\\n\t\t"
+		    if {$param ne "-data" || $config(iterations) == 1} {
+			append cmd " " $param " " $data " \\\n\t\t"
+		    } else {
+			set cmd [string cat "set data " $data ";for \{set i 0\} \{\$i < " $config(iterations) "\} \{incr i\} \{set data \[" $cmd " " $param " \$data\]\};set data"]
+		    }
 		}
 		break
 	    }
@@ -158,7 +162,7 @@ proc main {path} {
 	    continue
 	}
 
-	set cipher [file rootname [file tail $filename]]
+	set cipher [string trim [file rootname [file tail $filename]]]
 	set id [format "%s_%s" $group $cipher]
 	set test_num [incr test_ids($id)]
 	parse $id $filename $test_num $cipher

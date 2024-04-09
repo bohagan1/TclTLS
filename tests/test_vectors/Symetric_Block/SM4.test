@@ -1,0 +1,67 @@
+# Auto generated from "SM4.txt"
+lappend auto_path [file dirname [file dirname [file dirname [file dirname [file join [pwd] [info script]]]]]]
+package require tls
+package require tcltest
+
+catch {tls::provider legacy}
+tcltest::testConstraint SM4 [expr {[lsearch -nocase [tls::ciphers] SM4] > -1}]
+
+tcltest::test Symetric_Block_SM4-1.1 {Encrypt SM4} \
+	-constraints SM4 \
+	-body {binary encode hex [tls::encrypt -cipher SM4 -padding 0 \
+		 -key [binary decode hex 0123456789ABCDEFFEDCBA9876543210] \
+		 -data [binary decode hex 0123456789ABCDEFFEDCBA9876543210]]} \
+	-match exact -result 681edf34d206965e86b3e94f536e4246
+
+tcltest::test Symetric_Block_SM4-1.2 {Decrypt SM4} \
+	-constraints SM4 \
+	-body {binary encode hex [tls::decrypt -cipher SM4 -padding 0 \
+		 -key [binary decode hex 0123456789ABCDEFFEDCBA9876543210] \
+		 -data [binary decode hex 681EDF34D206965E86B3E94F536E4246]]} \
+	-match exact -result 0123456789abcdeffedcba9876543210
+
+tcltest::test Symetric_Block_SM4-1.3 {Encrypt SM4} \
+	-constraints SM4 \
+	-body {binary encode hex [set data [binary decode hex 0123456789ABCDEFFEDCBA9876543210];for {set i 0} {$i < 1000000} {incr i} {set data [tls::encrypt -cipher SM4 -padding 0 \
+		 -key [binary decode hex 0123456789ABCDEFFEDCBA9876543210] \
+		 -data $data]};set data]} \
+	-match exact -result 595298c7c6fd271f0402f804c33d3f66
+
+tcltest::test Symetric_Block_SM4-1.4 {Decrypt SM4} \
+	-constraints SM4 \
+	-body {binary encode hex [set data [binary decode hex 595298C7C6FD271F0402F804C33D3F66];for {set i 0} {$i < 1000000} {incr i} {set data [tls::decrypt -cipher SM4 -padding 0 \
+		 -key [binary decode hex 0123456789ABCDEFFEDCBA9876543210] \
+		 -data $data]};set data]} \
+	-match exact -result 0123456789abcdeffedcba9876543210
+
+tcltest::test Symetric_Block_SM4-1.5 {Encrypt SM4} \
+	-constraints SM4 \
+	-body {binary encode hex [tls::encrypt -cipher SM4 -padding 0 \
+		 -key [binary decode hex FEDCBA98765432100123456789ABCDEF] \
+		 -data [binary decode hex 000102030405060708090A0B0C0D0E0F]]} \
+	-match exact -result f766678f13f01adeac1b3ea955adb594
+
+tcltest::test Symetric_Block_SM4-1.6 {Decrypt SM4} \
+	-constraints SM4 \
+	-body {binary encode hex [tls::decrypt -cipher SM4 -padding 0 \
+		 -key [binary decode hex FEDCBA98765432100123456789ABCDEF] \
+		 -data [binary decode hex F766678F13F01ADEAC1B3EA955ADB594]]} \
+	-match exact -result 000102030405060708090a0b0c0d0e0f
+
+tcltest::test Symetric_Block_SM4-1.7 {Encrypt SM4} \
+	-constraints SM4 \
+	-body {binary encode hex [set data [binary decode hex 000102030405060708090A0B0C0D0E0F];for {set i 0} {$i < 1000000} {incr i} {set data [tls::encrypt -cipher SM4 -padding 0 \
+		 -key [binary decode hex FEDCBA98765432100123456789ABCDEF] \
+		 -data $data]};set data]} \
+	-match exact -result 379a96d0a6a5a5060fb460c75d1879ed
+
+tcltest::test Symetric_Block_SM4-1.8 {Decrypt SM4} \
+	-constraints SM4 \
+	-body {binary encode hex [set data [binary decode hex 379A96D0A6A5A5060FB460C75D1879ED];for {set i 0} {$i < 1000000} {incr i} {set data [tls::decrypt -cipher SM4 -padding 0 \
+		 -key [binary decode hex FEDCBA98765432100123456789ABCDEF] \
+		 -data $data]};set data]} \
+	-match exact -result 000102030405060708090a0b0c0d0e0f
+
+# Cleanup
+::tcltest::cleanupTests
+return

@@ -1,0 +1,43 @@
+# Auto generated from "SM4-CTR.txt"
+lappend auto_path [file dirname [file dirname [file dirname [file dirname [file join [pwd] [info script]]]]]]
+package require tls
+package require tcltest
+
+catch {tls::provider legacy}
+tcltest::testConstraint SM4_CTR [expr {[lsearch -nocase [tls::ciphers] SM4-CTR] > -1}]
+
+tcltest::test Symetric_Block_SM4-CTR-1.1 {Encrypt SM4-CTR} \
+	-constraints SM4_CTR \
+	-body {binary encode hex [tls::encrypt -cipher SM4-CTR -padding 0 \
+		 -key [binary decode hex 0123456789ABCDEFFEDCBA9876543210] \
+		 -iv [binary decode hex 000102030405060708090A0B0C0D0E0F] \
+		 -data [binary decode hex AAAAAAAAAAAAAAAABBBBBBBBBBBBBBBBCCCCCCCCCCCCCCCCDDDDDDDDDDDDDDDDEEEEEEEEEEEEEEEEFFFFFFFFFFFFFFFFAAAAAAAAAAAAAAAABBBBBBBBBBBBBBBB]]} \
+	-match exact -result ac3236cb970cc20791364c395a1342d1a3cbc1878c6f30cd074cce385cdd70c7f234bc0e24c11980fd1286310ce37b926e02fcd0faa0baf38b2933851d824514
+
+tcltest::test Symetric_Block_SM4-CTR-1.2 {Decrypt SM4-CTR} \
+	-constraints SM4_CTR \
+	-body {binary encode hex [tls::decrypt -cipher SM4-CTR -padding 0 \
+		 -key [binary decode hex 0123456789ABCDEFFEDCBA9876543210] \
+		 -iv [binary decode hex 000102030405060708090A0B0C0D0E0F] \
+		 -data [binary decode hex AC3236CB970CC20791364C395A1342D1A3CBC1878C6F30CD074CCE385CDD70C7F234BC0E24C11980FD1286310CE37B926E02FCD0FAA0BAF38B2933851D824514]]} \
+	-match exact -result aaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbccccccccccccccccddddddddddddddddeeeeeeeeeeeeeeeeffffffffffffffffaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbb
+
+tcltest::test Symetric_Block_SM4-CTR-1.3 {Encrypt SM4-CTR} \
+	-constraints SM4_CTR \
+	-body {binary encode hex [tls::encrypt -cipher SM4-CTR -padding 0 \
+		 -key [binary decode hex FEDCBA98765432100123456789ABCDEF] \
+		 -iv [binary decode hex 000102030405060708090A0B0C0D0E0F] \
+		 -data [binary decode hex AAAAAAAAAAAAAAAABBBBBBBBBBBBBBBBCCCCCCCCCCCCCCCCDDDDDDDDDDDDDDDDEEEEEEEEEEEEEEEEFFFFFFFFFFFFFFFFAAAAAAAAAAAAAAAABBBBBBBBBBBBBBBB]]} \
+	-match exact -result 5dcccd25b95ab07417a08512ee160e2f8f661521cbbab44cc87138445bc29e5c0ae0297205d62704173b21239b887f6c8cb5b800917a2488284bde9e16ea2906
+
+tcltest::test Symetric_Block_SM4-CTR-1.4 {Decrypt SM4-CTR} \
+	-constraints SM4_CTR \
+	-body {binary encode hex [tls::decrypt -cipher SM4-CTR -padding 0 \
+		 -key [binary decode hex FEDCBA98765432100123456789ABCDEF] \
+		 -iv [binary decode hex 000102030405060708090A0B0C0D0E0F] \
+		 -data [binary decode hex 5DCCCD25B95AB07417A08512EE160E2F8F661521CBBAB44CC87138445BC29E5C0AE0297205D62704173B21239B887F6C8CB5B800917A2488284BDE9E16EA2906]]} \
+	-match exact -result aaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbccccccccccccccccddddddddddddddddeeeeeeeeeeeeeeeeffffffffffffffffaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbb
+
+# Cleanup
+::tcltest::cleanupTests
+return

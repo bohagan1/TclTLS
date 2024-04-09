@@ -1,0 +1,39 @@
+# Auto generated from "SM4-ECB.txt"
+lappend auto_path [file dirname [file dirname [file dirname [file dirname [file join [pwd] [info script]]]]]]
+package require tls
+package require tcltest
+
+catch {tls::provider legacy}
+tcltest::testConstraint SM4_ECB [expr {[lsearch -nocase [tls::ciphers] SM4-ECB] > -1}]
+
+tcltest::test Symetric_Block_SM4-ECB-1.1 {Encrypt SM4-ECB} \
+	-constraints SM4_ECB \
+	-body {binary encode hex [tls::encrypt -cipher SM4-ECB -padding 0 \
+		 -key [binary decode hex 0123456789ABCDEFFEDCBA9876543210] \
+		 -data [binary decode hex AAAAAAAABBBBBBBBCCCCCCCCDDDDDDDDEEEEEEEEFFFFFFFFAAAAAAAABBBBBBBB]]} \
+	-match exact -result 5ec8143de509cff7b5179f8f474b86192f1d305a7fb17df985f81c8482192304
+
+tcltest::test Symetric_Block_SM4-ECB-1.2 {Decrypt SM4-ECB} \
+	-constraints SM4_ECB \
+	-body {binary encode hex [tls::decrypt -cipher SM4-ECB -padding 0 \
+		 -key [binary decode hex 0123456789ABCDEFFEDCBA9876543210] \
+		 -data [binary decode hex 5EC8143DE509CFF7B5179F8F474B86192F1D305A7FB17DF985F81C8482192304]]} \
+	-match exact -result aaaaaaaabbbbbbbbccccccccddddddddeeeeeeeeffffffffaaaaaaaabbbbbbbb
+
+tcltest::test Symetric_Block_SM4-ECB-1.3 {Encrypt SM4-ECB} \
+	-constraints SM4_ECB \
+	-body {binary encode hex [tls::encrypt -cipher SM4-ECB -padding 0 \
+		 -key [binary decode hex FEDCBA98765432100123456789ABCDEF] \
+		 -data [binary decode hex AAAAAAAABBBBBBBBCCCCCCCCDDDDDDDDEEEEEEEEFFFFFFFFAAAAAAAABBBBBBBB]]} \
+	-match exact -result c5876897e4a59bbba72a10c83872245b12dd90bc2d200692b529a4155ac9e600
+
+tcltest::test Symetric_Block_SM4-ECB-1.4 {Decrypt SM4-ECB} \
+	-constraints SM4_ECB \
+	-body {binary encode hex [tls::decrypt -cipher SM4-ECB -padding 0 \
+		 -key [binary decode hex FEDCBA98765432100123456789ABCDEF] \
+		 -data [binary decode hex C5876897E4A59BBBA72A10C83872245B12DD90BC2D200692B529A4155AC9E600]]} \
+	-match exact -result aaaaaaaabbbbbbbbccccccccddddddddeeeeeeeeffffffffaaaaaaaabbbbbbbb
+
+# Cleanup
+::tcltest::cleanupTests
+return
