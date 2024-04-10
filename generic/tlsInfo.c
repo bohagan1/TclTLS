@@ -138,18 +138,23 @@ int CipherInfo(Tcl_Interp *interp, Tcl_Obj *nameObj) {
 	case EVP_CIPH_GCM_MODE:
 	    modeName = "GCM";
 	    break;
-	case EVP_CIPH_XTS_MODE:
-	    modeName = "XTS";
-	    break;
 	case EVP_CIPH_CCM_MODE:
 	    modeName = "CCM";
 	    break;
-	case EVP_CIPH_OCB_MODE:
-	    modeName = "OCB";
+	case EVP_CIPH_XTS_MODE:
+	    modeName = "XTS";
 	    break;
 	case EVP_CIPH_WRAP_MODE :
 	    modeName = "WRAP";
 	    break;
+	case EVP_CIPH_OCB_MODE:
+	    modeName = "OCB";
+	    break;
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
+	case EVP_CIPH_SIV_MODE :
+	    modeName = "SIV";
+	    break;
+#endif
 	default:
 	    modeName = "unknown";
 	    break;
@@ -158,14 +163,31 @@ int CipherInfo(Tcl_Interp *interp, Tcl_Obj *nameObj) {
 
     /* Flags */
     listObj = Tcl_NewListObj(0, NULL);
+    LAPPEND_BOOL(interp, listObj, "Wrap Allowed", flags & EVP_CIPHER_CTX_FLAG_WRAP_ALLOW);
     LAPPEND_BOOL(interp, listObj, "Variable Length", flags & EVP_CIPH_VARIABLE_LENGTH);
-    LAPPEND_BOOL(interp, listObj, "Always Call Init", flags & EVP_CIPH_ALWAYS_CALL_INIT);
     LAPPEND_BOOL(interp, listObj, "Custom IV", flags & EVP_CIPH_CUSTOM_IV);
+    LAPPEND_BOOL(interp, listObj, "Always Call Init", flags & EVP_CIPH_ALWAYS_CALL_INIT);
     LAPPEND_BOOL(interp, listObj, "Control Init", flags & EVP_CIPH_CTRL_INIT);
+    LAPPEND_BOOL(interp, listObj, "Custom Key Length", flags & EVP_CIPH_CUSTOM_KEY_LENGTH);
+    LAPPEND_BOOL(interp, listObj, "No padding", flags & EVP_CIPH_NO_PADDING);
+    LAPPEND_BOOL(interp, listObj, "Has random key", flags & EVP_CIPH_RAND_KEY);
+    LAPPEND_BOOL(interp, listObj, "Custom Copy", flags & EVP_CIPH_CUSTOM_COPY);
+    LAPPEND_BOOL(interp, listObj, "Custom IV Length", flags & EVP_CIPH_CUSTOM_IV_LENGTH);
+    LAPPEND_BOOL(interp, listObj, "Default ASN1", flags & EVP_CIPH_FLAG_DEFAULT_ASN1);
     LAPPEND_BOOL(interp, listObj, "Custom Cipher", flags & EVP_CIPH_FLAG_CUSTOM_CIPHER);
     LAPPEND_BOOL(interp, listObj, "AEAD Cipher", flags & EVP_CIPH_FLAG_AEAD_CIPHER);
-    LAPPEND_BOOL(interp, listObj, "Custom Copy", flags & EVP_CIPH_CUSTOM_COPY);
+    LAPPEND_BOOL(interp, listObj, "TLS 1.1 Multiblock", flags & EVP_CIPH_FLAG_TLS1_1_MULTIBLOCK);
+    LAPPEND_BOOL(interp, listObj, "Pipeline", flags & EVP_CIPH_FLAG_PIPELINE);
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
+    LAPPEND_BOOL(interp, listObj, "FIPS", flags & EVP_CIPH_FLAG_FIPS);
     LAPPEND_BOOL(interp, listObj, "Non FIPS Allow", flags & EVP_CIPH_FLAG_NON_FIPS_ALLOW);
+#else
+    LAPPEND_BOOL(interp, listObj, "CTS", flags & EVP_CIPH_FLAG_CTS);
+    LAPPEND_BOOL(interp, listObj, "Custom ASN1", flags & EVP_CIPH_FLAG_CUSTOM_ASN1);
+    LAPPEND_BOOL(interp, listObj, "Cipher with MAC", flags & EVP_CIPH_FLAG_CIPHER_WITH_MAC);
+    LAPPEND_BOOL(interp, listObj, "Get Wrap Cipher", flags & EVP_CIPH_FLAG_GET_WRAP_CIPHER);
+    LAPPEND_BOOL(interp, listObj, "Inverse Cipher", flags & EVP_CIPH_FLAG_INVERSE_CIPHER);
+#endif
     LAPPEND_OBJ(interp, resultObj, "flags", listObj);
 
     /* CTX only properties */
@@ -523,7 +545,7 @@ int DigestInfo(Tcl_Interp *interp, Tcl_Obj *nameObj) {
     LAPPEND_BOOL(interp, listObj, "One-shot", flags & EVP_MD_FLAG_ONESHOT);
     LAPPEND_BOOL(interp, listObj, "XOF", flags & EVP_MD_FLAG_XOF);
     LAPPEND_BOOL(interp, listObj, "DigestAlgorithmId_NULL", flags & EVP_MD_FLAG_DIGALGID_NULL);
-    LAPPEND_BOOL(interp, listObj, "DigestAlgorithmId_Abscent", flags & EVP_MD_FLAG_DIGALGID_ABSENT);
+    LAPPEND_BOOL(interp, listObj, "DigestAlgorithmId_Absent", flags & EVP_MD_FLAG_DIGALGID_ABSENT);
     LAPPEND_BOOL(interp, listObj, "DigestAlgorithmId_Custom", flags & EVP_MD_FLAG_DIGALGID_CUSTOM);
     LAPPEND_BOOL(interp, listObj, "FIPS", flags & EVP_MD_FLAG_FIPS);
     LAPPEND_OBJ(interp, resultObj, "flags", listObj);
