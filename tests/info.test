@@ -222,9 +222,13 @@ test Ciphers_Errors-5.10 {TLS1.3} -constraints {!tls1.3} -body {
 # Test Cipher Info
 
 
-test Cipher_Info-6.1 {AES-256-CCM} -body {
+test Cipher_Info-6.1 {AES-256-CCM} -constraints {old_api} -body {
 	tls::cipher aes-256-ccm
     } -result {nid aes-256-ccm name id-aes256-CCM description {} block_size 1 key_length 32 iv_length 12 type aes-256-ccm provider {} mode CCM flags {{Variable Length} 0 {Always Call Init} 1 {Custom IV} 1 {Control Init} 1 {Custom Cipher} 1 {AEAD Cipher} 1 {Custom Copy} 1 {Non FIPS Allow} 0} tag_length 16 aad_length 13}
+
+test Cipher_Info-6.2 {AES-256-CCM} -constraints {new_api} -body {
+	tls::cipher aes-256-ccm
+    } -result {nid aes-256-ccm name AES-256-CCM description aes-256-ccm block_size 1 key_length 32 iv_length 12 type aes-256-ccm provider default mode CCM flags {{Wrap Allowed} 1 {Variable Length} 0 {Custom IV} 1 {Always Call Init} 0 {Control Init} 0 {Custom Key Length} 0 {No padding} 0 {Has random key} 0 {Custom Copy} 0 {Custom IV Length} 0 {Default ASN1} 0 {Custom Cipher} 1 {AEAD Cipher} 1 {TLS 1.1 Multiblock} 0 Pipeline 0 CTS 0 {Custom ASN1} 0 {Cipher with MAC} 0 {Get Wrap Cipher} 0 {Inverse Cipher} 0} tag_length 12 aad_length 13}
 
 # Test list digests
 
@@ -236,9 +240,13 @@ test Digests_List-7.1 {All} -body {
 # Test Digest Info
 
 
-test Digest_Info-8.1 {md5} -body {
+test Digest_Info-8.1 {md5} -constraints {old_api} -body {
 	tls::digests md5
     } -result {name MD5 description {} size 16 block_size 64 provider {} type md5 pkey_type md5WithRSAEncryption flags {One-shot 0 XOF 0 DigestAlgorithmId_NULL 0 DigestAlgorithmId_Abscent 0 DigestAlgorithmId_Custom 0 FIPS 0}}
+
+test Digest_Info-8.2 {md5} -constraints {new_api} -body {
+	tls::digests md5
+    } -result {name MD5 description md5 size 16 block_size 64 type md5 pkey_type undefined provider default flags {One-shot 0 XOF 0 DigestAlgorithmId_NULL 0 DigestAlgorithmId_Absent 0 DigestAlgorithmId_Custom 0 FIPS 0}}
 
 # Test list MACs
 
