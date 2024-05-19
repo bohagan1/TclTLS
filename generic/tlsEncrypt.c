@@ -805,6 +805,9 @@ static int EncryptChannelHandler(Tcl_Interp *interp, int type, const char *chann
 
     /* Configure channel */
     Tcl_SetChannelOption(interp, chan, "-translation", "binary");
+    if (Tcl_GetChannelBufferSize(chan) < EVP_MAX_BLOCK_LENGTH) {
+	Tcl_SetChannelBufferSize(chan, EVP_MAX_BLOCK_LENGTH);
+    }
 
     /* Create state data structure */
     if ((statePtr = EncryptStateNew(interp, type)) == NULL) {
@@ -827,8 +830,10 @@ static int EncryptChannelHandler(Tcl_Interp *interp, int type, const char *chann
 	return TCL_ERROR;
     }
 
+    dprintf("Created channel named %s", Tcl_GetChannelName(statePtr->self));
+
     /* Set result to channel Id */
-    Tcl_SetResult(interp, (char *) Tcl_GetChannelName(chan), TCL_VOLATILE);
+    Tcl_SetResult(interp, (char *) Tcl_GetChannelName(statePtr->self), TCL_VOLATILE);
     return TCL_OK;
 }
 
