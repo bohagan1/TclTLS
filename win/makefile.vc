@@ -1,11 +1,11 @@
 #------------------------------------------------------------- -*- makefile -*-
 #
-# Makefile for TclTLS extensions.
+# Makefile for TCL TLS extension
 #
 # Basic build, test and install
-#   nmake /f makefile.vc INSTALLDIR=c:\path\to\tcl
-#   nmake /f makefile.vc INSTALLDIR=c:\path\to\tcl test
-#   nmake /f makefile.vc INSTALLDIR=c:\path\to\tcl install
+#   nmake /f makefile.vc INSTALLDIR=c:\path\to\tcl TCLDIR=c:\path\to\tcl\sources
+#   nmake /f makefile.vc INSTALLDIR=c:\path\to\tcl TCLDIR=c:\path\to\tcl\sources test
+#   nmake /f makefile.vc INSTALLDIR=c:\path\to\tcl TCLDIR=c:\path\to\tcl\sources install
 #
 # For other build options (debug, static etc.),
 # See TIP 477 (https://core.tcl-lang.org/tips/doc/main/tip/477.md) for
@@ -15,6 +15,10 @@
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
 #------------------------------------------------------------------------------
+
+#-------------------------------------------------------------------------
+# Project specific information
+#-------------------------------------------------------------------------
 
 # The name of the package
 PROJECT=tls
@@ -38,10 +42,10 @@ PRJ_OBJS = $(TMP_DIR)\tls.obj \
 
 # Define any additional project include flags
 # SSL_INSTALL_FOLDER = with the OpenSSL installation folder following.
-PRJ_INCLUDES = -I"$(SSL_INSTALL_FOLDER)\include" -I"$(OPENSSL_INSTALL_DIR)\include"
+PRJ_INCLUDES = -I"$(SSL_INSTALL_FOLDER)\include" -I"$(OPENSSL_INSTALL_DIR)\include" -I"$(TMP_DIR)"
 
 # Define any additional compiler flags that might be required for the project
-PRJ_DEFINES = -D NO_SSL2 -D NO_SSL3 -D _CRT_SECURE_NO_WARNINGS
+PRJ_DEFINES = -D NO_SSL2 -D NO_SSL3 /D_CRT_SECURE_NO_WARNINGS /D_CRT_NONSTDC_NO_DEPRECATE /D__STDC_WANT_SECURE_LIB__=1
 
 #
 # SSL Libs:
@@ -55,39 +59,48 @@ PRJ_DEFINES = -D NO_SSL2 -D NO_SSL3 -D _CRT_SECURE_NO_WARNINGS
 PRJ_LIBS = \
 	"$(SSL_INSTALL_FOLDER)\lib\libssl.lib" \
 	"$(SSL_INSTALL_FOLDER)\lib\libcrypto.lib" \
-	WS2_32.LIB GDI32.LIB ADVAPI32.LIB CRYPT32.LIB USER32.LIB
+	User32.Lib WS2_32.Lib Gdi32.Lib AdvAPI32.Lib Crypt32.Lib
 
-# Define the standard targets
+# Define the standard targets which calls rules.vc
 !include "targets.vc"
 
+#---------------------------------------------------------------------
 # Project specific targets
+#---------------------------------------------------------------------
 
-all: default-target
+all: setup default-target
 
 clean: default-clean
-	@if exist $(WIN_DIR)\tlsUuid.h del $(WIN_DIR)\tlsUuid.h
 
 realclean: default-hose
-	@if exist $(WIN_DIR)\tlsUuid.h del $(WIN_DIR)\tlsUuid.h
 
 # We must define a pkgindex target that will create a pkgIndex.tcl
 # file in the $(OUT_DIR) directory. We can just redirect to the
 # default-pkgindex target for our sample extension.
 pkgindex: default-pkgindex-tea
 
+# Manifest which defines fossil/git commit id for build-info command
 $(ROOT)\manifest.uuid:
-   copy $(WIN_DIR)\gitmanifest.in $(ROOT)\manifest.uuid
-   git rev-parse HEAD >>$(ROOT)\manifest.uuid
+    if not exist $(ROOT)\manifest.uuid (
+	copy $(WIN_DIR)\gitmanifest.in $(ROOT)\manifest.uuid
+	where git
+	if ERRORLEVEL 0 (
+	    git rev-parse HEAD >>$(ROOT)\manifest.uuid
+	) else (
+	    echo unknown >>$(ROOT)\manifest.uuid
+	)
+    )
 
-$(WIN_DIR)\tlsUuid.h:	$(ROOT)\manifest.uuid
-	copy $(WIN_DIR)\tlsUuid.h.in+$(ROOT)\manifest.uuid $(WIN_DIR)\tlsUuid.h
+$(TMP_DIR)\tlsUuid.h:	$(ROOT)\manifest.uuid
+	copy $(WIN_DIR)\tlsUuid.h.in+$(ROOT)\manifest.uuid $(TMP_DIR)\tlsUuid.h
+	echo: >>$(TMP_DIR)\tlsUuid.h
 
 
 # The default install target only installs binaries and scripts so add
 # an additional target for our documentation. Note this *adds* a target
 # since no commands are listed after it. The original targets for
 # install (from targets.vc) will remain.
-install: default-pkgindex-tea default-install default-install-docs-html
+install: pkgindex default-install default-install-docs-html
     if exist "$(SSL_INSTALL_FOLDER)\bin\libcrypto-*-x64.dll" (
         xcopy /c /y "$(SSL_INSTALL_FOLDER)\bin\libcrypto-*-x64.dll" "$(PRJ_INSTALL_DIR)"
     )
@@ -96,7 +109,7 @@ install: default-pkgindex-tea default-install default-install-docs-html
     )
 
 # Explicit dependency rules
-$(GENERICDIR)\tls.c: $(WIN_DIR)\tlsUuid.h
+$(GENERICDIR)\tls.c: $(TMP_DIR)\tlsUuid.h
 
 # Test package
 test: default-test

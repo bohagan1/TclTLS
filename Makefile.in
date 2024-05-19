@@ -160,7 +160,7 @@ PKG_CFLAGS	= @PKG_CFLAGS@
 DEFS		= @DEFS@ $(PKG_CFLAGS)
 
 # Move pkgIndex.tcl to 'BINARIES' var if it is generated in the Makefile
-CONFIG_CLEAN_FILES = Makefile pkgIndex.tcl generic/tls.tcl.h tlsUuid.h
+CONFIG_CLEAN_FILES = Makefile
 CLEANFILES	= @CLEANFILES@
 
 CPPFLAGS	= @CPPFLAGS@
@@ -216,7 +216,7 @@ doc:
 	@echo "        xml2nroff sample.xml > sample.n"
 	@echo "        xml2html sample.xml > sample.html"
 
-install: all install-binaries install-libraries install-doc
+install: all install-binaries install-libraries install-doc-n install-doc-html
 
 install-binaries: binaries install-lib-binaries install-bin-binaries
 
@@ -231,19 +231,30 @@ install-libraries: libraries
 	@list='$(PKG_HEADERS)'; for i in $$list; do \
 	    echo "Installing $(srcdir)/$$i" ; \
 	    $(INSTALL_DATA) $(srcdir)/$$i "$(DESTDIR)$(includedir)" ; \
-	done;
+	done
 
 #========================================================================
 # Install documentation.  Unix manpages should go in the $(mandir)
 # directory.
 #========================================================================
+ 
+install-doc-html: doc
+	@$(INSTALL_DATA_DIR) "$(DESTDIR)$(pkglibdir)/html"
+	@list='$(srcdir)/doc/*.html'; for i in $$list; do \
+	    if test -f $$i ; then \
+		echo "Installing $$i"; \
+		$(INSTALL_DATA) $$i "$(DESTDIR)$(pkglibdir)/html"; \
+	    fi; \
+	done
 
-install-doc: doc
+install-doc-n: doc
 	@$(INSTALL_DATA_DIR) "$(DESTDIR)$(mandir)/mann"
 	@echo "Installing documentation in $(DESTDIR)$(mandir)"
 	@list='$(srcdir)/doc/*.n'; for i in $$list; do \
-	    echo "Installing $$i"; \
-	    $(INSTALL_DATA) $$i "$(DESTDIR)$(mandir)/mann" ; \
+	    if test -f $$i ; then \
+		echo "Installing $$i"; \
+		$(INSTALL_DATA) $$i "$(DESTDIR)$(mandir)/mann" ; \
+	    fi; \
 	done
 
 test: binaries libraries
@@ -310,9 +321,6 @@ $(PKG_STUB_LIB_FILE): $(PKG_STUB_OBJECTS)
 
 VPATH = $(srcdir):$(srcdir)/generic:$(srcdir)/unix:$(srcdir)/win:$(srcdir)/macosx
 
-.c.@OBJEXT@:
-	$(COMPILE) -c `@CYGPATH@ $<` -o $@
-
 # Create a C-source-ified version of the script resources
 # for TclTLS so that we only need a single file to enable
 # this extension
@@ -321,8 +329,6 @@ tls.tcl.h: @srcdir@/library/tls.tcl Makefile
 	sed 's@[^0-9A-Fa-f]@@g;s@..@0x&, @g' < tls.tcl.h.new.1 > tls.tcl.h.new.2
 	rm -f tls.tcl.h.new.1
 	mv tls.tcl.h.new.2 @srcdir@/generic/tls.tcl.h
-
-tls.o:	tlsUuid.h
 
 $(srcdir)/manifest.uuid:
 	printf "git-" >$(srcdir)/manifest.uuid
@@ -335,6 +341,11 @@ tlsUuid.h:	$(srcdir)/manifest.uuid
 	echo "#define TLS_VERSION_UUID \\" >$@
 	cat $(srcdir)/manifest.uuid >>$@
 	echo "" >>$@
+
+tls.@OBJEXT@:	tlsUuid.h tls.tcl.h
+
+.c.@OBJEXT@:
+	$(COMPILE) -c `@CYGPATH@ $<` -o $@
 
 #========================================================================
 # Create the pkgIndex.tcl file.
@@ -363,9 +374,9 @@ DIST_INSTALL_DATA_RECUR	= CPPROG='cp -p -R' $(INSTALL)
 DIST_INSTALL_SCRIPT	= CPPROG='cp -p' $(INSTALL) -m 755
 
 dist-clean:
-	rm -rf $(DIST_DIR) $(DIST_ROOT)/$(PKG_DIR).tar.*
+	rm -rf $(DIST_DIR) $(top_builddir)/$(PKG_DIR).tar.*
 
-dist: dist-clean
+dist: dist-clean $(srcdir)/manifest.uuid
 	# TEA files
 	$(INSTALL_DATA_DIR) $(DIST_DIR)
 	$(DIST_INSTALL_DATA) $(srcdir)/Makefile.in \
@@ -378,18 +389,7 @@ dist: dist-clean
 		$(srcdir)/license.terms $(srcdir)/manifest.uuid \
 		$(srcdir)/README.txt $(srcdir)/pkgIndex.tcl.in $(DIST_DIR)/
 
-	# TEA files
-	$(INSTALL_DATA_DIR) $(DIST_DIR)/tclconfig
-	$(DIST_INSTALL_DATA) $(srcdir)/tclconfig/README.txt \
-		$(srcdir)/tclconfig/tcl.m4 $(srcdir)/tclconfig/install-sh \
-		$(srcdir)/tclconfig/license.terms $(DIST_DIR)/tclconfig/
-
-	$(INSTALL_DATA_DIR) $(DIST_DIR)/win
-	$(DIST_INSTALL_DATA) \
-		$(srcdir)/win/README.txt $(srcdir)/win/*.vc \
-		$(srcdir)/win/nmakehlp.c $(srcdir)/win/*.in $(DIST_DIR)/win/
-
-	list='build demos doc generic library macosx tests unix'; \
+	list='build demos doc generic library tclconfig tests win'; \
 	for p in $$list; do \
 	    if test -d $(srcdir)/$$p ; then \
 		$(INSTALL_DATA_DIR) $(DIST_DIR)/$$p; \
@@ -398,8 +398,8 @@ dist: dist-clean
 	done
 
 	(cd $(DIST_ROOT); $(COMPRESS);)
-	cd $(top_builddir)
 	mv $(DIST_ROOT)/$(PKG_DIR).tar.gz $(top_builddir)
+	cd $(top_builddir)
 
 #========================================================================
 # End of user-definable section
@@ -418,7 +418,7 @@ clean:
 distclean: clean
 	-rm -f *.tab.c
 	-rm -f $(CONFIG_CLEAN_FILES)
-	-rm -f config.cache config.log config.status
+	-rm -f config.cache config.log config.status configure~
 	-rm -fR autom4te.cache
 
 #========================================================================
@@ -458,6 +458,9 @@ install-lib-binaries: binaries
 	@if test "x$(SHARED_BUILD)" = "x1"; then \
 	    echo " Install pkgIndex.tcl $(DESTDIR)$(pkglibdir)"; \
 	    $(INSTALL_DATA) pkgIndex.tcl "$(DESTDIR)$(pkglibdir)"; \
+	fi
+	@if test -f "$(srcdir)/tlsConfig.sh"; then \
+	    $(INSTALL_DATA) $(srcdir)/tlsConfig.sh $(DESTDIR)$(libdir); \
 	fi
 
 #========================================================================

@@ -1,10 +1,8 @@
 /*
+ *----------------------------------------------------------------------
  * Copyright (C) 1997-2000 Matt Newman <matt@novadigm.com>
  *
- * TLS (aka SSL) Channel - can be layered on any bi-directional
- * Tcl_Channel (Note: Requires Trf Core Patch)
- *
- * This was built from scratch based upon observation of OpenSSL 0.9.2B
+ *	Macro and structure definitions
  *
  * Addition credit is due for Andreas Kupries (a.kupries@westend.com), for
  * providing the Tcl_ReplaceChannel mechanism and working closely with me
@@ -13,21 +11,32 @@
  * Also work done by the follow people provided the impetus to do this "right":-
  *	tclSSL (Colin McCormack, Shared Technology)
  *	SSLtcl (Peter Antman)
- *
+ *----------------------------------------------------------------------
  */
 #ifndef _TLSINT_H
 #define _TLSINT_H
 
-#include "tls.h"
-#include <errno.h>
-#include <string.h>
-#include <stdint.h>
-
+/* Platform unique definitions */
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <wincrypt.h> /* OpenSSL needs this on Windows */
 #endif
+
+#include "tls.h"
+#include <errno.h>
+#include <string.h>
+#include <stdint.h>
+#include <openssl/ssl.h>
+#include <openssl/err.h>
+#include <openssl/rand.h>
+#include <openssl/opensslv.h>
+
+/* Windows needs to know which symbols to export. */
+#ifdef BUILD_tls
+#undef TCL_STORAGE_CLASS
+#define TCL_STORAGE_CLASS DLLEXPORT
+#endif /* BUILD_udp */
 
 /* Handle TCL 8.6 CONST changes */
 #ifndef CONST86
@@ -55,11 +64,7 @@
     #define Tcl_NewSizeIntFromObj Tcl_NewWideIntObj
 #endif
 
-#include <openssl/ssl.h>
-#include <openssl/err.h>
-#include <openssl/rand.h>
-#include <openssl/opensslv.h>
-
+/* Define missing POSIX error codes */
 #ifndef ECONNABORTED
 #define ECONNABORTED	130	/* Software caused connection abort */
 #endif
@@ -67,6 +72,7 @@
 #define ECONNRESET	131	/* Connection reset by peer */
 #endif
 
+/* Debug and error macros */
 #ifdef TCLEXT_TCLTLS_DEBUG
 #include <ctype.h>
 #define dprintf(...) { \

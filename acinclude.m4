@@ -9,11 +9,12 @@ builtin(include,tclconfig/tcl.m4)
 #
 
 AC_DEFUN([TCLTLS_SSL_OPENSSL], [
+	dnl Determine if pkg-config tool is available
 	AC_CHECK_TOOL([PKG_CONFIG], [pkg-config])
 
 	dnl Disable support for TLS 1.0 protocol
 	AC_ARG_ENABLE([tls1], AS_HELP_STRING([--disable-tls1], [disable TLS1 protocol]), [
-		if test "${enableval}" = "no"; then
+		if test "${enableval}" == "no"; then
 			AC_DEFINE([NO_TLS1], [1], [Disable TLS1 protocol])
 			AC_MSG_CHECKING([for disable TLS1 protocol])
 			AC_MSG_RESULT([yes])
@@ -22,7 +23,7 @@ AC_DEFUN([TCLTLS_SSL_OPENSSL], [
 
 	dnl Disable support for TLS 1.1 protocol
 	AC_ARG_ENABLE([tls1_1], AS_HELP_STRING([--disable-tls1_1], [disable TLS1.1 protocol]), [
-		if test "${enableval}" = "no"; then
+		if test "${enableval}" == "no"; then
 			AC_DEFINE([NO_TLS1_1], [1], [Disable TLS1.1 protocol])
 			AC_MSG_CHECKING([for disable TLS1.1 protocol])
 			AC_MSG_RESULT([yes])
@@ -31,7 +32,7 @@ AC_DEFUN([TCLTLS_SSL_OPENSSL], [
 
 	dnl Disable support for TLS 1.2 protocol
 	AC_ARG_ENABLE([tls1_2], AS_HELP_STRING([--disable-tls1_2], [disable TLS1.2 protocol]), [
-		if test "${enableval}" = "no"; then
+		if test "${enableval}" == "no"; then
 			AC_DEFINE([NO_TLS1_2], [1], [Disable TLS1.2 protocol])
 			AC_MSG_CHECKING([for disable TLS1.2 protocol])
 			AC_MSG_RESULT([yes])
@@ -40,7 +41,7 @@ AC_DEFUN([TCLTLS_SSL_OPENSSL], [
 
 	dnl Disable support for TLS 1.3 protocol
 	AC_ARG_ENABLE([tls1_3], AS_HELP_STRING([--disable-tls1_3], [disable TLS1.3 protocol]), [
-		if test "${enableval}" = "no"; then
+		if test "${enableval}" == "no"; then
 			AC_DEFINE([NO_TLS1_3], [1], [Disable TLS1.3 protocol])
 			AC_MSG_CHECKING([for disable TLS1.3 protocol])
 			AC_MSG_RESULT([yes])
@@ -55,7 +56,7 @@ AC_DEFUN([TCLTLS_SSL_OPENSSL], [
 	], [
 		tcltls_ssl_fastpath='no'
 	])
-	if test "$tcltls_ssl_fastpath" = 'yes'; then
+	if test "$tcltls_ssl_fastpath" == 'yes'; then
 		AC_DEFINE(TCLTLS_SSL_USE_FASTPATH, [1], [Enable SSL library direct use of the underlying file descriptor])
 	fi
 	AC_MSG_CHECKING([for fast path])
@@ -68,8 +69,8 @@ AC_DEFUN([TCLTLS_SSL_OPENSSL], [
 	], [
 		tcltls_enable_hardening='yes'
 	])
-	if test "$tcltls_enable_hardening" = 'yes'; then
-		if test "$GCC" = 'yes' -o "$CC" = 'clang'; then
+	if test "$tcltls_enable_hardening" == 'yes'; then
+		if test "$GCC" == 'yes' -o "$CC" = 'clang'; then
 			TEA_ADD_CFLAGS([-fstack-protector-all])
 			TEA_ADD_CFLAGS([-fno-strict-overflow])
 			AC_DEFINE([_FORTIFY_SOURCE], [2], [Enable fortification])
@@ -109,7 +110,7 @@ AC_DEFUN([TCLTLS_SSL_OPENSSL], [
 		), [
 			opensslincludedir="$withval"
 		], [
-			if test ! -z "$openssldir"; then
+			if test -n "$openssldir"; then
 				opensslincludedir="${openssldir}/include"
 			else
 				opensslincludedir=''
@@ -119,15 +120,14 @@ AC_DEFUN([TCLTLS_SSL_OPENSSL], [
 	AC_MSG_CHECKING([for OpenSSL include directory])
 	AC_MSG_RESULT($opensslincludedir)
 
-	dnl Set SSL include vars
-	if test ! -z "$opensslincludedir"; then
+	dnl Set SSL include variables
+	if test -n "$opensslincludedir"; then
+		AC_MSG_CHECKING([for ssl.h])
 		if test -f "$opensslincludedir/openssl/ssl.h"; then
 			TCLTLS_SSL_CFLAGS="-I$opensslincludedir"
 			TCLTLS_SSL_INCLUDES="-I$opensslincludedir"
-			AC_MSG_CHECKING([for ssl.h])
 			AC_MSG_RESULT([yes])
 		else
-			AC_MSG_CHECKING([for ssl.h])
 			AC_MSG_RESULT([no])
 			AC_MSG_ERROR([Unable to locate ssl.h])
 		fi
@@ -140,8 +140,8 @@ AC_DEFUN([TCLTLS_SSL_OPENSSL], [
 		), [
 			openssllibdir="$withval"
 		], [
-			if test ! -z "$openssldir"; then
-				if test "$do64bit" == 'yes'; then
+			if test -n "$openssldir"; then
+				if test "$do64bit" == 'yes' -a -d $openssldir/lib64; then
 					openssllibdir="$openssldir/lib64"
 				else
 					openssllibdir="$openssldir/lib"
@@ -154,19 +154,19 @@ AC_DEFUN([TCLTLS_SSL_OPENSSL], [
 	AC_MSG_CHECKING([for OpenSSL lib directory])
 	AC_MSG_RESULT($openssllibdir)
 
-	dnl Set SSL lib vars
-	if test ! -z "$openssllibdir"; then
-		if test -f "$openssllibdir/libssl${SHLIB_SUFFIX}"; then
-			if test "${TCLEXT_TLS_STATIC_SSL}" == 'no'; then
-				TCLTLS_SSL_LIBS="-L$openssllibdir -lcrypto -lssl"
-			#else
-				# Linux and Solaris
-				#TCLTLS_SSL_LIBS="-Wl,-Bstatic `$PKG_CONFIG --static --libs crypto ssl` -Wl,-Bdynamic"
-				# HPUX
-				# -Wl,-a,archive ... -Wl,-a,shared_archive
-			fi
+	dnl Set SSL lib variables
+	SSL_LIBS_PATH=''
+	if test -n "$openssllibdir"; then
+		if test "${TCLEXT_TLS_STATIC_SSL}" == 'no'; then
+			LIBEXT=${SHLIB_SUFFIX}
 		else
-			AC_MSG_ERROR([Unable to locate libssl${SHLIB_SUFFIX}])
+			LIBEXT='.a'
+		fi
+
+		if test -f "$openssllibdir/libssl${LIBEXT}"; then
+			SSL_LIBS_PATH="-L$openssllibdir"
+		else
+			AC_MSG_ERROR([Unable to locate libssl${LIBEXT}])
 		fi
 	fi
 
@@ -187,15 +187,11 @@ AC_DEFUN([TCLTLS_SSL_OPENSSL], [
 	AC_MSG_CHECKING([for OpenSSL pkgconfig])
 	AC_MSG_RESULT($opensslpkgconfigdir)
 
+	dnl Check if OpenSSL is available
+	USE_PKG_CONFIG=`"${PKG_CONFIG}" --list-package-names | grep openssl`
 
-	# Use Package Config tool to get config
-	pkgConfigExtraArgs=''
-	if test "${SHARED_BUILD}" == 0 -o "$TCLEXT_TLS_STATIC_SSL" = 'yes'; then
-		pkgConfigExtraArgs='--static'
-	fi
-
-	dnl Use pkg-config to find the libraries
-	if test -n "${PKG_CONFIG}"; then
+	dnl Use pkg-config to find the library names
+	if test -n "${PKG_CONFIG}" -a -n "${USE_PKG_CONFIG}"; then
 		dnl Temporarily update PKG_CONFIG_PATH
 		PKG_CONFIG_PATH_SAVE="${PKG_CONFIG_PATH}"
 		if test -n "${opensslpkgconfigdir}"; then
@@ -206,8 +202,17 @@ AC_DEFUN([TCLTLS_SSL_OPENSSL], [
 			PKG_CONFIG_PATH="${opensslpkgconfigdir}:${PKG_CONFIG_PATH}"
 			export PKG_CONFIG_PATH
 		fi
+
+		pkgConfigExtraArgs=''
+		if test "${SHARED_BUILD}" == "0" -o "$TCLEXT_TLS_STATIC_SSL" == 'yes'; then
+			pkgConfigExtraArgs='--static'
+		fi
+
 		if test -z "$TCLTLS_SSL_LIBS"; then
-			TCLTLS_SSL_LIBS="`"${PKG_CONFIG}" openssl --libs $pkgConfigExtraArgs`" || AC_MSG_ERROR([Unable to get OpenSSL Configuration])
+			TCLTLS_SSL_LIBS="$SSL_LIBS_PATH `${PKG_CONFIG} openssl --libs $pkgConfigExtraArgs`" || AC_MSG_ERROR([Unable to get OpenSSL Configuration])
+			if test "${TCLEXT_TLS_STATIC_SSL}" == 'yes'; then
+				TCLTLS_SSL_LIBS="-Wl,-Bstatic $TCLTLS_SSL_LIBS -Wl,-Bdynamic"
+			fi
 		fi
 		if test -z "$TCLTLS_SSL_CFLAGS"; then
 			TCLTLS_SSL_CFLAGS="`"${PKG_CONFIG}" openssl --cflags-only-other $pkgConfigExtraArgs`" || AC_MSG_ERROR([Unable to get OpenSSL Configuration])
@@ -218,17 +223,22 @@ AC_DEFUN([TCLTLS_SSL_OPENSSL], [
 		PKG_CONFIG_PATH="${PKG_CONFIG_PATH_SAVE}"
 	fi
 
-
-	dnl Fallback settings for OpenSSL includes and libs
-	if test -z "$TCLTLS_SSL_LIBS"; then
-		TCLTLS_SSL_LIBS="-lcrypto -lssl"
-	fi
+	dnl Use fall-back settings for OpenSSL include and library paths
 	if test -z "$TCLTLS_SSL_CFLAGS"; then
 		TCLTLS_SSL_CFLAGS=""
 	fi
 	if test -z "$TCLTLS_SSL_INCLUDES"; then
 		if test -f /usr/include/openssl/ssl.h; then
 			TCLTLS_SSL_INCLUDES="-I/usr/include"
+		fi
+	fi
+	if test -z "$TCLTLS_SSL_LIBS"; then
+		if test "${TCLEXT_TLS_STATIC_SSL}" == 'no'; then
+		    TCLTLS_SSL_LIBS="$SSL_LIBS_PATH -lssl -lcrypto"
+		else
+		    # Linux and Solaris
+		    TCLTLS_SSL_LIBS="$SSL_LIBS_PATH -Wl,-Bstatic -lssl -lcrypto -Wl,-Bdynamic"
+		    # HPUX: -Wl,-a,archive ... -Wl,-a,shared_archive
 		fi
 	fi
 

@@ -27,12 +27,7 @@
 #include "tlsUuid.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <openssl/crypto.h>
-#include <openssl/ssl.h>
-#include <openssl/evp.h>
-#include <openssl/objects.h>
-#include <openssl/rsa.h>
-#include <openssl/safestack.h>
+
 
 /* Min OpenSSL version */
 #if OPENSSL_VERSION_NUMBER < 0x10101000L
@@ -164,7 +159,7 @@ InfoCallback(const SSL *ssl, int where, int ret) {
     State *statePtr = (State*)SSL_get_app_data((SSL *)ssl);
     Tcl_Interp *interp	= statePtr->interp;
     Tcl_Obj *cmdPtr;
-    char *major; char *minor;
+    char *major, *minor;
 
     dprintf("Called");
 
@@ -1308,8 +1303,6 @@ ImportObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const
     /*
      * We need to make sure that the channel works in binary (for the
      * encryption not to get goofed up).
-     * We only want to adjust the buffering in pre-v2 channels, where
-     * each channel in the stack maintained its own buffers.
      */
     Tcl_DStringInit(&upperChannelTranslation);
     Tcl_DStringInit(&upperChannelBlocking);
@@ -1324,15 +1317,19 @@ ImportObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const
     dprintf("Consuming Tcl channel %s", Tcl_GetChannelName(chan));
     statePtr->self = Tcl_StackChannel(interp, Tls_ChannelType(), (ClientData) statePtr,
 	(TCL_READABLE | TCL_WRITABLE), chan);
-    dprintf("Created channel named %s", Tcl_GetChannelName(statePtr->self));
     if (statePtr->self == (Tcl_Channel) NULL) {
 	/*
 	 * No use of Tcl_EventuallyFree because no possible Tcl_Preserve.
 	 */
 	Tls_Free((tls_free_type *) statePtr);
+	Tcl_DStringFree(&upperChannelTranslation);
+	Tcl_DStringFree(&upperChannelEncoding);
+	Tcl_DStringFree(&upperChannelEOFChar);
+	Tcl_DStringFree(&upperChannelBlocking);
 	return TCL_ERROR;
     }
 
+    dprintf("Created channel named %s", Tcl_GetChannelName(statePtr->self));
     Tcl_SetChannelOption(interp, statePtr->self, "-translation", Tcl_DStringValue(&upperChannelTranslation));
     Tcl_SetChannelOption(interp, statePtr->self, "-encoding", Tcl_DStringValue(&upperChannelEncoding));
     Tcl_SetChannelOption(interp, statePtr->self, "-eofchar", Tcl_DStringValue(&upperChannelEOFChar));
@@ -1445,7 +1442,6 @@ ImportObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const
      * SSL Callbacks
      */
     SSL_set_app_data(statePtr->ssl, (void *)statePtr);	/* point back to us */
-
     SSL_set_verify(statePtr->ssl, verify, VerifyCallback);
     SSL_set_info_callback(statePtr->ssl, InfoCallback);
 
@@ -1537,7 +1533,9 @@ ImportObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const
  */
 static int
 UnimportObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
-    Tcl_Channel chan;		/* The channel to set a mode on. */
+    Tcl_Channel chan, child;	/* The stacked and underlying channels */
+    Tcl_DString upperChannelTranslation, upperChannelBlocking, upperChannelEncoding, upperChannelEOFChar;
+    int res = TCL_OK;
     (void) clientData;
 
     dprintf("Called");
@@ -1547,6 +1545,7 @@ UnimportObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *con
 	return TCL_ERROR;
     }
 
+    /* Validate channel name */
     chan = Tcl_GetChannel(interp, Tcl_GetString(objv[1]), NULL);
     if (chan == (Tcl_Channel) NULL) {
 	return TCL_ERROR;
@@ -1554,19 +1553,48 @@ UnimportObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *con
 
     /* Make sure to operate on the topmost channel */
     chan = Tcl_GetTopChannel(chan);
+    child = Tcl_GetStackedChannel(chan);
 
-    if (Tcl_GetChannelType(chan) != Tls_ChannelType()) {
+    /* Verify is a stacked channel */
+    if (child == NULL) {
 	Tcl_AppendResult(interp, "bad channel \"", Tcl_GetChannelName(chan),
-		"\": not a TLS channel", (char *) NULL);
+		"\": not a stacked channel", (char *) NULL);
 	    Tcl_SetErrorCode(interp, "TLS", "UNIMPORT", "CHANNEL", "INVALID", (char *) NULL);
 	return TCL_ERROR;
     }
 
-    if (Tcl_UnstackChannel(interp, chan) == TCL_ERROR) {
+    /* Flush any pending data */
+    if (Tcl_Flush(chan) != TCL_OK) {
 	return TCL_ERROR;
     }
 
-    return TCL_OK;
+    Tcl_DStringInit(&upperChannelTranslation);
+    Tcl_DStringInit(&upperChannelBlocking);
+    Tcl_DStringInit(&upperChannelEOFChar);
+    Tcl_DStringInit(&upperChannelEncoding);
+
+    /* Get current config - EOL translation, encoding and buffering options are shared between all channels in the stack */
+    Tcl_GetChannelOption(interp, chan, "-blocking", &upperChannelBlocking);
+    Tcl_GetChannelOption(interp, chan, "-encoding", &upperChannelEncoding);
+    Tcl_GetChannelOption(interp, chan, "-eofchar", &upperChannelEOFChar);
+    Tcl_GetChannelOption(interp, chan, "-translation", &upperChannelTranslation);
+
+    /* Unstack the channel and restore underlying channel config */
+    if (Tcl_UnstackChannel(interp, chan) == TCL_OK) {
+	Tcl_SetChannelOption(interp, child, "-encoding", Tcl_DStringValue(&upperChannelEncoding));
+	Tcl_SetChannelOption(interp, child, "-eofchar", Tcl_DStringValue(&upperChannelEOFChar));
+	Tcl_SetChannelOption(interp, child, "-translation", Tcl_DStringValue(&upperChannelTranslation));
+	Tcl_SetChannelOption(interp, child, "-blocking", Tcl_DStringValue(&upperChannelBlocking));
+    } else {
+	res = TCL_ERROR;
+    }
+
+    /* Clean-up */
+    Tcl_DStringFree(&upperChannelTranslation);
+    Tcl_DStringFree(&upperChannelEncoding);
+    Tcl_DStringFree(&upperChannelEOFChar);
+    Tcl_DStringFree(&upperChannelBlocking);
+    return res;
 }
 
 /*
@@ -2052,6 +2080,8 @@ StatusObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const
     if (!res) {nid = 0;}
     LAPPEND_STR(interp, objPtr, "signatureHashAlgorithm", OBJ_nid2ln(nid), -1);
 
+    /* Added in OpenSSL 1.1.1a */
+#if OPENSSL_VERSION_NUMBER > 0x10101000L
     if (objc == 2) {
 	res = SSL_get_peer_signature_type_nid(statePtr->ssl, &nid);
     } else {
@@ -2059,6 +2089,7 @@ StatusObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const
     }
     if (!res) {nid = 0;}
     LAPPEND_STR(interp, objPtr, "signatureType", OBJ_nid2ln(nid), -1);
+#endif
 
     Tcl_SetObjResult(interp, objPtr);
     return TCL_OK;
@@ -2744,6 +2775,7 @@ DLLEXPORT int Tls_Init(Tcl_Interp *interp) {
     Tcl_CreateObjCommand(interp, "::tls::import", ImportObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
     Tcl_CreateObjCommand(interp, "::tls::misc", MiscObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
     Tcl_CreateObjCommand(interp, "::tls::unimport", UnimportObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
+    Tcl_CreateObjCommand(interp, "::tls::unstack", UnimportObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
     Tcl_CreateObjCommand(interp, "::tls::status", StatusObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
 
     BuildInfoCommand(interp);
@@ -2858,31 +2890,6 @@ static int TlsLibInit(int uninitialize) {
 	| OPENSSL_INIT_ADD_ALL_CIPHERS | OPENSSL_INIT_ADD_ALL_DIGESTS, NULL);
 
     BIO_new_tcl(NULL, 0);
-
-#if 0
-    /*
-     * XXX:TODO: Remove this code and replace it with a check
-     * for enough entropy and do not try to create our own
-     * terrible entropy
-     */
-    /*
-     * Seed the random number generator in the SSL library,
-     * using the do/while construct because of the bug note in the
-     * OpenSSL FAQ at http://www.openssl.org/support/faq.html#USER1
-     *
-     * The crux of the problem is that Solaris 7 does not have a
-     * /dev/random or /dev/urandom device so it cannot gather enough
-     * entropy from the RAND_seed() when TLS initializes and refuses
-     * to go further. Earlier versions of OpenSSL carried on regardless.
-     */
-    srand((unsigned int) time((time_t *) NULL));
-    do {
-	for (i = 0; i < 16; i++) {
-	    rnd_seed[i] = 1 + (char) (255.0 * rand()/(RAND_MAX+1.0));
-	}
-	RAND_seed(rnd_seed, sizeof(rnd_seed));
-    } while (RAND_status() != 1);
-#endif
 
 #if defined(OPENSSL_THREADS) && defined(TCL_THREADS)
     Tcl_MutexUnlock(&init_mx);

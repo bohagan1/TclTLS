@@ -3,15 +3,12 @@ dnl	This file is an input file used by the GNU "autoconf" program to
 dnl	generate the file "configure", which is run during Tcl installation
 dnl	to configure the system for the local environment.
 
-#
 #-----------------------------------------------------------------------
 # This is the configure.ac for the TclTLS extension.  The only places you
 # should need to modify this file are marked by the string __CHANGE__.
 #-----------------------------------------------------------------------
 
 #-----------------------------------------------------------------------
-# Set your package name and version numbers here.
-#
 # This initializes the environment with PACKAGE_NAME and PACKAGE_VERSION
 # set as provided.  These will also be added as -D defs in your Makefile
 # so you can encode the package version directly into the source files.
@@ -62,7 +59,6 @@ TEA_PREFIX
 TEA_SETUP_COMPILER
 
 #-----------------------------------------------------------------------
-# __CHANGE__
 # Specify the C source files to compile in TEA_ADD_SOURCES,
 # public headers that need to be installed in TEA_ADD_HEADERS,
 # stub library C source files to compile in TEA_ADD_STUB_SOURCES,
@@ -77,10 +73,9 @@ TEA_ADD_INCLUDES([])
 TEA_ADD_LIBS([])
 TEA_ADD_CFLAGS([])
 TEA_ADD_STUB_SOURCES([])
-TEA_ADD_TCL_SOURCES([library/tls.tcl])
+TEA_ADD_TCL_SOURCES([library/tls.tcl license.terms README.txt])
 
 #--------------------------------------------------------------------
-#
 # You can add more files to clean if your extension creates any extra
 # files by extending CLEANFILES.
 # Add pkgIndex.tcl if it is generated in the Makefile instead of ./configure
@@ -90,13 +85,12 @@ TEA_ADD_TCL_SOURCES([library/tls.tcl])
 # TEA_ADD_* any platform specific compiler/build info here.
 #--------------------------------------------------------------------
 
-CONFIG_CLEAN_FILES="$CONFIG_CLEAN_FILES tls.tcl.h.* config.log config.status Makefile pkgIndex.tcl tcltls.a.linkadd tcltls.syms"
+TEA_ADD_CLEANFILES([pkgIndex.tcl generic/tls.tcl.h tlsUuid.h])
+
 if test "${TEA_PLATFORM}" = "windows" ; then
-    AC_DEFINE(BUILD_tls)
-    AC_DEFINE(WINDOWS)
-    CLEANFILES="pkgIndex.tcl *.lib *.dll *.exp *.ilk *.pdb vc*.pch"
+    TEA_ADD_CLEANFILES([*.lib *.dll *.exp *.ilk *.pdb vc*.pch])
 else
-    CLEANFILES="pkgIndex.tcl *.so"
+    TEA_ADD_CLEANFILES([*.so])
 fi
 AC_SUBST(CLEANFILES)
 
