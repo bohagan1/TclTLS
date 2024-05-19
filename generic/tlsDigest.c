@@ -875,56 +875,6 @@ static int DigestChannelHandler(Tcl_Interp *interp, const char *channel, Tcl_Obj
     return TCL_OK;
 }
 
-/*
- *----------------------------------------------------------------------
- *
- * Unstack Channel --
- *
- *	This function removes the stacked channel from the top of the
- *	channel stack if it is a digest channel.
- *
- * Returns:
- *	TCL_OK or TCL_ERROR
- *
- * Side effects:
- *	Removes transform from channel or sets result to error message.
- *
- *----------------------------------------------------------------------
- */
-static int DigestUnstackObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
-    Tcl_Channel chan;
-    int mode; /* OR-ed combination of TCL_READABLE and TCL_WRITABLE  */
-    (void) clientData;
-
-    dprintf("Called");
-
-    /* Validate arg count */
-    if (objc != 2) {
-	Tcl_WrongNumArgs(interp, 1, objv, "channelId");
-	return TCL_ERROR;
-    }
-
-    /* Get channel */
-    chan = Tcl_GetChannel(interp, Tcl_GetString(objv[1]), &mode);
-    if (chan == (Tcl_Channel) NULL) {
-	return TCL_ERROR;
-    }
-
-    /* Make sure to operate on the topmost channel */
-    chan = Tcl_GetTopChannel(chan);
-
-    /* Check if digest channel */
-    if (Tcl_GetChannelType(chan) != &digestChannelType) {
-	Tcl_AppendResult(interp, "bad channel \"", Tcl_GetChannelName(chan),
-	    "\": not a digest channel", (char *) NULL);
-	Tcl_SetErrorCode(interp, "TLS", "UNSTACK", "CHANNEL", "INVALID", (char *) NULL);
-	return TCL_ERROR;
-    }
-
-    /* Pop transform from channel */
-    return Tcl_UnstackChannel(interp, chan);
-}
-
 /*******************************************************************/
 
 /*
@@ -1491,7 +1441,6 @@ int Tls_DigestCommands(Tcl_Interp *interp) {
     Tcl_CreateObjCommand(interp, "::tls::sha1", SHA1ObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
     Tcl_CreateObjCommand(interp, "::tls::sha256", SHA256ObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
     Tcl_CreateObjCommand(interp, "::tls::sha512", SHA512ObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
-    Tcl_CreateObjCommand(interp, "::tls::unstack", DigestUnstackObjCmd, (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
     return TCL_OK;
 }
 
