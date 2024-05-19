@@ -924,10 +924,8 @@ int EncryptInstanceObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, T
 
     /* Allocate storage for result. Size should be data size + block size. */
     resultObj = Tcl_NewObj();
-    out_buf = Tcl_SetByteArrayLength(resultObj, data_len+EVP_MAX_BLOCK_LENGTH);
-    if (resultObj == NULL || out_buf == NULL) {
+    if (resultObj == NULL) {
 	Tcl_AppendResult(interp, "Memory allocation error", (char *) NULL);
-	Tcl_DecrRefCount(resultObj);
 	return TCL_ERROR;
     }
 
@@ -938,7 +936,14 @@ int EncryptInstanceObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, T
 	    data = Tcl_GetByteArrayFromObj(objv[2], &data_len);
 	} else {
 	    Tcl_WrongNumArgs(interp, 1, objv, "update data");
+	    return TCL_ERROR;
+	}
+
+	/* Allocate output buffer */
+	out_buf = Tcl_SetByteArrayLength(resultObj, data_len+EVP_MAX_BLOCK_LENGTH);
+	if (data == NULL || out_buf == NULL) {
 	    Tcl_DecrRefCount(resultObj);
+	    Tcl_AppendResult(interp, "Memory allocation error", (char *) NULL);
 	    return TCL_ERROR;
 	}
 
@@ -952,6 +957,14 @@ int EncryptInstanceObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, T
 	}
 
     } else {
+	/* Allocate output buffer */
+	out_buf = Tcl_SetByteArrayLength(resultObj, EVP_MAX_BLOCK_LENGTH);
+	if (out_buf == NULL) {
+	    Tcl_DecrRefCount(resultObj);
+	    Tcl_AppendResult(interp, "Memory allocation error", (char *) NULL);
+	    return TCL_ERROR;
+	}
+
 	/* Finalize function */
 	if (EncryptFinalize(interp, statePtr->type, statePtr->ctx, out_buf, &out_len) == TCL_OK) {
 	    out_buf = Tcl_SetByteArrayLength(resultObj, (Tcl_Size) out_len);
@@ -1109,7 +1122,8 @@ done:
  *
  * EncryptFileHandler --
  *
- *	Perform encryption function on a block of data and return result.
+ *	Perform encryption function on a block of data, write it to a
+ *	file, then return the result.
  *
  * Returns:
  *	TCL_OK or TCL_ERROR
