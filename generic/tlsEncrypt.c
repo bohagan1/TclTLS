@@ -310,6 +310,8 @@ int EncryptFinalize(Tcl_Interp *interp, int type, EVP_CIPHER_CTX *ctx, unsigned 
 static int EncryptBlockModeProc(ClientData clientData, int mode) {
     EncryptState *statePtr = (EncryptState *) clientData;
 
+    dprintf("Called");
+
     if (mode == TCL_MODE_NONBLOCKING) {
 	statePtr->flags |= TLS_TCL_ASYNC;
     } else {
@@ -337,6 +339,8 @@ static int EncryptBlockModeProc(ClientData clientData, int mode) {
  */
 int EncryptCloseProc(ClientData clientData, Tcl_Interp *interp) {
     EncryptState *statePtr = (EncryptState *) clientData;
+
+    dprintf("Called");
 
     /* Cancel active timer, if any */
     if (statePtr->timer != (Tcl_TimerToken) NULL) {
@@ -374,6 +378,8 @@ int EncryptCloseProc(ClientData clientData, Tcl_Interp *interp) {
  * Same as EncryptCloseProc but with individual read and write close control
  */
 static int EncryptClose2Proc(ClientData instanceData, Tcl_Interp *interp, int flags) {
+    dprintf("Called");
+
     if ((flags & (TCL_CLOSE_READ | TCL_CLOSE_WRITE)) == 0) {
 	return EncryptCloseProc(instanceData, interp);
     }
@@ -405,6 +411,8 @@ int EncryptInputProc(ClientData clientData, char *buf, int toRead, int *errorCod
     *errorCodePtr = 0;
     char *in_buf;
     
+    dprintf("Called");
+
     /* Abort if nothing to process */
     if (toRead <= 0 || statePtr->self == (Tcl_Channel) NULL) {
 	return 0;
@@ -418,7 +426,8 @@ int EncryptInputProc(ClientData clientData, char *buf, int toRead, int *errorCod
     /* Update function */
     if (read > 0) {
 	/* Have data - Update function */
-	if (EncryptUpdate(statePtr->interp, statePtr->type, statePtr->ctx, (unsigned char *) buf, &out_len, (unsigned char *) in_buf, read) == TCL_OK) {
+	if (EncryptUpdate(statePtr->interp, statePtr->type, statePtr->ctx, (unsigned char *) buf,
+		&out_len, (unsigned char *) in_buf, read) == TCL_OK) {
 	    /* If have data, put in buf, otherwise tell TCL to try again */
 	    if (out_len > 0) {
 		read = (Tcl_Size) out_len;
@@ -475,6 +484,8 @@ int EncryptInputProc(ClientData clientData, char *buf, int toRead, int *errorCod
     *errorCodePtr = 0;
     char *out_buf;
 
+    dprintf("Called");
+
     /* Abort if nothing to process */
     if (toWrite <= 0 || statePtr->self == (Tcl_Channel) NULL) {
 	return 0;
@@ -483,7 +494,8 @@ int EncryptInputProc(ClientData clientData, char *buf, int toRead, int *errorCod
     out_buf = Tcl_Alloc((Tcl_Size) toWrite+EVP_MAX_BLOCK_LENGTH);
 
     /* Update function */
-    if (EncryptUpdate(statePtr->interp, statePtr->type, statePtr->ctx, (unsigned char *) out_buf, &out_len, (unsigned char *) buf, (Tcl_Size) toWrite) == TCL_OK) {
+    if (EncryptUpdate(statePtr->interp, statePtr->type, statePtr->ctx, (unsigned char *) out_buf,
+	    &out_len, (unsigned char *) buf, (Tcl_Size) toWrite) == TCL_OK) {
 	/* If have data, output it, otherwise tell TCL to try again */
 	if (out_len > 0) {
 	    Tcl_Channel parent = Tcl_GetStackedChannel(statePtr->self);
@@ -525,6 +537,8 @@ static int EncryptSetOptionProc(ClientData clientData, Tcl_Interp *interp, const
     Tcl_Channel parent;
     Tcl_DriverSetOptionProc *setOptionProc;
 
+    dprintf("Called");
+
     /* Abort if no channel */
     if (statePtr->self == (Tcl_Channel) NULL) {
 	return TCL_ERROR;
@@ -563,6 +577,8 @@ static int EncryptGetOptionProc(ClientData clientData, Tcl_Interp *interp, const
     Tcl_Channel parent;
     Tcl_DriverGetOptionProc *getOptionProc;
 
+    dprintf("Called");
+
     /* Abort if no channel */
     if (statePtr->self == (Tcl_Channel) NULL) {
 	return TCL_ERROR;
@@ -600,6 +616,8 @@ static int EncryptGetOptionProc(ClientData clientData, Tcl_Interp *interp, const
 static void EncryptTimerHandler(ClientData clientData) {
     EncryptState *statePtr = (EncryptState *) clientData;
 
+    dprintf("Called");
+
     /* Abort if no channel */
     if (statePtr->self == (Tcl_Channel) NULL) {
 	return;
@@ -633,6 +651,8 @@ void EncryptWatchProc(ClientData clientData, int mask) {
     EncryptState *statePtr = (EncryptState *) clientData;
     Tcl_Channel parent;
     Tcl_DriverWatchProc *watchProc;
+
+    dprintf("Called");
 
     /* Abort if no channel */
     if (statePtr->self == (Tcl_Channel) NULL) {
@@ -681,6 +701,8 @@ int EncryptGetHandleProc(ClientData clientData, int direction, ClientData *handl
     EncryptState *statePtr = (EncryptState *) clientData;
     Tcl_Channel parent;
 
+    dprintf("Called");
+
     /* Abort if no channel */
     if (statePtr->self == (Tcl_Channel) NULL) {
 	return TCL_ERROR;
@@ -707,6 +729,8 @@ int EncryptGetHandleProc(ClientData clientData, int direction, ClientData *handl
  */
 int EncryptNotifyProc(ClientData clientData, int interestMask) {
     EncryptState *statePtr = (EncryptState *) clientData;
+
+    dprintf("Called");
 
     /* Skip timer event as redundant */
     if (statePtr->timer != (Tcl_TimerToken) NULL) {
@@ -960,6 +984,8 @@ int EncryptInstanceObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, T
  */
 void EncryptCommandDeleteHandler(ClientData clientData) {
     EncryptState *statePtr = (EncryptState *) clientData;
+
+    dprintf("Called");
 
     /* Clean-up */
     EncryptStateFree(statePtr);

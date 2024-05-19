@@ -377,6 +377,8 @@ int DigestFinalize(Tcl_Interp *interp, DigestState *statePtr, Tcl_Obj **resultOb
 static int DigestBlockModeProc(ClientData clientData, int mode) {
     DigestState *statePtr = (DigestState *) clientData;
 
+    dprintf("Called");
+
     if (mode == TCL_MODE_NONBLOCKING) {
 	statePtr->flags |= TLS_TCL_ASYNC;
     } else {
@@ -404,6 +406,8 @@ static int DigestBlockModeProc(ClientData clientData, int mode) {
  */
 int DigestCloseProc(ClientData clientData, Tcl_Interp *interp) {
     DigestState *statePtr = (DigestState *) clientData;
+
+    dprintf("Called");
 
     /* Cancel active timer, if any */
     if (statePtr->timer != (Tcl_TimerToken) NULL) {
@@ -438,6 +442,8 @@ int DigestCloseProc(ClientData clientData, Tcl_Interp *interp) {
  */
 static int DigestClose2Proc(ClientData instanceData, Tcl_Interp *interp, int flags) {
 
+    dprintf("Called");
+
     if ((flags & (TCL_CLOSE_READ | TCL_CLOSE_WRITE)) == 0) {
 	return DigestCloseProc(instanceData, interp);
     }
@@ -466,6 +472,8 @@ int DigestInputProc(ClientData clientData, char *buf, int toRead, int *errorCode
     Tcl_Channel parent;
     Tcl_Size read;
     *errorCodePtr = 0;
+
+    dprintf("Called");
 
     /* Abort if nothing to process */
     if (toRead <= 0 || statePtr->self == (Tcl_Channel) NULL) {
@@ -531,6 +539,8 @@ int DigestInputProc(ClientData clientData, char *buf, int toRead, int *errorCode
     DigestState *statePtr = (DigestState *) clientData;
     *errorCodePtr = 0;
 
+    dprintf("Called");
+
     /* Abort if nothing to process */
     if (toWrite <= 0 || statePtr->self == (Tcl_Channel) NULL) {
 	return 0;
@@ -566,6 +576,8 @@ static int DigestSetOptionProc(ClientData clientData, Tcl_Interp *interp, const 
     DigestState *statePtr = (DigestState *) clientData;
     Tcl_Channel parent;
     Tcl_DriverSetOptionProc *setOptionProc;
+
+    dprintf("Called");
 
     /* Abort if no channel */
     if (statePtr->self == (Tcl_Channel) NULL) {
@@ -605,6 +617,8 @@ static int DigestGetOptionProc(ClientData clientData, Tcl_Interp *interp, const 
     Tcl_Channel parent;
     Tcl_DriverGetOptionProc *getOptionProc;
 
+    dprintf("Called");
+
     /* Abort if no channel */
     if (statePtr->self == (Tcl_Channel) NULL) {
 	return TCL_ERROR;
@@ -642,6 +656,8 @@ static int DigestGetOptionProc(ClientData clientData, Tcl_Interp *interp, const 
 static void DigestTimerHandler(ClientData clientData) {
     DigestState *statePtr = (DigestState *) clientData;
 
+    dprintf("Called");
+
     /* Abort if no channel */
     if (statePtr->self == (Tcl_Channel) NULL) {
 	return;
@@ -675,6 +691,8 @@ void DigestWatchProc(ClientData clientData, int mask) {
     DigestState *statePtr = (DigestState *) clientData;
     Tcl_Channel parent;
     Tcl_DriverWatchProc *watchProc;
+
+    dprintf("Called");
 
     /* Abort if no channel */
     if (statePtr->self == (Tcl_Channel) NULL) {
@@ -723,6 +741,8 @@ int DigestGetHandleProc(ClientData clientData, int direction, ClientData *handle
     DigestState *statePtr = (DigestState *) clientData;
     Tcl_Channel parent;
 
+    dprintf("Called");
+
     /* Abort if no channel */
     if (statePtr->self == (Tcl_Channel) NULL) {
 	return TCL_ERROR;
@@ -749,6 +769,8 @@ int DigestGetHandleProc(ClientData clientData, int direction, ClientData *handle
  */
 int DigestNotifyProc(ClientData clientData, int interestMask) {
     DigestState *statePtr = (DigestState *) clientData;
+
+    dprintf("Called");
 
     /* Skip timer event as redundant */
     if (statePtr->timer != (Tcl_TimerToken) NULL) {
@@ -984,6 +1006,8 @@ int DigestInstanceObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tc
  */
 void DigestCommandDeleteHandler(ClientData clientData) {
     DigestState *statePtr = (DigestState *) clientData;
+
+    dprintf("Called");
 
     /* Clean-up */
     DigestStateFree(statePtr);
