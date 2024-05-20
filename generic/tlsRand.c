@@ -1,7 +1,7 @@
 /*
- * Key Derivation Function (KDF) Module
+ * Random Data Module
  *
- * Provides commands to derive keys.
+ * Provides commands to generate sequence of random data.
  *
  * Copyright (C) 2023 Brian O'Hagan
  *
