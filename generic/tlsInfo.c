@@ -224,7 +224,7 @@ int CipherInfo(Tcl_Interp *interp, Tcl_Obj *nameObj) {
 
 done:
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
-    EVP_CIPHER_free(cipher);
+    EVP_CIPHER_free((EVP_CIPHER *) cipher);
 #endif
     return res;
 }
@@ -554,7 +554,7 @@ int DigestInfo(Tcl_Interp *interp, Tcl_Obj *nameObj) {
 
 done:
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
-    EVP_MD_free(md);
+    EVP_MD_free((EVP_MD *) md);
 #endif
     return res;
 }
