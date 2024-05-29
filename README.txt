@@ -7,7 +7,7 @@ This package provides an extension which implements Secure Socket Layer (SSL)
 and Transport Layer Security (TLS) over Transmission Control Protocol (TCP)
 network communication channels. It utilizes either the OpenSSL or LibreSSL
 software library.
- 
+
 Version 1.9 also provides a cryptography library providing TCL scripts access
 to the crypto capabilities of the OpenSSL library.
 

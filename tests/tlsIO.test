@@ -5,7 +5,7 @@
 # generates output for errors.  No output means no errors were found.
 #
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
-# Copyright (c) 1998-2000 Ajuba Solutions. 
+# Copyright (c) 1998-2000 Ajuba Solutions.
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -14,46 +14,46 @@
 
 # Running socket tests with a remote server:
 # ------------------------------------------
-# 
+#
 # Some tests in socket.test depend on the existence of a remote server to
 # which they connect. The remote server must be an instance of tcltest and it
 # must run the script found in the file "remote.tcl" in this directory. You
 # can start the remote server on any machine reachable from the machine on
 # which you want to run the socket tests, by issuing:
-# 
+#
 #     tcltest remote.tcl -port 8048	# Or choose another port number.
-# 
+#
 # If the machine you are running the remote server on has several IP
 # interfaces, you can choose which interface the server listens on for
 # connections by specifying the -address command line flag, so:
-# 
+#
 #     tcltest remote.tcl -address your.machine.com
-# 
+#
 # These options can also be set by environment variables. On Unix, you can
 # type these commands to the shell from which the remote server is started:
-# 
+#
 #     shell% setenv serverPort 8048
 #     shell% setenv serverAddress your.machine.com
-# 
+#
 # and subsequently you can start the remote server with:
-# 
+#
 #     tcltest remote.tcl
-# 
+#
 # to have it listen on port 8048 on the interface your.machine.com.
-#     
+#
 # When the server starts, it prints out a detailed message containing its
 # configuration information, and it will block until killed with a Ctrl-C.
 # Once the remote server exists, you can run the tests in socket.test with
 # the server by setting two Tcl variables:
-# 
+#
 #     % set remoteServerIP <name or address of machine on which server runs>
 #     % set remoteServerPort 8048
-# 
+#
 # These variables are also settable from the environment. On Unix, you can:
-# 
+#
 #     shell% setenv remoteServerIP machine.where.server.runs
 #     shell% setenv remoteServerPort 8048
-# 
+#
 # The preamble of the socket.test file checks to see if the variables are set
 # either in Tcl or in the environment; if they are, it attempts to connect to
 # the server. If the connection is successful, the tests using the remote
@@ -568,7 +568,7 @@ test tlsIO-2.8 {echo server, loop 50 times, single connection} {socket stdio} {
                  global x
                  close $s
                  set x done
-             } else { 
+             } else {
 	         incr i
                  puts $s $l
              }
@@ -1231,7 +1231,7 @@ test tlsIO-9.3 {testing EOF stickyness} {unexplainedFailure socket} {
 	set done true
 	set count {timer went off, eof is not sticky}
 	close $c
-    }	
+    }
     set count 0
     set done false
     proc write_then_close {s} {
@@ -1466,7 +1466,7 @@ test tlsIO-11.7 {server with several clients} {socket doTestsWithRemoteServer} {
     close $s3
     sendCommand {close $socket10_9_test_server}
     set i
-} 100    
+} 100
 
 test tlsIO-11.8 {client with several servers} {socket doTestsWithRemoteServer} {
     sendCertValues
@@ -1943,7 +1943,7 @@ test tlsIO-13.1 {Testing use of shared socket between two threads} \
                  global x
                  close $s
                  set x done
-             } else { 
+             } else {
 	         incr i
                  puts $s $l
              }
@@ -1955,11 +1955,11 @@ test tlsIO-13.1 {Testing use of shared socket between two threads} \
 	# thread cleans itself up.
 	testthread exit
     } script
-    
+
     # create a thread
     set serverthread [testthread create { source script } ]
     update
-    
+
     after 1000
     set s [tls::socket 127.0.0.1 8828]
     fconfigure $s -buffering line
@@ -1973,7 +1973,7 @@ test tlsIO-13.1 {Testing use of shared socket between two threads} \
 
     after 2000
     lappend result [threadReap]
-    
+
     set result
 
 } {hello 1}
@@ -2031,12 +2031,12 @@ test tls-bug58-1.0 {test protocol negotiation failure} {socket} {
     proc Accept {sock args} {
         fconfigure $sock -blocking 0;
         fileevent $sock readable [list Handshake $sock]
-    } 
+    }
     proc Handshake {sock} {
         set ::done HAND
         catch {tls::handshake $sock} msg
         set ::done $msg
-    } 
+    }
     # NOTE: when doing an in-process client/server test, both sides need
     # to be non-blocking for the TLS handshake
 

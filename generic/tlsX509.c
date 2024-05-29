@@ -517,7 +517,7 @@ Tls_NewX509Obj(Tcl_Interp *interp, X509 *cert) {
 	its signer (the CA). RFC 5280 section 4.2.1.1, NID_authority_key_identifier */
     LAPPEND_OBJ(interp, certPtr, "authorityKeyIdentifier",
 	Tls_x509Identifier(X509_get0_authority_key_id(cert)));
- 
+
     /* Subject Key Identifier (SKI) is used to identify certificates that contain
 	a particular public key. RFC 5280 section 4.2.1.2, NID_subject_key_identifier */
     LAPPEND_OBJ(interp, certPtr, "subjectKeyIdentifier",

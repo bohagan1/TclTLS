@@ -410,7 +410,7 @@ int EncryptInputProc(ClientData clientData, char *buf, int toRead, int *errorCod
     Tcl_Size read;
     *errorCodePtr = 0;
     char *in_buf;
-    
+
     dprintf("Called");
 
     /* Abort if nothing to process */

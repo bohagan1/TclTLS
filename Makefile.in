@@ -237,7 +237,7 @@ install-libraries: libraries
 # Install documentation.  Unix manpages should go in the $(mandir)
 # directory.
 #========================================================================
- 
+
 install-doc-html: doc
 	@$(INSTALL_DATA_DIR) "$(DESTDIR)$(pkglibdir)/html"
 	@list='$(srcdir)/doc/*.html'; for i in $$list; do \

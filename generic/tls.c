@@ -45,7 +45,7 @@
 
 static SSL_CTX *CTX_Init(State *statePtr, int isServer, int proto, char *key,
 		char *certfile, unsigned char *key_asn1, unsigned char *cert_asn1,
-		int key_asn1_len, int cert_asn1_len, char *CApath, char *CAfile,
+		Tcl_Size key_asn1_len, Tcl_Size cert_asn1_len, char *CApath, char *CAfile,
 		char *ciphers, char *ciphersuites, int level, char *DHparams);
 
 static int	TlsLibInit(int uninitialize);
@@ -159,7 +159,7 @@ InfoCallback(const SSL *ssl, int where, int ret) {
     State *statePtr = (State*)SSL_get_app_data((SSL *)ssl);
     Tcl_Interp *interp	= statePtr->interp;
     Tcl_Obj *cmdPtr;
-    char *major, *minor;
+    const char *major, *minor;
 
     dprintf("Called");
 
@@ -428,7 +428,7 @@ VerifyCallback(int ok, X509_STORE_CTX *ctx) {
  *-------------------------------------------------------------------
  */
 void
-Tls_Error(State *statePtr, char *msg) {
+Tls_Error(State *statePtr, const char *msg) {
     Tcl_Interp *interp	= statePtr->interp;
     Tcl_Obj *cmdPtr, *listPtr;
     unsigned long err;
@@ -1291,8 +1291,8 @@ ImportObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const
 	}
 	ctx = ((State *)Tcl_GetChannelInstanceData(chan))->ctx;
     } else {
-	if ((ctx = CTX_Init(statePtr, server, proto, keyfile, certfile, key, cert, (int) key_len,
-	    (int) cert_len, CApath, CAfile, ciphers, ciphersuites, level, DHparams)) == NULL) {
+	if ((ctx = CTX_Init(statePtr, server, proto, keyfile, certfile, key, cert, key_len,
+	    cert_len, CApath, CAfile, ciphers, ciphersuites, level, DHparams)) == NULL) {
 	    Tls_Free((tls_free_type *) statePtr);
 	    return TCL_ERROR;
 	}
@@ -1612,7 +1612,7 @@ UnimportObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *con
  */
 static SSL_CTX *
 CTX_Init(State *statePtr, int isServer, int proto, char *keyfile, char *certfile,
-    unsigned char *key, unsigned char *cert, int key_len, int cert_len, char *CApath,
+    unsigned char *key, unsigned char *cert, Tcl_Size key_len, Tcl_Size cert_len, char *CApath,
     char *CAfile, char *ciphers, char *ciphersuites, int level, char *DHparams) {
     Tcl_Interp *interp = statePtr->interp;
     SSL_CTX *ctx = NULL;
@@ -1845,7 +1845,7 @@ CTX_Init(State *statePtr, int isServer, int proto, char *keyfile, char *certfile
 
     } else if (cert != NULL) {
 	load_private_key = 1;
-	if (SSL_CTX_use_certificate_ASN1(ctx, cert_len, cert) <= 0) {
+	if (SSL_CTX_use_certificate_ASN1(ctx, (int) cert_len, cert) <= 0) {
 	    Tcl_AppendResult(interp, "unable to set certificate: ",
 		GET_ERR_REASON(), (char *) NULL);
 	    SSL_CTX_free(ctx);
@@ -1889,7 +1889,7 @@ CTX_Init(State *statePtr, int isServer, int proto, char *keyfile, char *certfile
 	    Tcl_DStringFree(&ds);
 
 	} else if (key != NULL) {
-	    if (SSL_CTX_use_PrivateKey_ASN1(EVP_PKEY_RSA, ctx, key,key_len) <= 0) {
+	    if (SSL_CTX_use_PrivateKey_ASN1(EVP_PKEY_RSA, ctx, key, (int) key_len) <= 0) {
 		/* flush the passphrase which might be left in the result */
 		Tcl_SetResult(interp, NULL, TCL_STATIC);
 		Tcl_AppendResult(interp, "unable to set public key: ", GET_ERR_REASON(), (char *) NULL);
@@ -2327,7 +2327,6 @@ static int ConnectionInfoObjCmd(ClientData clientData, Tcl_Interp *interp, int o
     }
     LAPPEND_OBJ(interp, objPtr, "caList", listPtr);
     LAPPEND_INT(interp, objPtr, "caListCount", sk_X509_NAME_num(ca_list));
-
 
     Tcl_SetObjResult(interp, objPtr);
     return TCL_OK;
@@ -2810,6 +2809,7 @@ DLLEXPORT int Tls_Init(Tcl_Interp *interp) {
  *
  *------------------------------------------------------*
  */
+
 DLLEXPORT int Tls_SafeInit(Tcl_Interp *interp) {
     dprintf("Called");
     return Tls_Init(interp);
@@ -2832,6 +2832,7 @@ DLLEXPORT int Tls_SafeInit(Tcl_Interp *interp) {
  *
  *------------------------------------------------------*
  */
+
 static int TlsLibInit(int uninitialize) {
     static int initialized = 0;
     int status = TCL_OK;

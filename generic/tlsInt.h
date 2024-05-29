@@ -189,7 +189,7 @@ typedef struct State {
 	unsigned char *protos;	/* List of supported protocols in protocol format */
 	unsigned int protos_len; /* Length of protos */
 
-	char *err;
+	const char *err;
 } State;
 
 #ifdef USE_TCL_STUBS
@@ -212,7 +212,7 @@ Tcl_Channel     Tls_GetParent(State *statePtr, int maskFlags);
 
 Tcl_Obj         *Tls_NewX509Obj(Tcl_Interp *interp, X509 *cert);
 Tcl_Obj		*Tls_NewCAObj(Tcl_Interp *interp, const SSL *ssl, int peer);
-void            Tls_Error(State *statePtr, char *msg);
+void            Tls_Error(State *statePtr, const char *msg);
 void            Tls_Free(tls_free_type *blockPtr);
 void            Tls_Clean(State *statePtr);
 int             Tls_WaitForConnect(State *statePtr, int *errorCodePtr, int handshakeFailureIsPermanent);

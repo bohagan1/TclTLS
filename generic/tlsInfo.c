@@ -210,7 +210,7 @@ int CipherInfo(Tcl_Interp *interp, Tcl_Obj *nameObj) {
 	EVP_CIPHER_CTX_free(ctx);
 	LAPPEND_INT(interp, resultObj, "tag_length", tag_len);
     }
-    
+
     /* AEAD properties */
     {
 	int aad_len = 0;
@@ -444,7 +444,7 @@ static int CiphersObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tc
 		/* cipher name or (NONE) */
 		cp = SSL_CIPHER_get_name(c);
 		if (cp == NULL) break;
-		Tcl_ListObjAppendElement(interp, resultObj, Tcl_NewStringObj((char *) cp, -1));
+		Tcl_ListObjAppendElement(interp, resultObj, Tcl_NewStringObj(cp, -1));
 	    }
 
 	} else {

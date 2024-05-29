@@ -12,7 +12,7 @@ package require http
 # Initialize context
 #
 #tls::init -certfile client.pem -cafile server.pem -ssl2 1 -ssl3 1 -tls1 0 ;#-cipher RC4-MD5
-tls::init -cafile server.pem 
+tls::init -cafile server.pem
 #
 # Register with http module
 #

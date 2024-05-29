@@ -1388,7 +1388,7 @@ static int MACObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Ob
     Tcl_DecrRefCount(digestObj);
     return res;
 }
- 
+
 int MD4ObjCmd(ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]) {
     (void) clientData;
     return TemplateCmd(interp, objc, objv, "md4", HEX_FORMAT | TYPE_MD);

@@ -12,6 +12,15 @@ AC_DEFUN([TCLTLS_SSL_OPENSSL], [
 	dnl Determine if pkg-config tool is available
 	AC_CHECK_TOOL([PKG_CONFIG], [pkg-config])
 
+	dnl Enable support for SSL 3.0 protocol
+	AC_ARG_ENABLE([ssl3], AS_HELP_STRING([--disable-ssl3], [disable SSL3 protocol]), [
+		if test "${enableval}" == "no"; then
+			AC_DEFINE([NO_SSL3], [1], [Disable SSL3 protocol])
+			AC_MSG_CHECKING([for disable SSL3 protocol])
+			AC_MSG_RESULT([yes])
+		fi
+	], AC_DEFINE([NO_SSL3], [1], [Disable SSL3 protocol]))
+
 	dnl Disable support for TLS 1.0 protocol
 	AC_ARG_ENABLE([tls1], AS_HELP_STRING([--disable-tls1], [disable TLS1 protocol]), [
 		if test "${enableval}" == "no"; then

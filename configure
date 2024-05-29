@@ -768,6 +768,7 @@ enable_64bit
 enable_64bit_vis
 enable_rpath
 enable_symbols
+enable_ssl3
 enable_tls1
 enable_tls1_1
 enable_tls1_2
@@ -1418,6 +1419,7 @@ Optional Features:
   --enable-64bit-vis      enable 64bit Sparc VIS support (default: off)
   --disable-rpath         disable rpath support (default: on)
   --enable-symbols        build with debugging symbols (default: off)
+  --disable-ssl3          disable SSL3 protocol
   --disable-tls1          disable TLS1 protocol
   --disable-tls1_1        disable TLS1.1 protocol
   --disable-tls1_2        disable TLS1.2 protocol
@@ -9277,6 +9279,28 @@ esac
   fi
 else
   PKG_CONFIG="$ac_cv_prog_PKG_CONFIG"
+fi
+
+
+		# Check whether --enable-ssl3 was given.
+if test ${enable_ssl3+y}
+then :
+  enableval=$enable_ssl3;
+		if test "${enableval}" == "no"; then
+
+printf "%s\n" "#define NO_SSL3 1" >>confdefs.h
+
+			{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for disable SSL3 protocol" >&5
+printf %s "checking for disable SSL3 protocol... " >&6; }
+			{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+printf "%s\n" "yes" >&6; }
+		fi
+
+else case e in #(
+  e)
+printf "%s\n" "#define NO_SSL3 1" >>confdefs.h
+ ;;
+esac
 fi
 
 

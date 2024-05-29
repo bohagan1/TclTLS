@@ -18,7 +18,7 @@ proc reflectCB {chan {verbose 0}} {
 	catch {close $chan}
 	return
     }
-	
+
     if {$verbose && $data != ""} {
 	puts -nonewline stderr $data
     }

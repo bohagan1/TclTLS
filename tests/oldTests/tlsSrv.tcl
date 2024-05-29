@@ -19,7 +19,7 @@ proc reflectCB {chan {verbose 0}} {
 	catch {close $chan}
 	return
     }
-	
+
     if {$verbose && $data != ""} {
 	puts -nonewline stderr $data
     }
@@ -44,9 +44,9 @@ proc acceptCB { chan ip port } {
     fconfigure $chan -buffering none -blocking 0
     fileevent $chan readable [list reflectCB $chan 1]
 }
-#tls::init -cafile server.pem -certfile server.pem 
+#tls::init -cafile server.pem -certfile server.pem
 tls::init -cafile server.pem
-#tls::init 
+#tls::init
 
 set chan [tls::socket -server acceptCB \
 		-request 1 -require 0 1234]
