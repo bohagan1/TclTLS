@@ -51,17 +51,19 @@
  * Backwards compatibility for size type change
  */
 #if TCL_MAJOR_VERSION < 9 && TCL_MINOR_VERSION < 7
-    #include <limits.h>
-    #define TCL_SIZE_MAX INT_MAX
+#include <limits.h>
+#ifndef TCL_SIZE_MAX
+#define TCL_SIZE_MAX INT_MAX
+#endif
 
-    #ifndef Tcl_Size
-        typedef int Tcl_Size;
-    #endif
+#ifndef Tcl_Size
+    typedef int Tcl_Size;
+#endif
 
-    #define TCL_SIZE_MODIFIER ""
-    #define Tcl_GetSizeIntFromObj Tcl_GetIntFromObj
-    #define Tcl_NewSizeIntObj     Tcl_NewIntObj
-    #define Tcl_NewSizeIntFromObj Tcl_NewWideIntObj
+#define TCL_SIZE_MODIFIER ""
+#define Tcl_GetSizeIntFromObj Tcl_GetIntFromObj
+#define Tcl_NewSizeIntObj     Tcl_NewIntObj
+#define Tcl_NewSizeIntFromObj Tcl_NewWideIntObj
 #endif
 
 /* Define missing POSIX error codes */

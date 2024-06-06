@@ -773,6 +773,7 @@ enable_tls1
 enable_tls1_1
 enable_tls1_2
 enable_tls1_3
+enable_debug
 enable_ssl_fastpath
 enable_hardening
 enable_static_ssl
@@ -1424,6 +1425,7 @@ Optional Features:
   --disable-tls1_1        disable TLS1.1 protocol
   --disable-tls1_2        disable TLS1.2 protocol
   --disable-tls1_3        disable TLS1.3 protocol
+  --enable-debug          enable debugging mode and output more status
   --enable-ssl-fastpath   enable using the underlying file descriptor for
                           talking directly to the SSL library
   --enable-hardening      enable hardening attempts
@@ -9177,7 +9179,7 @@ printf "%s\n" "#define TCL_MAJOR_VERSION 8" >>confdefs.h
 #--------------------------------------------------------------------
 
 
-	if test -n "$ac_tool_prefix"; then
+		if test -n "$ac_tool_prefix"; then
   # Extract the first word of "${ac_tool_prefix}pkg-config", so it can be a program name with args.
 set dummy ${ac_tool_prefix}pkg-config; ac_word=$2
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
@@ -9371,6 +9373,30 @@ printf "%s\n" "yes" >&6; }
 
 fi
 
+
+
+		# Check whether --enable-debug was given.
+if test ${enable_debug+y}
+then :
+  enableval=$enable_debug;
+		tcltls_debug_mode="$enableval"
+
+else case e in #(
+  e)
+		tcltls_debug_mode='no'
+	 ;;
+esac
+fi
+
+	if test "$tcltls_debug_mode" == 'yes'; then
+
+printf "%s\n" "#define TCLEXT_TCLTLS_DEBUG 1" >>confdefs.h
+
+	fi
+	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for debug mode" >&5
+printf %s "checking for debug mode... " >&6; }
+	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $tcltls_debug_mode" >&5
+printf "%s\n" "$tcltls_debug_mode" >&6; }
 
 
 		# Check whether --enable-ssl-fastpath was given.

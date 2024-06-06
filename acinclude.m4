@@ -58,6 +58,20 @@ AC_DEFUN([TCLTLS_SSL_OPENSSL], [
 	])
 
 
+	dnl Determine if debugging mode should be enabled
+	AC_ARG_ENABLE([debug], AS_HELP_STRING([--enable-debug],
+		[enable debugging mode and output more status]), [
+		tcltls_debug_mode="$enableval"
+	], [
+		tcltls_debug_mode='no'
+	])
+	if test "$tcltls_debug_mode" == 'yes'; then
+		AC_DEFINE(TCLEXT_TCLTLS_DEBUG, [1], [Enable debugging mode])
+	fi
+	AC_MSG_CHECKING([for debug mode])
+	AC_MSG_RESULT([$tcltls_debug_mode])
+
+
 	dnl Determine if we have been asked to use a fast path if possible
 	AC_ARG_ENABLE([ssl-fastpath], AS_HELP_STRING([--enable-ssl-fastpath],
 		[enable using the underlying file descriptor for talking directly to the SSL library]), [

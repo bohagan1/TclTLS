@@ -324,11 +324,8 @@ VPATH = $(srcdir):$(srcdir)/generic:$(srcdir)/unix:$(srcdir)/win:$(srcdir)/macos
 # Create a C-source-ified version of the script resources
 # for TclTLS so that we only need a single file to enable
 # this extension
-tls.tcl.h: @srcdir@/library/tls.tcl Makefile
-	od -A n -v -t xC < '@srcdir@/library/tls.tcl' > tls.tcl.h.new.1
-	sed 's@[^0-9A-Fa-f]@@g;s@..@0x&, @g' < tls.tcl.h.new.1 > tls.tcl.h.new.2
-	rm -f tls.tcl.h.new.1
-	mv tls.tcl.h.new.2 @srcdir@/generic/tls.tcl.h
+tls.tcl.h: $(srcdir)/library/tls.tcl
+	sed -e '/^\\s*\#/d' -e '/^\\s*$$/d' -e 's/\\/\\\\/g' -e 's/\"/\\"/g' -e 's/^/"/' -e 's/$$/\\n\"/' < `@CYGPATH@ $<` > $@ || { rm -f $@; exit 1; }
 
 $(srcdir)/manifest.uuid:
 	printf "git-" >$(srcdir)/manifest.uuid

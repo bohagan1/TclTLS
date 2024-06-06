@@ -2724,6 +2724,11 @@ BuildInfoCommand(Tcl_Interp* interp) {
     return TCL_OK;
 }
 
+/* Init script */
+static const char tlsTclInitScript[] = {
+#include "tls.tcl.h"
+};
+
 /*
  *-------------------------------------------------------------------
  *
@@ -2745,11 +2750,6 @@ BuildInfoCommand(Tcl_Interp* interp) {
 #else
 #define MIN_VERSION "8.5"
 #endif
-
-static const char tlsTclInitScript[] = {
-#include "tls.tcl.h"
-	0x00
-    };
 
 DLLEXPORT int Tls_Init(Tcl_Interp *interp) {
 

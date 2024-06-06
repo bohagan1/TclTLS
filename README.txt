@@ -62,6 +62,7 @@ options, plus:
   --disable-tls1_1        disable TLS1.1 protocol
   --disable-tls1_2        disable TLS1.2 protocol
   --disable-tls1_3        disable TLS1.3 protocol
+  --enable-debug          enable debugging mode and output more status
   --enable-ssl-fastpath   enable using the underlying file descriptor for talking directly to the SSL library
   --enable-hardening      enable hardening attempts
   --enable-static-ssl     enable static linking to the SSL library

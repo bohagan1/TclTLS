@@ -74,10 +74,24 @@ clean: default-clean
 
 realclean: default-hose
 
+# Explicit dependency rules
+$(PRJ_OBJS): $(TMP_DIR)\tls.tcl.h $(TMP_DIR)\tlsUuid.h
+
 # We must define a pkgindex target that will create a pkgIndex.tcl
 # file in the $(OUT_DIR) directory. We can just redirect to the
 # default-pkgindex target for our sample extension.
 pkgindex: default-pkgindex-tea
+
+$(TMP_DIR)\tls.tcl.h: $(LIBDIR)\tls.tcl
+	"$(TCLSH)" << $(LIBDIR)\tls.tcl >$(TMP_DIR)\tls.tcl.h
+	set in [open [lindex $$argv 0] r]
+	while {[gets $$in line] != -1} {
+	    switch -regexp -- $$line "^$$" - {^\s*#} continue
+	    regsub -all {\\} $$line {\\\\} line
+	    regsub -all {"} $$line {\"} line
+	    puts "\"$$line\\n\""
+	}
+<<
 
 # Manifest which defines fossil/git commit id for build-info command
 $(ROOT)\manifest.uuid:
@@ -107,9 +121,6 @@ install: pkgindex default-install default-install-docs-html
     if exist "$(SSL_INSTALL_FOLDER)\bin\libssl-*-x64.dll" (
         xcopy /c /y "$(SSL_INSTALL_FOLDER)\bin\libssl-*-x64.dll" "$(PRJ_INSTALL_DIR)"
     )
-
-# Explicit dependency rules
-$(GENERICDIR)\tls.c: $(TMP_DIR)\tlsUuid.h
 
 # Test package
 test: default-test
