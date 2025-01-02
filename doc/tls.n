@@ -429,7 +429,8 @@ Allow post-handshake session ticket updates\&.
 \fB-request\fR \fIbool\fR
 Request a certificate from the peer during the SSL handshake\&. This is needed
 to do Certificate Validation\&. Starting in TclTLS 1\&.8, the default is
-\fBtrue\fR\&.
+\fBtrue\fR\&. Starting in TclTLS 2\&.0, If set to \fBfalse\fR and
+\fB-require\fR is \fBtrue\fR, then this will be overridden to \fBtrue\fR\&.
 See \fBCertificate Validation\fR for more details\&.
 .TP
 \fB-require\fR \fIbool\fR
@@ -438,7 +439,8 @@ set to true, then \fB-request\fR must also be set to true and a either
 \fB-cadir\fR, \fB-cafile\fR, \fB-castore\fR, or a platform default
 must be provided in order to validate against\&. The default in TclTLS 1\&.8 and
 earlier versions is \fBfalse\fR since not all platforms have certificates to
-validate against in a form compatible with OpenSSL\&.
+validate against in a form compatible with OpenSSL\&. Starting in TclTLS 2\&.0,
+the default is \fBtrue\fR\&.
 See \fBCertificate Validation\fR for more details\&.
 .TP
 \fB-security_level\fR \fIinteger\fR
@@ -814,7 +816,9 @@ This store only supports root certificate stores\&. See
 \fB-request\fR \fIbool\fR
 Request a certificate from the peer during the SSL handshake\&. This is needed
 to do Certificate Validation\&. Starting in TclTLS 1\&.8, the default is
-\fBtrue\fR\&. In addition, the client can manually inspect and accept or reject
+\fBtrue\fR\&. Starting in TclTLS 2\&.0, If set to \fBfalse\fR and
+\fB-require\fR is \fBtrue\fR, then this will be overridden to \fBtrue\fR\&.
+In addition, the client can manually inspect and accept or reject
 each certificate using the \fI-validatecommand\fR option\&.
 .TP
 \fB-require\fR \fIbool\fR
@@ -823,7 +827,8 @@ set to true, then \fB-request\fR must also be set to true and a either
 \fB-cadir\fR, \fB-cafile\fR, \fB-castore\fR, or a platform default
 must be provided in order to validate against\&. The default in TclTLS 1\&.8 and
 earlier versions is \fBfalse\fR since not all platforms have certificates to
-validate against in a form compatible with OpenSSL\&.
+validate against in a form compatible with OpenSSL\&. Starting in TclTLS 2\&.0,
+the default is \fBtrue\fR\&.
 .PP
 .SS "WHEN ARE COMMAND LINE OPTIONS NEEDED?"
 In TclTLS 1\&.8 and earlier versions, certificate validation is
@@ -831,7 +836,8 @@ In TclTLS 1\&.8 and earlier versions, certificate validation is
 cross platform database of Certificate Authority (CA) provided certificates to
 validate against\&. Many Linux systems natively support OpenSSL and thus have
 these certificates installed as part of the OS, but MacOS and MS Windows do not\&.
-In order to use the \fB-require\fR option, one of the following
+Staring in TclTLS 2\&.0, this has been changed to require certificate validation
+by default\&. In order to use the \fB-require\fR option, one of the following
 must be true:
 .IP \(bu
 On Linux and Unix systems with OpenSSL already installed or if the CA

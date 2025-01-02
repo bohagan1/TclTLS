@@ -37,7 +37,7 @@
 #ifdef BUILD_tls
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLEXPORT
-#endif /* BUILD_udp */
+#endif /* BUILD_tls */
 
 /* Handle TCL 8.6 CONST changes */
 #ifndef CONST86
