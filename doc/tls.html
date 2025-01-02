@@ -125,7 +125,7 @@
 </ul>
 </li>
 <li class="doctools_section"><a href="#section5">Debug</a></li>
-<li class="doctools_section"><a href="#section6">HTTP Package Examples</a></li>
+<li class="doctools_section"><a href="#section6">Examples</a></li>
 <li class="doctools_section"><a href="#section7">Special Considerations</a></li>
 <li class="doctools_section"><a href="#see-also">See Also</a></li>
 <li class="doctools_section"><a href="#keywords">Keywords</a></li>
@@ -160,20 +160,19 @@ using the Transport Layer Security (TLS) protocol. It provides a generic
 binding to <a href="https://www.openssl.org/">OpenSSL</a>, utilizing the
 <b class="syscmd">Tcl_StackChannel</b> API in TCL 8.4 and higher.
 These sockets behave exactly the same as channels created using the built-in
-<b class="syscmd">socket</b> command, along with additional options for controlling
+<b class="syscmd">socket</b> command, but provide additional options for controlling
 the SSL/TLS session.</p>
 </div>
 <div id="section2" class="doctools_section"><h2><a name="section2">Commands</a></h2>
-<p>Typically one would use the <b class="cmd">tls::socket</b> command to create a new encrypted
-TCP socket. It is compatible with the native TCL <b class="syscmd">::socket</b> command.
-Alternatively for an existing TCP socket, the <b class="cmd">tls::import</b> command can be
-used to start TLS on the connection.</p>
+<p>The following are the commands provided by the TcLTLS package. See the
+<span class="sectref"><a href="#section6">Examples</a></span> for example usage and the &quot;<b class="file">demos</b>&quot; directory for
+more example usage.</p>
 <dl class="doctools_definitions">
 <dt><a name="1"><b class="cmd">tls::init</b> <span class="opt">?<i class="arg">-option</i>?</span> <span class="opt">?<i class="arg">value</i>?</span> <span class="opt">?<i class="arg">-option value ...</i>?</span></a></dt>
 <dd><p>Optional function to set the default options used by <b class="cmd">tls::socket</b>. If you
-call <b class="cmd">tls::import</b> directly, this command has no effect. This command
-supports all of the same options as the <b class="cmd">tls::socket</b> command, though you
-should limit your options to only TLS related ones.</p></dd>
+call <b class="cmd">tls::import</b> directly, the values set by this command have no effect.
+This command supports all of the same options as the <b class="cmd">tls::socket</b> command,
+though you should limit your options to only TLS related ones.</p></dd>
 <dt><a name="2"><b class="cmd">tls::socket</b> <span class="opt">?<i class="arg">-option</i>?</span> <span class="opt">?<i class="arg">value</i>?</span> <span class="opt">?<i class="arg">-option value ...</i>?</span> <i class="arg">host</i> <i class="arg">port</i></a></dt>
 <dd><p>This is a helper function that utilizes the underlying commands <b class="syscmd">socket</b>
 and <b class="cmd">tls::import</b> to create the connection. It behaves the same as the
@@ -199,7 +198,7 @@ parameters for SSL handshake. Valid options are:</p>
 <dt><b class="option">-alpn</b> <i class="arg">list</i></dt>
 <dd><p>List of protocols to offer during Application-Layer Protocol Negotiation
 (ALPN). For example: <b class="const">h2</b> and <b class="const">http/1.1</b>, but not <b class="const">h3</b> or
-<b class="const">quic</b>.</p></dd>
+<b class="const">quic</b>. This option is new for TclTLS 1.8.</p></dd>
 <dt><b class="option">-cadir</b> <i class="arg">directory</i></dt>
 <dd><p>Specifies the directory where the Certificate Authority (CA) certificates are
 stored. The default is platform specific and can be set at compile time. The
@@ -214,8 +213,9 @@ variable. See <span class="sectref"><a href="#section3">Certificate Validation</
 <dd><p>Specifies the Uniform Resource Identifier (URI) for the Certificate Authority
 (CA) store, which may be a single container or a catalog of containers.
 Starting with OpenSSL 3.2 on MS Windows, set to &quot;<b class="const">org.openssl.winstore://</b>&quot;
-to use the built-in MS Windows Certificate Store. See
-<span class="sectref"><a href="#section3">Certificate Validation</a></span> for more details.</p></dd>
+to use the built-in MS Windows Certificate Store.
+See <span class="sectref"><a href="#section3">Certificate Validation</a></span> for more details.
+This option is new for TclTLS 1.8.</p></dd>
 <dt><b class="option">-certfile</b> <i class="arg">filename</i></dt>
 <dd><p>Specifies the name of the file with the certificate to use in PEM format
 as the local (client or server) certificate. It also contains the public key.</p></dd>
@@ -236,7 +236,8 @@ documentation for the full list of valid values.</p></dd>
 <dd><p>Specifies the list of cipher suites to use for TLS 1.3 as a colon
 &quot;<b class="const">:</b>&quot; separated list of cipher suite names. See the
 <a href="https://docs.openssl.org/master/man1/openssl-ciphers/#options">OpenSSL</a>
-documentation for the full list of valid values.</p></dd>
+documentation for the full list of valid values.
+This option is new for TclTLS 1.8.</p></dd>
 <dt><b class="option">-command</b> <i class="arg">callback</i></dt>
 <dd><p>Specifies the callback command to be invoked at several points during the
 handshake to pass errors, tracing information, and protocol messages.
@@ -254,10 +255,10 @@ specified <i class="arg">channel</i>, and therefore share config, callbacks, etc
 <dt><b class="option">-password</b> <i class="arg">callback</i></dt>
 <dd><p>Specifies the callback command to invoke when OpenSSL needs to obtain a
 password. This is typically used to unlock the private key of a certificate.
-The callback should return a password string. See <span class="sectref"><a href="#section4">Callback Options</a></span>
-for more info.</p></dd>
+The callback should return a password string. This option has changed for
+TclTLS 1.8. See <span class="sectref"><a href="#section4">Callback Options</a></span> for more info.</p></dd>
 <dt><b class="option">-post_handshake</b> <i class="arg">bool</i></dt>
-<dd><p>Allow post-handshake session ticket updates.</p></dd>
+<dd><p>Allow post-handshake session ticket updates. This option is new for TclTLS 1.8.</p></dd>
 <dt><b class="option">-request</b> <i class="arg">bool</i></dt>
 <dd><p>Request a certificate from the peer during the SSL handshake. This is needed
 to do Certificate Validation. Starting in TclTLS 1.8, the default is
@@ -279,7 +280,8 @@ the allowed cipher suite encryption algorithms, supported ECC curves,
 supported signature algorithms, DH parameter sizes, certificate key sizes
 and signature algorithms. The default is 1 prior to OpenSSL 3.2 and 2
 thereafter. Level 3 and higher disable support for session tickets and
-only accept cipher suites that provide forward secrecy.</p></dd>
+only accept cipher suites that provide forward secrecy.
+This option is new for TclTLS 1.8.</p></dd>
 <dt><b class="option">-server</b> <i class="arg">bool</i></dt>
 <dd><p>Specifies whether to act as a server and respond with a server handshake when a
 client connects and provides a client handshake. The default is <b class="const">false</b>.</p></dd>
@@ -289,7 +291,8 @@ client connects and provides a client handshake. The default is <b class="const"
 or one of the Subject Alternate Names (SAN). Starting in TclTLS 2.0, this will
 default to the host for the <b class="cmd">tls::socket</b> command.</p></dd>
 <dt><b class="option">-session_id</b> <i class="arg">binary_string</i></dt>
-<dd><p>Specifies the session id to resume a session. Not supported yet.</p></dd>
+<dd><p>Specifies the session id to resume a session. Not supported yet.
+This option is new for TclTLS 1.8.</p></dd>
 <dt><b class="option">-ssl2</b> <i class="arg">bool</i></dt>
 <dd><p>Enable use of SSL v2.The default is <b class="const">false</b>.
 OpenSSL 1.1+ no longer supports SSL v2, so this may not have any effect.
@@ -316,7 +319,8 @@ starting with OpenSSL 1.1.1 and TclTLS 1.7.</p></dd>
 and other config info during the protocol negotiation phase. This can be used
 by TCL scripts to perform their own Certificate Validation to supplement the
 default validation provided by OpenSSL. The script must return a boolean true
-to continue the negotiation. See <span class="sectref"><a href="#section4">Callback Options</a></span> for more info.</p></dd>
+to continue the negotiation. See <span class="sectref"><a href="#section4">Callback Options</a></span> for more info.
+This option is new for TclTLS 1.8.</p></dd>
 </dl></dd>
 <dt><a name="5"><b class="cmd">tls::unimport</b> <i class="arg">channel</i></a></dt>
 <dd><p>Compliment to <b class="cmd">tls::import</b>. Used to remove the top level stacked channel
@@ -335,38 +339,50 @@ values include:</p>
 <p>SSL Status</p>
 <dl class="doctools_definitions">
 <dt><b class="variable">alpn</b> <i class="arg">protocol</i></dt>
-<dd><p>The protocol selected after Application-Layer Protocol Negotiation (ALPN).</p></dd>
+<dd><p>The protocol selected after Application-Layer Protocol Negotiation (ALPN).
+This value is new for TclTLS 1.8.</p></dd>
 <dt><b class="variable">cipher</b> <i class="arg">cipher</i></dt>
 <dd><p>The current cipher in use for the session.</p></dd>
 <dt><b class="variable">peername</b> <i class="arg">name</i></dt>
-<dd><p>The peername from the certificate.</p></dd>
+<dd><p>The peername from the certificate.
+This value is new for TclTLS 1.8.</p></dd>
 <dt><b class="variable">protocol</b> <i class="arg">version</i></dt>
-<dd><p>The protocol version used for the connection: SSL2, SSL3, TLS1, TLS1.1, TLS1.2, TLS1.3, or unknown.</p></dd>
+<dd><p>The protocol version used for the connection: SSL2, SSL3, TLS1, TLS1.1, TLS1.2,
+TLS1.3, or unknown. This value is new for TclTLS 1.8.</p></dd>
 <dt><b class="variable">sbits</b> <i class="arg">n</i></dt>
 <dd><p>The number of bits used for the session key.</p></dd>
 <dt><b class="variable">signatureHashAlgorithm</b> <i class="arg">algorithm</i></dt>
-<dd><p>The signature hash algorithm.</p></dd>
+<dd><p>The signature hash algorithm.
+This value is new for TclTLS 1.8.</p></dd>
 <dt><b class="variable">signatureType</b> <i class="arg">type</i></dt>
-<dd><p>The signature type value.</p></dd>
+<dd><p>The signature type value.
+This value is new for TclTLS 1.8.</p></dd>
 <dt><b class="variable">verifyDepth</b> <i class="arg">n</i></dt>
-<dd><p>Maximum depth for the certificate chain verification. Default is -1, to check all.</p></dd>
+<dd><p>Maximum depth for the certificate chain verification. Default is -1, to check all.
+This value is new for TclTLS 1.8.</p></dd>
 <dt><b class="variable">verifyMode</b> <i class="arg">list</i></dt>
-<dd><p>List of certificate verification modes.</p></dd>
+<dd><p>List of certificate verification modes.
+This value is new for TclTLS 1.8.</p></dd>
 <dt><b class="variable">verifyResult</b> <i class="arg">result</i></dt>
-<dd><p>Certificate verification result.</p></dd>
+<dd><p>Certificate verification result.
+This value is new for TclTLS 1.8.</p></dd>
 <dt><b class="variable">ca_names</b> <i class="arg">list</i></dt>
-<dd><p>List of the Certificate Authorities used to create the certificate.</p></dd>
+<dd><p>List of the Certificate Authorities used to create the certificate.
+This value is new for TclTLS 1.8.</p></dd>
 </dl>
 <p>Certificate Status</p>
 <dl class="doctools_definitions">
 <dt><b class="variable">all</b> <i class="arg">string</i></dt>
-<dd><p>Dump of all certificate info.</p></dd>
+<dd><p>Dump of all certificate info.
+This value is new for TclTLS 1.8.</p></dd>
 <dt><b class="variable">version</b> <i class="arg">value</i></dt>
 <dd><p>The certificate version.</p></dd>
 <dt><b class="variable">serialNumber</b> <i class="arg">string</i></dt>
-<dd><p>The serial number of the certificate as a hex string.</p></dd>
+<dd><p>The serial number of the certificate as a hex string.
+This value was changed from serial in TclTLS 1.8.</p></dd>
 <dt><b class="variable">signature</b> <i class="arg">algorithm</i></dt>
-<dd><p>Cipher algorithm used for certificate signature.</p></dd>
+<dd><p>Cipher algorithm used for certificate signature.
+This value is new for TclTLS 1.8.</p></dd>
 <dt><b class="variable">issuer</b> <i class="arg">string</i></dt>
 <dd><p>The distinguished name (DN) of the certificate issuer.</p></dd>
 <dt><b class="variable">notBefore</b> <i class="arg">date</i></dt>
@@ -378,50 +394,68 @@ values include:</p>
 Name (CN), Organization (O), Locality or City (L), State or Province (S), and
 Country Name (C).</p></dd>
 <dt><b class="variable">issuerUniqueID</b> <i class="arg">string</i></dt>
-<dd><p>The issuer unique id.</p></dd>
+<dd><p>The issuer unique id.
+This value is new for TclTLS 1.8.</p></dd>
 <dt><b class="variable">subjectUniqueID</b> <i class="arg">string</i></dt>
-<dd><p>The subject unique id.</p></dd>
+<dd><p>The subject unique id.
+This value is new for TclTLS 1.8.</p></dd>
 <dt><b class="variable">num_extensions</b> <i class="arg">n</i></dt>
-<dd><p>Number of certificate extensions.</p></dd>
+<dd><p>Number of certificate extensions.
+This value is new for TclTLS 1.8.</p></dd>
 <dt><b class="variable">extensions</b> <i class="arg">list</i></dt>
-<dd><p>List of certificate extension names.</p></dd>
+<dd><p>List of certificate extension names.
+This value is new for TclTLS 1.8.</p></dd>
 <dt><b class="variable">authorityKeyIdentifier</b> <i class="arg">string</i></dt>
 <dd><p>Authority Key Identifier (AKI) of the Issuing CA certificate that signed the
 SSL certificate as a hex string. This value matches the SKI value of the
-Intermediate CA certificate.</p></dd>
+Intermediate CA certificate.
+This value is new for TclTLS 1.8.</p></dd>
 <dt><b class="variable">subjectKeyIdentifier</b> <i class="arg">string</i></dt>
 <dd><p>Subject Key Identifier (SKI) hash of the public key inside the certificate as a
-hex string. Used to identify certificates that contain a particular public key.</p></dd>
+hex string. Used to identify certificates that contain a particular public key.
+This value is new for TclTLS 1.8.</p></dd>
 <dt><b class="variable">subjectAltName</b> <i class="arg">list</i></dt>
 <dd><p>List of all of the Subject Alternative Names (SAN) including domain names, sub
-domains, and IP addresses that are secured by the certificate.</p></dd>
+domains, and IP addresses that are secured by the certificate.
+This value is new for TclTLS 1.8.</p></dd>
 <dt><b class="variable">ocsp</b> <i class="arg">list</i></dt>
 <dd><p>List of all Online Certificate Status Protocol (OCSP) URLs that can be used to
-check the validity of this certificate.</p></dd>
+check the validity of this certificate.
+This value is new for TclTLS 1.8.</p></dd>
 <dt><b class="variable">certificate</b> <i class="arg">cert</i></dt>
 <dd><p>The PEM encoded certificate.</p></dd>
 <dt><b class="variable">signatureAlgorithm</b> <i class="arg">algorithm</i></dt>
-<dd><p>Cipher algorithm used for the certificate signature.</p></dd>
+<dd><p>Cipher algorithm used for the certificate signature.
+This value is new for TclTLS 1.8.</p></dd>
 <dt><b class="variable">signatureValue</b> <i class="arg">string</i></dt>
-<dd><p>Certificate signature as a hex string.</p></dd>
+<dd><p>Certificate signature as a hex string.
+This value is new for TclTLS 1.8.</p></dd>
 <dt><b class="variable">signatureDigest</b> <i class="arg">version</i></dt>
-<dd><p>Certificate signing digest as a hex string.</p></dd>
+<dd><p>Certificate signing digest as a hex string.
+This value is new for TclTLS 1.8.</p></dd>
 <dt><b class="variable">publicKeyAlgorithm</b> <i class="arg">algorithm</i></dt>
-<dd><p>Certificate signature public key algorithm.</p></dd>
+<dd><p>Certificate signature public key algorithm.
+This value is new for TclTLS 1.8.</p></dd>
 <dt><b class="variable">publicKey</b> <i class="arg">string</i></dt>
-<dd><p>Certificate signature public key as a hex string.</p></dd>
+<dd><p>Certificate signature public key as a hex string.
+This value is new for TclTLS 1.8.</p></dd>
 <dt><b class="variable">bits</b> <i class="arg">n</i></dt>
-<dd><p>Number of bits used for certificate signature key.</p></dd>
+<dd><p>Number of bits used for certificate signature key.
+This value is new for TclTLS 1.8.</p></dd>
 <dt><b class="variable">self_signed</b> <i class="arg">boolean</i></dt>
-<dd><p>Whether the certificate signature is self signed.</p></dd>
+<dd><p>Whether the certificate signature is self signed.
+This value is new for TclTLS 1.8.</p></dd>
 <dt><b class="variable">sha1_hash</b> <i class="arg">hash</i></dt>
-<dd><p>The SHA1 hash of the certificate as a hex string.</p></dd>
+<dd><p>The SHA1 hash of the certificate as a hex string.
+This value is new for TclTLS 1.8.</p></dd>
 <dt><b class="variable">sha256_hash</b> <i class="arg">hash</i></dt>
-<dd><p>The SHA256 hash of the certificate as a hex string.</p></dd>
+<dd><p>The SHA256 hash of the certificate as a hex string.
+This value is new for TclTLS 1.8.</p></dd>
 </dl></dd>
 <dt><a name="8"><b class="cmd">tls::connection</b> <i class="arg">channel</i></a></dt>
 <dd><p>Returns the current connection status of an SSL channel. The result is a list
-of key-value pairs describing the connection. Returned values include:</p>
+of key-value pairs describing the connection.
+This command is new for TclTLS 1.8. Returned values include:</p>
 <p>SSL Status</p>
 <dl class="doctools_definitions">
 <dt><b class="variable">state</b> <i class="arg">state</i></dt>
@@ -490,16 +524,18 @@ of key-value pairs describing the connection. Returned values include:</p>
 <dd><p>Server cache mode (client, server, or both).</p></dd>
 </dl></dd>
 <dt><a name="9"><b class="cmd">tls::ciphers</b> <span class="opt">?<i class="arg">protocol</i>?</span> <span class="opt">?<i class="arg">verbose</i>?</span> <span class="opt">?<i class="arg">supported</i>?</span></a></dt>
-<dd><p>Without any args, returns a list of all symmetric ciphers for use with the
+<dd><p>Without any options, it returns a list of all symmetric ciphers for use with the
 <i class="arg">-cipher</i> option. With <i class="arg">protocol</i>, only the ciphers supported for that
 protocol are returned. See the <b class="cmd">tls::protocols</b> command for the supported
 protocols. If <i class="arg">verbose</i> is specified as true then a verbose, human readable
 list is returned with additional information on the cipher. If <i class="arg">supported</i>
-is specified as true, then only the ciphers supported for protocol will be listed.</p></dd>
+is specified as true, then only the ciphers supported for protocol will be listed.
+The <i class="arg">supported</i> arg is new for TclTLS 1.8.</p></dd>
 <dt><a name="10"><b class="cmd">tls::protocols</b></a></dt>
 <dd><p>Returns a list of the supported SSL/TLS protocols. Valid values are:
 <b class="const">ssl2</b>, <b class="const">ssl3</b>, <b class="const">tls1</b>, <b class="const">tls1.1</b>, <b class="const">tls1.2</b>, and
-<b class="const">tls1.3</b>. Exact list depends on OpenSSL version and compile time flags.</p></dd>
+<b class="const">tls1.3</b>. Exact list depends on OpenSSL version and compile time flags.
+This command is new for TclTLS 1.8.</p></dd>
 <dt><a name="11"><b class="cmd">tls::version</b></a></dt>
 <dd><p>Returns the OpenSSL version string.</p></dd>
 </dl>
@@ -550,8 +586,9 @@ variable.</p></dd>
 <dd><p>Specifies the Uniform Resource Identifier (URI) for the Certificate Authority
 (CA) store, which may be a single container or a catalog of containers.
 Starting with OpenSSL 3.2 on MS Windows, set to &quot;<b class="const">org.openssl.winstore://</b>&quot;
-to use the built-in MS Windows Certificate Store.
-This store only supports root certificate stores. See
+to use the built-in MS Windows Certificate Store. Starting in TclTLS 2.0, this
+is the default if <b class="option">-cadir</b>, <b class="option">-cadir</b>, and <b class="option">-castore</b> are
+not specified. This store only supports root certificate stores. See
 <span class="sectref"><a href="#section3">Certificate Validation</a></span> for more details.</p></dd>
 <dt><b class="option">-request</b> <i class="arg">bool</i></dt>
 <dd><p>Request a certificate from the peer during the SSL handshake. This is needed
@@ -591,7 +628,9 @@ or MS Windows and OpenSSL is installed, the <b class="variable">SSL_CERT_DIR</b>
 <b class="option">-cadir</b>, or <b class="option">-castore</b> options must be defined.</p></li>
 <li><p>On MS Windows, starting in OpenSSL 3.2, it is now possible to access the
 built-in Windows Certificate Store from OpenSSL. This can utilized by
-setting the <b class="option">-castore</b> option to &quot;<b class="const">org.openssl.winstore://</b>&quot;.</p></li>
+setting the <b class="option">-castore</b> option to &quot;<b class="const">org.openssl.winstore://</b>&quot;.
+In TclTLS 2.0, this is the default value if <b class="option">-cadir</b>,
+<b class="option">-cadir</b>, and <b class="option">-castore</b> are not specified.</p></li>
 <li><p>If OpenSSL is not installed or the CA certificates are not available in PEM
 format, the CA certificates must be downloaded and installed with the user
 software. The CURL team makes them available at
@@ -780,11 +819,11 @@ option is set to <b class="cmd">tls::validate_command</b>.</p>
 <p><em>The use of the variable <b class="variable">tls::debug</b> is not recommended.
 It may be removed from future releases.</em></p>
 </div>
-<div id="section6" class="doctools_section"><h2><a name="section6">HTTP Package Examples</a></h2>
+<div id="section6" class="doctools_section"><h2><a name="section6">Examples</a></h2>
 <p>The following are example scripts to download a webpage and file using the
-http package. See <span class="sectref"><a href="#section3">Certificate Validation</a></span> for whether the
+http package. See <span class="sectref"><a href="#section3">Certificate Validation</a></span> for when the
 <b class="option">-cadir</b>, <b class="option">-cafile</b>, and <b class="option">-castore</b> options are also
-needed. See the demos directory for more example scripts.</p>
+needed. See the &quot;<b class="file">demos</b>&quot; directory for more example scripts.</p>
 <p>Example #1: Download a web page</p>
 <pre class="doctools_example">
 package require http

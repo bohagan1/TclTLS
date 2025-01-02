@@ -21,24 +21,23 @@ using the Transport Layer Security (TLS) protocol. It provides a generic
 binding to [uri "https://www.openssl.org/" OpenSSL], utilizing the
 [syscmd Tcl_StackChannel] API in TCL 8.4 and higher.
 These sockets behave exactly the same as channels created using the built-in
-[syscmd socket] command, along with additional options for controlling
+[syscmd socket] command, but provide additional options for controlling
 the SSL/TLS session.
 
 [section Commands]
 
-Typically one would use the [cmd tls::socket] command to create a new encrypted
-TCP socket. It is compatible with the native TCL [syscmd ::socket] command.
-Alternatively for an existing TCP socket, the [cmd tls::import] command can be
-used to start TLS on the connection.
+The following are the commands provided by the TcLTLS package. See the
+[sectref Examples] for example usage and the [file demos] directory for
+more example usage.
 
 [list_begin definitions]
 
 [call [cmd tls::init] [opt [arg -option]] [opt [arg value]] [opt [arg "-option value ..."]]]
 
 Optional function to set the default options used by [cmd tls::socket]. If you
-call [cmd tls::import] directly, this command has no effect. This command
-supports all of the same options as the [cmd tls::socket] command, though you
-should limit your options to only TLS related ones.
+call [cmd tls::import] directly, the values set by this command have no effect.
+This command supports all of the same options as the [cmd tls::socket] command,
+though you should limit your options to only TLS related ones.
 
 [call [cmd tls::socket] [opt [arg -option]] [opt [arg value]] [opt [arg "-option value ..."]] [arg host] [arg port]]
 
@@ -75,7 +74,7 @@ parameters for SSL handshake. Valid options are:
 [opt_def -alpn [arg list]]
 List of protocols to offer during Application-Layer Protocol Negotiation
 (ALPN). For example: [const h2] and [const http/1.1], but not [const h3] or
-[const quic].
+[const quic]. This option is new for TclTLS 1.8.
 
 [opt_def -cadir [arg directory]]
 Specifies the directory where the Certificate Authority (CA) certificates are
@@ -93,8 +92,9 @@ variable. See [sectref "Certificate Validation"] for more details.
 Specifies the Uniform Resource Identifier (URI) for the Certificate Authority
 (CA) store, which may be a single container or a catalog of containers.
 Starting with OpenSSL 3.2 on MS Windows, set to "[const "org.openssl.winstore://"]"
-to use the built-in MS Windows Certificate Store. See
-[sectref "Certificate Validation"] for more details.
+to use the built-in MS Windows Certificate Store.
+See [sectref "Certificate Validation"] for more details.
+This option is new for TclTLS 1.8.
 
 [opt_def -certfile [arg filename]]
 Specifies the name of the file with the certificate to use in PEM format
@@ -120,6 +120,7 @@ Specifies the list of cipher suites to use for TLS 1.3 as a colon
 "[const :]" separated list of cipher suite names. See the
 [uri "https://docs.openssl.org/master/man1/openssl-ciphers/#options" OpenSSL]
 documentation for the full list of valid values.
+This option is new for TclTLS 1.8.
 
 [opt_def -command [arg callback]]
 Specifies the callback command to be invoked at several points during the
@@ -143,11 +144,11 @@ specified [arg channel], and therefore share config, callbacks, etc.
 [opt_def -password [arg callback]]
 Specifies the callback command to invoke when OpenSSL needs to obtain a
 password. This is typically used to unlock the private key of a certificate.
-The callback should return a password string. See [sectref "Callback Options"]
-for more info.
+The callback should return a password string. This option has changed for
+TclTLS 1.8. See [sectref "Callback Options"] for more info.
 
 [opt_def -post_handshake [arg bool]]
-Allow post-handshake session ticket updates.
+Allow post-handshake session ticket updates. This option is new for TclTLS 1.8.
 
 [opt_def -request [arg bool]]
 Request a certificate from the peer during the SSL handshake. This is needed
@@ -173,6 +174,7 @@ supported signature algorithms, DH parameter sizes, certificate key sizes
 and signature algorithms. The default is 1 prior to OpenSSL 3.2 and 2
 thereafter. Level 3 and higher disable support for session tickets and
 only accept cipher suites that provide forward secrecy.
+This option is new for TclTLS 1.8.
 
 [opt_def -server [arg bool]]
 Specifies whether to act as a server and respond with a server handshake when a
@@ -186,6 +188,7 @@ default to the host for the [cmd tls::socket] command.
 
 [opt_def -session_id [arg binary_string]]
 Specifies the session id to resume a session. Not supported yet.
+This option is new for TclTLS 1.8.
 
 [opt_def -ssl2 [arg bool]]
 Enable use of SSL v2.The default is [const false].
@@ -220,6 +223,7 @@ and other config info during the protocol negotiation phase. This can be used
 by TCL scripts to perform their own Certificate Validation to supplement the
 default validation provided by OpenSSL. The script must return a boolean true
 to continue the negotiation. See [sectref "Callback Options"] for more info.
+This option is new for TclTLS 1.8.
 
 [list_end]
 
@@ -251,36 +255,45 @@ SSL Status
 
 [def "[var alpn] [arg protocol]"]
 The protocol selected after Application-Layer Protocol Negotiation (ALPN).
+This value is new for TclTLS 1.8.
 
 [def "[var cipher] [arg cipher]"]
 The current cipher in use for the session.
 
 [def "[var peername] [arg name]"]
 The peername from the certificate.
+This value is new for TclTLS 1.8.
 
 [def "[var protocol] [arg version]"]
-The protocol version used for the connection: SSL2, SSL3, TLS1, TLS1.1, TLS1.2, TLS1.3, or unknown.
+The protocol version used for the connection: SSL2, SSL3, TLS1, TLS1.1, TLS1.2,
+TLS1.3, or unknown. This value is new for TclTLS 1.8.
 
 [def "[var sbits] [arg n]"]
 The number of bits used for the session key.
 
 [def "[var signatureHashAlgorithm] [arg algorithm]"]
 The signature hash algorithm.
+This value is new for TclTLS 1.8.
 
 [def "[var signatureType] [arg type]"]
 The signature type value.
+This value is new for TclTLS 1.8.
 
 [def "[var verifyDepth] [arg n]"]
 Maximum depth for the certificate chain verification. Default is -1, to check all.
+This value is new for TclTLS 1.8.
 
 [def "[var verifyMode] [arg list]"]
 List of certificate verification modes.
+This value is new for TclTLS 1.8.
 
 [def "[var verifyResult] [arg result]"]
 Certificate verification result.
+This value is new for TclTLS 1.8.
 
 [def "[var ca_names] [arg list]"]
 List of the Certificate Authorities used to create the certificate.
+This value is new for TclTLS 1.8.
 
 [list_end]
 
@@ -290,15 +303,18 @@ Certificate Status
 
 [def "[var all] [arg string]"]
 Dump of all certificate info.
+This value is new for TclTLS 1.8.
 
 [def "[var version] [arg value]"]
 The certificate version.
 
 [def "[var serialNumber] [arg string]"]
 The serial number of the certificate as a hex string.
+This value was changed from serial in TclTLS 1.8.
 
 [def "[var signature] [arg algorithm]"]
 Cipher algorithm used for certificate signature.
+This value is new for TclTLS 1.8.
 
 [def "[var issuer] [arg string]"]
 The distinguished name (DN) of the certificate issuer.
@@ -316,69 +332,87 @@ Country Name (C).
 
 [def "[var issuerUniqueID] [arg string]"]
 The issuer unique id.
+This value is new for TclTLS 1.8.
 
 [def "[var subjectUniqueID] [arg string]"]
 The subject unique id.
+This value is new for TclTLS 1.8.
 
 [def "[var num_extensions] [arg n]"]
 Number of certificate extensions.
+This value is new for TclTLS 1.8.
 
 [def "[var extensions] [arg list]"]
 List of certificate extension names.
+This value is new for TclTLS 1.8.
 
 [def "[var authorityKeyIdentifier] [arg string]"]
 Authority Key Identifier (AKI) of the Issuing CA certificate that signed the
 SSL certificate as a hex string. This value matches the SKI value of the
 Intermediate CA certificate.
+This value is new for TclTLS 1.8.
 
 [def "[var subjectKeyIdentifier] [arg string]"]
 Subject Key Identifier (SKI) hash of the public key inside the certificate as a
 hex string. Used to identify certificates that contain a particular public key.
+This value is new for TclTLS 1.8.
 
 [def "[var subjectAltName] [arg list]"]
 List of all of the Subject Alternative Names (SAN) including domain names, sub
 domains, and IP addresses that are secured by the certificate.
+This value is new for TclTLS 1.8.
 
 [def "[var ocsp] [arg list]"]
 List of all Online Certificate Status Protocol (OCSP) URLs that can be used to
 check the validity of this certificate.
+This value is new for TclTLS 1.8.
 
 [def "[var certificate] [arg cert]"]
 The PEM encoded certificate.
 
 [def "[var signatureAlgorithm] [arg algorithm]"]
 Cipher algorithm used for the certificate signature.
+This value is new for TclTLS 1.8.
 
 [def "[var signatureValue] [arg string]"]
 Certificate signature as a hex string.
+This value is new for TclTLS 1.8.
 
 [def "[var signatureDigest] [arg version]"]
 Certificate signing digest as a hex string.
+This value is new for TclTLS 1.8.
 
 [def "[var publicKeyAlgorithm] [arg algorithm]"]
 Certificate signature public key algorithm.
+This value is new for TclTLS 1.8.
 
 [def "[var publicKey] [arg string]"]
 Certificate signature public key as a hex string.
+This value is new for TclTLS 1.8.
 
 [def "[var bits] [arg n]"]
 Number of bits used for certificate signature key.
+This value is new for TclTLS 1.8.
 
 [def "[var self_signed] [arg boolean]"]
 Whether the certificate signature is self signed.
+This value is new for TclTLS 1.8.
 
 [def "[var sha1_hash] [arg hash]"]
 The SHA1 hash of the certificate as a hex string.
+This value is new for TclTLS 1.8.
 
 [def "[var sha256_hash] [arg hash]"]
 The SHA256 hash of the certificate as a hex string.
+This value is new for TclTLS 1.8.
 
 [list_end]
 
 [call [cmd tls::connection] [arg channel]]
 
 Returns the current connection status of an SSL channel. The result is a list
-of key-value pairs describing the connection. Returned values include:
+of key-value pairs describing the connection.
+This command is new for TclTLS 1.8. Returned values include:
 
 [para]
 
@@ -489,18 +523,20 @@ Server cache mode (client, server, or both).
 
 [call [cmd tls::ciphers] [opt [arg protocol]] [opt [arg verbose]] [opt [arg supported]]]
 
-Without any args, returns a list of all symmetric ciphers for use with the
+Without any options, it returns a list of all symmetric ciphers for use with the
 [arg -cipher] option. With [arg protocol], only the ciphers supported for that
 protocol are returned. See the [cmd tls::protocols] command for the supported
 protocols. If [arg verbose] is specified as true then a verbose, human readable
 list is returned with additional information on the cipher. If [arg supported]
 is specified as true, then only the ciphers supported for protocol will be listed.
+The [arg supported] arg is new for TclTLS 1.8.
 
 [call [cmd tls::protocols]]
 
 Returns a list of the supported SSL/TLS protocols. Valid values are:
 [const ssl2], [const ssl3], [const tls1], [const tls1.1], [const tls1.2], and
 [const tls1.3]. Exact list depends on OpenSSL version and compile time flags.
+This command is new for TclTLS 1.8.
 
 [call [cmd tls::version]]
 
@@ -550,7 +586,7 @@ The following options are used for peer certificate validation:
 
 [opt_def -cadir [arg directory]]
 Specifies the directory where the Certificate Authority (CA) certificates are
-stored. The default is platform specific, but is usually [file "/etc/ssl/certs"] on
+stored. The default is platform specific, but is usually [file /etc/ssl/certs] on
 Linux/Unix systems. The default location can be overridden by the
 [var SSL_CERT_DIR] environment variable.
 
@@ -565,8 +601,9 @@ variable.
 Specifies the Uniform Resource Identifier (URI) for the Certificate Authority
 (CA) store, which may be a single container or a catalog of containers.
 Starting with OpenSSL 3.2 on MS Windows, set to "[const "org.openssl.winstore://"]"
-to use the built-in MS Windows Certificate Store.
-This store only supports root certificate stores. See
+to use the built-in MS Windows Certificate Store. Starting in TclTLS 2.0, this
+is the default if [option -cadir], [option -cadir], and [option -castore] are
+not specified. This store only supports root certificate stores. See
 [sectref "Certificate Validation"] for more details.
 
 [opt_def -request [arg bool]]
@@ -618,6 +655,8 @@ or MS Windows and OpenSSL is installed, the [var SSL_CERT_DIR] and/or
 On MS Windows, starting in OpenSSL 3.2, it is now possible to access the
 built-in Windows Certificate Store from OpenSSL. This can utilized by
 setting the [option -castore] option to "[const org.openssl.winstore://]".
+In TclTLS 2.0, this is the default value if [option -cadir],
+[option -cadir], and [option -castore] are not specified.
 
 [item]
 If OpenSSL is not installed or the CA certificates are not available in PEM
@@ -872,12 +911,12 @@ option is set to [cmd tls::validate_command].
 [emph "The use of the variable [var tls::debug] is not recommended.
 It may be removed from future releases."]
 
-[section "HTTP Package Examples"]
+[section "Examples"]
 
 The following are example scripts to download a webpage and file using the
-http package. See [sectref "Certificate Validation"] for whether the
+http package. See [sectref "Certificate Validation"] for when the
 [option -cadir], [option -cafile], and [option -castore] options are also
-needed. See the demos directory for more example scripts.
+needed. See the [file demos] directory for more example scripts.
 
 [para]
 

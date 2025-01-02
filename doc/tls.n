@@ -309,19 +309,18 @@ using the Transport Layer Security (TLS) protocol\&. It provides a generic
 binding to \fIOpenSSL\fR [https://www\&.openssl\&.org/], utilizing the
 \fBTcl_StackChannel\fR API in TCL 8\&.4 and higher\&.
 These sockets behave exactly the same as channels created using the built-in
-\fBsocket\fR command, along with additional options for controlling
+\fBsocket\fR command, but provide additional options for controlling
 the SSL/TLS session\&.
 .SH COMMANDS
-Typically one would use the \fBtls::socket\fR command to create a new encrypted
-TCP socket\&. It is compatible with the native TCL \fB::socket\fR command\&.
-Alternatively for an existing TCP socket, the \fBtls::import\fR command can be
-used to start TLS on the connection\&.
+The following are the commands provided by the TcLTLS package\&. See the
+\fBExamples\fR for example usage and the "\fIdemos\fR" directory for
+more example usage\&.
 .TP
 \fBtls::init\fR ?\fI-option\fR? ?\fIvalue\fR? ?\fI-option value \&.\&.\&.\fR?
 Optional function to set the default options used by \fBtls::socket\fR\&. If you
-call \fBtls::import\fR directly, this command has no effect\&. This command
-supports all of the same options as the \fBtls::socket\fR command, though you
-should limit your options to only TLS related ones\&.
+call \fBtls::import\fR directly, the values set by this command have no effect\&.
+This command supports all of the same options as the \fBtls::socket\fR command,
+though you should limit your options to only TLS related ones\&.
 .TP
 \fBtls::socket\fR ?\fI-option\fR? ?\fIvalue\fR? ?\fI-option value \&.\&.\&.\fR? \fIhost\fR \fIport\fR
 This is a helper function that utilizes the underlying commands \fBsocket\fR
@@ -352,7 +351,7 @@ parameters for SSL handshake\&. Valid options are:
 \fB-alpn\fR \fIlist\fR
 List of protocols to offer during Application-Layer Protocol Negotiation
 (ALPN)\&. For example: \fBh2\fR and \fBhttp/1\&.1\fR, but not \fBh3\fR or
-\fBquic\fR\&.
+\fBquic\fR\&. This option is new for TclTLS 1\&.8\&.
 .TP
 \fB-cadir\fR \fIdirectory\fR
 Specifies the directory where the Certificate Authority (CA) certificates are
@@ -370,8 +369,9 @@ variable\&. See \fBCertificate Validation\fR for more details\&.
 Specifies the Uniform Resource Identifier (URI) for the Certificate Authority
 (CA) store, which may be a single container or a catalog of containers\&.
 Starting with OpenSSL 3\&.2 on MS Windows, set to "\fBorg\&.openssl\&.winstore://\fR"
-to use the built-in MS Windows Certificate Store\&. See
-\fBCertificate Validation\fR for more details\&.
+to use the built-in MS Windows Certificate Store\&.
+See \fBCertificate Validation\fR for more details\&.
+This option is new for TclTLS 1\&.8\&.
 .TP
 \fB-certfile\fR \fIfilename\fR
 Specifies the name of the file with the certificate to use in PEM format
@@ -397,6 +397,7 @@ Specifies the list of cipher suites to use for TLS 1\&.3 as a colon
 "\fB:\fR" separated list of cipher suite names\&. See the
 \fIOpenSSL\fR [https://docs\&.openssl\&.org/master/man1/openssl-ciphers/#options]
 documentation for the full list of valid values\&.
+This option is new for TclTLS 1\&.8\&.
 .TP
 \fB-command\fR \fIcallback\fR
 Specifies the callback command to be invoked at several points during the
@@ -420,11 +421,11 @@ specified \fIchannel\fR, and therefore share config, callbacks, etc\&.
 \fB-password\fR \fIcallback\fR
 Specifies the callback command to invoke when OpenSSL needs to obtain a
 password\&. This is typically used to unlock the private key of a certificate\&.
-The callback should return a password string\&. See \fBCallback Options\fR
-for more info\&.
+The callback should return a password string\&. This option has changed for
+TclTLS 1\&.8\&. See \fBCallback Options\fR for more info\&.
 .TP
 \fB-post_handshake\fR \fIbool\fR
-Allow post-handshake session ticket updates\&.
+Allow post-handshake session ticket updates\&. This option is new for TclTLS 1\&.8\&.
 .TP
 \fB-request\fR \fIbool\fR
 Request a certificate from the peer during the SSL handshake\&. This is needed
@@ -450,6 +451,7 @@ supported signature algorithms, DH parameter sizes, certificate key sizes
 and signature algorithms\&. The default is 1 prior to OpenSSL 3\&.2 and 2
 thereafter\&. Level 3 and higher disable support for session tickets and
 only accept cipher suites that provide forward secrecy\&.
+This option is new for TclTLS 1\&.8\&.
 .TP
 \fB-server\fR \fIbool\fR
 Specifies whether to act as a server and respond with a server handshake when a
@@ -463,6 +465,7 @@ default to the host for the \fBtls::socket\fR command\&.
 .TP
 \fB-session_id\fR \fIbinary_string\fR
 Specifies the session id to resume a session\&. Not supported yet\&.
+This option is new for TclTLS 1\&.8\&.
 .TP
 \fB-ssl2\fR \fIbool\fR
 Enable use of SSL v2\&.The default is \fBfalse\fR\&.
@@ -497,6 +500,7 @@ and other config info during the protocol negotiation phase\&. This can be used
 by TCL scripts to perform their own Certificate Validation to supplement the
 default validation provided by OpenSSL\&. The script must return a boolean true
 to continue the negotiation\&. See \fBCallback Options\fR for more info\&.
+This option is new for TclTLS 1\&.8\&.
 .RE
 .TP
 \fBtls::unimport\fR \fIchannel\fR
@@ -521,36 +525,45 @@ SSL Status
 .TP
 \fBalpn\fR \fIprotocol\fR
 The protocol selected after Application-Layer Protocol Negotiation (ALPN)\&.
+This value is new for TclTLS 1\&.8\&.
 .TP
 \fBcipher\fR \fIcipher\fR
 The current cipher in use for the session\&.
 .TP
 \fBpeername\fR \fIname\fR
 The peername from the certificate\&.
+This value is new for TclTLS 1\&.8\&.
 .TP
 \fBprotocol\fR \fIversion\fR
-The protocol version used for the connection: SSL2, SSL3, TLS1, TLS1\&.1, TLS1\&.2, TLS1\&.3, or unknown\&.
+The protocol version used for the connection: SSL2, SSL3, TLS1, TLS1\&.1, TLS1\&.2,
+TLS1\&.3, or unknown\&. This value is new for TclTLS 1\&.8\&.
 .TP
 \fBsbits\fR \fIn\fR
 The number of bits used for the session key\&.
 .TP
 \fBsignatureHashAlgorithm\fR \fIalgorithm\fR
 The signature hash algorithm\&.
+This value is new for TclTLS 1\&.8\&.
 .TP
 \fBsignatureType\fR \fItype\fR
 The signature type value\&.
+This value is new for TclTLS 1\&.8\&.
 .TP
 \fBverifyDepth\fR \fIn\fR
 Maximum depth for the certificate chain verification\&. Default is -1, to check all\&.
+This value is new for TclTLS 1\&.8\&.
 .TP
 \fBverifyMode\fR \fIlist\fR
 List of certificate verification modes\&.
+This value is new for TclTLS 1\&.8\&.
 .TP
 \fBverifyResult\fR \fIresult\fR
 Certificate verification result\&.
+This value is new for TclTLS 1\&.8\&.
 .TP
 \fBca_names\fR \fIlist\fR
 List of the Certificate Authorities used to create the certificate\&.
+This value is new for TclTLS 1\&.8\&.
 .RE
 .IP
 Certificate Status
@@ -558,15 +571,18 @@ Certificate Status
 .TP
 \fBall\fR \fIstring\fR
 Dump of all certificate info\&.
+This value is new for TclTLS 1\&.8\&.
 .TP
 \fBversion\fR \fIvalue\fR
 The certificate version\&.
 .TP
 \fBserialNumber\fR \fIstring\fR
 The serial number of the certificate as a hex string\&.
+This value was changed from serial in TclTLS 1\&.8\&.
 .TP
 \fBsignature\fR \fIalgorithm\fR
 Cipher algorithm used for certificate signature\&.
+This value is new for TclTLS 1\&.8\&.
 .TP
 \fBissuer\fR \fIstring\fR
 The distinguished name (DN) of the certificate issuer\&.
@@ -584,67 +600,85 @@ Country Name (C)\&.
 .TP
 \fBissuerUniqueID\fR \fIstring\fR
 The issuer unique id\&.
+This value is new for TclTLS 1\&.8\&.
 .TP
 \fBsubjectUniqueID\fR \fIstring\fR
 The subject unique id\&.
+This value is new for TclTLS 1\&.8\&.
 .TP
 \fBnum_extensions\fR \fIn\fR
 Number of certificate extensions\&.
+This value is new for TclTLS 1\&.8\&.
 .TP
 \fBextensions\fR \fIlist\fR
 List of certificate extension names\&.
+This value is new for TclTLS 1\&.8\&.
 .TP
 \fBauthorityKeyIdentifier\fR \fIstring\fR
 Authority Key Identifier (AKI) of the Issuing CA certificate that signed the
 SSL certificate as a hex string\&. This value matches the SKI value of the
 Intermediate CA certificate\&.
+This value is new for TclTLS 1\&.8\&.
 .TP
 \fBsubjectKeyIdentifier\fR \fIstring\fR
 Subject Key Identifier (SKI) hash of the public key inside the certificate as a
 hex string\&. Used to identify certificates that contain a particular public key\&.
+This value is new for TclTLS 1\&.8\&.
 .TP
 \fBsubjectAltName\fR \fIlist\fR
 List of all of the Subject Alternative Names (SAN) including domain names, sub
 domains, and IP addresses that are secured by the certificate\&.
+This value is new for TclTLS 1\&.8\&.
 .TP
 \fBocsp\fR \fIlist\fR
 List of all Online Certificate Status Protocol (OCSP) URLs that can be used to
 check the validity of this certificate\&.
+This value is new for TclTLS 1\&.8\&.
 .TP
 \fBcertificate\fR \fIcert\fR
 The PEM encoded certificate\&.
 .TP
 \fBsignatureAlgorithm\fR \fIalgorithm\fR
 Cipher algorithm used for the certificate signature\&.
+This value is new for TclTLS 1\&.8\&.
 .TP
 \fBsignatureValue\fR \fIstring\fR
 Certificate signature as a hex string\&.
+This value is new for TclTLS 1\&.8\&.
 .TP
 \fBsignatureDigest\fR \fIversion\fR
 Certificate signing digest as a hex string\&.
+This value is new for TclTLS 1\&.8\&.
 .TP
 \fBpublicKeyAlgorithm\fR \fIalgorithm\fR
 Certificate signature public key algorithm\&.
+This value is new for TclTLS 1\&.8\&.
 .TP
 \fBpublicKey\fR \fIstring\fR
 Certificate signature public key as a hex string\&.
+This value is new for TclTLS 1\&.8\&.
 .TP
 \fBbits\fR \fIn\fR
 Number of bits used for certificate signature key\&.
+This value is new for TclTLS 1\&.8\&.
 .TP
 \fBself_signed\fR \fIboolean\fR
 Whether the certificate signature is self signed\&.
+This value is new for TclTLS 1\&.8\&.
 .TP
 \fBsha1_hash\fR \fIhash\fR
 The SHA1 hash of the certificate as a hex string\&.
+This value is new for TclTLS 1\&.8\&.
 .TP
 \fBsha256_hash\fR \fIhash\fR
 The SHA256 hash of the certificate as a hex string\&.
+This value is new for TclTLS 1\&.8\&.
 .RE
 .TP
 \fBtls::connection\fR \fIchannel\fR
 Returns the current connection status of an SSL channel\&. The result is a list
-of key-value pairs describing the connection\&. Returned values include:
+of key-value pairs describing the connection\&.
+This command is new for TclTLS 1\&.8\&. Returned values include:
 .sp
 SSL Status
 .RS
@@ -746,17 +780,19 @@ Server cache mode (client, server, or both)\&.
 .RE
 .TP
 \fBtls::ciphers\fR ?\fIprotocol\fR? ?\fIverbose\fR? ?\fIsupported\fR?
-Without any args, returns a list of all symmetric ciphers for use with the
+Without any options, it returns a list of all symmetric ciphers for use with the
 \fI-cipher\fR option\&. With \fIprotocol\fR, only the ciphers supported for that
 protocol are returned\&. See the \fBtls::protocols\fR command for the supported
 protocols\&. If \fIverbose\fR is specified as true then a verbose, human readable
 list is returned with additional information on the cipher\&. If \fIsupported\fR
 is specified as true, then only the ciphers supported for protocol will be listed\&.
+The \fIsupported\fR arg is new for TclTLS 1\&.8\&.
 .TP
 \fBtls::protocols\fR
 Returns a list of the supported SSL/TLS protocols\&. Valid values are:
 \fBssl2\fR, \fBssl3\fR, \fBtls1\fR, \fBtls1\&.1\fR, \fBtls1\&.2\fR, and
 \fBtls1\&.3\fR\&. Exact list depends on OpenSSL version and compile time flags\&.
+This command is new for TclTLS 1\&.8\&.
 .TP
 \fBtls::version\fR
 Returns the OpenSSL version string\&.
@@ -810,8 +846,9 @@ variable\&.
 Specifies the Uniform Resource Identifier (URI) for the Certificate Authority
 (CA) store, which may be a single container or a catalog of containers\&.
 Starting with OpenSSL 3\&.2 on MS Windows, set to "\fBorg\&.openssl\&.winstore://\fR"
-to use the built-in MS Windows Certificate Store\&.
-This store only supports root certificate stores\&. See
+to use the built-in MS Windows Certificate Store\&. Starting in TclTLS 2\&.0, this
+is the default if \fB-cadir\fR, \fB-cadir\fR, and \fB-castore\fR are
+not specified\&. This store only supports root certificate stores\&. See
 \fBCertificate Validation\fR for more details\&.
 .TP
 \fB-request\fR \fIbool\fR
@@ -855,6 +892,8 @@ or MS Windows and OpenSSL is installed, the \fBSSL_CERT_DIR\fR and/or
 On MS Windows, starting in OpenSSL 3\&.2, it is now possible to access the
 built-in Windows Certificate Store from OpenSSL\&. This can utilized by
 setting the \fB-castore\fR option to "\fBorg\&.openssl\&.winstore://\fR"\&.
+In TclTLS 2\&.0, this is the default value if \fB-cadir\fR,
+\fB-cadir\fR, and \fB-castore\fR are not specified\&.
 .IP \(bu
 If OpenSSL is not installed or the CA certificates are not available in PEM
 format, the CA certificates must be downloaded and installed with the user
@@ -1066,11 +1105,11 @@ option is set to \fBtls::validate_command\fR\&.
 .PP
 \fIThe use of the variable \fBtls::debug\fR is not recommended\&.
 It may be removed from future releases\&.\fR
-.SH "HTTP PACKAGE EXAMPLES"
+.SH EXAMPLES
 The following are example scripts to download a webpage and file using the
-http package\&. See \fBCertificate Validation\fR for whether the
+http package\&. See \fBCertificate Validation\fR for when the
 \fB-cadir\fR, \fB-cafile\fR, and \fB-castore\fR options are also
-needed\&. See the demos directory for more example scripts\&.
+needed\&. See the "\fIdemos\fR" directory for more example scripts\&.
 .PP
 Example #1: Download a web page
 .CS
