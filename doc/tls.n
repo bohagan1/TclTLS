@@ -465,30 +465,31 @@ default to the host for the \fBtls::socket\fR command\&.
 Specifies the session id to resume a session\&. Not supported yet\&.
 .TP
 \fB-ssl2\fR \fIbool\fR
-Enable use of SSL v2\&. The default is \fBfalse\fR\&. Note: Recent versions of
-OpenSSL no longer support SSLv2, so this may not have any effect\&. See the
-\fBtls::protocols\fR command for supported protocols\&.
+Enable use of SSL v2\&.The default is \fBfalse\fR\&.
+OpenSSL 1\&.1+ no longer supports SSL v2, so this may not have any effect\&.
+See the \fBtls::protocols\fR command for supported protocols\&.
 .TP
 \fB-ssl3\fR \fIbool\fR
-Enable use of SSL v3\&. The default is \fBfalse\fR\&. Note: Recent versions
-of OpenSSL may have this disabled at compile time, so this may not have any
-effect\&. See the \fBtls::protocols\fR command for supported protocols\&.
+Enable use of SSL v3\&. The default is \fBfalse\fR\&. Starting in TclTLS 1\&.8,
+use of SSL v3 if only available via a compile time option\&.
+See the \fBtls::protocols\fR command for supported protocols\&.
 .TP
 \fB-tls1\fR \fIbool\fR
-Enable use of TLS v1\&. The default is \fBtrue\fR\&. Note: TLS 1\&.0 needs
-SHA1 to operate, which is only available in security level 0 for Open SSL 3\&.0+\&.
-See the \fI-security_level\fR option\&.
+Enable use of TLS v1\&. Starting in TclTLS 2\&.0, the default is \fBfalse\fR\&.
+Note: TLS 1\&.0 needs SHA1 to operate, which is only available in security level
+0 for Open SSL 3\&.0+\&. See the \fI-security_level\fR option\&.
 .TP
 \fB-tls1\&.1\fR \fIbool\fR
-Enable use of TLS v1\&.1\&. The default is \fBtrue\fR\&. Note: TLS 1\&.1 needs
-SHA1 to operate, which is only available in security level 0 for Open SSL 3\&.0+\&.
-See the \fI-security_level\fR option\&.
+Enable use of TLS v1\&.1\&. Starting in TclTLS 2\&.0, the default is \fBfalse\fR\&.
+Note: TLS 1\&.1 needs SHA1 to operate, which is only available in security level
+0 for Open SSL 3\&.0+\&. See the \fI-security_level\fR option\&.
 .TP
 \fB-tls1\&.2\fR \fIbool\fR
 Enable use of TLS v1\&.2\&. The default is \fBtrue\fR\&.
 .TP
 \fB-tls1\&.3\fR \fIbool\fR
-Enable use of TLS v1\&.3\&. The default is \fBtrue\fR\&.
+Enable use of TLS v1\&.3\&. The default is \fBtrue\fR\&. This is only available
+starting with OpenSSL 1\&.1\&.1 and TclTLS 1\&.7\&.
 .TP
 \fB-validatecommand\fR \fIcallback\fR
 Specifies the callback command to invoke to validate the peer certificates

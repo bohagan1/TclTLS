@@ -1350,7 +1350,7 @@ ImportObjCmd(
     char *session_id		= NULL;
     Tcl_Obj *alpn		= NULL;
     int ssl2 = 0, ssl3 = 0;
-    int tls1 = 1, tls1_1 = 1, tls1_2 = 1, tls1_3 = 1;
+    int tls1 = 0, tls1_1 = 0, tls1_2 = 1, tls1_3 = 1;
     int proto = 0, level = -1;
     int verify = 0, require = 1, request = 1, post_handshake = 0;
 

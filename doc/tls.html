@@ -291,25 +291,26 @@ default to the host for the <b class="cmd">tls::socket</b> command.</p></dd>
 <dt><b class="option">-session_id</b> <i class="arg">binary_string</i></dt>
 <dd><p>Specifies the session id to resume a session. Not supported yet.</p></dd>
 <dt><b class="option">-ssl2</b> <i class="arg">bool</i></dt>
-<dd><p>Enable use of SSL v2. The default is <b class="const">false</b>. Note: Recent versions of
-OpenSSL no longer support SSLv2, so this may not have any effect. See the
-<b class="cmd">tls::protocols</b> command for supported protocols.</p></dd>
+<dd><p>Enable use of SSL v2.The default is <b class="const">false</b>.
+OpenSSL 1.1+ no longer supports SSL v2, so this may not have any effect.
+See the <b class="cmd">tls::protocols</b> command for supported protocols.</p></dd>
 <dt><b class="option">-ssl3</b> <i class="arg">bool</i></dt>
-<dd><p>Enable use of SSL v3. The default is <b class="const">false</b>. Note: Recent versions
-of OpenSSL may have this disabled at compile time, so this may not have any
-effect. See the <b class="cmd">tls::protocols</b> command for supported protocols.</p></dd>
+<dd><p>Enable use of SSL v3. The default is <b class="const">false</b>. Starting in TclTLS 1.8,
+use of SSL v3 if only available via a compile time option.
+See the <b class="cmd">tls::protocols</b> command for supported protocols.</p></dd>
 <dt><b class="option">-tls1</b> <i class="arg">bool</i></dt>
-<dd><p>Enable use of TLS v1. The default is <b class="const">true</b>. Note: TLS 1.0 needs
-SHA1 to operate, which is only available in security level 0 for Open SSL 3.0+.
-See the <i class="arg">-security_level</i> option.</p></dd>
+<dd><p>Enable use of TLS v1. Starting in TclTLS 2.0, the default is <b class="const">false</b>.
+Note: TLS 1.0 needs SHA1 to operate, which is only available in security level
+0 for Open SSL 3.0+. See the <i class="arg">-security_level</i> option.</p></dd>
 <dt><b class="option">-tls1.1</b> <i class="arg">bool</i></dt>
-<dd><p>Enable use of TLS v1.1. The default is <b class="const">true</b>. Note: TLS 1.1 needs
-SHA1 to operate, which is only available in security level 0 for Open SSL 3.0+.
-See the <i class="arg">-security_level</i> option.</p></dd>
+<dd><p>Enable use of TLS v1.1. Starting in TclTLS 2.0, the default is <b class="const">false</b>.
+Note: TLS 1.1 needs SHA1 to operate, which is only available in security level
+0 for Open SSL 3.0+. See the <i class="arg">-security_level</i> option.</p></dd>
 <dt><b class="option">-tls1.2</b> <i class="arg">bool</i></dt>
 <dd><p>Enable use of TLS v1.2. The default is <b class="const">true</b>.</p></dd>
 <dt><b class="option">-tls1.3</b> <i class="arg">bool</i></dt>
-<dd><p>Enable use of TLS v1.3. The default is <b class="const">true</b>.</p></dd>
+<dd><p>Enable use of TLS v1.3. The default is <b class="const">true</b>. This is only available
+starting with OpenSSL 1.1.1 and TclTLS 1.7.</p></dd>
 <dt><b class="option">-validatecommand</b> <i class="arg">callback</i></dt>
 <dd><p>Specifies the callback command to invoke to validate the peer certificates
 and other config info during the protocol negotiation phase. This can be used
