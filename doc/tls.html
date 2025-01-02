@@ -183,7 +183,9 @@ for the new socket.</p>
 <dl class="doctools_options">
 <dt><b class="option">-autoservername</b> <i class="arg">bool</i></dt>
 <dd><p>If <b class="const">true</b>, automatically set the <b class="option">-servername</b> argument to the
-<em>host</em> argument. Default is <b class="const">false</b>.</p></dd>
+<em>host</em> argument. Prior to TclTLS 2.0, the default is <b class="const">false</b>.
+Starting in TclTLS 2.0, the default is <b class="const">true</b> unless <b class="option">-servername</b>
+is also specified.</p></dd>
 </dl></dd>
 <dt><a name="3"><b class="cmd">tls::socket</b> <b class="option">-server</b> <i class="arg">command</i> <span class="opt">?<i class="arg">-option</i>?</span> <span class="opt">?<i class="arg">value</i>?</span> <span class="opt">?<i class="arg">-option value ...</i>?</span> <i class="arg">port</i></a></dt>
 <dd><p>Same as previous, but instead creates a server socket for clients to connect to
@@ -280,9 +282,10 @@ only accept cipher suites that provide forward secrecy.</p></dd>
 <dd><p>Specifies whether to act as a server and respond with a server handshake when a
 client connects and provides a client handshake. The default is <b class="const">false</b>.</p></dd>
 <dt><b class="option">-servername</b> <i class="arg">hostname</i></dt>
-<dd><p>Specify the peer's hostname. This is used to set the TLS Server Name
-Indication (SNI) extension. Set this to the expected servername in the
-server's certificate or one of the Subject Alternate Names (SAN).</p></dd>
+<dd><p>Specify the peer's hostname. This is used to set the TLS Server Name Indication
+(SNI) extension. Set this to the expected servername in the server's certificate
+or one of the Subject Alternate Names (SAN). Starting in TclTLS 2.0, this will
+default to the host for the <b class="cmd">tls::socket</b> command.</p></dd>
 <dt><b class="option">-session_id</b> <i class="arg">binary_string</i></dt>
 <dd><p>Specifies the session id to resume a session. Not supported yet.</p></dd>
 <dt><b class="option">-ssl2</b> <i class="arg">bool</i></dt>

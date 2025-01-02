@@ -266,6 +266,13 @@ proc tls::socket {args} {
 	    }
 	}
 
+	# Use host as SNI server name without -autoservername and -servername args
+	if {![info exists argsArray(-autoservername)] && 
+		![info exists argsArray(-servername)]} {
+	    set argsArray(-servername) $host
+	    lappend iopts -servername $host
+	}
+
 	lappend sopts $host $port
     }
     #

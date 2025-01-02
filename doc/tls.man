@@ -52,7 +52,9 @@ for the new socket.
 
 [opt_def -autoservername [arg bool]]
 If [const true], automatically set the [option -servername] argument to the
-[emph host] argument. Default is [const false].
+[emph host] argument. Prior to TclTLS 2.0, the default is [const false].
+Starting in TclTLS 2.0, the default is [const true] unless [option -servername]
+is also specified.
 
 [list_end]
 
@@ -175,9 +177,10 @@ Specifies whether to act as a server and respond with a server handshake when a
 client connects and provides a client handshake. The default is [const false].
 
 [opt_def -servername [arg hostname]]
-Specify the peer's hostname. This is used to set the TLS Server Name
-Indication (SNI) extension. Set this to the expected servername in the
-server's certificate or one of the Subject Alternate Names (SAN).
+Specify the peer's hostname. This is used to set the TLS Server Name Indication
+(SNI) extension. Set this to the expected servername in the server's certificate
+or one of the Subject Alternate Names (SAN). Starting in TclTLS 2.0, this will
+default to the host for the [cmd tls::socket] command.
 
 [opt_def -session_id [arg binary_string]]
 Specifies the session id to resume a session. Not supported yet.

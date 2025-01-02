@@ -333,7 +333,9 @@ for the new socket\&.
 .TP
 \fB-autoservername\fR \fIbool\fR
 If \fBtrue\fR, automatically set the \fB-servername\fR argument to the
-\fIhost\fR argument\&. Default is \fBfalse\fR\&.
+\fIhost\fR argument\&. Prior to TclTLS 2\&.0, the default is \fBfalse\fR\&.
+Starting in TclTLS 2\&.0, the default is \fBtrue\fR unless \fB-servername\fR
+is also specified\&.
 .RE
 .TP
 \fBtls::socket\fR \fB-server\fR \fIcommand\fR ?\fI-option\fR? ?\fIvalue\fR? ?\fI-option value \&.\&.\&.\fR? \fIport\fR
@@ -452,9 +454,10 @@ Specifies whether to act as a server and respond with a server handshake when a
 client connects and provides a client handshake\&. The default is \fBfalse\fR\&.
 .TP
 \fB-servername\fR \fIhostname\fR
-Specify the peer's hostname\&. This is used to set the TLS Server Name
-Indication (SNI) extension\&. Set this to the expected servername in the
-server's certificate or one of the Subject Alternate Names (SAN)\&.
+Specify the peer's hostname\&. This is used to set the TLS Server Name Indication
+(SNI) extension\&. Set this to the expected servername in the server's certificate
+or one of the Subject Alternate Names (SAN)\&. Starting in TclTLS 2\&.0, this will
+default to the host for the \fBtls::socket\fR command\&.
 .TP
 \fB-session_id\fR \fIbinary_string\fR
 Specifies the session id to resume a session\&. Not supported yet\&.
