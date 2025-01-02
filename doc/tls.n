@@ -4,7 +4,7 @@
 '\" Copyright (c) 2004 Starfish Systems
 '\" Copyright (c) 2024 Brian O'Hagan
 '\"
-.TH "tls" n 1\&.8 tls "Tcl TLS extension"
+.TH "tls" n 2\&.0b1 tls "Tcl TLS extension"
 .\" The -*- nroff -*- definitions below are for supplemental macros used
 .\" in Tcl/Tk manual entries.
 .\"
@@ -278,7 +278,7 @@ tls \- binding to the OpenSSL library for encrypted socket and I/O channel commu
 .SH SYNOPSIS
 package require \fBTcl 8\&.5-\fR
 .sp
-package require \fBtls 1\&.8\fR
+package require \fBtls 2\&.0b1\fR
 .sp
 \fBtls::init\fR ?\fI-option\fR? ?\fIvalue\fR? ?\fI-option value \&.\&.\&.\fR?
 .sp

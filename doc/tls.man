@@ -3,7 +3,7 @@
           script from tcllib: dtplite -o tls.n nroff tls.man
                               dtplite -o tls.html html tls.man
 }]
-[manpage_begin tls n 1.8]
+[manpage_begin tls n 2.0b1]
 [category tls]
 [copyright {1999 Matt Newman}]
 [copyright {2004 Starfish Systems}]
@@ -13,7 +13,7 @@
 [see_also http socket [uri https://www.openssl.org/ OpenSSL]]
 [titledesc {binding to the OpenSSL library for encrypted socket and I/O channel communications}]
 [require Tcl 8.5-]
-[require tls 1.8]
+[require tls 2.0b1]
 [description]
 
 This extension provides TCL script access to secure socket communications
