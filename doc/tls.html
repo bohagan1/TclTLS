@@ -109,24 +109,25 @@
 <li class="doctools_section"><a href="#toc">Table Of Contents</a></li>
 <li class="doctools_section"><a href="#synopsis">Synopsis</a></li>
 <li class="doctools_section"><a href="#section1">Description</a></li>
-<li class="doctools_section"><a href="#section2">Commands</a></li>
-<li class="doctools_section"><a href="#section3">Certificate Validation</a>
+<li class="doctools_section"><a href="#section2">Compatibility</a></li>
+<li class="doctools_section"><a href="#section3">Commands</a></li>
+<li class="doctools_section"><a href="#section4">Certificate Validation</a>
 <ul>
 <li class="doctools_subsection"><a href="#subsection1">PKI and Certificates</a></li>
 <li class="doctools_subsection"><a href="#subsection2">Summary of command line options</a></li>
 <li class="doctools_subsection"><a href="#subsection3">When are command line options needed?</a></li>
 </ul>
 </li>
-<li class="doctools_section"><a href="#section4">Callback Options</a>
+<li class="doctools_section"><a href="#section5">Callback Options</a>
 <ul>
 <li class="doctools_subsection"><a href="#subsection4">Values for Command Callback</a></li>
 <li class="doctools_subsection"><a href="#subsection5">Values for Password Callback</a></li>
 <li class="doctools_subsection"><a href="#subsection6">Values for Validate Command Callback</a></li>
 </ul>
 </li>
-<li class="doctools_section"><a href="#section5">Debug</a></li>
-<li class="doctools_section"><a href="#section6">Examples</a></li>
-<li class="doctools_section"><a href="#section7">Special Considerations</a></li>
+<li class="doctools_section"><a href="#section6">Debug</a></li>
+<li class="doctools_section"><a href="#section7">Examples</a></li>
+<li class="doctools_section"><a href="#section8">Special Considerations</a></li>
 <li class="doctools_section"><a href="#see-also">See Also</a></li>
 <li class="doctools_section"><a href="#keywords">Keywords</a></li>
 <li class="doctools_section"><a href="#category">Category</a></li>
@@ -163,9 +164,13 @@ These sockets behave exactly the same as channels created using the built-in
 <b class="syscmd">socket</b> command, but provide additional options for controlling
 the SSL/TLS session.</p>
 </div>
-<div id="section2" class="doctools_section"><h2><a name="section2">Commands</a></h2>
+<div id="section2" class="doctools_section"><h2><a name="section2">Compatibility</a></h2>
+<p>This extension is compatible with OpenSSL 1.1.1 or later. It requires Tcl
+version 8.5 or later and will work with Tcl 9.0.</p>
+</div>
+<div id="section3" class="doctools_section"><h2><a name="section3">Commands</a></h2>
 <p>The following are the commands provided by the TcLTLS package. See the
-<span class="sectref"><a href="#section6">Examples</a></span> for example usage and the &quot;<b class="file">demos</b>&quot; directory for
+<span class="sectref"><a href="#section7">Examples</a></span> for example usage and the &quot;<b class="file">demos</b>&quot; directory for
 more example usage.</p>
 <dl class="doctools_definitions">
 <dt><a name="1"><b class="cmd">tls::init</b> <span class="opt">?<i class="arg">-option</i>?</span> <span class="opt">?<i class="arg">value</i>?</span> <span class="opt">?<i class="arg">-option value ...</i>?</span></a></dt>
@@ -203,18 +208,18 @@ parameters for SSL handshake. Valid options are:</p>
 <dd><p>Specifies the directory where the Certificate Authority (CA) certificates are
 stored. The default is platform specific and can be set at compile time. The
 default location can be overridden by the <b class="variable">SSL_CERT_DIR</b> environment
-variable. See <span class="sectref"><a href="#section3">Certificate Validation</a></span> for more details.</p></dd>
+variable. See <span class="sectref"><a href="#section4">Certificate Validation</a></span> for more details.</p></dd>
 <dt><b class="option">-cafile</b> <i class="arg">filename</i></dt>
 <dd><p>Specifies the file with the Certificate Authority (CA) certificates to use in
 <b class="const">PEM</b> file format. The default is &quot;<b class="file">cert.pem</b>&quot;, in the OpenSSL
 directory. The default file can be overridden by the <b class="variable">SSL_CERT_FILE</b> environment
-variable. See <span class="sectref"><a href="#section3">Certificate Validation</a></span> for more details.</p></dd>
+variable. See <span class="sectref"><a href="#section4">Certificate Validation</a></span> for more details.</p></dd>
 <dt><b class="option">-castore</b> <i class="arg">URI</i></dt>
 <dd><p>Specifies the Uniform Resource Identifier (URI) for the Certificate Authority
 (CA) store, which may be a single container or a catalog of containers.
 Starting with OpenSSL 3.2 on MS Windows, set to &quot;<b class="const">org.openssl.winstore://</b>&quot;
 to use the built-in MS Windows Certificate Store.
-See <span class="sectref"><a href="#section3">Certificate Validation</a></span> for more details.
+See <span class="sectref"><a href="#section4">Certificate Validation</a></span> for more details.
 This option is new for TclTLS 1.8.</p></dd>
 <dt><b class="option">-certfile</b> <i class="arg">filename</i></dt>
 <dd><p>Specifies the name of the file with the certificate to use in PEM format
@@ -241,7 +246,7 @@ This option is new for TclTLS 1.8.</p></dd>
 <dt><b class="option">-command</b> <i class="arg">callback</i></dt>
 <dd><p>Specifies the callback command to be invoked at several points during the
 handshake to pass errors, tracing information, and protocol messages.
-See <span class="sectref"><a href="#section4">Callback Options</a></span> for more info.</p></dd>
+See <span class="sectref"><a href="#section5">Callback Options</a></span> for more info.</p></dd>
 <dt><b class="option">-dhparams</b> <i class="arg">filename</i></dt>
 <dd><p>Specifies the Diffie-Hellman (DH) parameters file.</p></dd>
 <dt><b class="option">-keyfile</b> <i class="arg">filename</i></dt>
@@ -256,7 +261,7 @@ specified <i class="arg">channel</i>, and therefore share config, callbacks, etc
 <dd><p>Specifies the callback command to invoke when OpenSSL needs to obtain a
 password. This is typically used to unlock the private key of a certificate.
 The callback should return a password string. This option has changed for
-TclTLS 1.8. See <span class="sectref"><a href="#section4">Callback Options</a></span> for more info.</p></dd>
+TclTLS 1.8. See <span class="sectref"><a href="#section5">Callback Options</a></span> for more info.</p></dd>
 <dt><b class="option">-post_handshake</b> <i class="arg">bool</i></dt>
 <dd><p>Allow post-handshake session ticket updates. This option is new for TclTLS 1.8.</p></dd>
 <dt><b class="option">-request</b> <i class="arg">bool</i></dt>
@@ -264,7 +269,7 @@ TclTLS 1.8. See <span class="sectref"><a href="#section4">Callback Options</a></
 to do Certificate Validation. Starting in TclTLS 1.8, the default is
 <b class="const">true</b>. Starting in TclTLS 2.0, If set to <b class="const">false</b> and
 <b class="option">-require</b> is <b class="const">true</b>, then this will be overridden to <b class="const">true</b>.
-See <span class="sectref"><a href="#section3">Certificate Validation</a></span> for more details.</p></dd>
+See <span class="sectref"><a href="#section4">Certificate Validation</a></span> for more details.</p></dd>
 <dt><b class="option">-require</b> <i class="arg">bool</i></dt>
 <dd><p>Require a valid certificate from the peer during the SSL handshake. If this is
 set to true, then <b class="option">-request</b> must also be set to true and a either
@@ -273,7 +278,7 @@ must be provided in order to validate against. The default in TclTLS 1.8 and
 earlier versions is <b class="const">false</b> since not all platforms have certificates to
 validate against in a form compatible with OpenSSL. Starting in TclTLS 2.0,
 the default is <b class="const">true</b>.
-See <span class="sectref"><a href="#section3">Certificate Validation</a></span> for more details.</p></dd>
+See <span class="sectref"><a href="#section4">Certificate Validation</a></span> for more details.</p></dd>
 <dt><b class="option">-security_level</b> <i class="arg">integer</i></dt>
 <dd><p>Specifies the security level (value from 0 to 5). The security level affects
 the allowed cipher suite encryption algorithms, supported ECC curves,
@@ -319,7 +324,7 @@ starting with OpenSSL 1.1.1 and TclTLS 1.7.</p></dd>
 and other config info during the protocol negotiation phase. This can be used
 by TCL scripts to perform their own Certificate Validation to supplement the
 default validation provided by OpenSSL. The script must return a boolean true
-to continue the negotiation. See <span class="sectref"><a href="#section4">Callback Options</a></span> for more info.
+to continue the negotiation. See <span class="sectref"><a href="#section5">Callback Options</a></span> for more info.
 This option is new for TclTLS 1.8.</p></dd>
 </dl></dd>
 <dt><a name="5"><b class="cmd">tls::unimport</b> <i class="arg">channel</i></a></dt>
@@ -540,7 +545,7 @@ This command is new for TclTLS 1.8.</p></dd>
 <dd><p>Returns the OpenSSL version string.</p></dd>
 </dl>
 </div>
-<div id="section3" class="doctools_section"><h2><a name="section3">Certificate Validation</a></h2>
+<div id="section4" class="doctools_section"><h2><a name="section4">Certificate Validation</a></h2>
 <div id="subsection1" class="doctools_subsection"><h3><a name="subsection1">PKI and Certificates</a></h3>
 <p>Using the Public Key Infrastructure (PKI), each user creates a private key that
 only they know about and a public key they can exchange with others for use in
@@ -589,7 +594,7 @@ Starting with OpenSSL 3.2 on MS Windows, set to &quot;<b class="const">org.opens
 to use the built-in MS Windows Certificate Store. Starting in TclTLS 2.0, this
 is the default if <b class="option">-cadir</b>, <b class="option">-cadir</b>, and <b class="option">-castore</b> are
 not specified. This store only supports root certificate stores. See
-<span class="sectref"><a href="#section3">Certificate Validation</a></span> for more details.</p></dd>
+<span class="sectref"><a href="#section4">Certificate Validation</a></span> for more details.</p></dd>
 <dt><b class="option">-request</b> <i class="arg">bool</i></dt>
 <dd><p>Request a certificate from the peer during the SSL handshake. This is needed
 to do Certificate Validation. Starting in TclTLS 1.8, the default is
@@ -642,7 +647,7 @@ location. It is your responsibility to keep this file up to date.</p></li>
 </ul>
 </div>
 </div>
-<div id="section4" class="doctools_section"><h2><a name="section4">Callback Options</a></h2>
+<div id="section5" class="doctools_section"><h2><a name="section5">Callback Options</a></h2>
 <p>As previously described, each channel can be given their own callbacks
 to handle intermediate processing by the OpenSSL library, using the
 <b class="option">-command</b>, <b class="option">-password</b>, and <b class="option">-validate_command</b> options
@@ -800,7 +805,7 @@ implementations.</p>
 and <b class="cmd">tls::validate_command</b> is not recommended. They may be removed from future releases.</em></p>
 </div>
 </div>
-<div id="section5" class="doctools_section"><h2><a name="section5">Debug</a></h2>
+<div id="section6" class="doctools_section"><h2><a name="section6">Debug</a></h2>
 <p>For most debugging needs, the <b class="option">-callback</b> option can be used to provide
 sufficient insight and information on the TLS handshake and progress. If
 further troubleshooting insight is needed, the compile time option
@@ -819,9 +824,9 @@ option is set to <b class="cmd">tls::validate_command</b>.</p>
 <p><em>The use of the variable <b class="variable">tls::debug</b> is not recommended.
 It may be removed from future releases.</em></p>
 </div>
-<div id="section6" class="doctools_section"><h2><a name="section6">Examples</a></h2>
+<div id="section7" class="doctools_section"><h2><a name="section7">Examples</a></h2>
 <p>The following are example scripts to download a webpage and file using the
-http package. See <span class="sectref"><a href="#section3">Certificate Validation</a></span> for when the
+http package. See <span class="sectref"><a href="#section4">Certificate Validation</a></span> for when the
 <b class="option">-cadir</b>, <b class="option">-cafile</b>, and <b class="option">-castore</b> options are also
 needed. See the &quot;<b class="file">demos</b>&quot; directory for more example scripts.</p>
 <p>Example #1: Download a web page</p>
@@ -863,7 +868,7 @@ close $ch
 ::http::cleanup $token
 </pre>
 </div>
-<div id="section7" class="doctools_section"><h2><a name="section7">Special Considerations</a></h2>
+<div id="section8" class="doctools_section"><h2><a name="section8">Special Considerations</a></h2>
 <p>The capabilities of this package can vary enormously based upon how the
 linked to OpenSSL library was configured and built. New versions may obsolete
 older protocol versions, add or remove ciphers, change default values, etc.

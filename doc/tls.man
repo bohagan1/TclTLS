@@ -24,6 +24,10 @@ These sockets behave exactly the same as channels created using the built-in
 [syscmd socket] command, but provide additional options for controlling
 the SSL/TLS session.
 
+[section Compatibility]
+This extension is compatible with OpenSSL 1.1.1 or later. It requires Tcl
+version 8.5 or later and will work with Tcl 9.0.
+
 [section Commands]
 
 The following are the commands provided by the TcLTLS package. See the
