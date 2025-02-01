@@ -84,7 +84,7 @@ static SSL_CTX *CTX_Init(State *statePtr, int isServer, int proto, char *key,
  *
  *-------------------------------------------------------------------
  */
- 
+
 static int
 EvalCallback(
     Tcl_Interp *interp,		/* Tcl interpreter */
@@ -139,7 +139,7 @@ EvalCallback(
  *
  *-------------------------------------------------------------------
  */
- 
+
 static void
 InfoCallback(
     const SSL *ssl,		/* SSL context */
@@ -216,7 +216,7 @@ InfoCallback(
  *
  *-------------------------------------------------------------------
  */
- 
+
 #ifndef OPENSSL_NO_SSL_TRACE
 static void
 MessageCallback(
@@ -366,7 +366,7 @@ MessageCallback(
  *
  *-------------------------------------------------------------------
  */
- 
+
 static int
 VerifyCallback(
     int ok,			/* Verify result */
@@ -436,7 +436,7 @@ VerifyCallback(
  *
  *-------------------------------------------------------------------
  */
- 
+
 void
 Tls_Error(
     State *statePtr,		/* Client state for TLS socket */
@@ -494,7 +494,7 @@ Tls_Error(
  *
  *-------------------------------------------------------------------
  */
- 
+
 void KeyLogCallback(
     const SSL *ssl,		/* Client state for TLS socket */
     const char *line)		/* Key data to be logged */
@@ -531,7 +531,7 @@ void KeyLogCallback(
  *
  *-------------------------------------------------------------------
  */
- 
+
 static int
 PasswordCallback(
     char *buf,			/* Pointer to buffer to store password in */
@@ -616,7 +616,7 @@ PasswordCallback(
  *
  *-------------------------------------------------------------------
  */
- 
+
 static int
 SessionCallback(
     SSL *ssl,			/* SSL context */
@@ -689,7 +689,7 @@ SessionCallback(
  *
  *-------------------------------------------------------------------
  */
- 
+
 static int
 ALPNCallback(
     SSL *ssl,			/* SSL context */
@@ -764,7 +764,7 @@ ALPNCallback(
  *
  *-------------------------------------------------------------------
  */
- 
+
 #ifdef USE_NPN
 static int
 NPNCallback(
@@ -819,7 +819,7 @@ NPNCallback(
  *
  *-------------------------------------------------------------------
  */
- 
+
 static int
 SNICallback(
     const SSL *ssl,		/* SSL context */
@@ -896,7 +896,7 @@ SNICallback(
  *
  *-------------------------------------------------------------------
  */
- 
+
 static int
 HelloCallback(
     SSL *ssl,			/* SSL context */
@@ -997,7 +997,7 @@ HelloCallback(
  *
  *-------------------------------------------------------------------
  */
- 
+
 static const char *protocols[] = {
     "ssl2", "ssl3", "tls1", "tls1.1", "tls1.2", "tls1.3", NULL
 };
@@ -1614,10 +1614,10 @@ ImportObjCmd(
 	http/1.1, h2, h3, ftp, imap, pop3, xmpp-client, xmpp-server, mqtt, irc, etc. */
     if (alpn) {
 	/* Convert a TCL list into a protocol-list in wire-format */
-	unsigned char *protos, *p;
+	unsigned char *protos = NULL, *p;
 	unsigned int protos_len = 0;
 	Tcl_Size cnt, i;
-	int j;
+	int res = TCL_OK;
 	Tcl_Obj **list;
 
 	if (Tcl_ListObjGetElements(interp, alpn, &cnt, &list) != TCL_OK) {
@@ -1631,8 +1631,8 @@ ImportObjCmd(
 	    if (len > 255) {
 		Tcl_AppendResult(interp, "ALPN protocol names too long", (char *)NULL);
 		Tcl_SetErrorCode(interp, "TLS", "IMPORT", "ALPN", "FAILED", (char *)NULL);
-		Tls_Free((tls_free_type *) statePtr);
-		return TCL_ERROR;
+		res = TCL_ERROR;
+		goto done;
 	    }
 	    protos_len += 1 + (int) len;
 	}
@@ -1640,8 +1640,8 @@ ImportObjCmd(
 	/* Build the complete protocol-list */
 	protos = ckalloc(protos_len);
 	/* protocol-lists consist of 8-bit length-prefixed, byte strings */
-	for (j = 0, p = protos; j < cnt; j++) {
-	    char *str = Tcl_GetStringFromObj(list[j], &len);
+	for (i = 0, p = protos; i < cnt; i++) {
+	    char *str = Tcl_GetStringFromObj(list[i], &len);
 	    *p++ = (unsigned char) len;
 	    memcpy(p, str, (size_t) len);
 	    p += len;
@@ -1652,8 +1652,19 @@ ImportObjCmd(
 	if (SSL_set_alpn_protos(statePtr->ssl, protos, protos_len)) {
 	    Tcl_AppendResult(interp, "Set ALPN protocols failed: ", GET_ERR_REASON(), (char *)NULL);
 	    Tcl_SetErrorCode(interp, "TLS", "IMPORT", "ALPN", "FAILED", (char *)NULL);
+	    res = TCL_ERROR;
+	}
+
+done:	for (i = 0; i < cnt; i++) {
+	    Tcl_IncrRefCount(list[i]);
+	    Tcl_DecrRefCount(list[i]);
+	}
+
+	if (res != TCL_OK) {
 	    Tls_Free((tls_free_type *) statePtr);
-	    ckfree(protos);
+	    if (protos != NULL) {
+		ckfree(protos);
+	    }
 	    return TCL_ERROR;
 	}
 
@@ -1847,7 +1858,7 @@ UnimportObjCmd(
  *
  *-------------------------------------------------------------------
  */
- 
+
 static int
 TlsLoadClientCAFileFromMemory(
     Tcl_Interp *interp,		/* Tcl interpreter */
@@ -2343,10 +2354,11 @@ CTX_Init(
 
 	    Tcl_Obj *fsinfo = Tcl_FSFileSystemInfo(cafileobj);
 	    if (fsinfo) {
+		Tcl_Obj *fstype = NULL;
 		Tcl_IncrRefCount(fsinfo);
 
-		Tcl_Obj *fstype = NULL;
 		Tcl_ListObjIndex(interp, fsinfo, 0, &fstype);
+		Tcl_IncrRefCount(fstype);
 
 		if (Tcl_StringMatch("native", Tcl_GetString(fstype))) {
 		    if (!SSL_CTX_load_verify_file(ctx, F2N(CAfile, &ds))) {
@@ -2367,6 +2379,7 @@ CTX_Init(
 			abort++;
 		    }
 		}
+		Tcl_DecrRefCount(fstype);
 		Tcl_DecrRefCount(fsinfo);
 
 	    } else {
@@ -2396,7 +2409,7 @@ CTX_Init(
  *
  *-------------------------------------------------------------------
  */
- 
+
 static int
 StatusObjCmd(
     TCL_UNUSED(ClientData),	/* Client data */
@@ -2803,7 +2816,7 @@ static int ConnectionInfoObjCmd(
  *
  *-------------------------------------------------------------------
  */
- 
+
 static int
 VersionObjCmd(
     TCL_UNUSED(ClientData),	/* Client data */
@@ -2834,7 +2847,7 @@ VersionObjCmd(
  *
  *-------------------------------------------------------------------
  */
- 
+
 static int
 MiscObjCmd(
     TCL_UNUSED(ClientData),	/* Client data */
@@ -2846,6 +2859,7 @@ MiscObjCmd(
     enum command { C_REQ, C_STRREQ, C_DUMMY };
     int cmd, isStr;
     char buffer[16384];
+    int res = TCL_OK;
 
     dprintf("Called");
 
@@ -2871,7 +2885,7 @@ MiscObjCmd(
 
 	    BIO *out=NULL;
 
-	    const char *k_C="",*k_ST="",*k_L="",*k_O="",*k_OU="",*k_CN="",*k_Email="";
+	    Tcl_Obj *k_C=NULL,*k_ST=NULL,*k_L=NULL,*k_O=NULL,*k_OU=NULL,*k_CN=NULL,*k_Email=NULL;
 	    char *keyout,*pemout,*str;
 	    int keysize,serial=0,days=365;
 
@@ -2904,34 +2918,53 @@ MiscObjCmd(
 
 		if ((listc%2) != 0) {
 		    Tcl_SetResult(interp,"Information list must have even number of arguments",NULL);
-		    return TCL_ERROR;
+		    res = TCL_ERROR;
 		}
 		for (i=0; i<listc; i+=2) {
 		    str=Tcl_GetString(listv[i]);
 		    if (strcmp(str,"days")==0) {
-			if (Tcl_GetIntFromObj(interp,listv[i+1],&days)!=TCL_OK)
-			    return TCL_ERROR;
+			if (Tcl_GetIntFromObj(interp,listv[i+1],&days)!=TCL_OK) {
+			    res = TCL_ERROR;
+			    break;
+			}
 		    } else if (strcmp(str,"serial")==0) {
-			if (Tcl_GetIntFromObj(interp,listv[i+1],&serial)!=TCL_OK)
-			    return TCL_ERROR;
+			if (Tcl_GetIntFromObj(interp,listv[i+1],&serial)!=TCL_OK) {
+			    res = TCL_ERROR;
+			    break;
+			}
 		    } else if (strcmp(str,"C")==0) {
-			k_C=Tcl_GetString(listv[i+1]);
+			k_C = listv[i+1];
+			Tcl_IncrRefCount(k_C);
 		    } else if (strcmp(str,"ST")==0) {
-			k_ST=Tcl_GetString(listv[i+1]);
+			k_ST = listv[i+1];
+			Tcl_IncrRefCount(k_ST);
 		    } else if (strcmp(str,"L")==0) {
-			k_L=Tcl_GetString(listv[i+1]);
+			k_L = listv[i+1];
+			Tcl_IncrRefCount(k_L);
 		    } else if (strcmp(str,"O")==0) {
-			k_O=Tcl_GetString(listv[i+1]);
+			k_O = listv[i+1];
+			Tcl_IncrRefCount(k_O);
 		    } else if (strcmp(str,"OU")==0) {
-			k_OU=Tcl_GetString(listv[i+1]);
+			k_OU = listv[i+1];
+			Tcl_IncrRefCount(k_OU);
 		    } else if (strcmp(str,"CN")==0) {
-			k_CN=Tcl_GetString(listv[i+1]);
+			k_CN = listv[i+1];
+			Tcl_IncrRefCount(k_CN);
 		    } else if (strcmp(str,"Email")==0) {
-			k_Email=Tcl_GetString(listv[i+1]);
+			k_Email = listv[i+1];
+			Tcl_IncrRefCount(k_Email);
 		    } else {
 			Tcl_SetResult(interp,"Unknown parameter",NULL);
-			return TCL_ERROR;
+			res = TCL_ERROR;
+			break;
 		    }
+		}
+		for (i=0; i<listc; i+=2) {
+		    Tcl_IncrRefCount(listv[i]);
+		    Tcl_DecrRefCount(listv[i]);
+		}
+		if (res != TCL_OK) {
+		    goto done;
 		}
 	    }
 
@@ -2953,8 +2986,13 @@ MiscObjCmd(
 		EVP_PKEY_CTX_free(ctx);
 #endif
 		Tcl_SetResult(interp,"Error generating private key",NULL);
-		return TCL_ERROR;
+		res = TCL_ERROR;
+		goto done;
+
 	    } else {
+		const unsigned char *string;
+		Tcl_Size len;
+
 		if (isStr) {
 		    out=BIO_new(BIO_s_mem());
 		    PEM_write_bio_PrivateKey(out,pkey,NULL,NULL,0,NULL,NULL);
@@ -2978,7 +3016,8 @@ MiscObjCmd(
 #if OPENSSL_VERSION_NUMBER < 0x30000000L
 		    BN_free(bne);
 #endif
-		    return TCL_ERROR;
+		    res = TCL_ERROR;
+		    goto done;
 		}
 
 		X509_set_version(cert,2);
@@ -2989,13 +3028,61 @@ MiscObjCmd(
 
 		name=X509_get_subject_name(cert);
 
-		X509_NAME_add_entry_by_txt(name,"C", MBSTRING_ASC, (const unsigned char *) k_C, -1, -1, 0);
-		X509_NAME_add_entry_by_txt(name,"ST", MBSTRING_ASC, (const unsigned char *) k_ST, -1, -1, 0);
-		X509_NAME_add_entry_by_txt(name,"L", MBSTRING_ASC, (const unsigned char *) k_L, -1, -1, 0);
-		X509_NAME_add_entry_by_txt(name,"O", MBSTRING_ASC, (const unsigned char *) k_O, -1, -1, 0);
-		X509_NAME_add_entry_by_txt(name,"OU", MBSTRING_ASC, (const unsigned char *) k_OU, -1, -1, 0);
-		X509_NAME_add_entry_by_txt(name,"CN", MBSTRING_ASC, (const unsigned char *) k_CN, -1, -1, 0);
-		X509_NAME_add_entry_by_txt(name,"Email", MBSTRING_ASC, (const unsigned char *) k_Email, -1, -1, 0);
+		if (K_C != NULL) {
+		    string = (const unsigned char *) Tcl_GetStringFromObj(k_C, &len);
+		} else {
+		    string = NULL;
+		    len = 0;
+		}
+		X509_NAME_add_entry_by_txt(name,"C", MBSTRING_ASC, string, (int) len, -1, 0);
+
+		if (k_ST != NULL) {
+		    string = (const unsigned char *) Tcl_GetStringFromObj(k_ST, &len);
+		} else {
+		    string = NULL;
+		    len = 0;
+		}
+		X509_NAME_add_entry_by_txt(name,"ST", MBSTRING_ASC, string, (int) len, -1, 0);
+
+		if (k_L != NULL) {
+		    string = (const unsigned char *) Tcl_GetStringFromObj(k_L, &len);
+		} else {
+		    string = NULL;
+		    len = 0;
+		}
+		X509_NAME_add_entry_by_txt(name,"L", MBSTRING_ASC, string, (int) len, -1, 0);
+
+		if (k_O != NULL) {
+		    string = (const unsigned char *) Tcl_GetStringFromObj(k_O, &len);
+		} else {
+		    string = NULL;
+		    len = 0;
+		}
+		X509_NAME_add_entry_by_txt(name,"O", MBSTRING_ASC, string, (int) len, -1, 0);
+
+		if (k_OU != NULL) {
+		    string = (const unsigned char *) Tcl_GetStringFromObj(k_OU, &len);
+		} else {
+		    string = NULL;
+		    len = 0;
+		}
+		X509_NAME_add_entry_by_txt(name,"OU", MBSTRING_ASC, string, (int) len, -1, 0);
+
+		if (k_CN != NULL) {
+		    string = (const unsigned char *) Tcl_GetStringFromObj(k_CN, &len);
+		} else {
+		    string = NULL;
+		    len = 0;
+		}
+		X509_NAME_add_entry_by_txt(name,"CN", MBSTRING_ASC, string, (int) len, -1, 0);
+
+		if (k_Email != NULL) {
+		    string = (const unsigned char *) Tcl_GetStringFromObj(k_Email, &len);
+		} else {
+		    string = NULL;
+		    len = 0;
+		}
+		X509_NAME_add_entry_by_txt(name,"Email", MBSTRING_ASC, string, (int) len, -1, 0);
 
 		X509_set_subject_name(cert,name);
 
@@ -3006,7 +3093,8 @@ MiscObjCmd(
 		    BN_free(bne);
 #endif
 		    Tcl_SetResult(interp,"Error signing certificate",NULL);
-		    return TCL_ERROR;
+		    res = TCL_ERROR;
+		    goto done;
 		}
 
 		if (isStr) {
@@ -3031,12 +3119,33 @@ MiscObjCmd(
 		BN_free(bne);
 #endif
 	    }
+done:	    if (k_C != NULL) {
+		Tcl_DecRefCount(k_C);
+	    }
+	    if (k_ST != NULL) {
+		Tcl_DecRefCount(k_ST);
+	    }
+	    if (k_L != NULL) {
+		Tcl_DecRefCount(k_L);
+	    }
+	    if (k_O != NULL) {
+		Tcl_DecRefCount(k_O);
+	    }
+	    if (k_OU != NULL) {
+		Tcl_DecRefCount(k_OU);
+	    }
+	    if (k_CN != NULL) {
+		Tcl_DecRefCount(k_CN);
+	    }
+	    if (k_Email != NULL) {
+		Tcl_DecRefCount(k_Email);
+	    }
 	}
 	break;
     default:
 	break;
     }
-    return TCL_OK;
+    return res;
 }
 
 /********************/
@@ -3059,7 +3168,7 @@ MiscObjCmd(
  *
  *-------------------------------------------------------------------
  */
- 
+
 void
 Tls_Free(
     tls_free_type *blockPtr)	/* Client state for TLS socket */
@@ -3090,7 +3199,7 @@ Tls_Free(
  *
  *-------------------------------------------------------------------
  */
- 
+
 void Tls_Clean(
     State *statePtr)		/* Client state for TLS socket */
 {
@@ -3249,7 +3358,7 @@ BuildInfoCommand(
  *
  *------------------------------------------------------*
  */
- 
+
 void TlsLibShutdown(
     ClientData clientData)	/* Not used */
 {
@@ -3273,7 +3382,7 @@ void TlsLibShutdown(
  *
  *------------------------------------------------------*
  */
- 
+
 static int TlsLibInit() {
     static int initialized = 0;
 
@@ -3381,7 +3490,7 @@ DLLEXPORT int Tls_Init(
  *
  *-------------------------------------------------------------------
  */
- 
+
 DLLEXPORT int Tls_SafeInit(
     Tcl_Interp *interp)		/* Tcl interpreter */
 {
