@@ -3028,7 +3028,7 @@ MiscObjCmd(
 
 		name=X509_get_subject_name(cert);
 
-		if (K_C != NULL) {
+		if (k_C != NULL) {
 		    string = (const unsigned char *) Tcl_GetStringFromObj(k_C, &len);
 		} else {
 		    string = NULL;
@@ -3120,25 +3120,25 @@ MiscObjCmd(
 #endif
 	    }
 done:	    if (k_C != NULL) {
-		Tcl_DecRefCount(k_C);
+		Tcl_DecrRefCount(k_C);
 	    }
 	    if (k_ST != NULL) {
-		Tcl_DecRefCount(k_ST);
+		Tcl_DecrRefCount(k_ST);
 	    }
 	    if (k_L != NULL) {
-		Tcl_DecRefCount(k_L);
+		Tcl_DecrRefCount(k_L);
 	    }
 	    if (k_O != NULL) {
-		Tcl_DecRefCount(k_O);
+		Tcl_DecrRefCount(k_O);
 	    }
 	    if (k_OU != NULL) {
-		Tcl_DecRefCount(k_OU);
+		Tcl_DecrRefCount(k_OU);
 	    }
 	    if (k_CN != NULL) {
-		Tcl_DecRefCount(k_CN);
+		Tcl_DecrRefCount(k_CN);
 	    }
 	    if (k_Email != NULL) {
-		Tcl_DecRefCount(k_Email);
+		Tcl_DecrRefCount(k_Email);
 	    }
 	}
 	break;
