@@ -307,7 +307,7 @@ package require \fBtls 2\&.0b1\fR
 This extension provides TCL script access to secure socket communications
 using the Transport Layer Security (TLS) protocol\&. It provides a generic
 binding to \fIOpenSSL\fR [https://www\&.openssl\&.org/], utilizing the
-\fBTcl_StackChannel\fR API in TCL 8\&.4 and higher\&.
+\fBTcl_StackChannel\fR API in TCL 8\&.4 or later\&.
 These sockets behave exactly the same as channels created using the built-in
 \fBsocket\fR command, but provide additional options for controlling
 the SSL/TLS session\&.
@@ -323,12 +323,12 @@ more example usage\&.
 Optional function to set the default options used by \fBtls::socket\fR\&. If you
 call \fBtls::import\fR directly, the values set by this command have no effect\&.
 This command supports all of the same options as the \fBtls::socket\fR command,
-though you should limit your options to only TLS related ones\&.
+though you should limit your options to only the TLS related ones\&.
 .TP
 \fBtls::socket\fR ?\fI-option\fR? ?\fIvalue\fR? ?\fI-option value \&.\&.\&.\fR? \fIhost\fR \fIport\fR
 This is a helper function that utilizes the underlying commands \fBsocket\fR
 and \fBtls::import\fR to create the connection\&. It behaves the same as the
-native TCL \fBsocket\fR command, but also supports the \fBtls:import\fR
+native TCL \fBsocket\fR command, but also supports the \fBtls::import\fR
 command options with one additional option\&. It returns the channel handle id
 for the new socket\&.
 .RS
@@ -412,7 +412,7 @@ Specifies the Diffie-Hellman (DH) parameters file\&.
 .TP
 \fB-keyfile\fR \fIfilename\fR
 Specifies the private key file\&. The default is to use the file
-specified by the \fI-certfile\fR option\&.
+specified by the \fB-certfile\fR option\&.
 .TP
 \fB-key\fR \fIstring\fR
 Specifies the private key to use as a DER encoded string (PKCS#1 DER)\&.
@@ -433,7 +433,7 @@ Allow post-handshake session ticket updates\&. This option is new for TclTLS 1\&
 \fB-request\fR \fIbool\fR
 Request a certificate from the peer during the SSL handshake\&. This is needed
 to do Certificate Validation\&. Starting in TclTLS 1\&.8, the default is
-\fBtrue\fR\&. Starting in TclTLS 2\&.0, If set to \fBfalse\fR and
+\fBtrue\fR\&. Starting in TclTLS 2\&.0, if set to \fBfalse\fR and
 \fB-require\fR is \fBtrue\fR, then this will be overridden to \fBtrue\fR\&.
 See \fBCertificate Validation\fR for more details\&.
 .TP
@@ -483,12 +483,12 @@ See the \fBtls::protocols\fR command for supported protocols\&.
 \fB-tls1\fR \fIbool\fR
 Enable use of TLS v1\&. Starting in TclTLS 2\&.0, the default is \fBfalse\fR\&.
 Note: TLS 1\&.0 needs SHA1 to operate, which is only available in security level
-0 for Open SSL 3\&.0+\&. See the \fI-security_level\fR option\&.
+0 for Open SSL 3\&.0+\&. See the \fB-security_level\fR option\&.
 .TP
 \fB-tls1\&.1\fR \fIbool\fR
 Enable use of TLS v1\&.1\&. Starting in TclTLS 2\&.0, the default is \fBfalse\fR\&.
 Note: TLS 1\&.1 needs SHA1 to operate, which is only available in security level
-0 for Open SSL 3\&.0+\&. See the \fI-security_level\fR option\&.
+0 for Open SSL 3\&.0+\&. See the \fB-security_level\fR option\&.
 .TP
 \fB-tls1\&.2\fR \fIbool\fR
 Enable use of TLS v1\&.2\&. The default is \fBtrue\fR\&.
@@ -819,7 +819,7 @@ Authority (CA)\&. Users can then exchange these certificates during the TLS
 initialization process and check them against the root CA certificates to ensure
 they are valid\&. This is handled by OpenSSL via the \fB-request\fR and
 \fB-require\fR options\&. See the \fB-cadir\fR, \fB-cadir\fR, and
-\fB-castore\fR options for how tp specify where to find the CA certificates\&.
+\fB-castore\fR options for how to specify where to find the CA certificates\&.
 Optionally, in a future release, they can also be checked against the Certificate
 Revocation List (CRL) of revoked certificates\&. Certificates can also be
 self-signed, but they are by default not trusted unless you add them to your
@@ -851,16 +851,15 @@ Specifies the Uniform Resource Identifier (URI) for the Certificate Authority
 Starting with OpenSSL 3\&.2 on MS Windows, set to "\fBorg\&.openssl\&.winstore://\fR"
 to use the built-in MS Windows Certificate Store\&. Starting in TclTLS 2\&.0, this
 is the default if \fB-cadir\fR, \fB-cadir\fR, and \fB-castore\fR are
-not specified\&. This store only supports root certificate stores\&. See
-\fBCertificate Validation\fR for more details\&.
+not specified\&. This store only supports root certificate stores\&.
 .TP
 \fB-request\fR \fIbool\fR
 Request a certificate from the peer during the SSL handshake\&. This is needed
 to do Certificate Validation\&. Starting in TclTLS 1\&.8, the default is
-\fBtrue\fR\&. Starting in TclTLS 2\&.0, If set to \fBfalse\fR and
+\fBtrue\fR\&. Starting in TclTLS 2\&.0, if set to \fBfalse\fR and
 \fB-require\fR is \fBtrue\fR, then this will be overridden to \fBtrue\fR\&.
 In addition, the client can manually inspect and accept or reject
-each certificate using the \fI-validatecommand\fR option\&.
+each certificate using the \fB-validatecommand\fR option\&.
 .TP
 \fB-require\fR \fIbool\fR
 Require a valid certificate from the peer during the SSL handshake\&. If this is
@@ -1027,7 +1026,7 @@ For servers, this form of callback is invoked when the client ALPN extension is
 received\&. If \fImatch\fR is true, then \fIprotocol\fR is the first
 \fB-alpn\fR protocol option in common to both the client and server\&.
 If not, the first client specified protocol is used\&. This callback is called
-after the Hello and ALPN callbacks\&.
+after the Hello and SNI callbacks\&.
 .TP
 \fBhello\fR \fIchannelId servername\fR
 For servers, this form of callback is invoked during client hello message
@@ -1039,9 +1038,9 @@ callbacks\&.
 \fBsni\fR \fIchannelId servername\fR
 For servers, this form of callback is invoked when the Server Name Indication
 (SNI) extension is received\&. The \fIservername\fR argument is the client
-provided server name specified in the \fB-servername</b>\fR option\&. The
+provided server name specified in the \fB-servername\fR option\&. The
 purpose is so when a server supports multiple names, the right certificate
-can be used\&. It is called after the hello callback but before the ALPN
+can be used\&. It is called after the Hello callback but before the ALPN
 callback\&.
 .TP
 \fBverify\fR \fIchannelId depth cert status error\fR
@@ -1174,7 +1173,7 @@ close $ch
 The capabilities of this package can vary enormously based upon how the
 linked to OpenSSL library was configured and built\&. New versions may obsolete
 older protocol versions, add or remove ciphers, change default values, etc\&.
-Use the \fBtls::protocols\fR commands to obtain the supported
+Use the \fBtls::protocols\fR command to obtain the supported
 protocol versions\&.
 .SH "SEE ALSO"
 \fIOpenSSL\fR [https://www\&.openssl\&.org/], http, socket

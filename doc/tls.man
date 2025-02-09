@@ -19,7 +19,7 @@
 This extension provides TCL script access to secure socket communications
 using the Transport Layer Security (TLS) protocol. It provides a generic
 binding to [uri "https://www.openssl.org/" OpenSSL], utilizing the
-[syscmd Tcl_StackChannel] API in TCL 8.4 and higher.
+[syscmd Tcl_StackChannel] API in TCL 8.4 or later.
 These sockets behave exactly the same as channels created using the built-in
 [syscmd socket] command, but provide additional options for controlling
 the SSL/TLS session.
@@ -41,13 +41,13 @@ more example usage.
 Optional function to set the default options used by [cmd tls::socket]. If you
 call [cmd tls::import] directly, the values set by this command have no effect.
 This command supports all of the same options as the [cmd tls::socket] command,
-though you should limit your options to only TLS related ones.
+though you should limit your options to only the TLS related ones.
 
 [call [cmd tls::socket] [opt [arg -option]] [opt [arg value]] [opt [arg "-option value ..."]] [arg host] [arg port]]
 
 This is a helper function that utilizes the underlying commands [syscmd socket]
 and [cmd tls::import] to create the connection. It behaves the same as the
-native TCL [syscmd socket] command, but also supports the [cmd tls:import]
+native TCL [syscmd socket] command, but also supports the [cmd tls::import]
 command options with one additional option. It returns the channel handle id
 for the new socket.
 
@@ -136,7 +136,7 @@ Specifies the Diffie-Hellman (DH) parameters file.
 
 [opt_def -keyfile [arg filename]]
 Specifies the private key file. The default is to use the file
-specified by the [arg -certfile] option.
+specified by the [option -certfile] option.
 
 [opt_def -key [arg string]]
 Specifies the private key to use as a DER encoded string (PKCS#1 DER).
@@ -157,7 +157,7 @@ Allow post-handshake session ticket updates. This option is new for TclTLS 1.8.
 [opt_def -request [arg bool]]
 Request a certificate from the peer during the SSL handshake. This is needed
 to do Certificate Validation. Starting in TclTLS 1.8, the default is
-[const true]. Starting in TclTLS 2.0, If set to [const false] and
+[const true]. Starting in TclTLS 2.0, if set to [const false] and
 [option -require] is [const true], then this will be overridden to [const true].
 See [sectref "Certificate Validation"] for more details.
 
@@ -207,12 +207,12 @@ See the [cmd tls::protocols] command for supported protocols.
 [opt_def -tls1 [arg bool]]
 Enable use of TLS v1. Starting in TclTLS 2.0, the default is [const false].
 Note: TLS 1.0 needs SHA1 to operate, which is only available in security level
-0 for Open SSL 3.0+. See the [arg -security_level] option.
+0 for Open SSL 3.0+. See the [option -security_level] option.
 
 [opt_def -tls1.1 [arg bool]]
 Enable use of TLS v1.1. Starting in TclTLS 2.0, the default is [const false].
 Note: TLS 1.1 needs SHA1 to operate, which is only available in security level
-0 for Open SSL 3.0+. See the [arg -security_level] option.
+0 for Open SSL 3.0+. See the [option -security_level] option.
 
 [opt_def -tls1.2 [arg bool]]
 Enable use of TLS v1.2. The default is [const true].
@@ -570,7 +570,7 @@ Authority (CA). Users can then exchange these certificates during the TLS
 initialization process and check them against the root CA certificates to ensure
 they are valid. This is handled by OpenSSL via the [option -request] and
 [option -require] options. See the [option -cadir], [option -cadir], and
-[option -castore] options for how tp specify where to find the CA certificates.
+[option -castore] options for how to specify where to find the CA certificates.
 Optionally, in a future release, they can also be checked against the Certificate
 Revocation List (CRL) of revoked certificates. Certificates can also be
 self-signed, but they are by default not trusted unless you add them to your
@@ -607,16 +607,15 @@ Specifies the Uniform Resource Identifier (URI) for the Certificate Authority
 Starting with OpenSSL 3.2 on MS Windows, set to "[const "org.openssl.winstore://"]"
 to use the built-in MS Windows Certificate Store. Starting in TclTLS 2.0, this
 is the default if [option -cadir], [option -cadir], and [option -castore] are
-not specified. This store only supports root certificate stores. See
-[sectref "Certificate Validation"] for more details.
+not specified. This store only supports root certificate stores.
 
 [opt_def -request [arg bool]]
 Request a certificate from the peer during the SSL handshake. This is needed
 to do Certificate Validation. Starting in TclTLS 1.8, the default is
-[const true]. Starting in TclTLS 2.0, If set to [const false] and
+[const true]. Starting in TclTLS 2.0, if set to [const false] and
 [option -require] is [const true], then this will be overridden to [const true].
 In addition, the client can manually inspect and accept or reject
-each certificate using the [arg -validatecommand] option.
+each certificate using the [option -validatecommand] option.
 
 [opt_def -require [arg bool]]
 Require a valid certificate from the peer during the SSL handshake. If this is
@@ -817,7 +816,7 @@ For servers, this form of callback is invoked when the client ALPN extension is
 received. If [arg match] is true, then [arg protocol] is the first
 [option -alpn] protocol option in common to both the client and server.
 If not, the first client specified protocol is used. This callback is called
-after the Hello and ALPN callbacks.
+after the Hello and SNI callbacks.
 
 [opt_def hello [arg "channelId servername"]]
 For servers, this form of callback is invoked during client hello message
@@ -829,9 +828,9 @@ callbacks.
 [opt_def sni [arg "channelId servername"]]
 For servers, this form of callback is invoked when the Server Name Indication
 (SNI) extension is received. The [arg servername] argument is the client
-provided server name specified in the [option -servername</b>] option. The
+provided server name specified in the [option -servername] option. The
 purpose is so when a server supports multiple names, the right certificate
-can be used. It is called after the hello callback but before the ALPN
+can be used. It is called after the Hello callback but before the ALPN
 callback.
 
 [opt_def verify [arg "channelId depth cert status error"]]
@@ -983,7 +982,7 @@ close $ch
 The capabilities of this package can vary enormously based upon how the
 linked to OpenSSL library was configured and built. New versions may obsolete
 older protocol versions, add or remove ciphers, change default values, etc.
-Use the [cmd tls::protocols] commands to obtain the supported
+Use the [cmd tls::protocols] command to obtain the supported
 protocol versions.
 
 [manpage_end]

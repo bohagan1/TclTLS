@@ -159,7 +159,7 @@
 <p>This extension provides TCL script access to secure socket communications
 using the Transport Layer Security (TLS) protocol. It provides a generic
 binding to <a href="https://www.openssl.org/">OpenSSL</a>, utilizing the
-<b class="syscmd">Tcl_StackChannel</b> API in TCL 8.4 and higher.
+<b class="syscmd">Tcl_StackChannel</b> API in TCL 8.4 or later.
 These sockets behave exactly the same as channels created using the built-in
 <b class="syscmd">socket</b> command, but provide additional options for controlling
 the SSL/TLS session.</p>
@@ -177,11 +177,11 @@ more example usage.</p>
 <dd><p>Optional function to set the default options used by <b class="cmd">tls::socket</b>. If you
 call <b class="cmd">tls::import</b> directly, the values set by this command have no effect.
 This command supports all of the same options as the <b class="cmd">tls::socket</b> command,
-though you should limit your options to only TLS related ones.</p></dd>
+though you should limit your options to only the TLS related ones.</p></dd>
 <dt><a name="2"><b class="cmd">tls::socket</b> <span class="opt">?<i class="arg">-option</i>?</span> <span class="opt">?<i class="arg">value</i>?</span> <span class="opt">?<i class="arg">-option value ...</i>?</span> <i class="arg">host</i> <i class="arg">port</i></a></dt>
 <dd><p>This is a helper function that utilizes the underlying commands <b class="syscmd">socket</b>
 and <b class="cmd">tls::import</b> to create the connection. It behaves the same as the
-native TCL <b class="syscmd">socket</b> command, but also supports the <b class="cmd">tls:import</b>
+native TCL <b class="syscmd">socket</b> command, but also supports the <b class="cmd">tls::import</b>
 command options with one additional option. It returns the channel handle id
 for the new socket.</p>
 <dl class="doctools_options">
@@ -251,7 +251,7 @@ See <span class="sectref"><a href="#section5">Callback Options</a></span> for mo
 <dd><p>Specifies the Diffie-Hellman (DH) parameters file.</p></dd>
 <dt><b class="option">-keyfile</b> <i class="arg">filename</i></dt>
 <dd><p>Specifies the private key file. The default is to use the file
-specified by the <i class="arg">-certfile</i> option.</p></dd>
+specified by the <b class="option">-certfile</b> option.</p></dd>
 <dt><b class="option">-key</b> <i class="arg">string</i></dt>
 <dd><p>Specifies the private key to use as a DER encoded string (PKCS#1 DER).</p></dd>
 <dt><b class="option">-model</b> <i class="arg">channel</i></dt>
@@ -267,7 +267,7 @@ TclTLS 1.8. See <span class="sectref"><a href="#section5">Callback Options</a></
 <dt><b class="option">-request</b> <i class="arg">bool</i></dt>
 <dd><p>Request a certificate from the peer during the SSL handshake. This is needed
 to do Certificate Validation. Starting in TclTLS 1.8, the default is
-<b class="const">true</b>. Starting in TclTLS 2.0, If set to <b class="const">false</b> and
+<b class="const">true</b>. Starting in TclTLS 2.0, if set to <b class="const">false</b> and
 <b class="option">-require</b> is <b class="const">true</b>, then this will be overridden to <b class="const">true</b>.
 See <span class="sectref"><a href="#section4">Certificate Validation</a></span> for more details.</p></dd>
 <dt><b class="option">-require</b> <i class="arg">bool</i></dt>
@@ -309,11 +309,11 @@ See the <b class="cmd">tls::protocols</b> command for supported protocols.</p></
 <dt><b class="option">-tls1</b> <i class="arg">bool</i></dt>
 <dd><p>Enable use of TLS v1. Starting in TclTLS 2.0, the default is <b class="const">false</b>.
 Note: TLS 1.0 needs SHA1 to operate, which is only available in security level
-0 for Open SSL 3.0+. See the <i class="arg">-security_level</i> option.</p></dd>
+0 for Open SSL 3.0+. See the <b class="option">-security_level</b> option.</p></dd>
 <dt><b class="option">-tls1.1</b> <i class="arg">bool</i></dt>
 <dd><p>Enable use of TLS v1.1. Starting in TclTLS 2.0, the default is <b class="const">false</b>.
 Note: TLS 1.1 needs SHA1 to operate, which is only available in security level
-0 for Open SSL 3.0+. See the <i class="arg">-security_level</i> option.</p></dd>
+0 for Open SSL 3.0+. See the <b class="option">-security_level</b> option.</p></dd>
 <dt><b class="option">-tls1.2</b> <i class="arg">bool</i></dt>
 <dd><p>Enable use of TLS v1.2. The default is <b class="const">true</b>.</p></dd>
 <dt><b class="option">-tls1.3</b> <i class="arg">bool</i></dt>
@@ -563,7 +563,7 @@ Authority (CA). Users can then exchange these certificates during the TLS
 initialization process and check them against the root CA certificates to ensure
 they are valid. This is handled by OpenSSL via the <b class="option">-request</b> and
 <b class="option">-require</b> options. See the <b class="option">-cadir</b>, <b class="option">-cadir</b>, and
-<b class="option">-castore</b> options for how tp specify where to find the CA certificates.
+<b class="option">-castore</b> options for how to specify where to find the CA certificates.
 Optionally, in a future release, they can also be checked against the Certificate
 Revocation List (CRL) of revoked certificates. Certificates can also be
 self-signed, but they are by default not trusted unless you add them to your
@@ -593,15 +593,14 @@ variable.</p></dd>
 Starting with OpenSSL 3.2 on MS Windows, set to &quot;<b class="const">org.openssl.winstore://</b>&quot;
 to use the built-in MS Windows Certificate Store. Starting in TclTLS 2.0, this
 is the default if <b class="option">-cadir</b>, <b class="option">-cadir</b>, and <b class="option">-castore</b> are
-not specified. This store only supports root certificate stores. See
-<span class="sectref"><a href="#section4">Certificate Validation</a></span> for more details.</p></dd>
+not specified. This store only supports root certificate stores.</p></dd>
 <dt><b class="option">-request</b> <i class="arg">bool</i></dt>
 <dd><p>Request a certificate from the peer during the SSL handshake. This is needed
 to do Certificate Validation. Starting in TclTLS 1.8, the default is
-<b class="const">true</b>. Starting in TclTLS 2.0, If set to <b class="const">false</b> and
+<b class="const">true</b>. Starting in TclTLS 2.0, if set to <b class="const">false</b> and
 <b class="option">-require</b> is <b class="const">true</b>, then this will be overridden to <b class="const">true</b>.
 In addition, the client can manually inspect and accept or reject
-each certificate using the <i class="arg">-validatecommand</i> option.</p></dd>
+each certificate using the <b class="option">-validatecommand</b> option.</p></dd>
 <dt><b class="option">-require</b> <i class="arg">bool</i></dt>
 <dd><p>Require a valid certificate from the peer during the SSL handshake. If this is
 set to true, then <b class="option">-request</b> must also be set to true and a either
@@ -752,7 +751,7 @@ continue the connection, it should return 2. This callback is new for TclTLS 1.8
 received. If <i class="arg">match</i> is true, then <i class="arg">protocol</i> is the first
 <b class="option">-alpn</b> protocol option in common to both the client and server.
 If not, the first client specified protocol is used. This callback is called
-after the Hello and ALPN callbacks.</p></dd>
+after the Hello and SNI callbacks.</p></dd>
 <dt><b class="option">hello</b> <i class="arg">channelId servername</i></dt>
 <dd><p>For servers, this form of callback is invoked during client hello message
 processing. The purpose is so the server can select the appropriate certificate
@@ -762,9 +761,9 @@ callbacks.</p></dd>
 <dt><b class="option">sni</b> <i class="arg">channelId servername</i></dt>
 <dd><p>For servers, this form of callback is invoked when the Server Name Indication
 (SNI) extension is received. The <i class="arg">servername</i> argument is the client
-provided server name specified in the <b class="option">-servername&lt;/b&gt;</b> option. The
+provided server name specified in the <b class="option">-servername</b> option. The
 purpose is so when a server supports multiple names, the right certificate
-can be used. It is called after the hello callback but before the ALPN
+can be used. It is called after the Hello callback but before the ALPN
 callback.</p></dd>
 <dt><b class="option">verify</b> <i class="arg">channelId depth cert status error</i></dt>
 <dd><p>This form of callback is invoked by OpenSSL when a new certificate is received
@@ -872,7 +871,7 @@ close $ch
 <p>The capabilities of this package can vary enormously based upon how the
 linked to OpenSSL library was configured and built. New versions may obsolete
 older protocol versions, add or remove ciphers, change default values, etc.
-Use the <b class="cmd">tls::protocols</b> commands to obtain the supported
+Use the <b class="cmd">tls::protocols</b> command to obtain the supported
 protocol versions.</p>
 </div>
 <div id="see-also" class="doctools_section"><h2><a name="see-also">See Also</a></h2>
