@@ -1352,7 +1352,7 @@ ImportObjCmd(
     int ssl2 = 0, ssl3 = 0;
     int tls1 = 0, tls1_1 = 0, tls1_2 = 1, tls1_3 = 1;
     int proto = 0, level = -1;
-    int verify = 0, require = 1, request = 1, post_handshake = 0;
+    int verify = 0, require = -1, request = -1, post_handshake = 0;
 
     dprintf("Called");
 
@@ -1425,11 +1425,21 @@ ImportObjCmd(
 
 	return TCL_ERROR;
     }
+
+    /* For client, request and require default to true, server default is false */
+    if (!server) {
+	if (request == -1)	request = 1;
+	if (require == -1)	require = 1;
+    } else {
+	if (request == -1)	request = 0;
+	if (require == -1)	require = 0;
+    }
+
     if (require)		request = 1;
     if (request)		verify |= SSL_VERIFY_CLIENT_ONCE | SSL_VERIFY_PEER;
     if (request && require)	verify |= SSL_VERIFY_FAIL_IF_NO_PEER_CERT;
     if (request && post_handshake) verify |= SSL_VERIFY_POST_HANDSHAKE;
-    if (verify == 0)		verify = SSL_VERIFY_NONE;
+    if (!verify)		verify = SSL_VERIFY_NONE;
 
     proto |= (ssl2 ? TLS_PROTO_SSL2 : 0);
     proto |= (ssl3 ? TLS_PROTO_SSL3 : 0);
