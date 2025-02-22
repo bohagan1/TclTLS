@@ -18,7 +18,7 @@ foreach {key val} $argv {
 		\n\t-cafile   file     Cert. Auth. File ($OPTS(-cafile))\
 		\n\t-cert     file     Server Cert ($OPTS(-cert))\
 		\n\t-key      file     Server Key ($OPTS(-key))\
-		\n\t-require  boolean  Require Certification ($OPTS(-require))\
+		\n\t-require  boolean  Require Certificate ($OPTS(-require))\
 		\n\t-port     num      Port to listen on ($OPTS(-port))"
 	exit
     }

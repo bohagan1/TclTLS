@@ -1,4 +1,5 @@
 # Group,Name,Constraints,Setup,Body,Cleanup,Match,Result,Output,Error Output,Return Codes
+command,package prefer latest,,,,,,,,,
 command,package require tls,,,,,,,,,
 command,,,,,,,,,,
 command,# Make sure path includes location of OpenSSL executable,,,,,,,,,

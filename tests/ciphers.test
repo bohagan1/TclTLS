@@ -8,6 +8,7 @@ if {[lsearch [namespace children] ::tcltest] == -1} {
 
 set auto_path [concat [list [file dirname [file dirname [info script]]]] $auto_path]
 
+package prefer latest
 package require tls
 
 # Make sure path includes location of OpenSSL executable

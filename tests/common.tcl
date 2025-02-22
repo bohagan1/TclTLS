@@ -1,6 +1,7 @@
 #!/usr/bin/env tclsh
 
 # Common Constraints
+package prefer latest
 package require tls
 
 # Supported protocols

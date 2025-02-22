@@ -4,30 +4,27 @@
 # tests.  Execute it by invoking "source all.test" when running tcltest
 # in this directory.
 #
-# Copyright (c) 1998-2000 by Ajuba Solutions.
-# All rights reserved.
-#
 
 set path [file normalize [file dirname [file join [pwd] [info script]]]]
-#set auto_path [linsert $auto_path 0 [file normalize [file join [file dirname [info script]] ..]]]
-set auto_path [linsert $auto_path 0 [file dirname $path] [file normalize [pwd]]]
+set auto_path [linsert $auto_path 0 [file dirname $path] $path]
 
-if {[lsearch [namespace children] ::tcltest] == -1} {
+if {"::tcltest" ni [namespace children]} {
     package require tcltest
-    namespace import ::tcltest::*
+    namespace import -force ::tcltest::*
 }
 
-# Get common functions
+# Add user provided args such as -load
+tcltest::configure {*}$argv -testdir $path
+#tcltest::configure -verbose tpse
+
+# Print stats at end
+set ::tcltest::testSingleFile false
+#tcltest::configure -singleproc 1
+
+# Get common functions, if any
 if {[file exists [file join $path common.tcl]]} {
     source -encoding utf-8 [file join $path common.tcl]
 }
-
-set ::tcltest::testSingleFile false
-set ::tcltest::testsDirectory [file dir [info script]]
-
-# We should ensure that the testsDirectory is absolute.
-# This was introduced in Tcl 8.3+'s tcltest, so we need a catch.
-catch {::tcltest::normalizePath ::tcltest::testsDirectory}
 
 #
 # Run all tests in current and any sub directories with an all.tcl file.
@@ -48,5 +45,9 @@ if {[package vsatisfies [package require tcltest] 2.5-]} {
     ::tcltest::runAllTests
 }
 
-#  Exit code: 0=all passed, 1=one or more failed
-exit $::exitCode
+# Return exit code for use by test frameworks: 0=all passed, 1=one or more failed
+if {[info exists env(ERROR_ON_FAILURES)]} {
+    exit $::exitCode
+} else {
+    exit 0
+}

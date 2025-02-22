@@ -20,10 +20,10 @@ http_debug_example.tcl
 Download a webpage using http package with additional debug output.
 
 http_get_file.tcl
-Download a webpage using the http package.
+Download a file using the http package.
 
 http_get_webpage.tcl
-Download a file using the http package.
+Download a webpage using the http package.
 
 http_get_webpage_proxy.tcl
 Download a file using the http and autoproxy packages.

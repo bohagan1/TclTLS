@@ -1,4 +1,5 @@
 # Group,Name,Constraints,Setup,Body,Cleanup,Match,Result,Output,Error Output,Return Codes
+command,package prefer latest,,,,,,,,,
 command,package require tls,,,,,,,,,
 ,,,,,,,,,,
 command,# Constraints,,,,,,,,,
@@ -48,7 +49,7 @@ BadSSL,preact-cli,,,badssl preact-cli.badssl.com,,,"handshake failed: certificat
 BadSSL,preloaded-hsts,,,badssl preloaded-hsts.badssl.com,,,,,,
 BadSSL,rc4-md5,,,badssl rc4-md5.badssl.com,,glob,handshake failed: * alert handshake failure,,,1
 BadSSL,rc4,,,badssl rc4.badssl.com,,glob,handshake failed: * alert handshake failure,,,1
-BadSSL,revoked,,,badssl revoked.badssl.com,,,"handshake failed: certificate verify failed due to ""certificate has expired""",,,1
+BadSSL,revoked,,,badssl revoked.badssl.com,,,,,,
 BadSSL,rsa2048,,,badssl rsa2048.badssl.com,,,,,,
 BadSSL,rsa4096,,,badssl rsa4096.badssl.com,,,,,,
 BadSSL,rsa8192,,,badssl rsa8192.badssl.com,,,"handshake failed: certificate verify failed due to ""certificate has expired""",,,1

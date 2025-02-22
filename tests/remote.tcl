@@ -177,7 +177,7 @@ set serverCert	[file join $certsDir server.pem]
 set caCert	[file join $certsDir cacert.pem]
 set serverKey	[file join $certsDir server.key]
 if {[catch {set serverSocket \
-	[tls::socket -myaddr $serverAddress -server __accept__ \
+	[tls::socket -require 0 -myaddr $serverAddress -server __accept__ \
 	-cafile $caCert -certfile $serverCert -keyfile $serverKey \
 	$serverPort]} msg]} {
     puts "Server on $serverAddress:$serverPort cannot start: $msg"
