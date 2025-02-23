@@ -801,6 +801,8 @@ NPNCallback(
  *
  *	Perform server-side SNI hostname selection after receiving SNI extension
  *	in Client Hello. Called after hello callback but before ALPN callback.
+ *	This callback is mostly superseded by the ClientHello callback. Used to
+ *	acknowledge the server name requested by the client.
  *
  * Results:
  *	None
@@ -839,7 +841,9 @@ SNICallback(
     }
 
     /* Only works for TLS 1.2 and earlier */
-    servername = SSL_get_servername(ssl, TLSEXT_NAMETYPE_host_name);
+    if (SSL_get_servername_type(ssl) == TLSEXT_NAMETYPE_host_name) {
+	servername = SSL_get_servername(ssl, TLSEXT_NAMETYPE_host_name);
+    }
     if (!servername || servername[0] == '\0') {
 	return SSL_TLSEXT_ERR_NOACK;
     }
