@@ -819,7 +819,7 @@ received. If [arg match] is true, then [arg protocol] is the first
 If not, the first client specified protocol is used. This callback is called
 after the Hello and SNI callbacks.
 
-[opt_def hello [arg "channelId servername"]]
+[opt_def hello [arg "channelId servername session_id"]]
 For servers, this form of callback is invoked during client hello message
 processing. The purpose is so the server can select the appropriate certificate
 to present to the client, and to make other configuration adjustments relevant

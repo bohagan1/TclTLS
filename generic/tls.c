@@ -912,8 +912,8 @@ HelloCallback(
     Tcl_Obj *cmdPtr;
     int code, res;
     const char *servername;
-    const unsigned char *p;
-    size_t len, remaining;
+    const unsigned char *p, *session_id;
+    size_t len, remaining, len2;
 
     dprintf("Called");
 
@@ -959,12 +959,16 @@ HelloCallback(
 	len = 0;
     }
 
-    /* Create command to eval with fn, chan, and server name args */
+    /* Get session id from Client Hello */
+    len2 = SSL_client_hello_get0_session_id(ssl, &session_id);
+
+    /* Create command to eval with fn, chan, server name, and session id */
     cmdPtr = Tcl_DuplicateObj(statePtr->vcmd);
     Tcl_ListObjAppendElement(interp, cmdPtr, Tcl_NewStringObj("hello", -1));
     Tcl_ListObjAppendElement(interp, cmdPtr,
 	    Tcl_NewStringObj(Tcl_GetChannelName(statePtr->self), -1));
     Tcl_ListObjAppendElement(interp, cmdPtr, Tcl_NewStringObj(servername, (Tcl_Size) len));
+    Tcl_ListObjAppendElement(interp, cmdPtr, Tcl_NewByteArrayObj(session_id, (Tcl_Size) len2));
 
     /* Eval callback command */
     Tcl_IncrRefCount(cmdPtr);
@@ -1734,6 +1738,7 @@ done:	for (i = 0; i < cnt; i++) {
 	/* Set server mode */
 	statePtr->flags |= TLS_TCL_SERVER;
 	SSL_set_accept_state(statePtr->ssl);
+
     } else {
 	/* Client callbacks */
 #ifdef USE_NPN

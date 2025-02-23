@@ -753,7 +753,7 @@ received. If <i class="arg">match</i> is true, then <i class="arg">protocol</i> 
 <b class="option">-alpn</b> protocol option in common to both the client and server.
 If not, the first client specified protocol is used. This callback is called
 after the Hello and SNI callbacks.</p></dd>
-<dt><b class="option">hello</b> <i class="arg">channelId servername</i></dt>
+<dt><b class="option">hello</b> <i class="arg">channelId servername session_id</i></dt>
 <dd><p>For servers, this form of callback is invoked during client hello message
 processing. The purpose is so the server can select the appropriate certificate
 to present to the client, and to make other configuration adjustments relevant
