@@ -923,41 +923,41 @@ HelloCallback(
 	return SSL_CLIENT_HELLO_ERROR;
     }
 
-    /* Get names */
-    if (!SSL_client_hello_get0_ext(ssl, TLSEXT_TYPE_server_name, &p, &remaining) || remaining <= 2) {
-	*alert = SSL_R_SSLV3_ALERT_ILLEGAL_PARAMETER;
-	return SSL_CLIENT_HELLO_ERROR;
-    }
+    /* Get server name */
+    if (SSL_client_hello_get0_ext(ssl, TLSEXT_TYPE_server_name, &p, &remaining)) {
+	/* Extract the length of the supplied list of names. */
+	len = (*(p++) << 8);
+	len += *(p++);
+	if (len + 2 != remaining) {
+	    *alert = SSL_R_SSLV3_ALERT_ILLEGAL_PARAMETER;
+	    return SSL_CLIENT_HELLO_ERROR;
+	}
+	remaining = len;
 
-    /* Extract the length of the supplied list of names. */
-    len = (*(p++) << 8);
-    len += *(p++);
-    if (len + 2 != remaining) {
-	*alert = SSL_R_SSLV3_ALERT_ILLEGAL_PARAMETER;
-	return SSL_CLIENT_HELLO_ERROR;
-    }
-    remaining = len;
+	/* The list in practice only has a single element, so we only consider the first one. */
+	if (remaining == 0 || *p++ != TLSEXT_NAMETYPE_host_name) {
+	    *alert = SSL_R_TLSV1_ALERT_INTERNAL_ERROR;
+	    return SSL_CLIENT_HELLO_ERROR;
+	}
+	remaining--;
 
-    /* The list in practice only has a single element, so we only consider the first one. */
-    if (remaining == 0 || *p++ != TLSEXT_NAMETYPE_host_name) {
-	*alert = SSL_R_TLSV1_ALERT_INTERNAL_ERROR;
-	return SSL_CLIENT_HELLO_ERROR;
+	/* Now we can finally pull out the byte array with the actual hostname. */
+	if (remaining <= 2) {
+	    *alert = SSL_R_TLSV1_ALERT_INTERNAL_ERROR;
+	    return SSL_CLIENT_HELLO_ERROR;
+	}
+	len = (*(p++) << 8);
+	len += *(p++);
+	if (len + 2 > remaining) {
+	    *alert = SSL_R_TLSV1_ALERT_INTERNAL_ERROR;
+	    return SSL_CLIENT_HELLO_ERROR;
+	}
+	remaining = len;
+	servername = (const char *)p;
+    } else {
+	servername = "";
+	len = 0;
     }
-    remaining--;
-
-    /* Now we can finally pull out the byte array with the actual hostname. */
-    if (remaining <= 2) {
-	*alert = SSL_R_TLSV1_ALERT_INTERNAL_ERROR;
-	return SSL_CLIENT_HELLO_ERROR;
-    }
-    len = (*(p++) << 8);
-    len += *(p++);
-    if (len + 2 > remaining) {
-	*alert = SSL_R_TLSV1_ALERT_INTERNAL_ERROR;
-	return SSL_CLIENT_HELLO_ERROR;
-    }
-    remaining = len;
-    servername = (const char *)p;
 
     /* Create command to eval with fn, chan, and server name args */
     cmdPtr = Tcl_DuplicateObj(statePtr->vcmd);
