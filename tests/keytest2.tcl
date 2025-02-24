@@ -1,6 +1,7 @@
 #!/usr/bin/env tclsh
 
 set auto_path [linsert $auto_path 0 [file normalize [file join [file dirname [info script]] ..]]]
+package prefer latest
 package require tls
 
 set s [tls::socket -require 0 127.0.0.1 12300]

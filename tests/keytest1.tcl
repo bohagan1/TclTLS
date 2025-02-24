@@ -1,6 +1,7 @@
 #!/usr/bin/env tclsh
 
 set auto_path [linsert $auto_path 0 [file normalize [file join [file dirname [info script]] ..]]]
+package prefer latest
 package require tls
 
 proc creadable {s} {

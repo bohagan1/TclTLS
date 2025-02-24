@@ -1,5 +1,6 @@
 #!/usr/bin/env tclsh
 
+package prefer latest
 package require tls
 
 set dir			[file join [file dirname [info script]] ../tests/certs]

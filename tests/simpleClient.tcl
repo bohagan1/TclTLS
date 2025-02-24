@@ -1,5 +1,6 @@
 #!/usr/bin/env tclsh
 
+package prefer latest
 package require tls
 
 set dir			[file join [file dirname [info script]] ../tests/certs]
@@ -7,7 +8,7 @@ set OPTS(-cafile)	[file join $dir ca.pem]
 set OPTS(-cert)		[file join $dir client.pem]
 set OPTS(-key)		[file join $dir client.key]
 
-set OPTS(-host)		lorax
+set OPTS(-host)		localhost
 set OPTS(-port)		2468
 set OPTS(-debug)	1
 set OPTS(-count)	8
