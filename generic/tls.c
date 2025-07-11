@@ -925,6 +925,12 @@ HelloCallback(
 
     /* Get server name */
     if (SSL_client_hello_get0_ext(ssl, TLSEXT_TYPE_server_name, &p, &remaining)) {
+	/* Check if there is sufficient data to extract */
+	if (remaining <= 2) {
+	    *alert = SSL_R_SSLV3_ALERT_ILLEGAL_PARAMETER;
+	    return SSL_CLIENT_HELLO_ERROR;
+	}
+
 	/* Extract the length of the supplied list of names. */
 	len = (*(p++) << 8);
 	len += *(p++);
