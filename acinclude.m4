@@ -266,6 +266,8 @@ AC_DEFUN([TCLTLS_SSL_OPENSSL], [
 		    # HPUX: -Wl,-a,archive ... -Wl,-a,shared_archive
 		fi
 	fi
+	AC_MSG_CHECKING([for SSL libs])
+	AC_MSG_RESULT([$TCLTLS_SSL_LIBS])
 
 	dnl Include config variables in --help list and make available to be substituted via AC_SUBST.
 	AC_ARG_VAR([TCLTLS_SSL_CFLAGS], [C compiler flags for OpenSSL])

@@ -173,7 +173,7 @@ if test "${TEA_PLATFORM}" = "windows" ; then
     if test "$GCC" = "yes"; then
 	TEA_ADD_CFLAGS([${TCLTLS_SSL_CFLAGS} -Wno-deprecated-declarations])
 	TEA_ADD_INCLUDES([${TCLTLS_SSL_INCLUDES}])
-	TEA_ADD_LIBS([${TCLTLS_SSL_LIBS}])
+	TEA_ADD_LIBS([${TCLTLS_SSL_LIBS} ws2_32.lib Crypt32.lib])
     fi
 else
 	TEA_ADD_CFLAGS([${TCLTLS_SSL_CFLAGS} -Wno-deprecated-declarations])
