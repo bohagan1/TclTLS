@@ -8,17 +8,17 @@
  */
 
 /*
-				Normal
-		tlsBIO.c				tlsIO.c
- +------+                        +---+                                 +---+
- |      |Tcl_WriteRaw<--BioOutput|SSL|BIO_write<--TlsOutputProc<--Write|   |
- |socket|      <encrypted>       |BIO|            <unencrypted>        |App|
- |      |Tcl_ReadRaw --> BioInput|   |BIO_Read -->TlsInputProc --> Read|   |
- +------+                        +---+                                 +---+
+Normal
+		tlsBIO.c			tlsIO.c
+ +------+                        +-----+                                 +---+
+ |      |Tcl_WriteRaw<--BioOutput| SSL |BIO_write<--TlsOutputProc<--Write|   |
+ |socket|      <encrypted>       | BIO |            <unencrypted>        |App|
+ |      |Tcl_ReadRaw --> BioInput|     |BIO_Read -->TlsInputProc --> Read|   |
+ +------+                        +-----+                                 +---+
 
 
-				Fast Path
-					tlsIO.c
+Fast Path
+						tlsIO.c
   +------+             +-----+                                     +-----+
   |      |<-- write <--| SSL |BIO_write <-- TlsOutputProc <-- Write|     |
   |socket| <encrypted> | BIO |            <unencrypted>            | App |

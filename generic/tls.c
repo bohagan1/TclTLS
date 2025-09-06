@@ -2187,7 +2187,9 @@ CTX_Init(
     }
 
     /* set automatic curve selection */
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
     SSL_CTX_set_ecdh_auto(ctx, 1);
+#endif
 
     /* Set security level */
     if (level > -1 && level < 6) {

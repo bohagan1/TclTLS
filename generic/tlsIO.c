@@ -17,16 +17,16 @@
  */
 
 /*
-				Normal
+Normal
 		tlsBIO.c				tlsIO.c
- +------+                        +---+                                 +---+
- |      |Tcl_WriteRaw<--BioOutput|SSL|BIO_write<--TlsOutputProc<--Write|   |
- |socket|      <encrypted>       |BIO|            <unencrypted>        |App|
- |      |Tcl_ReadRaw --> BioInput|   |BIO_Read -->TlsInputProc --> Read|   |
- +------+                        +---+                                 +---+
+ +------+                        +-----+                                 +---+
+ |      |Tcl_WriteRaw<--BioOutput| SSL |BIO_write<--TlsOutputProc<--Write|   |
+ |socket|      <encrypted>       | BIO |            <unencrypted>        |App|
+ |      |Tcl_ReadRaw --> BioInput|     |BIO_Read -->TlsInputProc --> Read|   |
+ +------+                        +-----+                                 +---+
 
 
-				Fast Path
+Fast Path
 					tlsIO.c
   +------+             +-----+                                     +-----+
   |      |<-- write <--| SSL |BIO_write <-- TlsOutputProc <-- Write|     |
@@ -220,18 +220,6 @@ int Tls_WaitForConnect(
 	/* The retry flag is set by the BIO_set_retry_* functions */
 	bioShouldRetry = BIO_should_retry(statePtr->bio);
 	dprintf("bioShouldRetry = %d", bioShouldRetry);
-
-	if (err <= 0) {
-	    if (rc == SSL_ERROR_WANT_CONNECT || rc == SSL_ERROR_WANT_ACCEPT) {
-		bioShouldRetry = 1;
-	    } else if (rc == SSL_ERROR_WANT_READ) {
-		bioShouldRetry = 1;
-		statePtr->want |= TCL_READABLE;
-	    } else if (rc == SSL_ERROR_WANT_WRITE) {
-		bioShouldRetry = 1;
-		statePtr->want |= TCL_WRITABLE;
-	    }
-	}
 
 	if (bioShouldRetry) {
 	    dprintf("The I/O did not complete -- but we should try it again");
@@ -598,8 +586,8 @@ static int TlsInputProc(
 	       alert. Can't read, but can write. Need to return an EOF, so the
 	       channel is closed which will send an SSL_shutdown(). */
 	    dprintf("SSL_ERROR_ZERO_RETURN: Peer has closed the connection");
-	    bytesRead = 0;
 	    *errorCodePtr = 0;
+	    bytesRead = 0;
 	    Tls_Error(statePtr, "Peer has closed the connection for writing by sending the close_notify alert");
 	    break;
 
@@ -704,8 +692,8 @@ static int TlsOutputProc(
 	    return -1;
 	}
 
-	written = 0;
 	*errorCodePtr = 0;
+	written = 0;
 	return 0;
     }
 
