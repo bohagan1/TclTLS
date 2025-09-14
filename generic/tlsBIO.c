@@ -11,19 +11,19 @@
 Normal
 		tlsBIO.c			tlsIO.c
  +------+                        +-----+                                 +---+
- |      |Tcl_WriteRaw<--BioOutput| SSL |BIO_write<--TlsOutputProc<--Write|   |
+ |      |Tcl_WriteRaw<--BioOutput| SSL |BIO_write<--TlsOutputProc <--puts|   |
  |socket|      <encrypted>       | BIO |            <unencrypted>        |App|
- |      |Tcl_ReadRaw --> BioInput|     |BIO_Read -->TlsInputProc --> Read|   |
+ |      |Tcl_ReadRaw --> BioInput|     |BIO_Read -->TlsInputProc --> read|   |
  +------+                        +-----+                                 +---+
 
 
 Fast Path
 						tlsIO.c
-  +------+             +-----+                                     +-----+
-  |      |<-- write <--| SSL |BIO_write <-- TlsOutputProc <-- Write|     |
-  |socket| <encrypted> | BIO |            <unencrypted>            | App |
-  |      |<--  read <--|     |BIO_Read  --> TlsInputProc  -->  Read|     |
-  +------+             +-----+                                     +-----+
+  +------+             +-----+                                    +-----+
+  |      |<-- write <--| SSL |BIO_write <-- TlsOutputProc <-- puts|     |
+  |socket| <encrypted> | BIO |            <unencrypted>           | App |
+  |      |-->  read -->|     |BIO_Read  --> TlsInputProc -->  read|     |
+  +------+             +-----+                                    +-----+
 */
 
 #include "tlsInt.h"
@@ -39,7 +39,7 @@ static BIO_METHOD *BioMethods = NULL;
  *
  * BIOShouldRetry --
  *
- *	Determine if should retry operation based on error code. Same
+ *	Determine if should retry operation based on error code. Uses the same
  *	conditions as BIO_sock_should_retry function.
  *
  * Results:
@@ -48,6 +48,10 @@ static BIO_METHOD *BioMethods = NULL;
  * Side effects:
  *	None
  *
+ * The BIO_sock_non_fatal_error function uses EWOULDBLOCK, ENOTCONN, EINTR,
+ * EAGAIN, EPROTO, EINPROGRESS, and EALREADY as retry errors. However, Tcl core
+ * uses EWOULDBLOCK if connect is still in progress and ENOTCONN if it failed.
+ *
  *-----------------------------------------------------------------------------
  */
 
@@ -55,15 +59,13 @@ static int BIOShouldRetry(int code) {
     int res = 0;
     dprintf("BIOShouldRetry %d=%s", code, Tcl_ErrnoMsg(code));
 
-    if (code == EAGAIN || code == EWOULDBLOCK || code == ENOTCONN || code == EPROTO ||
-#ifdef _WIN32
-	code == WSAEWOULDBLOCK ||
-#endif
-	code == EINTR || code == EINPROGRESS || code == EALREADY) {
+    /* Retry code, skip ENOTCONN since Tcl core treats as failed. */
+    if (code == EWOULDBLOCK || code == EINPROGRESS || code == EALREADY || 
+	code == EAGAIN || code == EPROTO || code == EINTR) {
 	res = 1;
     }
 
-    dprintf("BIOShouldRetry %d=%s, res=%d", code, Tcl_ErrnoMsg(code), res);
+    dprintf("BIOShouldRetry %d=%s, retry=%d", code, Tcl_ErrnoMsg(code), res);
 
     return res;
 }
@@ -377,15 +379,13 @@ static long BioCtrl(BIO *bio, int cmd, long num, void *ptr) {
 		ret = -1;
 		break;
 
-#if OPENSSL_VERSION_NUMBER >= 0x30000000L && defined(BIO_CTRL_GET_KTLS_SEND)
+#if OPENSSL_VERSION_NUMBER >= 0x30000000L
 	case BIO_CTRL_GET_KTLS_SEND:
 		/* Implements BIO_get_ktls_send */
 		dprintf("Got BIO_CTRL_GET_KTLS_SEND");
 		/* Returns 1 if the BIO is using the Kernel TLS data-path for sending, 0 if not */
 		ret = 0;
 		break;
-#endif
-#if OPENSSL_VERSION_NUMBER >= 0x30000000L && defined(BIO_CTRL_GET_KTLS_RECV)
 	case BIO_CTRL_GET_KTLS_RECV:
 		/* Implements BIO_get_ktls_recv */
 		dprintf("Got BIO_CTRL_GET_KTLS_RECV");
@@ -461,8 +461,8 @@ static int BioFree(BIO *bio) {
     /* Clear flags if set to BIO_CLOSE (close I/O stream when the BIO is freed) */
     if (BIO_get_shutdown(bio)) {
 	BIO_set_data(bio, NULL);
-	BIO_set_init(bio, 0);
 	BIO_clear_flags(bio, -1);
+	BIO_set_init(bio, 0);
     }
     return 1;
 }

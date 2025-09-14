@@ -18,21 +18,21 @@
 
 /*
 Normal
-		tlsBIO.c				tlsIO.c
+		tlsBIO.c			tlsIO.c
  +------+                        +-----+                                 +---+
- |      |Tcl_WriteRaw<--BioOutput| SSL |BIO_write<--TlsOutputProc<--Write|   |
+ |      |Tcl_WriteRaw<--BioOutput| SSL |BIO_write<--TlsOutputProc <--puts|   |
  |socket|      <encrypted>       | BIO |            <unencrypted>        |App|
- |      |Tcl_ReadRaw --> BioInput|     |BIO_Read -->TlsInputProc --> Read|   |
+ |      |Tcl_ReadRaw --> BioInput|     |BIO_Read -->TlsInputProc --> read|   |
  +------+                        +-----+                                 +---+
 
 
 Fast Path
-					tlsIO.c
-  +------+             +-----+                                     +-----+
-  |      |<-- write <--| SSL |BIO_write <-- TlsOutputProc <-- Write|     |
-  |socket| <encrypted> | BIO |            <unencrypted>            | App |
-  |      |<--  read <--|     |BIO_Read  --> TlsInputProc  -->  Read|     |
-  +------+             +-----+                                     +-----+
+						tlsIO.c
+  +------+             +-----+                                    +-----+
+  |      |<-- write <--| SSL |BIO_write <-- TlsOutputProc <-- puts|     |
+  |socket| <encrypted> | BIO |            <unencrypted>           | App |
+  |      |-->  read -->|     |BIO_Read  --> TlsInputProc -->  read|     |
+  +------+             +-----+                                    +-----+
 */
 
 #include "tlsInt.h"
@@ -219,18 +219,18 @@ int Tls_WaitForConnect(
 
 	/* The retry flag is set by the BIO_set_retry_* functions */
 	bioShouldRetry = BIO_should_retry(statePtr->bio);
-	dprintf("bioShouldRetry = %d", bioShouldRetry);
+	dprintf("BIO_should_retry = %d", bioShouldRetry);
 
 	if (bioShouldRetry) {
 	    dprintf("The I/O did not complete -- but we should try it again");
 
 	    if (statePtr->flags & TLS_TCL_ASYNC) {
 		dprintf("Returning EAGAIN so that it can be retried later");
-		*errorCodePtr = EAGAIN;
-		return 0;
+/*		*errorCodePtr = EAGAIN;
+		return 0;*/
 	    } else {
 		dprintf("Doing so now");
-		continue;
+/*		continue;*/
 	    }
 	}
 
@@ -567,8 +567,7 @@ static int TlsInputProc(
 		Tls_Error(statePtr, "EOF reached");
 
 	    } else if (backingError == 0 && bytesRead == -1) {
-		dprintf("I/O error occurred (errno = %lu)",
-		    (unsigned long) Tcl_GetErrno());
+		dprintf("I/O error occurred (errno = %lu)", (unsigned long) Tcl_GetErrno());
 		*errorCodePtr = Tcl_GetErrno();
 		bytesRead = -1;
 		Tls_Error(statePtr, Tcl_ErrnoMsg(*errorCodePtr));
@@ -1082,8 +1081,10 @@ TlsWatchProc(
 	((mask & TCL_READABLE) && ((Tcl_InputBuffered(statePtr->self) > 0) || (BIO_ctrl_pending(statePtr->bio) > 0))) ||
 	((mask & TCL_WRITABLE) && ((Tcl_OutputBuffered(statePtr->self) > 0) || (BIO_ctrl_wpending(statePtr->bio) > 0))));
 
-    dprintf("IO Want=%d, input buffer=%d, output buffer=%d, BIO pending=%zd, BIO wpending=%zd, pending=%d", \
-	statePtr->want, Tcl_InputBuffered(statePtr->self), Tcl_OutputBuffered(statePtr->self), \
+    dprintf("IO Want=%d, input buffer=%d, output buffer=%d, BIO pending=%d, BIO wpending=%d, \
+	BIO ctrl pending=%zu, BIO ctrl wpending=%zu, pending=%d", statePtr->want, \
+	Tcl_InputBuffered(statePtr->self), Tcl_OutputBuffered(statePtr->self), \
+	BIO_pending(statePtr->bio), BIO_wpending(statePtr->bio), \
 	BIO_ctrl_pending(statePtr->bio), BIO_ctrl_wpending(statePtr->bio), pending);
 
     /* Schedule next event if data is pending, otherwise cease events for now */
