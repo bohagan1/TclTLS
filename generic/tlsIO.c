@@ -258,6 +258,7 @@ int Tls_WaitForConnect(
 		Tls_Error(statePtr, ERR_reason_error_string(backingError));
 	    }
 	    statePtr->flags |= TLS_TCL_HANDSHAKE_FAILED;
+	    statePtr->flags |= TLS_TCL_EOF;
 	    *errorCodePtr = ECONNABORTED;
 	    return -1;
 
@@ -318,6 +319,7 @@ int Tls_WaitForConnect(
 	    }
 
 	    statePtr->flags |= TLS_TCL_HANDSHAKE_FAILED;
+	    statePtr->flags |= TLS_TCL_EOF;
 	    return -1;
 
 	case SSL_ERROR_ZERO_RETURN:
@@ -326,6 +328,7 @@ int Tls_WaitForConnect(
 	       channel is closed which will send an SSL_shutdown(). */
 	    dprintf("SSL_ERROR_ZERO_RETURN: Peer has closed the connection");
 	    *errorCodePtr = ECONNRESET;
+	    statePtr->flags |= TLS_TCL_EOF;
 	    Tls_Error(statePtr, "Peer has closed the connection for writing by sending the close_notify alert");
 	    return -1;
 
@@ -421,6 +424,12 @@ static int TlsInputProc(
 	return 0;
     }
 
+    /* Abort if EOF already detected. Can't read, but can write. */
+    if (statePtr->flags & TLS_TCL_EOF) {
+	dprintf("EOF already detected, abort read");
+	return 0;
+    }
+
     /* If not initialized, do connect */
     /* Can also check SSL_is_init_finished(ssl) */
     if (statePtr->flags & TLS_TCL_INIT) {
@@ -439,6 +448,7 @@ static int TlsInputProc(
 		/* Soft EOF */
 		*errorCodePtr = 0;
 		bytesRead = 0;
+		statePtr->flags |= TLS_TCL_EOF;
 	    }
 	    return bytesRead;
 	} else if (tlsConnect == 0) {
@@ -525,6 +535,7 @@ static int TlsInputProc(
 		Tls_Error(statePtr, "EOF reached");
 	    }
 #endif
+	    statePtr->flags |= TLS_TCL_EOF;
 	    break;
 
 	case SSL_ERROR_WANT_READ:
@@ -578,6 +589,7 @@ static int TlsInputProc(
 		bytesRead = -1;
 		Tls_Error(statePtr, ERR_reason_error_string(backingError));
 	    }
+	    statePtr->flags |= TLS_TCL_EOF;
 	    break;
 
 	case SSL_ERROR_ZERO_RETURN:
@@ -587,6 +599,7 @@ static int TlsInputProc(
 	    dprintf("SSL_ERROR_ZERO_RETURN: Peer has closed the connection");
 	    *errorCodePtr = 0;
 	    bytesRead = 0;
+	    statePtr->flags |= TLS_TCL_EOF;
 	    Tls_Error(statePtr, "Peer has closed the connection for writing by sending the close_notify alert");
 	    break;
 
@@ -669,6 +682,7 @@ static int TlsOutputProc(
 		/* Soft EOF */
 		*errorCodePtr = 0;
 		written = 0;
+		statePtr->flags |= TLS_TCL_EOF;
 	    }
 	    return written;
 	} else if (tlsConnect == 0) {
@@ -763,6 +777,7 @@ static int TlsOutputProc(
 	    } else {
 		Tls_Error(statePtr, "Unknown SSL error");
 	    }
+	    statePtr->flags |= TLS_TCL_EOF;
 	    *errorCodePtr = ECONNABORTED;
 	    written = -1;
 	    break;
@@ -817,6 +832,7 @@ static int TlsOutputProc(
 		written = -1;
 		Tls_Error(statePtr, ERR_reason_error_string(backingError));
 	    }
+	    statePtr->flags |= TLS_TCL_EOF;
 	    break;
 
 	case SSL_ERROR_ZERO_RETURN:
@@ -826,6 +842,7 @@ static int TlsOutputProc(
 	    dprintf("SSL_ERROR_ZERO_RETURN: Peer has closed the connection");
 	    *errorCodePtr = 0;
 	    written = 0;
+	    statePtr->flags |= TLS_TCL_EOF;
 	    Tls_Error(statePtr, "Peer has closed the connection for writing by sending the close_notify alert");
 	    break;
 

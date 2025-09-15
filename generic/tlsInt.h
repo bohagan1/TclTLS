@@ -175,6 +175,7 @@
 					 * further I/O will result in ECONNABORTED errors. */
 #define TLS_TCL_FASTPATH 	(1<<6)	/* The parent channel is being used
 					 * directly by the SSL library. */
+#define TLS_TCL_EOF	 	(1<<7)	/* At EOF. Can't read, but can write. */
 #define TLS_TCL_DELAY (5)
 
 /*
