@@ -1005,7 +1005,10 @@ static void TlsChannelHandlerTimer(
 
     dprintf("Called with mask 0x%02x", mask);
 
-    statePtr->timer = (Tcl_TimerToken) NULL;
+    if (statePtr->timer != (Tcl_TimerToken) NULL) {
+	statePtr->timer = (Tcl_TimerToken) NULL;
+	Tcl_Release((ClientData) statePtr);
+    }
 
     /* Check for amount of data pending in IO or BIO write buffer */
     if (Tcl_OutputBuffered(statePtr->self) || BIO_wpending(statePtr->bio)) {
@@ -1111,12 +1114,14 @@ TlsWatchProc(
 	    dprintf("A timer was found, deleting it");
 	    Tcl_DeleteTimerHandler(statePtr->timer);
 	    statePtr->timer = (Tcl_TimerToken) NULL;
+	    Tcl_Release((ClientData) statePtr);
 	}
 
     } else {
 	/* Add timer, if none */
 	if (statePtr->timer == (Tcl_TimerToken) NULL) {
 	    dprintf("Creating a new timer since data appears to be waiting");
+	    Tcl_Preserve((ClientData) statePtr);
 	    statePtr->timer = Tcl_CreateTimerHandler(TLS_TCL_DELAY, TlsChannelHandlerTimer, (ClientData) statePtr);
 	}
     }
@@ -1212,6 +1217,7 @@ static int TlsNotifyProc(
     if (statePtr->timer != (Tcl_TimerToken) NULL) {
 	Tcl_DeleteTimerHandler(statePtr->timer);
 	statePtr->timer = (Tcl_TimerToken) NULL;
+	Tcl_Release((ClientData) statePtr);
     }
 
     /*

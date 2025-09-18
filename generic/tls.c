@@ -3182,35 +3182,6 @@ done:	    if (k_C != NULL) {
 /*
  *-------------------------------------------------------------------
  *
- * Tls_Free --
- *
- *	This procedure cleans up when a SSL socket based channel
- *	is closed and its reference count falls below 1
- *
- * Results:
- *	none
- *
- * Side effects:
- *	Frees all the state
- *
- *-------------------------------------------------------------------
- */
-
-void
-Tls_Free(
-    tls_free_type *blockPtr)	/* Client state for TLS socket */
-{
-    State *statePtr = (State *)blockPtr;
-
-    dprintf("Called");
-
-    Tls_Clean(statePtr);
-    ckfree(blockPtr);
-}
-
-/*
- *-------------------------------------------------------------------
- *
  * Tls_Clean --
  *
  *	This procedure cleans up when a SSL socket based channel
@@ -3238,6 +3209,7 @@ void Tls_Clean(
     if (statePtr->timer != (Tcl_TimerToken) NULL) {
 	Tcl_DeleteTimerHandler(statePtr->timer);
 	statePtr->timer = NULL;
+	Tcl_Release((ClientData) statePtr);
     }
 
     /* Remove callbacks */
@@ -3283,6 +3255,35 @@ void Tls_Clean(
     }
 
     dprintf("Returning");
+}
+
+/*
+ *-------------------------------------------------------------------
+ *
+ * Tls_Free --
+ *
+ *	This procedure cleans up when a SSL socket based channel
+ *	is closed and its reference count falls below 1
+ *
+ * Results:
+ *	none
+ *
+ * Side effects:
+ *	Frees all the state
+ *
+ *-------------------------------------------------------------------
+ */
+
+void
+Tls_Free(
+    tls_free_type *blockPtr)	/* Client state for TLS socket */
+{
+    State *statePtr = (State *)blockPtr;
+
+    dprintf("Called");
+
+    Tls_Clean(statePtr);
+    ckfree(blockPtr);
 }
 
 /*
