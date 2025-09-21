@@ -11,7 +11,7 @@
  *	Copyright (C) 2000 Ajuba Solutions
  *	Copyright (C) 2002 ActiveState Corporation
  *	Copyright (C) 2004 Starfish Systems
- *	Copyright (C) 2023 Brian O'Hagan
+ *	Copyright (C) 2023-2025 Brian O'Hagan
  *
  * Additional credit is due for Andreas Kupries (a.kupries@westend.com), for
  * providing the Tcl_ReplaceChannel mechanism and working closely with me

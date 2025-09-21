@@ -3,7 +3,7 @@
  * directly interface between the TCL IO channel and BIO buffers.
  *
  * Copyright (C) 1997-2000 Matt Newman <matt@novadigm.com>
- * Copyright (C) 2024 Brian O'Hagan
+ * Copyright (C) 2024-2025 Brian O'Hagan
  *
  */
 
@@ -39,8 +39,8 @@ static BIO_METHOD *BioMethods = NULL;
  *
  * BIOShouldRetry --
  *
- *	Determine if should retry operation based on error code. Uses the same
- *	conditions as BIO_sock_should_retry function.
+ *	Determine if an operation should be retried for non-fatal errors after
+ *	next select/(e)poll.
  *
  * Results:
  *	1 = retry, 0 = no retry
@@ -48,9 +48,14 @@ static BIO_METHOD *BioMethods = NULL;
  * Side effects:
  *	None
  *
- * The BIO_sock_non_fatal_error function uses EWOULDBLOCK, ENOTCONN, EINTR,
- * EAGAIN, EPROTO, EINPROGRESS, and EALREADY as retry errors. However, Tcl core
- * uses EWOULDBLOCK if connect is still in progress and ENOTCONN if it failed.
+ * Notes:
+ *	We check the same codes as BIO_sock_should_retry and
+ *	BIO_sock_non_fatal_error (EWOULDBLOCK, ENOTCONN, EINTR, EAGAIN, EPROTO,
+ *	EINPROGRESS, and EALREADY) except for ENOTCONN. Newer FreeBSDs return
+ *	ENOTCONN instead of EAGAIN/EWOULDBLOCK when trying to send on a
+ *	non-blocking socket which is not yet fully connected. While TCL core
+ *	uses EWOULDBLOCK if the connect is still in progress, it uses ENOTCONN
+ *	if it failed. So we skip it.
  *
  *-----------------------------------------------------------------------------
  */
@@ -59,7 +64,7 @@ static int BIOShouldRetry(int code) {
     int res = 0;
     dprintf("BIOShouldRetry %d=%s", code, Tcl_ErrnoMsg(code));
 
-    /* Retry code, skip ENOTCONN since Tcl core treats as failed. */
+    /* Check for non-blocking retry-able error codes, but skip ENOTCONN */
     if (code == EWOULDBLOCK || code == EINPROGRESS || code == EALREADY || 
 	code == EAGAIN || code == EPROTO || code == EINTR) {
 	res = 1;
@@ -75,9 +80,9 @@ static int BIOShouldRetry(int code) {
  *
  * BioOutput --
  *
- *	This function is used to read encrypted data from the BIO and write it
- *	into the socket. This function will be called in response to the
- *	application calling the BIO_write_ex() or BIO_write() functions.
+ *	This function is used to get encrypted data from the BIO in buf and
+ *	write it to the channel. This function will be called in response to
+ *	the tlsIO calling the BIO_write_ex() or BIO_write() functions.
  *
  * Results:
  *	Returns the number of bytes written to channel, 0 for EOF, or -1 for
@@ -147,23 +152,16 @@ static int BioOutput(BIO *bio, const char *buf, int bufLen) {
  *
  * BioInput --
  *
- *	This function is used to read encrypted data from the socket and
- *	write it into the BIO. This function will be called in response to the
- *	application calling the BIO_read_ex() or BIO_read() functions.
+ *	This function is used to read encrypted data from the channel and pass
+ *	it to the BIO in buf. This function will be called in response to the
+ *	tlsIO calling the BIO_read_ex() or BIO_read() functions.
  *
  * Results:
  *	Returns the number of bytes read from channel, 0 for EOF, or -1 for
  *	error.
  *
  * Side effects:
- *	Reads channel data into BIO.
- *
- * Data is received in whole blocks known as records from the peer. A whole
- * record is processed (e.g. decrypted) in one go and is buffered by OpenSSL
- * until it is read by the application via a call to SSL_read. SSL_pending()
- * returns the number of bytes which have been processed, buffered, and are
- * available inside ssl for immediate read. SSL_has_pending() returns 1 if
- * data is buffered (whether processed or unprocessed) and 0 otherwise.
+ *	Reads channel data into BIO or sets retry flags.
  *
  *-----------------------------------------------------------------------------
  */
@@ -191,7 +189,7 @@ static int BioInput(BIO *bio, char *buf, int bufLen) {
     tclErrno = Tcl_GetErrno();
     is_blocked = Tcl_InputBlocked(chan);
 
-    dprintf("[chan=%p] BioInput(%d) -> %" TCL_SIZE_MODIFIER "d [tclEof=%d; blocked=%d; tclErrno=%d: %s]",
+    dprintf("[chan=%p] BioInput(buf len=%d) -> %" TCL_SIZE_MODIFIER "d [tclEof=%d; blocked=%d; tclErrno=%d: %s]",
 	(void *) chan, bufLen, ret, is_eof, is_blocked, tclErrno, Tcl_ErrnoMsg(tclErrno));
 
     if (ret > 0) {
@@ -234,10 +232,11 @@ static int BioInput(BIO *bio, char *buf, int bufLen) {
  *	the application calling the BIO_puts() function.
  *
  * Results:
- *	Returns the number of bytes written to channel or 0 for error.
+ *	Returns the number of bytes read from channel, 0 for EOF, or -1 for
+ *	error.
  *
  * Side effects:
- *	Writes data to channel.
+ *	Writes data to channel or sets retry flags.
  *
  *-----------------------------------------------------------------------------
  */
@@ -255,7 +254,8 @@ static int BioPuts(BIO *bio, const char *str) {
  *
  *	This function is used to process control messages in the BIO. This
  *	function will be called in response to the application calling the
- *	BIO_ctrl() function.
+ *	BIO_ctrl() function. Several functions wrap BIO_ctrl() such as
+ *	BIO_eof, BIO_flush, BIO_pending, BIO_wpending, etc.
  *
  * Results:
  *	Function dependent
@@ -277,94 +277,95 @@ static long BioCtrl(BIO *bio, int cmd, long num, void *ptr) {
 	case BIO_CTRL_RESET:
 		/* opt - Resets BIO to initial state. Implements BIO_reset. */
 		dprintf("Got BIO_CTRL_RESET");
-		/* Return 1 for success (0 for file BIOs) and -1 for failure */
+		/* Return 1 for success (0 for file BIOs) and -1 for failure. */
 		ret = 0;
 		break;
 	case BIO_CTRL_EOF:
 		/* opt - Returns whether EOF has been reached. Implements BIO_eof. */
 		dprintf("Got BIO_CTRL_EOF");
-		/* Returns 1 if EOF has been reached, 0 if not, or <0 for failure */
+		/* Returns 1 if EOF has been reached, 0 if not, or <0 for failure. */
 		ret = ((chan) ? (Tcl_Eof(chan) || BIO_test_flags(bio, BIO_FLAGS_IN_EOF)) : 1);
 		break;
 	case BIO_CTRL_INFO:
-		/* opt - extra info on BIO. Implements BIO_get_mem_data */
+		/* opt - extra info on BIO. Implements BIO_get_mem_data. */
 		dprintf("Got BIO_CTRL_INFO");
 		ret = 0;
 		break;
 	case BIO_CTRL_SET:
-		/* man - set the 'IO' parameter */
+		/* man - set the 'IO' parameter. */
 		dprintf("Got BIO_CTRL_SET");
 		ret = 0;
 		break;
 	case BIO_CTRL_GET:
-		/* man - get the 'IO' parameter */
+		/* man - get the 'IO' parameter. */
 		dprintf("Got BIO_CTRL_GET ");
 		ret = 0;
 		break;
 	case BIO_CTRL_PUSH:
-		/* opt - internal, used to signify change. Implements BIO_push */
+		/* opt - internal, used to signify change. Implements BIO_push. */
 		dprintf("Got BIO_CTRL_PUSH");
 		ret = 0;
 		break;
 	case BIO_CTRL_POP:
-		/* opt - internal, used to signify change. Implements BIO_pop */
+		/* opt - internal, used to signify change. Implements BIO_pop. */
 		dprintf("Got BIO_CTRL_POP");
 		ret = 0;
 		break;
 	case BIO_CTRL_GET_CLOSE:
-		/* man - Get the close on BIO_free() flag set by BIO_CTRL_SET_CLOSE. Implements BIO_get_close */
+		/* man - Get the close on BIO_free() flag set by BIO_CTRL_SET_CLOSE. Implements BIO_get_close. */
 		dprintf("Got BIO_CTRL_CLOSE");
-		/* Returns BIO_CLOSE, BIO_NOCLOSE, or <0 for failure */
+		/* Returns BIO_CLOSE, BIO_NOCLOSE, or <0 for failure. */
 		ret = BIO_get_shutdown(bio);
 		break;
 	case BIO_CTRL_SET_CLOSE:
-		/* man - Set the close on BIO_free() flag. Implements BIO_set_close */
+		/* man - Set the close on BIO_free() flag. Implements BIO_set_close. */
 		dprintf("Got BIO_SET_CLOSE");
 		BIO_set_shutdown(bio, num);
-		/* Returns 1 on success or <=0 for failure */
+		/* Returns 1 on success or <=0 for failure. */
 		ret = 1;
 		break;
 	case BIO_CTRL_PENDING:
-		/* opt - Return number of bytes in BIO waiting to be read. Implements BIO_pending. */
+		/* opt - Return number of bytes in chan waiting to be read. Implements BIO_pending. */
 		dprintf("Got BIO_CTRL_PENDING");
-		/* Return the amount of pending data or 0 for error */
+		/* Return the amount of pending data or 0 for error. */
 		ret = ((chan) ? Tcl_InputBuffered(chan) : 0);
+		dprintf("rbio pending=%d", ret);
 		break;
 	case BIO_CTRL_FLUSH:
 		/* opt - Flush any buffered output. Implements BIO_flush. */
 		dprintf("Got BIO_CTRL_FLUSH");
-		/* Use Tcl_WriteRaw instead of Tcl_Flush to operate on right chan in stack */
+		/* Use Tcl_WriteRaw instead of Tcl_Flush to operate on right chan in stack. */
 		/* Returns 1 for success, <=0 for error/retry. */
 		ret = ((chan) && (Tcl_WriteRaw(chan, "", 0) >= 0) ? 1 : -1);
-		/*ret = BioOutput(bio, NULL, 0);*/
 		break;
 	case BIO_CTRL_DUP:
-		/* man - extra stuff for 'duped' BIO. Implements BIO_dup_state */
+		/* man - extra stuff for 'duped' BIO. Implements BIO_dup_state. */
 		dprintf("Got BIO_CTRL_DUP");
 		ret = 1;
 		break;
 	case BIO_CTRL_WPENDING:
-		/* opt - Return number of bytes in BIO still to be written. Implements BIO_wpending. */
+		/* opt - Return number of bytes in chan still to be written. Implements BIO_wpending. */
 		dprintf("Got BIO_CTRL_WPENDING");
 		/* Return the amount of pending data or 0 for error */
 		ret = ((chan) ? Tcl_OutputBuffered(chan) : 0);
+		dprintf("wbio pending=%d", ret);
 		break;
 	case BIO_CTRL_SET_CALLBACK:
-		/* opt - Sets an informational callback. Implements BIO_set_info_callback */
+		/* opt - Sets an informational callback. Implements BIO_set_info_callback. */
 		ret = 0;
 		break;
 	case BIO_CTRL_GET_CALLBACK:
-		/* opt - Get and return the info callback. Implements BIO_get_info_callback */
+		/* opt - Get and return the info callback. Implements BIO_get_info_callback. */
 		ret = 0;
 		break;
 
 	case BIO_C_FILE_SEEK:
-		/* Not used for sockets. Tcl_Seek only works on top chan. Implements BIO_seek() */
+		/* Not used for sockets. Tcl_Seek only works on top chan. Implements BIO_seek(). */
 		dprintf("Got BIO_C_FILE_SEEK");
 		ret = 0; /* Return 0 success and -1 for failure */
 		break;
 	case BIO_C_FILE_TELL:
-		/* Not used for sockets. Tcl_Tell only works on top chan. Implements BIO_tell() */
+		/* Not used for sockets. Tcl_Tell only works on top chan. Implements BIO_tell(). */
 		dprintf("Got BIO_C_FILE_TELL");
 		ret = 0; /* Return 0 success and -1 for failure */
 		break;
@@ -383,13 +384,13 @@ static long BioCtrl(BIO *bio, int cmd, long num, void *ptr) {
 	case BIO_CTRL_GET_KTLS_SEND:
 		/* Implements BIO_get_ktls_send */
 		dprintf("Got BIO_CTRL_GET_KTLS_SEND");
-		/* Returns 1 if the BIO is using the Kernel TLS data-path for sending, 0 if not */
+		/* Returns 1 if the BIO is using the Kernel TLS data-path for sending, 0 if not. */
 		ret = 0;
 		break;
 	case BIO_CTRL_GET_KTLS_RECV:
 		/* Implements BIO_get_ktls_recv */
 		dprintf("Got BIO_CTRL_GET_KTLS_RECV");
-		/* Returns 1 if the BIO is using the Kernel TLS data-path for receiving, 0 if not */
+		/* Returns 1 if the BIO is using the Kernel TLS data-path for receiving, 0 if not. */
 		ret = 0;
 		break;
 #endif
@@ -412,7 +413,7 @@ static long BioCtrl(BIO *bio, int cmd, long num, void *ptr) {
  *	BIO_new() function.
  *
  * Results:
- *	Returns boolean success result (1=success, 0=failure)
+ *	Returns boolean success result (1=success, 0=failure).
  *
  * Side effects:
  *	Initializes BIO structure.
@@ -443,10 +444,10 @@ static int BioNew(BIO *bio) {
  *	function.
  *
  * Results:
- *	Returns boolean success result
+ *	Returns boolean success result (1=success, 0=failure).
  *
  * Side effects:
- *	Initializes BIO structure.
+ *	De-initializes BIO structure.
  *
  *-----------------------------------------------------------------------------
  */
@@ -498,8 +499,7 @@ BIO *BIO_new_tcl(State *statePtr, int flags) {
     /* Create custom BIO method */
     if (BioMethods == NULL) {
 	/* BIO_TYPE_BIO = (19|BIO_TYPE_SOURCE_SINK) -- half a BIO pair */
-	/* BIO_TYPE_CONNECT = (12|BIO_TYPE_SOURCE_SINK|BIO_TYPE_DESCRIPTOR) */
-	/* BIO_TYPE_ACCEPT  = (13|BIO_TYPE_SOURCE_SINK|BIO_TYPE_DESCRIPTOR) */
+	/* custom = BIO_get_new_index() | BIO_TYPE_SOURCE_SINK */
 	BioMethods = BIO_meth_new(BIO_TYPE_BIO, "tcl");
 	if (BioMethods == NULL) {
 	    dprintf("Memory allocation error");

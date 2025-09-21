@@ -4,7 +4,7 @@
  *
  * Copyright (C) 1997-2000 Matt Newman <matt@novadigm.com>
  * Copyright (C) 2000 Ajuba Solutions
- * Copyright (C) 2024 Brian O'Hagan
+ * Copyright (C) 2024-2025 Brian O'Hagan
  *
  * Additional credit is due for Andreas Kupries (a.kupries@westend.com), for
  * providing the Tcl_ReplaceChannel mechanism and working closely with me
@@ -43,9 +43,10 @@ Fast Path
  *
  * TlsBlockModeProc --
  *
- *	This procedure is invoked by the generic IO level to set channel to
+ *	This procedure is invoked by the generic IO level to set the channel to
  *	blocking or nonblocking mode. Called by the generic I/O layer whenever
- *	the Tcl_SetChannelOption() function is used with option -blocking.
+ *	the Tcl_SetChannelOption() function is used with option -blocking. Each
+ *	stacked channel is configured individually.
  *
  * Results:
  *	0 if successful or POSIX error code if failed.
@@ -60,6 +61,8 @@ static int TlsBlockModeProc(
     int mode)			/* Blocking or non-blocking mode */
 {
     State *statePtr = (State *) instanceData;
+
+    dprintf("Called with mode %d", mode);
 
     if (mode == TCL_MODE_NONBLOCKING) {
 	statePtr->flags |= TLS_TCL_ASYNC;
@@ -82,7 +85,7 @@ static int TlsBlockModeProc(
  *	0 if successful or POSIX error code if failed.
  *
  * Side effects:
- *	Closes the socket of the channel.
+ *	Closes the socket for the channel.
  *
  *-----------------------------------------------------------------------------
  */
@@ -92,7 +95,7 @@ static int TlsCloseProc(
 {
     State *statePtr = (State *) instanceData;
 
-    dprintf("TlsCloseProc(%p)", (void *) statePtr);
+    dprintf("Close(%p)", (void *) statePtr);
 
     /* Send shutdown notification. Will return 0 while in process, then 1 when
        complete. Only closes the write direction of the connection; the read
@@ -113,8 +116,15 @@ static int TlsCloseProc(
  *
  * TlsClose2Proc --
  *
- *	Similar to TlsCloseProc, but allows for separate close read and write
- *	side of channel.
+ *	Similar to TlsCloseProc, but allows for separate close of the read or
+ *	write side of the channel. We don't support these since TLS is a
+ *	bi-directional protocol.
+ *
+ * Results:
+ *	0 if successful or POSIX error code if failed.
+ *
+ * Side effects:
+ *	Closes the socket for the channel.
  *
  *-----------------------------------------------------------------------------
  */
@@ -125,7 +135,7 @@ static int TlsClose2Proc(
 {
     State *statePtr = (State *) instanceData;
 
-    dprintf("TlsClose2Proc(%p)", (void *) statePtr);
+    dprintf("Called with flags %d", flags);
 
     if ((flags & (TCL_CLOSE_READ|TCL_CLOSE_WRITE)) == 0) {
 	return TlsCloseProc(instanceData, interp);
@@ -142,10 +152,11 @@ static int TlsClose2Proc(
  *	equivalent of handshake function.
  *
  * Result:
- *    1 if successful, 0 if wait for connect, and -1 if failed.
+ *	1 if successful, 0 if waiting for connect, and -1 if failed. Sets
+ *	errorCodePtr to a POSIX error code if an error occurred, or 0 if not.
  *
  * Side effects:
- *	Issues SSL_accept or SSL_connect
+ *	Performs SSL_accept or SSL_connect.
  *
  *-----------------------------------------------------------------------------
  */
@@ -168,11 +179,8 @@ int Tls_WaitForConnect(
 	return 1;
     }
 
+    /* Different types of operations have different requirements for SSL being established. */
     if (statePtr->flags & TLS_TCL_HANDSHAKE_FAILED) {
-	/*
-	 * Different types of operations have different requirements
-	 * SSL being established
-	 */
 	if (handshakeFailureIsPermanent) {
 	    dprintf("Asked to wait for a TLS handshake that has already failed.  Returning fatal error");
 	    *errorCodePtr = ECONNABORTED;
@@ -239,31 +247,28 @@ int Tls_WaitForConnect(
 	case SSL_ERROR_WANT_READ:
 	    /* More data must be read from the underlying BIO layer in order to
 	       complete the actual SSL_*() operation.  */
-	    dprintf("SSL_ERROR_WANT_READ");
+	    dprintf("SSL_ERROR_WANT_READ: EAGAIN");
 	    BIO_set_retry_read(statePtr->bio);
 	    *errorCodePtr = EAGAIN;
-	    dprintf("ERR(SSL_ERROR_WANT_READ, EAGAIN)");
 	    statePtr->want |= TCL_READABLE;
 	    return 0;
 
 	case SSL_ERROR_WANT_WRITE:
 	    /* There is data in the SSL buffer that must be written to the
 	       underlying BIO in order to complete the SSL_*() operation. */
-	    dprintf("SSL_ERROR_WANT_WRITE");
+	    dprintf("SSL_ERROR_WANT_WRITE: EAGAIN");
 	    BIO_set_retry_write(statePtr->bio);
 	    *errorCodePtr = EAGAIN;
-	    dprintf("ERR(SSL_ERROR_WANT_WRITE, EAGAIN)");
 	    statePtr->want |= TCL_WRITABLE;
 	    return 0;
 
 	case SSL_ERROR_WANT_X509_LOOKUP:
 	    /* The operation did not complete because an application callback
 	       set by SSL_CTX_set_client_cert_cb() has asked to be called again. */
-	    dprintf("SSL_ERROR_WANT_X509_LOOKUP");
+	    dprintf("SSL_ERROR_WANT_X509_LOOKUP: EAGAIN");
 	    BIO_set_retry_special(statePtr->bio);
 	    BIO_set_retry_reason(statePtr->bio, BIO_RR_SSL_X509_LOOKUP);
 	    *errorCodePtr = EAGAIN;
-	    dprintf("ERR(SSL_ERROR_WANT_X509_LOOKUP, EAGAIN)");
 	    return 0;
 
 	case SSL_ERROR_SYSCALL:
@@ -309,21 +314,19 @@ int Tls_WaitForConnect(
 	case SSL_ERROR_WANT_CONNECT:
 	    /* The operation did not complete and connect would have blocked.
 	       Retry again after connection is established. */
-	    dprintf("SSL_ERROR_WANT_CONNECT");
+	    dprintf("SSL_ERROR_WANT_CONNECT: EAGAIN");
 	    BIO_set_retry_special(statePtr->bio);
 	    BIO_set_retry_reason(statePtr->bio, BIO_RR_CONNECT);
 	    *errorCodePtr = EAGAIN;
-	    dprintf("ERR(SSL_ERROR_WANT_CONNECT, EAGAIN)");
 	    return 0;
 
 	case SSL_ERROR_WANT_ACCEPT:
 	    /* The operation did not complete and accept would have blocked.
 	       Retry again after connection is established. */
-	    dprintf("SSL_ERROR_WANT_ACCEPT");
+	    dprintf("SSL_ERROR_WANT_ACCEPT: EAGAIN");
 	    BIO_set_retry_special(statePtr->bio);
 	    BIO_set_retry_reason(statePtr->bio, BIO_RR_ACCEPT);
 	    *errorCodePtr = EAGAIN;
-	    dprintf("ERR(SSL_ERROR_WANT_ACCEPT, EAGAIN)");
 	    return 0;
 
 	case SSL_ERROR_WANT_ASYNC:
@@ -362,19 +365,24 @@ int Tls_WaitForConnect(
  * TlsInputProc --
  *
  *	This procedure is invoked by the generic I/O layer to read data from
- *	the BIO whenever the Tcl_Read(), Tcl_ReadChars, Tcl_Gets, and
- *	Tcl_GetsObj functions are used. Equivalent to SSL_read_ex and SSL_read.
+ *	the BIO whenever the Tcl_Read, Tcl_ReadChars, Tcl_Gets, and Tcl_GetsObj
+ *	functions are used. Equivalent to SSL_read_ex and SSL_read.
  *
  * Results:
  *	Returns the number of bytes read or -1 on error. Sets errorCodePtr to
- *	a POSIX error code if an error occurred, or 0 if none.
+ *	a POSIX error code if an error occurred, or 0 if successful.
  *
  * Side effects:
- *	Reads input from the input device of the channel.
+ *	Reads data from SSL/BIO.
  *
- * Data is received in whole blocks known as records from the peer. A whole
- * record is processed (e.g. decrypted) in one go and is buffered by OpenSSL
- * until it is read by the application via a call to SSL_read.
+ * Notes:
+ *	Data is received in whole blocks known as records from the peer. A 
+ *	whole record is processed (e.g. decrypted) in one go and is buffered by
+ *	OpenSSL until it is read by the application via a call to SSL_read() or
+ *	BIO_read() in our case. SSL_pending() returns the number of bytes which
+ *	have been processed, buffered, and are available inside ssl for
+ *	immediate read. SSL_has_pending() returns 1 if data is buffered
+ *	(whether processed or unprocessed) and 0 otherwise.
  *
  *-----------------------------------------------------------------------------
  */
@@ -389,7 +397,7 @@ static int TlsInputProc(
     int bytesRead, err;
     *errorCodePtr = 0;
 
-    dprintf("Read(%d)", bufSize);
+    dprintf("Read %d bytes", bufSize);
 
     /* Abort if the user verify callback is still running to avoid triggering
      * another call before the current one is complete. */
@@ -437,12 +445,8 @@ static int TlsInputProc(
      * this function with leftover errors in the stack.  If BIO_read
      * returns -1 and intends EAGAIN, there is a leftover error, it will be
      * misconstrued as an error, not EAGAIN.
-     *
-     * Alternatively, we may want to handle the <0 return codes from
-     * BIO_read specially (as advised in the RSA docs).  TLS's lower level BIO
-     * functions play with the retry flags though, and this seems to work
-     * correctly.  Similar fix in TlsOutputProc. - hobbs
      */
+    dprintf("BIO_read: Chan pending=%d, SSL pending=%d", BIO_pending(statePtr->bio), SSL_pending(statePtr->ssl));
     ERR_clear_error();
     BIO_clear_retry_flags(statePtr->bio);
     bytesRead = BIO_read(statePtr->bio, buf, bufSize);
@@ -459,6 +463,7 @@ static int TlsInputProc(
 	    BIO_should_write(statePtr->bio), BIO_should_io_special(statePtr->bio));
     }
 
+    /* Based on error, do retry or abort */
     switch (err) {
 	case SSL_ERROR_NONE:
 	    /* I/O operation completed */
@@ -589,10 +594,10 @@ static int TlsInputProc(
  *
  * Results:
  *	Returns the number of bytes written or -1 on error. Sets errorCodePtr
- *	to a POSIX error code if an error occurred, or 0 if none.
+ *	to a POSIX error code if an error occurred, or 0 if successful.
  *
  * Side effects:
- *	Writes output on the output device of the channel.
+ *	Writes data to SSL/BIO.
  *
  *-----------------------------------------------------------------------------
  */
@@ -607,7 +612,7 @@ static int TlsOutputProc(
     int written, err;
     *errorCodePtr = 0;
 
-    dprintf("Write(%p, %d)", (void *) statePtr, toWrite);
+    dprintf("Write %d bytes", toWrite);
     dprintBuffer(buf, toWrite);
 
     /* Abort if the user verify callback is still running to avoid triggering
@@ -670,12 +675,8 @@ static int TlsOutputProc(
      * this function with leftover errors in the stack.  If BIO_write
      * returns -1 and intends EAGAIN, there is a leftover error, it will be
      * misconstrued as an error, not EAGAIN.
-     *
-     * Alternatively, we may want to handle the <0 return codes from
-     * BIO_write specially (as advised in the RSA docs).  TLS's lower level
-     * BIO functions play with the retry flags though, and this seems to
-     * work correctly.  Similar fix in TlsInputProc. - hobbs
      */
+    dprintf("BIO_write: BIO pending=%d, Chan pending=%d", BIO_wpending(statePtr->bio), Tcl_OutputBuffered(statePtr->self));
     ERR_clear_error();
     BIO_clear_retry_flags(statePtr->bio);
     written = BIO_write(statePtr->bio, buf, toWrite);
@@ -694,6 +695,7 @@ static int TlsOutputProc(
 	BIO_flush(statePtr->bio);
     }
 
+    /* Based on error, do retry or abort */
     switch (err) {
 	case SSL_ERROR_NONE:
 	    /* I/O operation completed */
@@ -812,7 +814,7 @@ static int TlsOutputProc(
  *	Get parent channel for a stacked channel.
  *
  * Results:
- *	Tcl_Channel or NULL if none.
+ *	Tcl_Channel or NULL if None
  *
  *-----------------------------------------------------------------------------
  */
@@ -857,7 +859,7 @@ TlsSetOptionProc(
     Tcl_Channel parent = Tls_GetParent(statePtr, TLS_TCL_FASTPATH);
     Tcl_DriverSetOptionProc *setOptionProc;
 
-    dprintf("Called");
+    dprintf("Called to set option %s to value %s", optionName, optionValue);
 
     /* Pass to parent */
     setOptionProc = Tcl_ChannelSetOptionProc(Tcl_GetChannelType(parent));
@@ -871,7 +873,7 @@ TlsSetOptionProc(
 }
 
 /*
- *-------------------------------------------------------------------
+ *-----------------------------------------------------------------------------
  *
  * TlsGetOptionProc --
  *
@@ -881,13 +883,13 @@ TlsSetOptionProc(
  *
  *
  * Results:
- *	A standard Tcl result. The value of the specified option or a list of
- *	all options and their values is returned in the supplied DString.
+ *	TCL_OK if successful or TCL_ERROR if failed. Sets optionValue to
+ *	the option's value.
  *
  * Side effects:
- *	None.
+ *	None
  *
- *-------------------------------------------------------------------
+ *-----------------------------------------------------------------------------
  */
 static int
 TlsGetOptionProc(
@@ -901,7 +903,7 @@ TlsGetOptionProc(
     Tcl_Channel parent = Tls_GetParent(statePtr, TLS_TCL_FASTPATH);
     Tcl_DriverGetOptionProc *getOptionProc;
 
-    dprintf("Called");
+    dprintf("Called to get option %s", optionName);
 
     /* Pass to parent */
     getOptionProc = Tcl_ChannelGetOptionProc(Tcl_GetChannelType(parent));
@@ -925,12 +927,13 @@ TlsGetOptionProc(
  *
  * TlsChannelHandlerTimer --
  *
- *	Called by the notifier via a timer, to flush out data waiting in
- *	channel buffers. called by the generic I/O layer whenever the
- *	Tcl_GetChannelHandle() function is used.
+ *	Called by the notifier via a timer, to generate read/write events to
+ *	flush out data waiting in channel buffers. Called by TlsWatchProc to
+ *	periodically check for new events. Used to generate events when data is
+ *	buffered in BIO and there are no underlying channel events.
  *
  * Results:
- *	None.
+ *	None
  *
  * Side effects:
  *	Creates notification event.
@@ -986,11 +989,11 @@ static void TlsChannelHandlerTimer(
  *	called repeatedly.
  *
  * Results:
- *	None.
+ *	None
  *
  * Side effects:
- *	Sets up the time-based notifier so that future events on the channel
- *	will be seen by TCL.
+ *	Sets up or clears a time-based notifier so that future events on the
+ *	channel will be seen by TCL.
  *
  *-----------------------------------------------------------------------------
  */
@@ -1004,7 +1007,7 @@ TlsWatchProc(
     State *statePtr = (State *) instanceData;
     Tcl_DriverWatchProc *watchProc;
 
-    dprintf("Called with mask 0x%02x", mask);
+    dprintf("Called with mask 0x%02x and want 0x%02x", mask, statePtr->want);
     dprintFlags(statePtr);
 
     /* Abort if the user verify callback is still running to avoid triggering
@@ -1014,8 +1017,12 @@ TlsWatchProc(
 	return;
     }
 
+    /* Get channel to monitor for events */
     parent = Tls_GetParent(statePtr, TLS_TCL_FASTPATH);
+    dprintf("Parent: chan buffer=%d, input buffer=%d, output buffer=%d", \
+	Tcl_ChannelBuffered(parent), Tcl_InputBuffered(parent), Tcl_OutputBuffered(parent));
 
+    /* Abort if connect failed */
     if (statePtr->flags & TLS_TCL_HANDSHAKE_FAILED) {
 	dprintf("Asked to watch a socket with a failed handshake -- nothing can happen here");
 	dprintf("Unregistering interest in the lower channel");
@@ -1049,6 +1056,7 @@ TlsWatchProc(
 	    Tcl_Release((ClientData) statePtr);
 	}
 
+    /* Don't check for pending data here, will check for want in timer callback */
     } else {
 	/* Add timer, if none */
 	if (statePtr->timer == (Tcl_TimerToken) NULL) {
@@ -1068,10 +1076,10 @@ TlsWatchProc(
  *	specific handle associated with the channel. Not used for transforms.
  *
  * Results:
- *	The appropriate Tcl_File handle or NULL if none.
+ *	The appropriate Tcl_File handle or NULL if None
  *
  * Side effects:
- *	None.
+ *	None
  *
  *-----------------------------------------------------------------------------
  */
@@ -1081,6 +1089,8 @@ static int TlsGetHandleProc(
     ClientData *handlePtr)	/* Handle associated with the channel */
 {
     State *statePtr = (State *) instanceData;
+
+    dprintf("Called with direction 0x%02x", direction);
 
     return Tcl_GetChannelHandle(Tls_GetParent(statePtr, TLS_TCL_FASTPATH),
 	direction, handlePtr);
@@ -1097,10 +1107,10 @@ static int TlsGetHandleProc(
  *	on the underlying (stacked) channel.
  *
  * Results:
- *	Type of event or 0 if failed
+ *	Returns mask value to indicate none of the events were serviced.
  *
  * Side effects:
- *	May process the incoming event by itself.
+ *	May call Tls_WaitForConnect and/or delete timer.
  *
  *-----------------------------------------------------------------------------
  */
@@ -1142,7 +1152,7 @@ static int TlsNotifyProc(
 
     /*
      * Delete an existing timer. It was not fired, yet we are here, so the
-     * channel below generated such an event and we don't have to. The renewal
+     * below channel generated such an event and we don't need to. The renewal
      * of the interest after the execution of channel handlers will eventually
      * cause us to recreate the timer (in TlsWatchProc).
      */
@@ -1165,13 +1175,13 @@ static int TlsNotifyProc(
  *
  * Tls_ChannelType --
  *
- *	Defines the correct TLS channel driver handlers for this channel type.
+ *	Defines the TLS channel driver handlers for this channel type.
  *
  * Results:
- *	Tcl_ChannelType structure.
+ *	Returns a pointer to Tcl_ChannelType structure.
  *
  * Side effects:
- *	None.
+ *	None
  *
  *-----------------------------------------------------------------------------
  */
