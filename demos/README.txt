@@ -1,6 +1,9 @@
 This directory contain example files for how to use the TLS package to perform
 common functions. These are just a few of the possibilities.
 
+echat.tcl
+Example echo chat tool. Start with -server or -client arg to set client/server mode.
+
 gets_blocking_no_variable.tcl
 Download a webpage using gets, no variable arg, and blocking I/O.
 
