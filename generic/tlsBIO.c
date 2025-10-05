@@ -329,7 +329,7 @@ static long BioCtrl(BIO *bio, int cmd, long num, void *ptr) {
 		dprintf("Got BIO_CTRL_PENDING");
 		/* Return the amount of pending data or 0 for error. */
 		ret = ((chan) ? Tcl_InputBuffered(chan) : 0);
-		dprintf("rbio pending=%d", ret);
+		dprintf("rbio pending=%ld", ret);
 		break;
 	case BIO_CTRL_FLUSH:
 		/* opt - Flush any buffered output. Implements BIO_flush. */
@@ -348,7 +348,7 @@ static long BioCtrl(BIO *bio, int cmd, long num, void *ptr) {
 		dprintf("Got BIO_CTRL_WPENDING");
 		/* Return the amount of pending data or 0 for error */
 		ret = ((chan) ? Tcl_OutputBuffered(chan) : 0);
-		dprintf("wbio pending=%d", ret);
+		dprintf("wbio pending=%ld", ret);
 		break;
 	case BIO_CTRL_SET_CALLBACK:
 		/* opt - Sets an informational callback. Implements BIO_set_info_callback. */

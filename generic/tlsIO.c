@@ -97,11 +97,11 @@ static int TlsCloseProc(
 
     dprintf("Close(%p)", (void *) statePtr);
 
-    /* Send shutdown notification. Will return 0 while in process, then 1 when
-       complete. Only closes the write direction of the connection; the read
-       direction is closed by the peer. Does not affect socket state. Don't
-       call after fatal error. */
-    if (statePtr->ssl != NULL && !(statePtr->flags & TLS_TCL_HANDSHAKE_FAILED)) {
+    /* Send "close notify" shutdown notification. Will return 0 if in progress,
+	and 1 when complete. Only closes the write direction of the connection;
+	the read direction is closed by the peer. Does not affect the socket 
+	state. Don't call after fatal error. */
+    if (statePtr->ssl != NULL && !(statePtr->flags & TLS_TCL_FATAL_ERROR)) {
 	BIO_flush(statePtr->bio);
 	SSL_shutdown(statePtr->ssl);
     }
@@ -180,7 +180,7 @@ int Tls_WaitForConnect(
     }
 
     /* Different types of operations have different requirements for SSL being established. */
-    if (statePtr->flags & TLS_TCL_HANDSHAKE_FAILED) {
+    if (statePtr->flags & TLS_TCL_FATAL_ERROR) {
 	if (handshakeFailureIsPermanent) {
 	    dprintf("Asked to wait for a TLS handshake that has already failed.  Returning fatal error");
 	    *errorCodePtr = ECONNABORTED;
@@ -239,9 +239,9 @@ int Tls_WaitForConnect(
 	    if (backingError != 0) {
 		Tls_Error(statePtr, ERR_reason_error_string(backingError));
 	    }
-	    statePtr->flags |= TLS_TCL_HANDSHAKE_FAILED;
-	    statePtr->flags |= TLS_TCL_EOF;
 	    *errorCodePtr = ECONNABORTED;
+	    statePtr->flags |= TLS_TCL_FATAL_ERROR;
+	    statePtr->flags |= TLS_TCL_EOF;
 	    return -1;
 
 	case SSL_ERROR_WANT_READ:
@@ -297,7 +297,7 @@ int Tls_WaitForConnect(
 		Tls_Error(statePtr, ERR_reason_error_string(backingError));
 	    }
 
-	    statePtr->flags |= TLS_TCL_HANDSHAKE_FAILED;
+	    statePtr->flags |= TLS_TCL_FATAL_ERROR;
 	    statePtr->flags |= TLS_TCL_EOF;
 	    return -1;
 
@@ -407,13 +407,12 @@ static int TlsInputProc(
     }
 
     /* Abort if EOF already detected. Can't read, but can write. */
-    if (statePtr->flags & TLS_TCL_EOF) {
+    if (statePtr->flags & TLS_TCL_FATAL_ERROR || statePtr->flags & TLS_TCL_EOF) {
 	dprintf("EOF already detected, abort read");
 	return 0;
     }
 
-    /* If not initialized, do connect */
-    /* Can also check SSL_is_init_finished(ssl) */
+    /* If not initialized, do connect. Can also check SSL_is_init_finished(). */
     if (statePtr->flags & TLS_TCL_INIT) {
 	int tlsConnect;
 
@@ -446,7 +445,7 @@ static int TlsInputProc(
      * returns -1 and intends EAGAIN, there is a leftover error, it will be
      * misconstrued as an error, not EAGAIN.
      */
-    dprintf("BIO_read: Chan pending=%d, SSL pending=%d", BIO_pending(statePtr->bio), SSL_pending(statePtr->ssl));
+/*    dprintf("BIO_read: Chan pending=%dd", BIO_pending(statePtr->bio));*/
     ERR_clear_error();
     BIO_clear_retry_flags(statePtr->bio);
     bytesRead = BIO_read(statePtr->bio, buf, bufSize);
@@ -495,6 +494,7 @@ static int TlsInputProc(
 		Tls_Error(statePtr, "EOF reached");
 	    }
 #endif
+	    statePtr->flags |= TLS_TCL_FATAL_ERROR;
 	    statePtr->flags |= TLS_TCL_EOF;
 	    break;
 
@@ -549,6 +549,7 @@ static int TlsInputProc(
 		bytesRead = -1;
 		Tls_Error(statePtr, ERR_reason_error_string(backingError));
 	    }
+	    statePtr->flags |= TLS_TCL_FATAL_ERROR;
 	    statePtr->flags |= TLS_TCL_EOF;
 	    break;
 
@@ -624,8 +625,13 @@ static int TlsOutputProc(
 	return -1;
     }
 
-    /* If not initialized, do connect */
-    /* Can also check SSL_is_init_finished(ssl) */
+    /* Abort if connection has failed. */
+    if (statePtr->flags & TLS_TCL_FATAL_ERROR) {
+	dprintf("EOF already detected, abort write");
+	return 0;
+    }
+
+    /* If not initialized, do connect. Can also check SSL_is_init_finished(). */
     if (statePtr->flags & TLS_TCL_INIT) {
 	int tlsConnect;
 
@@ -717,8 +723,9 @@ static int TlsOutputProc(
 	    } else {
 		Tls_Error(statePtr, "Unknown SSL error");
 	    }
-	    statePtr->flags |= TLS_TCL_EOF;
 	    *errorCodePtr = ECONNABORTED;
+	    statePtr->flags |= TLS_TCL_FATAL_ERROR;
+	    statePtr->flags |= TLS_TCL_EOF;
 	    written = -1;
 	    break;
 
@@ -772,6 +779,7 @@ static int TlsOutputProc(
 		written = -1;
 		Tls_Error(statePtr, ERR_reason_error_string(backingError));
 	    }
+	    statePtr->flags |= TLS_TCL_FATAL_ERROR;
 	    statePtr->flags |= TLS_TCL_EOF;
 	    break;
 
@@ -1023,7 +1031,7 @@ TlsWatchProc(
 	Tcl_ChannelBuffered(parent), Tcl_InputBuffered(parent), Tcl_OutputBuffered(parent));
 
     /* Abort if connect failed */
-    if (statePtr->flags & TLS_TCL_HANDSHAKE_FAILED) {
+    if (statePtr->flags & TLS_TCL_FATAL_ERROR) {
 	dprintf("Asked to watch a socket with a failed handshake -- nothing can happen here");
 	dprintf("Unregistering interest in the lower channel");
 

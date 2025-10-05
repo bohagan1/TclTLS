@@ -124,7 +124,7 @@
 	if (((statePtr)->flags & TLS_TCL_INIT) == TLS_TCL_INIT) { dprintfBuffer_p += sprintf(dprintfBuffer_p, "|TLS_TCL_INIT"); }; \
 	if (((statePtr)->flags & TLS_TCL_DEBUG) == TLS_TCL_DEBUG) { dprintfBuffer_p += sprintf(dprintfBuffer_p, "|TLS_TCL_DEBUG"); }; \
 	if (((statePtr)->flags & TLS_TCL_CALLBACK) == TLS_TCL_CALLBACK) { dprintfBuffer_p += sprintf(dprintfBuffer_p, "|TLS_TCL_CALLBACK"); }; \
-	if (((statePtr)->flags & TLS_TCL_HANDSHAKE_FAILED) == TLS_TCL_HANDSHAKE_FAILED) { dprintfBuffer_p += sprintf(dprintfBuffer_p, "|TLS_TCL_HANDSHAKE_FAILED"); }; \
+	if (((statePtr)->flags & TLS_TCL_FATAL_ERROR) == TLS_TCL_FATAL_ERROR) { dprintfBuffer_p += sprintf(dprintfBuffer_p, "|TLS_TCL_FATAL_ERROR"); }; \
 	if (((statePtr)->flags & TLS_TCL_FASTPATH) == TLS_TCL_FASTPATH) { dprintfBuffer_p += sprintf(dprintfBuffer_p, "|TLS_TCL_FASTPATH"); }; \
 	fprintf(stderr, "%s\n", dprintfBuffer); \
 }
@@ -171,7 +171,7 @@
 #define TLS_TCL_DEBUG		(1<<3)	/* Show debug tracing */
 #define TLS_TCL_CALLBACK	(1<<4)	/* In a callback, prevent update
 					 * looping problem. [Bug 1652380] */
-#define TLS_TCL_HANDSHAKE_FAILED (1<<5) /* Set on handshake failures and once set, all
+#define TLS_TCL_FATAL_ERROR	(1<<5)	/* Set on handshake failure or other fatal erros. All
 					 * further I/O will result in ECONNABORTED errors. */
 #define TLS_TCL_FASTPATH 	(1<<6)	/* The parent channel is being used
 					 * directly by the SSL library. */
