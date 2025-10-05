@@ -128,6 +128,7 @@
 <li class="doctools_section"><a href="#section6">Debug</a></li>
 <li class="doctools_section"><a href="#section7">Examples</a></li>
 <li class="doctools_section"><a href="#section8">Special Considerations</a></li>
+<li class="doctools_section"><a href="#section9">Error Messages</a></li>
 <li class="doctools_section"><a href="#see-also">See Also</a></li>
 <li class="doctools_section"><a href="#keywords">Keywords</a></li>
 <li class="doctools_section"><a href="#category">Category</a></li>
@@ -156,20 +157,19 @@
 </div>
 </div>
 <div id="section1" class="doctools_section"><h2><a name="section1">Description</a></h2>
-<p>This extension provides TCL script access to secure socket communications
-using the Transport Layer Security (TLS) protocol. It provides a generic
-binding to <a href="https://www.openssl.org/">OpenSSL</a>, utilizing the
-<b class="syscmd">Tcl_StackChannel</b> API in TCL 8.4 or later.
-These sockets behave exactly the same as channels created using the built-in
-<b class="syscmd">socket</b> command, but provide additional options for controlling
-the SSL/TLS session.</p>
+<p>This extension provides TCL script access to Secure Socket Layer (SSL)
+communications using the Transport Layer Security (TLS) protocol. It provides a
+generic binding to <a href="https://www.openssl.org/">OpenSSL</a>, utilizing the
+<b class="syscmd">Tcl_StackChannel</b> API in TCL 8.4 or later. These sockets behave exactly
+the same as channels created using the built-in <b class="syscmd">socket</b> command, but
+provide additional options for controlling the SSL/TLS session.</p>
 </div>
 <div id="section2" class="doctools_section"><h2><a name="section2">Compatibility</a></h2>
 <p>This extension is compatible with OpenSSL 1.1.1 or later. It requires Tcl
 version 8.5 or later and will work with Tcl 9.0.</p>
 </div>
 <div id="section3" class="doctools_section"><h2><a name="section3">Commands</a></h2>
-<p>The following are the commands provided by the TcLTLS package. See the
+<p>The following are the commands provided by the TcLTLS package. See
 <span class="sectref"><a href="#section7">Examples</a></span> for example usage and the &quot;<b class="file">demos</b>&quot; directory for
 more example usage.</p>
 <dl class="doctools_definitions">
@@ -183,7 +183,7 @@ though you should limit your options to only the TLS related ones.</p></dd>
 and <b class="cmd">tls::import</b> to create the connection. It behaves the same as the
 native TCL <b class="syscmd">socket</b> command, but also supports the <b class="cmd">tls::import</b>
 command options with one additional option. It returns the channel handle id
-for the new socket.</p>
+for the new socket. Additional options are:</p>
 <dl class="doctools_options">
 <dt><b class="option">-autoservername</b> <i class="arg">bool</i></dt>
 <dd><p>If <b class="const">true</b>, automatically set the <b class="option">-servername</b> argument to the
@@ -192,9 +192,9 @@ Starting in TclTLS 2.0, the default is <b class="const">true</b> unless <b class
 is also specified.</p></dd>
 </dl></dd>
 <dt><a name="3"><b class="cmd">tls::socket</b> <b class="option">-server</b> <i class="arg">command</i> <span class="opt">?<i class="arg">-option</i>?</span> <span class="opt">?<i class="arg">value</i>?</span> <span class="opt">?<i class="arg">-option value ...</i>?</span> <i class="arg">port</i></a></dt>
-<dd><p>Same as previous, but instead creates a server socket for clients to connect to
-just like the Tcl <b class="syscmd">socket -server</b> command. It returns the channel
-handle id for the new socket.</p></dd>
+<dd><p>Same as previous command, but instead creates a server socket for clients to
+connect to just like the Tcl <b class="syscmd">socket -server</b> command. It returns the
+channel handle id for the new socket.</p></dd>
 <dt><a name="4"><b class="cmd">tls::import</b> <i class="arg">channel</i> <span class="opt">?<i class="arg">-option</i>?</span> <span class="opt">?<i class="arg">value</i>?</span> <span class="opt">?<i class="arg">-option value ...</i>?</span></a></dt>
 <dd><p>Start TLS encryption on TCL channel <i class="arg">channel</i> via a stacked channel. It
 need not be a socket, but must provide bi-directional flow. Also sets session
@@ -632,7 +632,7 @@ or MS Windows and OpenSSL is installed, the <b class="variable">SSL_CERT_DIR</b>
 <b class="variable">SSL_CERT_FILE</b> environment variables or the one of the <b class="option">-cadir</b>,
 <b class="option">-cadir</b>, or <b class="option">-castore</b> options must be defined.</p></li>
 <li><p>On MS Windows, starting in OpenSSL 3.2, it is now possible to access the
-built-in Windows Certificate Store from OpenSSL. This can utilized by
+built-in Windows Certificate Store from OpenSSL. This can be utilized by
 setting the <b class="option">-castore</b> option to &quot;<b class="const">org.openssl.winstore://</b>&quot;.
 In TclTLS 2.0, this is the default value if <b class="option">-cadir</b>,
 <b class="option">-cadir</b>, and <b class="option">-castore</b> are not specified.</p></li>
@@ -874,6 +874,18 @@ linked to OpenSSL library was configured and built. New versions may obsolete
 older protocol versions, add or remove ciphers, change default values, etc.
 Use the <b class="cmd">tls::protocols</b> command to obtain the supported
 protocol versions.</p>
+</div>
+<div id="section9" class="doctools_section"><h2><a name="section9">Error Messages</a></h2>
+<p>Some OpsnSSl error messages have cryptic meanings. This is a list of messages
+along with their true meaning.</p>
+<dl class="doctools_definitions">
+<dt><i class="arg">packet length too long</i></dt>
+<dd><p>Client has tried to connect to a HTTP server on the plain-text port instead of the SSL/TLS port.</p></dd>
+<dt><i class="arg">unexpected eof while reading</i></dt>
+<dd><p>Peer has closed the connection without sending the &quot;close notify&quot; shutdown alert.</p></dd>
+<dt><i class="arg">wrong version number</i></dt>
+<dd><p>Client has tried to connect to a non-HTTP server on a non-TLS (i.e. plain text) port.</p></dd>
+</dl>
 </div>
 <div id="see-also" class="doctools_section"><h2><a name="see-also">See Also</a></h2>
 <p><a href="https://www.openssl.org/">OpenSSL</a>, http, socket</p>

@@ -16,13 +16,12 @@
 [require tls 2.0b1]
 [description]
 
-This extension provides TCL script access to secure socket communications
-using the Transport Layer Security (TLS) protocol. It provides a generic
-binding to [uri "https://www.openssl.org/" OpenSSL], utilizing the
-[syscmd Tcl_StackChannel] API in TCL 8.4 or later.
-These sockets behave exactly the same as channels created using the built-in
-[syscmd socket] command, but provide additional options for controlling
-the SSL/TLS session.
+This extension provides TCL script access to Secure Socket Layer (SSL)
+communications using the Transport Layer Security (TLS) protocol. It provides a
+generic binding to [uri "https://www.openssl.org/" OpenSSL], utilizing the
+[syscmd Tcl_StackChannel] API in TCL 8.4 or later. These sockets behave exactly
+the same as channels created using the built-in [syscmd socket] command, but
+provide additional options for controlling the SSL/TLS session.
 
 [section Compatibility]
 This extension is compatible with OpenSSL 1.1.1 or later. It requires Tcl
@@ -30,7 +29,7 @@ version 8.5 or later and will work with Tcl 9.0.
 
 [section Commands]
 
-The following are the commands provided by the TcLTLS package. See the
+The following are the commands provided by the TcLTLS package. See
 [sectref Examples] for example usage and the [file demos] directory for
 more example usage.
 
@@ -49,7 +48,7 @@ This is a helper function that utilizes the underlying commands [syscmd socket]
 and [cmd tls::import] to create the connection. It behaves the same as the
 native TCL [syscmd socket] command, but also supports the [cmd tls::import]
 command options with one additional option. It returns the channel handle id
-for the new socket.
+for the new socket. Additional options are:
 
 [list_begin options]
 
@@ -63,9 +62,9 @@ is also specified.
 
 [call [cmd tls::socket] [option -server] [arg command] [opt [arg -option]] [opt [arg value]] [opt [arg "-option value ..."]] [arg port]]
 
-Same as previous, but instead creates a server socket for clients to connect to
-just like the Tcl [syscmd "socket -server"] command. It returns the channel
-handle id for the new socket.
+Same as previous command, but instead creates a server socket for clients to
+connect to just like the Tcl [syscmd "socket -server"] command. It returns the
+channel handle id for the new socket.
 
 [call [cmd tls::import] [arg channel] [opt [arg -option]] [opt [arg value]] [opt [arg "-option value ..."]]]
 
@@ -657,7 +656,7 @@ or MS Windows and OpenSSL is installed, the [var SSL_CERT_DIR] and/or
 
 [item]
 On MS Windows, starting in OpenSSL 3.2, it is now possible to access the
-built-in Windows Certificate Store from OpenSSL. This can utilized by
+built-in Windows Certificate Store from OpenSSL. This can be utilized by
 setting the [option -castore] option to "[const org.openssl.winstore://]".
 In TclTLS 2.0, this is the default value if [option -cadir],
 [option -cadir], and [option -castore] are not specified.
@@ -985,5 +984,23 @@ linked to OpenSSL library was configured and built. New versions may obsolete
 older protocol versions, add or remove ciphers, change default values, etc.
 Use the [cmd tls::protocols] command to obtain the supported
 protocol versions.
+
+[section "Error Messages"]
+
+Some OpsnSSl error messages have cryptic meanings. This is a list of messages
+along with their true meaning.
+
+[list_begin definitions]
+
+[def [arg "packet length too long"]]
+Client has tried to connect to a HTTP server on the plain-text port instead of the SSL/TLS port.
+
+[def [arg "unexpected eof while reading"]]
+Peer has closed the connection without sending the "close notify" shutdown alert.
+
+[def [arg "wrong version number"]]
+Client has tried to connect to a non-HTTP server on a non-TLS (i.e. plain text) port.
+
+[list_end]
 
 [manpage_end]
