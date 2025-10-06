@@ -133,8 +133,6 @@ static int TlsClose2Proc(
     Tcl_Interp *interp,		/* Tcl interpreter to report errors to */
     int flags)			/* Flags to close read/write side of channel */
 {
-    State *statePtr = (State *) instanceData;
-
     dprintf("Called with flags %d", flags);
 
     if ((flags & (TCL_CLOSE_READ|TCL_CLOSE_WRITE)) == 0) {
@@ -165,8 +163,8 @@ int Tls_WaitForConnect(
     int *errorCodePtr,			/* Storage for error code to return */
     int handshakeFailureIsPermanent)	/* Is the connect failure permanent */
 {
-    unsigned long backingError;
-    int err, rc;
+    unsigned long err;
+    int ret, rc, reason, is_fatal, bioShouldRetry, io_err;
     *errorCodePtr = 0;
 
     dprintf("WaitForConnect(%p)", (void *) statePtr);
@@ -191,36 +189,74 @@ int Tls_WaitForConnect(
 	return -1;
     }
 
-    /*
-     * We need to clear the SSL error stack now because we sometimes reach
-     * this function with leftover errors in the stack.  If accept or connect
-     * return -1 and intends EAGAIN, there is a leftover error, it will be
-     * misconstrued as an error, not EAGAIN.
-     */
-    ERR_clear_error();
-    BIO_clear_retry_flags(statePtr->bio);
+    for (;;) {
+	Tcl_SetErrno(0);
+	ERR_clear_error();
+	BIO_clear_retry_flags(statePtr->bio);
 
-    /* Not initialized yet! Also calls SSL_do_handshake(). */
-    if (statePtr->flags & TLS_TCL_SERVER) {
-	dprintf("Calling SSL_accept()");
-	rc = SSL_accept(statePtr->ssl);
+	/* Not initialized yet! Also calls SSL_do_handshake(). */
+	if (statePtr->flags & TLS_TCL_SERVER) {
+	    dprintf("Calling SSL_accept()");
+	    ret = SSL_accept(statePtr->ssl);
 
-    } else {
-	dprintf("Calling SSL_connect()");
-	rc = SSL_connect(statePtr->ssl);
-    }
-    err = SSL_get_error(statePtr->ssl, rc);
-    backingError = ERR_get_error();
+	} else {
+	    dprintf("Calling SSL_connect()");
+	    ret = SSL_connect(statePtr->ssl);
+	}
 
-    if (rc <= 0) {
-	dprintf("Accept/connect failed: is EOF=%d, should retry=%d, retry read=%d, retry write=%d, other=%d",
-	    BIO_eof(statePtr->bio),
-	    BIO_should_retry(statePtr->bio), BIO_should_read(statePtr->bio),
-	    BIO_should_write(statePtr->bio), BIO_should_io_special(statePtr->bio));
+	/* 1=successful, 0=not successful and shut down, <0=fatal error */
+	if (ret > 0) {
+	    dprintf("Accept or connect was successful");
+
+	    if (BIO_flush(statePtr->bio) <= 0) {
+		dprintf("Flushing the lower layers failed, this will probably terminate this session");
+	    }
+	} else {
+	    dprintf("Accept or connect failed");
+	}
+
+	/* Same as SSL_want, but also checks the error queue */
+	rc = SSL_get_error(statePtr->ssl, ret);
+	err = ERR_get_error();
+	reason = ERR_GET_REASON(err);
+	is_fatal = ERR_FATAL_ERROR(err);
+	/* The retry flag is set by the BIO_set_retry_* functions */
+	bioShouldRetry = BIO_should_retry(statePtr->bio);
+	io_err = Tcl_GetErrno();
+	dprintf("Connect: ret=%d, rc=%d, err=%ld, reason=%d, is_fatal=%d, lib=%s, msg=%s, bioShouldRetry=%d, errno=%d, id=%s, msg=%s", \
+	    ret, rc, err, reason, is_fatal, ERR_lib_error_string(err), ERR_reason_error_string(err), bioShouldRetry, io_err, Tcl_ErrnoId(), Tcl_ErrnoMsg(io_err));
+
+	if (ret <= 0) {
+	    if (rc == SSL_ERROR_WANT_CONNECT || rc == SSL_ERROR_WANT_ACCEPT) {
+		bioShouldRetry = 1;
+	    } else if (rc == SSL_ERROR_WANT_READ) {
+		bioShouldRetry = 1;
+		statePtr->want |= TCL_READABLE;
+	    } else if (rc == SSL_ERROR_WANT_WRITE) {
+		bioShouldRetry = 1;
+		statePtr->want |= TCL_WRITABLE;
+	    }
+	}
+
+	if (bioShouldRetry) {
+	    dprintf("The I/O did not complete -- but we should try it again");
+
+	    if (statePtr->flags & TLS_TCL_ASYNC) {
+		dprintf("Returning EAGAIN so that it can be retried later");
+		*errorCodePtr = EAGAIN;
+		return 0;
+	    } else {
+		dprintf("Doing so now");
+		continue;
+	    }
+	}
+
+	dprintf("We have either completely established the session or completely failed it -- there is no more need to ever retry it though");
+	break;
     }
 
     /* Based on error, do retry or abort */
-    switch (err) {
+    switch (rc) {
 	case SSL_ERROR_NONE:
 	    /* The TLS/SSL I/O operation completed successfully */
 	    dprintf("SSL_ERROR_NONE");
@@ -236,8 +272,8 @@ int Tls_WaitForConnect(
 		Tls_Error(statePtr,
 		    X509_verify_cert_error_string(SSL_get_verify_result(statePtr->ssl)));
 	    }
-	    if (backingError != 0) {
-		Tls_Error(statePtr, ERR_reason_error_string(backingError));
+	    if (err != 0) {
+		Tls_Error(statePtr, ERR_reason_error_string(err));
 	    }
 	    *errorCodePtr = ECONNABORTED;
 	    statePtr->flags |= TLS_TCL_FATAL_ERROR;
@@ -275,12 +311,13 @@ int Tls_WaitForConnect(
 	    /* Some non-recoverable, fatal I/O error occurred */
 	    dprintf("SSL_ERROR_SYSCALL: Fatal I/O error occurred");
 
-	    if (backingError == 0 && rc == 0) {
+	    if (err == 0 && ret == 0) {
+		/* Unexpected EOF for 1.1.1 */
 		dprintf("EOF reached")
 		*errorCodePtr = ECONNRESET;
 		Tls_Error(statePtr, "(unexpected) EOF reached");
 
-	    } else if (backingError == 0 && rc == -1) {
+	    } else if (err == 0 && ret == -1) {
 		dprintf("I/O error occurred (errno = %lu)", (unsigned long) Tcl_GetErrno());
 		*errorCodePtr = Tcl_GetErrno();
 		if (*errorCodePtr == ECONNRESET) {
@@ -289,12 +326,12 @@ int Tls_WaitForConnect(
 		Tls_Error(statePtr, Tcl_ErrnoMsg(*errorCodePtr));
 
 	    } else {
-		dprintf("I/O error occurred (backingError = %lu)", backingError);
+		dprintf("I/O error occurred (err = %lu)", err);
 		*errorCodePtr = Tcl_GetErrno();
 		if (*errorCodePtr == ECONNRESET) {
 		    *errorCodePtr = ECONNABORTED;
 		}
-		Tls_Error(statePtr, ERR_reason_error_string(backingError));
+		Tls_Error(statePtr, ERR_reason_error_string(err));
 	    }
 
 	    statePtr->flags |= TLS_TCL_FATAL_ERROR;
@@ -392,9 +429,9 @@ static int TlsInputProc(
     int bufSize,		/* Buffer size in bytes */
     int *errorCodePtr)		/* Storage for error code to return */
 {
-    unsigned long backingError;
+    unsigned long err;
     State *statePtr = (State *) instanceData;
-    int bytesRead, err;
+    int bytesRead, rc, reason, is_fatal, bioShouldRetry, io_err;
     *errorCodePtr = 0;
 
     dprintf("Read %d bytes", bufSize);
@@ -445,25 +482,39 @@ static int TlsInputProc(
      * returns -1 and intends EAGAIN, there is a leftover error, it will be
      * misconstrued as an error, not EAGAIN.
      */
-/*    dprintf("BIO_read: Chan pending=%dd", BIO_pending(statePtr->bio));*/
+    dprintf("BIO_read eof=%d, buffered=%d, input=%d, output=%d", Tcl_Eof(statePtr->self), Tcl_ChannelBuffered(statePtr->self), \
+        Tcl_InputBuffered(statePtr->self), Tcl_OutputBuffered(statePtr->self));    ERR_clear_error();
+    Tcl_SetErrno(0);
     ERR_clear_error();
     BIO_clear_retry_flags(statePtr->bio);
     bytesRead = BIO_read(statePtr->bio, buf, bufSize);
     dprintf("BIO_read -> %d", bytesRead);
+    dprintf("BIO_read eof=%d, buffered=%d, input=%d, output=%d", Tcl_Eof(statePtr->self), Tcl_ChannelBuffered(statePtr->self), \
+        Tcl_InputBuffered(statePtr->self), Tcl_OutputBuffered(statePtr->self));
 
     /* Same as SSL_want, but also checks the error queue */
-    err = SSL_get_error(statePtr->ssl, bytesRead);
-    backingError = ERR_get_error();
+    rc = SSL_get_error(statePtr->ssl, bytesRead);
+    err = ERR_get_error();
+    reason = ERR_GET_REASON(err);
+    is_fatal = ERR_FATAL_ERROR(err);
+    /* The retry flag is set by the BIO_set_retry_* functions */
+    bioShouldRetry = BIO_should_retry(statePtr->bio);
+    io_err = Tcl_GetErrno();
+    dprintf("Read: bytesRead=%d, rc=%d, err=%ld, reason=%d, is_fatal=%d, lib=%s, msg=%s, bioShouldRetry=%d, errno=%d, id=%s, msg=%s", \
+        bytesRead, rc, err, reason, is_fatal, ERR_lib_error_string(err), ERR_reason_error_string(err), bioShouldRetry, io_err, Tcl_ErrnoId(), Tcl_ErrnoMsg(io_err));
 
     if (bytesRead <= 0) {
+	/* The retry flag is set by the BIO_set_retry_* functions */
 	dprintf("Read failed: is EOF=%d, should retry=%d, retry read=%d, retry write=%d, other=%d",
-	    BIO_eof(statePtr->bio),
-	    BIO_should_retry(statePtr->bio), BIO_should_read(statePtr->bio),
+	    BIO_eof(statePtr->bio), BIO_should_retry(statePtr->bio), BIO_should_read(statePtr->bio),
 	    BIO_should_write(statePtr->bio), BIO_should_io_special(statePtr->bio));
+	if (BIO_should_retry(statePtr->bio)) {
+	    *errorCodePtr = EAGAIN;
+	}
     }
 
     /* Based on error, do retry or abort */
-    switch (err) {
+    switch (rc) {
 	case SSL_ERROR_NONE:
 	    /* I/O operation completed */
 	    dprintf("SSL_ERROR_NONE");
@@ -474,8 +525,8 @@ static int TlsInputProc(
 	    /* A non-recoverable, fatal error in the SSL library occurred,
 	       usually a protocol error. */
 	    dprintf("SSL_ERROR_SSL: Fatal SSL protocol error occurred");
-	    if (backingError != 0) {
-		Tls_Error(statePtr, ERR_reason_error_string(backingError));
+	    if (err != 0) {
+		Tls_Error(statePtr, ERR_reason_error_string(err));
 	    } else if (SSL_get_verify_result(statePtr->ssl) != X509_V_OK) {
 		Tls_Error(statePtr,
 		    X509_verify_cert_error_string(SSL_get_verify_result(statePtr->ssl)));
@@ -487,7 +538,7 @@ static int TlsInputProc(
 
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
 	    /* Unexpected EOF from the peer for OpenSSL 3.0+ */
-	    if (ERR_GET_REASON(backingError) == SSL_R_UNEXPECTED_EOF_WHILE_READING) {
+	    if (ERR_GET_REASON(err) == SSL_R_UNEXPECTED_EOF_WHILE_READING) {
 		dprintf("(Unexpected) EOF reached")
 		*errorCodePtr = 0;
 		bytesRead = 0;
@@ -530,24 +581,24 @@ static int TlsInputProc(
 	    /* Some non-recoverable, fatal I/O error occurred */
 	    dprintf("SSL_ERROR_SYSCALL: Fatal I/O error occurred");
 
-	    if (backingError == 0 && bytesRead == 0) {
+	    if (err == 0 && bytesRead == 0) {
 		/* Unexpected EOF from the peer for OpenSSL 1.1 */
 		dprintf("(Unexpected) EOF reached")
 		*errorCodePtr = 0;
 		bytesRead = 0;
 		Tls_Error(statePtr, "EOF reached");
 
-	    } else if (backingError == 0 && bytesRead == -1) {
+	    } else if (err == 0 && bytesRead == -1) {
 		dprintf("I/O error occurred (errno = %lu)", (unsigned long) Tcl_GetErrno());
 		*errorCodePtr = Tcl_GetErrno();
 		bytesRead = -1;
 		Tls_Error(statePtr, Tcl_ErrnoMsg(*errorCodePtr));
 
 	    } else {
-		dprintf("I/O error occurred (backingError = %lu)", backingError);
+		dprintf("I/O error occurred (err = %lu)", err);
 		*errorCodePtr = Tcl_GetErrno();
 		bytesRead = -1;
-		Tls_Error(statePtr, ERR_reason_error_string(backingError));
+		Tls_Error(statePtr, ERR_reason_error_string(err));
 	    }
 	    statePtr->flags |= TLS_TCL_FATAL_ERROR;
 	    statePtr->flags |= TLS_TCL_EOF;
@@ -577,6 +628,7 @@ static int TlsInputProc(
 	    dprintf("Other error, abort");
 	    *errorCodePtr = 0;
 	    bytesRead = 0;
+	    Tls_Error(statePtr, "Unknown error");
 	    break;
     }
 
@@ -608,9 +660,9 @@ static int TlsOutputProc(
     int toWrite,		/* Size of data to write in bytes */
     int *errorCodePtr)		/* Storage for error code to return */
 {
-    unsigned long backingError;
+    unsigned long err;
     State *statePtr = (State *) instanceData;
-    int written, err;
+    int written, rc, reason, is_fatal, bioShouldRetry, io_err;
     *errorCodePtr = 0;
 
     dprintf("Write %d bytes", toWrite);
@@ -658,11 +710,11 @@ static int TlsOutputProc(
 	}
     }
 
+    /* Flush */
     if (toWrite == 0) {
 	dprintf("zero-write");
-	err = BIO_flush(statePtr->bio);
 
-	if (err <= 0) {
+	if (BIO_flush(statePtr->bio) <= 0) {
 	    dprintf("Flushing failed");
 	    Tls_Error(statePtr, "Flush failed");
 
@@ -682,27 +734,40 @@ static int TlsOutputProc(
      * returns -1 and intends EAGAIN, there is a leftover error, it will be
      * misconstrued as an error, not EAGAIN.
      */
-    dprintf("BIO_write: BIO pending=%d, Chan pending=%d", BIO_wpending(statePtr->bio), Tcl_OutputBuffered(statePtr->self));
+    dprintf("BIO_write eof=%d, buffered=%d, input=%d, output=%d", Tcl_Eof(statePtr->self), Tcl_ChannelBuffered(statePtr->self), \
+        Tcl_InputBuffered(statePtr->self), Tcl_OutputBuffered(statePtr->self));
+    Tcl_SetErrno(0);
     ERR_clear_error();
     BIO_clear_retry_flags(statePtr->bio);
     written = BIO_write(statePtr->bio, buf, toWrite);
     dprintf("BIO_write(%p, %d) -> [%d]", (void *) statePtr, toWrite, written);
+    dprintf("BIO_write eof=%d, buffered=%d, input=%d, output=%d", Tcl_Eof(statePtr->self), Tcl_ChannelBuffered(statePtr->self), \
+        Tcl_InputBuffered(statePtr->self), Tcl_OutputBuffered(statePtr->self));
 
     /* Same as SSL_want, but also checks the error queue */
-    err = SSL_get_error(statePtr->ssl, written);
-    backingError = ERR_get_error();
+    rc = SSL_get_error(statePtr->ssl, written);
+    err = ERR_get_error();
+    reason = ERR_GET_REASON(err);
+    is_fatal = ERR_FATAL_ERROR(err);
+    /* The retry flag is set by the BIO_set_retry_* functions */
+    bioShouldRetry = BIO_should_retry(statePtr->bio);
+    io_err = Tcl_GetErrno();
+    dprintf("Write: written=%d, rc=%d, err=%ld, reason=%d, is_fatal=%d, lib=%s, msg=%s, bioShouldRetry=%d, errno=%d, id=%s, msg=%s", \
+        written, rc, err, reason, is_fatal, ERR_lib_error_string(err), ERR_reason_error_string(err), bioShouldRetry, io_err, Tcl_ErrnoId(), Tcl_ErrnoMsg(io_err));
 
     if (written <= 0) {
 	dprintf("Write failed: is EOF=%d, should retry=%d, retry read=%d, retry write=%d, other=%d",
-	    BIO_eof(statePtr->bio),
-	    BIO_should_retry(statePtr->bio), BIO_should_read(statePtr->bio),
+	    BIO_eof(statePtr->bio), BIO_should_retry(statePtr->bio), BIO_should_read(statePtr->bio),
 	    BIO_should_write(statePtr->bio), BIO_should_io_special(statePtr->bio));
+	if (BIO_should_retry(statePtr->bio)) {
+	    *errorCodePtr = EAGAIN;
+	}
     } else {
 	BIO_flush(statePtr->bio);
     }
 
     /* Based on error, do retry or abort */
-    switch (err) {
+    switch (rc) {
 	case SSL_ERROR_NONE:
 	    /* I/O operation completed */
 	    dprintf("SSL_ERROR_NONE");
@@ -715,8 +780,8 @@ static int TlsOutputProc(
 	    /* A non-recoverable, fatal error in the SSL library occurred,
 	       usually a protocol error */
 	    dprintf("SSL_ERROR_SSL: Fatal SSL protocol error occurred");
-	    if (backingError != 0) {
-		Tls_Error(statePtr, ERR_reason_error_string(backingError));
+	    if (err != 0) {
+		Tls_Error(statePtr, ERR_reason_error_string(err));
 	    } else if (SSL_get_verify_result(statePtr->ssl) != X509_V_OK) {
 		Tls_Error(statePtr,
 		    X509_verify_cert_error_string(SSL_get_verify_result(statePtr->ssl)));
@@ -761,23 +826,23 @@ static int TlsOutputProc(
 	    /* Some non-recoverable, fatal I/O error occurred */
 	    dprintf("SSL_ERROR_SYSCALL: Fatal I/O error occurred");
 
-	    if (backingError == 0 && written == 0) {
+	    if (err == 0 && written == 0) {
 		dprintf("EOF reached")
 		*errorCodePtr = 0;
 		written = 0;
 		Tls_Error(statePtr, "EOF reached");
 
-	    } else if (backingError == 0 && written == -1) {
+	    } else if (err == 0 && written == -1) {
 		dprintf("I/O error occurred (errno = %lu)", (unsigned long) Tcl_GetErrno());
 		*errorCodePtr = Tcl_GetErrno();
 		written = -1;
 		Tls_Error(statePtr, Tcl_ErrnoMsg(*errorCodePtr));
 
 	    } else {
-		dprintf("I/O error occurred (backingError = %lu)", backingError);
+		dprintf("I/O error occurred (err = %lu)", err);
 		*errorCodePtr = Tcl_GetErrno();
 		written = -1;
-		Tls_Error(statePtr, ERR_reason_error_string(backingError));
+		Tls_Error(statePtr, ERR_reason_error_string(err));
 	    }
 	    statePtr->flags |= TLS_TCL_FATAL_ERROR;
 	    statePtr->flags |= TLS_TCL_EOF;
@@ -807,6 +872,7 @@ static int TlsOutputProc(
 	    dprintf("Other error, abort");
 	    *errorCodePtr = 0;
 	    written = 0;
+	    Tls_Error(statePtr, "Unknown error");
 	    break;
     }
 
@@ -822,7 +888,7 @@ static int TlsOutputProc(
  *	Get parent channel for a stacked channel.
  *
  * Results:
- *	Tcl_Channel or NULL if None
+ *	Tcl_Channel or NULL if none.
  *
  *-----------------------------------------------------------------------------
  */
@@ -976,12 +1042,8 @@ static void TlsChannelHandlerTimer(
     }
 
     /* Notify the generic IO layer that mask events have occurred on the channel */
-    if (mask > 0) {
-	dprintf("Notifying ourselves with mask=%d", mask);
-	Tcl_NotifyChannel(statePtr->self, mask);
-    } else {
-	dprintf("No notification");
-    }
+    dprintf("Notifying ourselves with mask=%d", mask);
+    Tcl_NotifyChannel(statePtr->self, mask);
     statePtr->want = 0;
     return;
 }
@@ -1014,6 +1076,7 @@ TlsWatchProc(
     Tcl_Channel parent;
     State *statePtr = (State *) instanceData;
     Tcl_DriverWatchProc *watchProc;
+    int pending = 0;
 
     dprintf("Called with mask 0x%02x and want 0x%02x", mask, statePtr->want);
     dprintFlags(statePtr);
@@ -1054,24 +1117,28 @@ TlsWatchProc(
     watchProc = Tcl_ChannelWatchProc(Tcl_GetChannelType(parent));
     watchProc(Tcl_GetChannelInstanceData(parent), mask);
 
-    /* Schedule next event if data is pending, otherwise cease events for now */
-    if (!(mask & TCL_READABLE)) {
-	/* Remove timer, if any */
-	if (statePtr->timer != (Tcl_TimerToken) NULL) {
-	    dprintf("A timer was found, deleting it");
-	    Tcl_DeleteTimerHandler(statePtr->timer);
-	    statePtr->timer = (Tcl_TimerToken) NULL;
-	    Tcl_Release((ClientData) statePtr);
-	}
+    /* Do we have any pending data */
+    pending = (statePtr->want || \
+	((mask & TCL_READABLE) && ((Tcl_InputBuffered(statePtr->self) > 0) || (BIO_ctrl_pending(statePtr->bio) > 0))) ||
+	((mask & TCL_WRITABLE) && ((Tcl_OutputBuffered(statePtr->self) > 0) || (BIO_ctrl_wpending(statePtr->bio) > 0))));
 
-    /* Don't check for pending data here, will check for want in timer callback */
-    } else {
-	/* Add timer, if none */
-	if (statePtr->timer == (Tcl_TimerToken) NULL) {
-	    dprintf("Creating a new timer since data appears to be waiting");
-	    Tcl_Preserve((ClientData) statePtr);
-	    statePtr->timer = Tcl_CreateTimerHandler(TLS_TCL_DELAY, TlsChannelHandlerTimer, (ClientData) statePtr);
-	}
+    dprintf("IO Want=%d, input buffer=%d, output buffer=%d, BIO pending=%zd, BIO wpending=%zd, pending=%d", \
+	statePtr->want, Tcl_InputBuffered(statePtr->self), Tcl_OutputBuffered(statePtr->self), \
+	BIO_ctrl_pending(statePtr->bio), BIO_ctrl_wpending(statePtr->bio), pending);
+
+    /* Remove timer, if any */
+    if (statePtr->timer != (Tcl_TimerToken) NULL) {
+	dprintf("A timer was found, deleting it");
+	Tcl_DeleteTimerHandler(statePtr->timer);
+	statePtr->timer = (Tcl_TimerToken) NULL;
+	Tcl_Release((ClientData) statePtr);
+    }
+
+    /* Add timer, if none */
+    if (mask & TCL_READABLE) {
+	dprintf("Creating a new timer since data appears to be waiting");
+	Tcl_Preserve((ClientData) statePtr);
+	statePtr->timer = Tcl_CreateTimerHandler(TLS_TCL_DELAY, TlsChannelHandlerTimer, (ClientData) statePtr);
     }
 }
 
@@ -1132,6 +1199,18 @@ static int TlsNotifyProc(
 
     dprintf("Called with mask 0x%02x", mask);
 
+    /*
+     * Delete an existing timer. It was not fired, yet we are here, so the
+     * below channel generated such an event and we don't need to. The renewal
+     * of the interest after the execution of channel handlers will eventually
+     * cause us to recreate the timer (in TlsWatchProc).
+     */
+    if (statePtr->timer != (Tcl_TimerToken) NULL) {
+	Tcl_DeleteTimerHandler(statePtr->timer);
+	statePtr->timer = (Tcl_TimerToken) NULL;
+	Tcl_Release((ClientData) statePtr);
+    }
+
     /* Abort if the user verify callback is still running to avoid triggering
      * another call before the current one is complete. */
     if (statePtr->flags & TLS_TCL_CALLBACK) {
@@ -1156,18 +1235,6 @@ static int TlsNotifyProc(
 
 	    dprintf("Tls_WaitForConnect returned an error");
 	}
-    }
-
-    /*
-     * Delete an existing timer. It was not fired, yet we are here, so the
-     * below channel generated such an event and we don't need to. The renewal
-     * of the interest after the execution of channel handlers will eventually
-     * cause us to recreate the timer (in TlsWatchProc).
-     */
-    if (statePtr->timer != (Tcl_TimerToken) NULL) {
-	Tcl_DeleteTimerHandler(statePtr->timer);
-	statePtr->timer = (Tcl_TimerToken) NULL;
-	Tcl_Release((ClientData) statePtr);
     }
 
     /*
