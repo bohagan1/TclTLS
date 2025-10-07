@@ -323,6 +323,7 @@ int Tls_WaitForConnect(
 		if (*errorCodePtr == ECONNRESET) {
 		    *errorCodePtr = ECONNABORTED;
 		}
+		statePtr->flags |= TLS_TCL_FATAL_ERROR;
 		Tls_Error(statePtr, Tcl_ErrnoMsg(*errorCodePtr));
 
 	    } else {
@@ -331,10 +332,9 @@ int Tls_WaitForConnect(
 		if (*errorCodePtr == ECONNRESET) {
 		    *errorCodePtr = ECONNABORTED;
 		}
+		statePtr->flags |= TLS_TCL_FATAL_ERROR;
 		Tls_Error(statePtr, ERR_reason_error_string(err));
 	    }
-
-	    statePtr->flags |= TLS_TCL_FATAL_ERROR;
 	    statePtr->flags |= TLS_TCL_EOF;
 	    return -1;
 
@@ -443,9 +443,14 @@ static int TlsInputProc(
 	return 0;
     }
 
-    /* Abort if EOF already detected. Can't read, but can write. */
-    if (statePtr->flags & TLS_TCL_FATAL_ERROR || statePtr->flags & TLS_TCL_EOF) {
+    /* Abort if connection has failed or EOF already detected. Can't read, but can write. */
+    if (statePtr->flags & TLS_TCL_FATAL_ERROR) {
+	dprintf("Fatal error already detected, abort read");
+	*errorCodePtr = 0;
+	return 0;
+    } else if (statePtr->flags & TLS_TCL_EOF) {
 	dprintf("EOF already detected, abort read");
+	*errorCodePtr = 0;
 	return 0;
     }
 
@@ -543,9 +548,13 @@ static int TlsInputProc(
 		*errorCodePtr = 0;
 		bytesRead = 0;
 		Tls_Error(statePtr, "EOF reached");
+	    } else {
+		statePtr->flags |= TLS_TCL_FATAL_ERROR;
 	    }
-#endif
+#else
 	    statePtr->flags |= TLS_TCL_FATAL_ERROR;
+#endif
+	    
 	    statePtr->flags |= TLS_TCL_EOF;
 	    break;
 
@@ -592,15 +601,16 @@ static int TlsInputProc(
 		dprintf("I/O error occurred (errno = %lu)", (unsigned long) Tcl_GetErrno());
 		*errorCodePtr = Tcl_GetErrno();
 		bytesRead = -1;
+		statePtr->flags |= TLS_TCL_FATAL_ERROR;
 		Tls_Error(statePtr, Tcl_ErrnoMsg(*errorCodePtr));
 
 	    } else {
 		dprintf("I/O error occurred (err = %lu)", err);
 		*errorCodePtr = Tcl_GetErrno();
 		bytesRead = -1;
+		statePtr->flags |= TLS_TCL_FATAL_ERROR;
 		Tls_Error(statePtr, ERR_reason_error_string(err));
 	    }
-	    statePtr->flags |= TLS_TCL_FATAL_ERROR;
 	    statePtr->flags |= TLS_TCL_EOF;
 	    break;
 
@@ -679,8 +689,9 @@ static int TlsOutputProc(
 
     /* Abort if connection has failed. */
     if (statePtr->flags & TLS_TCL_FATAL_ERROR) {
-	dprintf("EOF already detected, abort write");
-	return 0;
+	dprintf("Fatal error already detected, abort write");
+	*errorCodePtr = ECONNABORTED;
+	return -1;
     }
 
     /* If not initialized, do connect. Can also check SSL_is_init_finished(). */
@@ -836,15 +847,16 @@ static int TlsOutputProc(
 		dprintf("I/O error occurred (errno = %lu)", (unsigned long) Tcl_GetErrno());
 		*errorCodePtr = Tcl_GetErrno();
 		written = -1;
+		statePtr->flags |= TLS_TCL_FATAL_ERROR;
 		Tls_Error(statePtr, Tcl_ErrnoMsg(*errorCodePtr));
 
 	    } else {
 		dprintf("I/O error occurred (err = %lu)", err);
 		*errorCodePtr = Tcl_GetErrno();
 		written = -1;
+		statePtr->flags |= TLS_TCL_FATAL_ERROR;
 		Tls_Error(statePtr, ERR_reason_error_string(err));
 	    }
-	    statePtr->flags |= TLS_TCL_FATAL_ERROR;
 	    statePtr->flags |= TLS_TCL_EOF;
 	    break;
 
