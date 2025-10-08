@@ -146,13 +146,16 @@
 <li><a href="#2"><b class="cmd">tls::socket</b> <span class="opt">?<i class="arg">-option</i>?</span> <span class="opt">?<i class="arg">value</i>?</span> <span class="opt">?<i class="arg">-option value ...</i>?</span> <i class="arg">host</i> <i class="arg">port</i></a></li>
 <li><a href="#3"><b class="cmd">tls::socket</b> <b class="option">-server</b> <i class="arg">command</i> <span class="opt">?<i class="arg">-option</i>?</span> <span class="opt">?<i class="arg">value</i>?</span> <span class="opt">?<i class="arg">-option value ...</i>?</span> <i class="arg">port</i></a></li>
 <li><a href="#4"><b class="cmd">tls::import</b> <i class="arg">channel</i> <span class="opt">?<i class="arg">-option</i>?</span> <span class="opt">?<i class="arg">value</i>?</span> <span class="opt">?<i class="arg">-option value ...</i>?</span></a></li>
-<li><a href="#5"><b class="cmd">tls::unimport</b> <i class="arg">channel</i></a></li>
+<li><a href="#5"><b class="cmd">tls::starttls</b> <i class="arg">channel</i> <span class="opt">?<i class="arg">-option</i>?</span> <span class="opt">?<i class="arg">value</i>?</span> <span class="opt">?<i class="arg">-option value ...</i>?</span></a></li>
 <li><a href="#6"><b class="cmd">tls::handshake</b> <i class="arg">channel</i></a></li>
-<li><a href="#7"><b class="cmd">tls::status</b> <span class="opt">?<b class="option">-local</b>?</span> <i class="arg">channel</i></a></li>
-<li><a href="#8"><b class="cmd">tls::connection</b> <i class="arg">channel</i></a></li>
-<li><a href="#9"><b class="cmd">tls::ciphers</b> <span class="opt">?<i class="arg">protocol</i>?</span> <span class="opt">?<i class="arg">verbose</i>?</span> <span class="opt">?<i class="arg">supported</i>?</span></a></li>
-<li><a href="#10"><b class="cmd">tls::protocols</b></a></li>
-<li><a href="#11"><b class="cmd">tls::version</b></a></li>
+<li><a href="#7"><b class="cmd">tls::shutdown</b> <i class="arg">channel</i></a></li>
+<li><a href="#8"><b class="cmd">tls::unimport</b> <i class="arg">channel</i></a></li>
+<li><a href="#9"><b class="cmd">tls::unstack</b> <i class="arg">channel</i></a></li>
+<li><a href="#10"><b class="cmd">tls::status</b> <span class="opt">?<b class="option">-local</b>?</span> <i class="arg">channel</i></a></li>
+<li><a href="#11"><b class="cmd">tls::connection</b> <i class="arg">channel</i></a></li>
+<li><a href="#12"><b class="cmd">tls::ciphers</b> <span class="opt">?<i class="arg">protocol</i>?</span> <span class="opt">?<i class="arg">verbose</i>?</span> <span class="opt">?<i class="arg">supported</i>?</span></a></li>
+<li><a href="#13"><b class="cmd">tls::protocols</b></a></li>
+<li><a href="#14"><b class="cmd">tls::version</b></a></li>
 </ul>
 </div>
 </div>
@@ -196,6 +199,8 @@ is also specified.</p></dd>
 connect to just like the Tcl <b class="syscmd">socket -server</b> command. It returns the
 channel handle id for the new socket.</p></dd>
 <dt><a name="4"><b class="cmd">tls::import</b> <i class="arg">channel</i> <span class="opt">?<i class="arg">-option</i>?</span> <span class="opt">?<i class="arg">value</i>?</span> <span class="opt">?<i class="arg">-option value ...</i>?</span></a></dt>
+<dd></dd>
+<dt><a name="5"><b class="cmd">tls::starttls</b> <i class="arg">channel</i> <span class="opt">?<i class="arg">-option</i>?</span> <span class="opt">?<i class="arg">value</i>?</span> <span class="opt">?<i class="arg">-option value ...</i>?</span></a></dt>
 <dd><p>Start TLS encryption on TCL channel <i class="arg">channel</i> via a stacked channel. It
 need not be a socket, but must provide bi-directional flow. Also sets session
 parameters for SSL handshake. Valid options are:</p>
@@ -269,8 +274,8 @@ TclTLS 1.8. See <span class="sectref"><a href="#section5">Callback Options</a></
 to do Certificate Validation. Starting in TclTLS 1.8, the default is
 <b class="const">true</b> for client connections. Starting in TclTLS 2.0, if set to
 <b class="const">false</b> and <b class="option">-require</b> is <b class="const">true</b>, then this will be
-overridden to <b class="const">true</b>. See <span class="sectref"><a href="#section4">Certificate Validation</a></span> for
-more details.</p></dd>
+overridden to <b class="const">true</b>.
+See <span class="sectref"><a href="#section4">Certificate Validation</a></span> for more details.</p></dd>
 <dt><b class="option">-require</b> <i class="arg">bool</i></dt>
 <dd><p>Require a valid certificate from the peer during the SSL handshake. If this is
 set to true, then <b class="option">-request</b> must also be set to true and a either
@@ -295,7 +300,7 @@ client connects and provides a client handshake. The default is <b class="const"
 <dd><p>Specify the peer's hostname. This is used to set the TLS Server Name Indication
 (SNI) extension. Set this to the expected servername in the server's certificate
 or one of the Subject Alternate Names (SAN). Starting in TclTLS 2.0, this will
-default to the host for the <b class="cmd">tls::socket</b> command.</p></dd>
+default to the host from the <b class="cmd">tls::socket</b> command.</p></dd>
 <dt><b class="option">-session_id</b> <i class="arg">binary_string</i></dt>
 <dd><p>Specifies the session id to resume a session. Not supported yet.
 This option is new for TclTLS 1.8.</p></dd>
@@ -328,20 +333,25 @@ default validation provided by OpenSSL. The script must return a boolean true
 to continue the negotiation. See <span class="sectref"><a href="#section5">Callback Options</a></span> for more info.
 This option is new for TclTLS 1.8.</p></dd>
 </dl></dd>
-<dt><a name="5"><b class="cmd">tls::unimport</b> <i class="arg">channel</i></a></dt>
-<dd><p>Compliment to <b class="cmd">tls::import</b>. Used to remove the top level stacked channel
-from <i class="arg">channel</i>. This unstacks the encryption of a regular TCL channel. An
-error is thrown if TLS is not the top stacked channel type.</p></dd>
 <dt><a name="6"><b class="cmd">tls::handshake</b> <i class="arg">channel</i></a></dt>
 <dd><p>Forces the TLS negotiation handshake to take place immediately, and returns 0
 if handshake is still in progress (non-blocking), or 1 if the handshake was
 successful. If the handshake failed, an error will be returned.</p></dd>
-<dt><a name="7"><b class="cmd">tls::status</b> <span class="opt">?<b class="option">-local</b>?</span> <i class="arg">channel</i></a></dt>
+<dt><a name="7"><b class="cmd">tls::shutdown</b> <i class="arg">channel</i></a></dt>
+<dd></dd>
+<dt><a name="8"><b class="cmd">tls::unimport</b> <i class="arg">channel</i></a></dt>
+<dd></dd>
+<dt><a name="9"><b class="cmd">tls::unstack</b> <i class="arg">channel</i></a></dt>
+<dd><p>This terminates the SSL/TLS session by sending the &quot;close_notify&quot; message and
+removes the top level stacked channel from <i class="arg">channel</i>, but it does not close
+the socket. It is the compliment to <b class="cmd">tls::import</b> by ending encryption of
+a TCL channel. An error is thrown if TLS is not the top stacked channel type.</p></dd>
+<dt><a name="10"><b class="cmd">tls::status</b> <span class="opt">?<b class="option">-local</b>?</span> <i class="arg">channel</i></a></dt>
 <dd><p>Returns the current status of an SSL channel. The result is a list of key-value
 pairs describing the SSL, certificate, and certificate verification status. If
 the SSL handshake has not yet completed, an empty list is returned. If the
-<b class="option">-local</b> option is specified, then the local certificate is used. Returned
-values include:</p>
+<b class="option">-local</b> option is specified, then the local certificate is used.
+Returned values include:</p>
 <p>SSL Status</p>
 <dl class="doctools_definitions">
 <dt><b class="variable">alpn</b> <i class="arg">protocol</i></dt>
@@ -458,7 +468,7 @@ This value is new for TclTLS 1.8.</p></dd>
 <dd><p>The SHA256 hash of the certificate as a hex string.
 This value is new for TclTLS 1.8.</p></dd>
 </dl></dd>
-<dt><a name="8"><b class="cmd">tls::connection</b> <i class="arg">channel</i></a></dt>
+<dt><a name="11"><b class="cmd">tls::connection</b> <i class="arg">channel</i></a></dt>
 <dd><p>Returns the current connection status of an SSL channel. The result is a list
 of key-value pairs describing the connection.
 This command is new for TclTLS 1.8. Returned values include:</p>
@@ -529,7 +539,7 @@ This command is new for TclTLS 1.8. Returned values include:</p>
 <dt><b class="variable">session_cache_mode</b> <i class="arg">mode</i></dt>
 <dd><p>Server cache mode (client, server, or both).</p></dd>
 </dl></dd>
-<dt><a name="9"><b class="cmd">tls::ciphers</b> <span class="opt">?<i class="arg">protocol</i>?</span> <span class="opt">?<i class="arg">verbose</i>?</span> <span class="opt">?<i class="arg">supported</i>?</span></a></dt>
+<dt><a name="12"><b class="cmd">tls::ciphers</b> <span class="opt">?<i class="arg">protocol</i>?</span> <span class="opt">?<i class="arg">verbose</i>?</span> <span class="opt">?<i class="arg">supported</i>?</span></a></dt>
 <dd><p>Without any options, it returns a list of all symmetric ciphers for use with the
 <i class="arg">-cipher</i> option. With <i class="arg">protocol</i>, only the ciphers supported for that
 protocol are returned. See the <b class="cmd">tls::protocols</b> command for the supported
@@ -537,12 +547,12 @@ protocols. If <i class="arg">verbose</i> is specified as true then a verbose, hu
 list is returned with additional information on the cipher. If <i class="arg">supported</i>
 is specified as true, then only the ciphers supported for protocol will be listed.
 The <i class="arg">supported</i> arg is new for TclTLS 1.8.</p></dd>
-<dt><a name="10"><b class="cmd">tls::protocols</b></a></dt>
+<dt><a name="13"><b class="cmd">tls::protocols</b></a></dt>
 <dd><p>Returns a list of the supported SSL/TLS protocols. Valid values are:
 <b class="const">ssl2</b>, <b class="const">ssl3</b>, <b class="const">tls1</b>, <b class="const">tls1.1</b>, <b class="const">tls1.2</b>, and
 <b class="const">tls1.3</b>. Exact list depends on OpenSSL version and compile time flags.
 This command is new for TclTLS 1.8.</p></dd>
-<dt><a name="11"><b class="cmd">tls::version</b></a></dt>
+<dt><a name="14"><b class="cmd">tls::version</b></a></dt>
 <dd><p>Returns the OpenSSL version string.</p></dd>
 </dl>
 </div>

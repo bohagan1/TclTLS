@@ -68,6 +68,8 @@ channel handle id for the new socket.
 
 [call [cmd tls::import] [arg channel] [opt [arg -option]] [opt [arg value]] [opt [arg "-option value ..."]]]
 
+[call [cmd tls::starttls] [arg channel] [opt [arg -option]] [opt [arg value]] [opt [arg "-option value ..."]]]
+
 Start TLS encryption on TCL channel [arg channel] via a stacked channel. It
 need not be a socket, but must provide bi-directional flow. Also sets session
 parameters for SSL handshake. Valid options are:
@@ -158,8 +160,8 @@ Request a certificate from the peer during the SSL handshake. This is needed
 to do Certificate Validation. Starting in TclTLS 1.8, the default is
 [const true] for client connections. Starting in TclTLS 2.0, if set to
 [const false] and [option -require] is [const true], then this will be
-overridden to [const true]. See [sectref "Certificate Validation"] for
-more details.
+overridden to [const true].
+See [sectref "Certificate Validation"] for more details.
 
 [opt_def -require [arg bool]]
 Require a valid certificate from the peer during the SSL handshake. If this is
@@ -188,7 +190,7 @@ client connects and provides a client handshake. The default is [const false].
 Specify the peer's hostname. This is used to set the TLS Server Name Indication
 (SNI) extension. Set this to the expected servername in the server's certificate
 or one of the Subject Alternate Names (SAN). Starting in TclTLS 2.0, this will
-default to the host for the [cmd tls::socket] command.
+default to the host from the [cmd tls::socket] command.
 
 [opt_def -session_id [arg binary_string]]
 Specifies the session id to resume a session. Not supported yet.
@@ -231,25 +233,30 @@ This option is new for TclTLS 1.8.
 
 [list_end]
 
-[call [cmd tls::unimport] [arg channel]]
-
-Compliment to [cmd tls::import]. Used to remove the top level stacked channel
-from [arg channel]. This unstacks the encryption of a regular TCL channel. An
-error is thrown if TLS is not the top stacked channel type.
-
 [call [cmd tls::handshake] [arg channel]]
 
 Forces the TLS negotiation handshake to take place immediately, and returns 0
 if handshake is still in progress (non-blocking), or 1 if the handshake was
 successful. If the handshake failed, an error will be returned.
 
+[call [cmd tls::shutdown] [arg channel]]
+
+[call [cmd tls::unimport] [arg channel]]
+
+[call [cmd tls::unstack] [arg channel]]
+
+This terminates the SSL/TLS session by sending the "close_notify" message and
+removes the top level stacked channel from [arg channel], but it does not close
+the socket. It is the compliment to [cmd tls::import] by ending encryption of
+a TCL channel. An error is thrown if TLS is not the top stacked channel type.
+
 [call [cmd tls::status] [opt [option -local]] [arg channel]]
 
 Returns the current status of an SSL channel. The result is a list of key-value
 pairs describing the SSL, certificate, and certificate verification status. If
 the SSL handshake has not yet completed, an empty list is returned. If the
-[option -local] option is specified, then the local certificate is used. Returned
-values include:
+[option -local] option is specified, then the local certificate is used.
+Returned values include:
 
 [para]
 

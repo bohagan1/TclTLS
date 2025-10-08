@@ -288,9 +288,15 @@ package require \fBtls 2\&.0b1\fR
 .sp
 \fBtls::import\fR \fIchannel\fR ?\fI-option\fR? ?\fIvalue\fR? ?\fI-option value \&.\&.\&.\fR?
 .sp
-\fBtls::unimport\fR \fIchannel\fR
+\fBtls::starttls\fR \fIchannel\fR ?\fI-option\fR? ?\fIvalue\fR? ?\fI-option value \&.\&.\&.\fR?
 .sp
 \fBtls::handshake\fR \fIchannel\fR
+.sp
+\fBtls::shutdown\fR \fIchannel\fR
+.sp
+\fBtls::unimport\fR \fIchannel\fR
+.sp
+\fBtls::unstack\fR \fIchannel\fR
 .sp
 \fBtls::status\fR ?\fB-local\fR? \fIchannel\fR
 .sp
@@ -345,6 +351,8 @@ connect to just like the Tcl \fBsocket -server\fR command\&. It returns the
 channel handle id for the new socket\&.
 .TP
 \fBtls::import\fR \fIchannel\fR ?\fI-option\fR? ?\fIvalue\fR? ?\fI-option value \&.\&.\&.\fR?
+.TP
+\fBtls::starttls\fR \fIchannel\fR ?\fI-option\fR? ?\fIvalue\fR? ?\fI-option value \&.\&.\&.\fR?
 Start TLS encryption on TCL channel \fIchannel\fR via a stacked channel\&. It
 need not be a socket, but must provide bi-directional flow\&. Also sets session
 parameters for SSL handshake\&. Valid options are:
@@ -434,8 +442,8 @@ Request a certificate from the peer during the SSL handshake\&. This is needed
 to do Certificate Validation\&. Starting in TclTLS 1\&.8, the default is
 \fBtrue\fR for client connections\&. Starting in TclTLS 2\&.0, if set to
 \fBfalse\fR and \fB-require\fR is \fBtrue\fR, then this will be
-overridden to \fBtrue\fR\&. See \fBCertificate Validation\fR for
-more details\&.
+overridden to \fBtrue\fR\&.
+See \fBCertificate Validation\fR for more details\&.
 .TP
 \fB-require\fR \fIbool\fR
 Require a valid certificate from the peer during the SSL handshake\&. If this is
@@ -464,7 +472,7 @@ client connects and provides a client handshake\&. The default is \fBfalse\fR\&.
 Specify the peer's hostname\&. This is used to set the TLS Server Name Indication
 (SNI) extension\&. Set this to the expected servername in the server's certificate
 or one of the Subject Alternate Names (SAN)\&. Starting in TclTLS 2\&.0, this will
-default to the host for the \fBtls::socket\fR command\&.
+default to the host from the \fBtls::socket\fR command\&.
 .TP
 \fB-session_id\fR \fIbinary_string\fR
 Specifies the session id to resume a session\&. Not supported yet\&.
@@ -506,22 +514,27 @@ to continue the negotiation\&. See \fBCallback Options\fR for more info\&.
 This option is new for TclTLS 1\&.8\&.
 .RE
 .TP
-\fBtls::unimport\fR \fIchannel\fR
-Compliment to \fBtls::import\fR\&. Used to remove the top level stacked channel
-from \fIchannel\fR\&. This unstacks the encryption of a regular TCL channel\&. An
-error is thrown if TLS is not the top stacked channel type\&.
-.TP
 \fBtls::handshake\fR \fIchannel\fR
 Forces the TLS negotiation handshake to take place immediately, and returns 0
 if handshake is still in progress (non-blocking), or 1 if the handshake was
 successful\&. If the handshake failed, an error will be returned\&.
 .TP
+\fBtls::shutdown\fR \fIchannel\fR
+.TP
+\fBtls::unimport\fR \fIchannel\fR
+.TP
+\fBtls::unstack\fR \fIchannel\fR
+This terminates the SSL/TLS session by sending the "close_notify" message and
+removes the top level stacked channel from \fIchannel\fR, but it does not close
+the socket\&. It is the compliment to \fBtls::import\fR by ending encryption of
+a TCL channel\&. An error is thrown if TLS is not the top stacked channel type\&.
+.TP
 \fBtls::status\fR ?\fB-local\fR? \fIchannel\fR
 Returns the current status of an SSL channel\&. The result is a list of key-value
 pairs describing the SSL, certificate, and certificate verification status\&. If
 the SSL handshake has not yet completed, an empty list is returned\&. If the
-\fB-local\fR option is specified, then the local certificate is used\&. Returned
-values include:
+\fB-local\fR option is specified, then the local certificate is used\&.
+Returned values include:
 .sp
 SSL Status
 .RS
