@@ -417,7 +417,7 @@ Tcl_Obj *Tls_x509CrlDp(Tcl_Interp *interp, X509 *cert) {
 		for (int j = 0; j < sk_X509_NAME_ENTRY_num(sk_relname); j++) {
 		    X509_NAME_ENTRY *e = sk_X509_NAME_ENTRY_value(sk_relname, j);
 		    ASN1_STRING *d = X509_NAME_ENTRY_get_data(e);
-		    LAPPEND_STR(interp, resultObj, (char *) NULL, (char *) ASN1_STRING_data(d), (Tcl_Size) ASN1_STRING_length(d));
+		    LAPPEND_STR(interp, resultObj, (char *) NULL, (char *) ASN1_STRING_get0_data(d), (Tcl_Size) ASN1_STRING_length(d));
 		}
 	    }
 	}

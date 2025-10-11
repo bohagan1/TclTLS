@@ -33,6 +33,10 @@
 #include <openssl/opensslconf.h>
 #include <openssl/rsa.h>
 #include <openssl/safestack.h>
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
+    #include <openssl/bn.h>
+    #include <openssl/dh.h>
+#endif
 
 /* Min OpenSSL version */
 #if OPENSSL_VERSION_NUMBER < 0x10101000L
@@ -101,14 +105,14 @@ EvalCallback(
     /* Eval callback with success for ok or return value 1, fail for error or return value 0 */
     Tcl_ResetResult(interp);
     code = Tcl_EvalObjEx(interp, cmdPtr, TCL_EVAL_GLOBAL);
-    dprintf("EvalCallback: %d", code);
+    dprintf("EvalCallback code: %d", code);
     if (code == TCL_OK) {
 	/* Check result for return value */
 	Tcl_Obj *result = Tcl_GetObjResult(interp);
 	if (result == NULL || Tcl_GetIntFromObj(interp, result, &ok) != TCL_OK) {
 	    ok = 1;
 	}
-	dprintf("Result: %d", ok);
+	dprintf("Result boolean: %d", ok);
     } else {
 	/* Error - reject the certificate */
 	dprintf("Tcl_BackgroundError");
@@ -2187,7 +2191,7 @@ CTX_Init(
     }
 
     /* set automatic curve selection */
-#if OPENSSL_VERSION_NUMBER < 0x30000000L
+#if OPENSSL_VERSION_NUMBER < 0x10101000L
     SSL_CTX_set_ecdh_auto(ctx, 1);
 #endif
 
@@ -2740,7 +2744,11 @@ static int ConnectionInfoObjCmd(
 	LAPPEND_BOOL(interp, objPtr, "resumable", SSL_SESSION_is_resumable(session));
 
 	/* Session start time (seconds since epoch) */
+#if OPENSSL_VERSION_NUMBER < 0x30300000L
 	LAPPEND_LONG(interp, objPtr, "start_time", SSL_SESSION_get_time(session));
+#else
+	LAPPEND_WIDE(interp, objPtr, "start_time", SSL_SESSION_get_time_ex(session));
+#endif
 
 	/* Timeout value - SSL_CTX_get_timeout (in seconds) */
 	LAPPEND_LONG(interp, objPtr, "timeout", SSL_SESSION_get_timeout(session));

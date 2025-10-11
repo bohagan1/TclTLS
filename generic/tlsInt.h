@@ -161,6 +161,10 @@
     if (text != NULL) Tcl_ListObjAppendElement(interp, obj, Tcl_NewStringObj(text, -1)); \
     Tcl_ListObjAppendElement(interp, obj, (tclObj != NULL) ? tclObj : Tcl_NewStringObj("", 0)); \
 }
+#define LAPPEND_WIDE(interp, obj, text, value) {\
+    if (text != NULL) Tcl_ListObjAppendElement(interp, obj, Tcl_NewStringObj(text, -1)); \
+    Tcl_ListObjAppendElement(interp, obj, Tcl_NewWideIntObj(value)); \
+}
 
 /*
  * Defines for State.flags
@@ -171,11 +175,13 @@
 #define TLS_TCL_DEBUG		(1<<3)	/* Show debug tracing */
 #define TLS_TCL_CALLBACK	(1<<4)	/* In a callback, prevent update
 					 * looping problem. [Bug 1652380] */
-#define TLS_TCL_FATAL_ERROR	(1<<5)	/* Set on handshake failure or other fatal erros. All
+#define TLS_TCL_FATAL_ERROR	(1<<5)	/* Set on handshake failure or other fatal error. All
 					 * further I/O will result in ECONNABORTED errors. */
 #define TLS_TCL_FASTPATH 	(1<<6)	/* The parent channel is being used
 					 * directly by the SSL library. */
 #define TLS_TCL_EOF	 	(1<<7)	/* At EOF. Can't read, but can write. */
+
+/* Set timer delay */
 #define TLS_TCL_DELAY (5)
 
 /*
