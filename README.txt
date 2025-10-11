@@ -17,6 +17,15 @@ functionality is supported in addition to several new options. Both client and
 server modes are supported.
 
 
+Features
+========
+
+The package provides:
+- Encrypted TCP communications layered on TCL channels.
+- Status of encrypted channels.
+- View X.509 certificate contents.
+
+
 Documentation
 =============
 

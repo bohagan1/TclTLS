@@ -101,7 +101,8 @@ static int TlsCloseProc(
 	and 1 when complete. Only closes the write direction of the connection;
 	the read direction is closed by the peer. Does not affect the socket 
 	state. Don't call after fatal error. */
-    if (statePtr->ssl != NULL && !(statePtr->flags & TLS_TCL_FATAL_ERROR)) {
+    if (statePtr->ssl != NULL && !(statePtr->flags & TLS_TCL_INIT) &&
+	    !(statePtr->flags & TLS_TCL_FATAL_ERROR)) {
 	BIO_flush(statePtr->bio);
 	SSL_shutdown(statePtr->ssl);
     }
