@@ -4,6 +4,7 @@
 #
 #################################################
 
+package prefer latest
 package require Tcl 8.6-
 package require tls
 

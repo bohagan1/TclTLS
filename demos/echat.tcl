@@ -265,7 +265,7 @@ proc setup_gui {w mode} {
     }
     set b [ttk::button $f.b -command $cmd -text "Send"]
     bind $e <Return> $cmd
-    set sh [ttk::scrollbar $f.hsb -command [list $e xview scroll] -orient horizontal]
+    set sh [ttk::scrollbar $f.hsb -command [list $e xview] -orient horizontal]
     grid $e -row 0 -column 0 -sticky nsew
     grid $b -row 0 -column 1 -sticky nsew
     grid $sh -row 1 -column 0 -sticky nsew
