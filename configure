@@ -9621,7 +9621,7 @@ printf %s "checking for OpenSSL pkgconfig... " >&6; }
 printf "%s\n" "$opensslpkgconfigdir" >&6; }
 
 		if test -n "$PKG_CONFIG" -a -z "$openssldir" -a -z "$opensslincludedir" -a -z "$openssllibdir"; then
-	    USE_PKG_CONFIG=`"${PKG_CONFIG}" --list-all | grep openssl`
+	    USE_PKG_CONFIG=`"${PKG_CONFIG}" --list-all | grep openssl | uniq`
 
 	    	    if test -n "$USE_PKG_CONFIG"; then
 				PKG_CONFIG_PATH_SAVE="${PKG_CONFIG_PATH}"
@@ -9641,8 +9641,9 @@ printf "%s\n" "$opensslpkgconfigdir" >&6; }
 
 		if test -z "$TCLTLS_SSL_LIBS"; then
 			TCLTLS_SSL_LIBS="$SSL_LIBS_PATH `${PKG_CONFIG} openssl --libs $pkgConfigExtraArgs`" || as_fn_error $? "Unable to get OpenSSL Configuration" "$LINENO" 5
-			if test "${TCLEXT_TLS_STATIC_SSL}" == 'yes'; then
-				TCLTLS_SSL_LIBS="-Wl,-Bstatic $TCLTLS_SSL_LIBS -Wl,-Bdynamic"
+			system="`uname -s`"
+			if test "$system" == "Linux" -a "${TCLEXT_TLS_STATIC_SSL}" == 'yes'; then
+				TCLTLS_SSL_LIBS="-Wl,-Bstatic ${TCLTLS_SSL_LIBS} -Wl,-Bdynamic"
 			fi
 		fi
 		if test -z "$TCLTLS_SSL_CFLAGS"; then
@@ -9663,13 +9664,32 @@ printf "%s\n" "$opensslpkgconfigdir" >&6; }
 			TCLTLS_SSL_INCLUDES="-I/usr/include"
 		fi
 	fi
-	if test -z "$TCLTLS_SSL_LIBS"; then
+
+		if test -z "$TCLTLS_SSL_LIBS"; then
 		if test "$TCLEXT_TLS_STATIC_SSL" == 'no'; then
-		    TCLTLS_SSL_LIBS="$SSL_LIBS_PATH -lssl -lcrypto"
+			TCLTLS_SSL_LIBS="$SSL_LIBS_PATH -lssl -lcrypto"
 		else
-		    # Linux and Solaris
-		    TCLTLS_SSL_LIBS="$SSL_LIBS_PATH -Wl,-Bstatic -lssl -lcrypto -Wl,-Bdynamic"
-		    # HPUX: -Wl,-a,archive ... -Wl,-a,shared_archive
+			system="`uname -s`"
+			case $system in
+				AIX*)
+					TCLTLS_SSL_LIBS="$SSL_LIBS_PATH -Wl,-bstatic -lssl -lcrypto -Wl,-bdynamic";;
+				BSD*|OpenBSD*)
+					TCLTLS_SSL_LIBS="$SSL_LIBS_PATH -Wl,-Bstatic -lssl -lcrypto -Wl,-Bdynamic";;
+				CYGWIN_*|MINGW32_*|MINGW64_*|MSYS_*)
+					TCLTLS_SSL_LIBS="$SSL_LIBS_PATH -Wl,-Bstatic -lssl -lcrypto -Wl,-Bdynamic";;
+				Darwin-*)
+					TCLTLS_SSL_LIBS="$SSL_LIBS_PATH -lssl -lcrypto";;
+				HP-UX-*)
+					TCLTLS_SSL_LIBS="$SSL_LIBS_PATH -Wl,-a,archive -lssl -lcrypto -Wl,-a,shared_archive";;
+				IRIX-*)
+					TCLTLS_SSL_LIBS="$SSL_LIBS_PATH -Wl,-B, static -lssl -lcrypto -Wl,-B, dynamic";;
+				Solaris*)
+					TCLTLS_SSL_LIBS="$SSL_LIBS_PATH -Bstatic -lssl -lcrypto -Bdynamic";;
+				Linux*|GNU*|NetBSD-Debian|DragonFly-*|FreeBSD-*)
+					TCLTLS_SSL_LIBS="$SSL_LIBS_PATH -Wl,-Bstatic -lssl -lcrypto -Wl,-Bdynamic";;
+				*)
+					TCLTLS_SSL_LIBS="$SSL_LIBS_PATH -lssl -lcrypto";;
+			esac
 		fi
 	fi
 	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for SSL libs" >&5

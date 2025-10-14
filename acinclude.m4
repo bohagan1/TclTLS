@@ -210,9 +210,9 @@ AC_DEFUN([TCLTLS_SSL_OPENSSL], [
 	AC_MSG_CHECKING([for OpenSSL pkgconfig])
 	AC_MSG_RESULT($opensslpkgconfigdir)
 
-	dnl Use pkg-config to find OpenSSL if not already found 
+	dnl Use pkg-config to find OpenSSL if not already found
 	if test -n "$PKG_CONFIG" -a -z "$openssldir" -a -z "$opensslincludedir" -a -z "$openssllibdir"; then
-	    USE_PKG_CONFIG=`"${PKG_CONFIG}" --list-all | grep openssl`
+	    USE_PKG_CONFIG=`"${PKG_CONFIG}" --list-all | grep openssl | uniq`
 
 	    dnl Use pkg-config to find the library names
 	    if test -n "$USE_PKG_CONFIG"; then
@@ -234,8 +234,9 @@ AC_DEFUN([TCLTLS_SSL_OPENSSL], [
 
 		if test -z "$TCLTLS_SSL_LIBS"; then
 			TCLTLS_SSL_LIBS="$SSL_LIBS_PATH `${PKG_CONFIG} openssl --libs $pkgConfigExtraArgs`" || AC_MSG_ERROR([Unable to get OpenSSL Configuration])
-			if test "${TCLEXT_TLS_STATIC_SSL}" == 'yes'; then
-				TCLTLS_SSL_LIBS="-Wl,-Bstatic $TCLTLS_SSL_LIBS -Wl,-Bdynamic"
+			system="`uname -s`"
+			if test "$system" == "Linux" -a "${TCLEXT_TLS_STATIC_SSL}" == 'yes'; then
+				TCLTLS_SSL_LIBS="-Wl,-Bstatic ${TCLTLS_SSL_LIBS} -Wl,-Bdynamic"
 			fi
 		fi
 		if test -z "$TCLTLS_SSL_CFLAGS"; then
@@ -257,13 +258,33 @@ AC_DEFUN([TCLTLS_SSL_OPENSSL], [
 			TCLTLS_SSL_INCLUDES="-I/usr/include"
 		fi
 	fi
+
+	dnl Use fallback settings for OpenSSL libraries if not already found
 	if test -z "$TCLTLS_SSL_LIBS"; then
 		if test "$TCLEXT_TLS_STATIC_SSL" == 'no'; then
-		    TCLTLS_SSL_LIBS="$SSL_LIBS_PATH -lssl -lcrypto"
+			TCLTLS_SSL_LIBS="$SSL_LIBS_PATH -lssl -lcrypto"
 		else
-		    # Linux and Solaris
-		    TCLTLS_SSL_LIBS="$SSL_LIBS_PATH -Wl,-Bstatic -lssl -lcrypto -Wl,-Bdynamic"
-		    # HPUX: -Wl,-a,archive ... -Wl,-a,shared_archive
+			system="`uname -s`"
+			case $system in
+				AIX*)
+					TCLTLS_SSL_LIBS="$SSL_LIBS_PATH -Wl,-bstatic -lssl -lcrypto -Wl,-bdynamic";;
+				BSD*|OpenBSD*)
+					TCLTLS_SSL_LIBS="$SSL_LIBS_PATH -Wl,-Bstatic -lssl -lcrypto -Wl,-Bdynamic";;
+				CYGWIN_*|MINGW32_*|MINGW64_*|MSYS_*)
+					TCLTLS_SSL_LIBS="$SSL_LIBS_PATH -Wl,-Bstatic -lssl -lcrypto -Wl,-Bdynamic";;
+				Darwin-*)
+					TCLTLS_SSL_LIBS="$SSL_LIBS_PATH -lssl -lcrypto";;
+				HP-UX-*)
+					TCLTLS_SSL_LIBS="$SSL_LIBS_PATH -Wl,-a,archive -lssl -lcrypto -Wl,-a,shared_archive";;
+				IRIX-*)
+					TCLTLS_SSL_LIBS="$SSL_LIBS_PATH -Wl,-B, static -lssl -lcrypto -Wl,-B, dynamic";;
+				Solaris*)
+					TCLTLS_SSL_LIBS="$SSL_LIBS_PATH -Bstatic -lssl -lcrypto -Bdynamic";;
+				Linux*|GNU*|NetBSD-Debian|DragonFly-*|FreeBSD-*)
+					TCLTLS_SSL_LIBS="$SSL_LIBS_PATH -Wl,-Bstatic -lssl -lcrypto -Wl,-Bdynamic";;
+				*)
+					TCLTLS_SSL_LIBS="$SSL_LIBS_PATH -lssl -lcrypto";;
+			esac
 		fi
 	fi
 	AC_MSG_CHECKING([for SSL libs])
