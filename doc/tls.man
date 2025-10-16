@@ -999,11 +999,20 @@ along with their true meaning.
 
 [list_begin definitions]
 
+[def [arg "handshake failed: certificate verify failed due to \"unable to get local issuer certificate\""]]
+The certificates in the CA file or certificate store either do not have one or
+more issuers of the certificates you are validating or they have expired.
+Usually this means you need an updated CAcert file.
+
 [def [arg "packet length too long"]]
-Client has tried to connect to a HTTP server on the plain-text port instead of the SSL/TLS port.
+Client has tried to connect to a HTTP server on the plain-text port instead of
+the SSL/TLS port.
 
 [def [arg "unexpected eof while reading"]]
-Peer has closed the connection without sending the "close notify" shutdown alert.
+The peer has closed the connection without sending the "close notify" shutdown
+alert. Some servers will terminate the connection after the file or webpage has
+been sent without sending the "close notify" message. In this case, it should
+not result in a loss of data.
 
 [def [arg "wrong version number"]]
 Client has tried to connect to a non-HTTP server on a non-TLS (i.e. plain text) port.

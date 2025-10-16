@@ -889,10 +889,18 @@ protocol versions.</p>
 <p>Some OpsnSSl error messages have cryptic meanings. This is a list of messages
 along with their true meaning.</p>
 <dl class="doctools_definitions">
+<dt><i class="arg">handshake failed: certificate verify failed due to &quot;unable to get local issuer certificate&quot;</i></dt>
+<dd><p>The certificates in the CA file or certificate store either do not have one or
+more issuers of the certificates you are validating or they have expired.
+Usually this means you need an updated CAcert file.</p></dd>
 <dt><i class="arg">packet length too long</i></dt>
-<dd><p>Client has tried to connect to a HTTP server on the plain-text port instead of the SSL/TLS port.</p></dd>
+<dd><p>Client has tried to connect to a HTTP server on the plain-text port instead of
+the SSL/TLS port.</p></dd>
 <dt><i class="arg">unexpected eof while reading</i></dt>
-<dd><p>Peer has closed the connection without sending the &quot;close notify&quot; shutdown alert.</p></dd>
+<dd><p>The peer has closed the connection without sending the &quot;close notify&quot; shutdown
+alert. Some servers will terminate the connection after the file or webpage has
+been sent without sending the &quot;close notify&quot; message. In this case, it should
+not result in a loss of data.</p></dd>
 <dt><i class="arg">wrong version number</i></dt>
 <dd><p>Client has tried to connect to a non-HTTP server on a non-TLS (i.e. plain text) port.</p></dd>
 </dl>
