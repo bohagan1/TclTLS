@@ -1035,83 +1035,92 @@ CiphersObjCmd(
     SSL *ssl = NULL;
     STACK_OF(SSL_CIPHER) *sk;
     char buf[BUFSIZ];
-    int index, verbose = 0, use_supported = 0;
-    const SSL_METHOD *method;
+    int index, verbose = 0, use_supported = 0, version = 0;
+    const SSL_METHOD *method = TLS_method();
 
     dprintf("Called");
 
-    if ((objc < 2) || (objc > 4)) {
-	Tcl_WrongNumArgs(interp, 1, objv, "protocol ?verbose? ?supported?");
+    if ((objc < 1) || (objc > 4)) {
+	Tcl_WrongNumArgs(interp, 1, objv, "?protocol? ?verbose? ?supported?");
 	return TCL_ERROR;
     }
-    if (Tcl_GetIndexFromObj(interp, objv[1], protocols, "protocol", 0, &index) != TCL_OK) {
-	return TCL_ERROR;
+
+    if (objc > 1) {
+	if (Tcl_GetIndexFromObj(interp, objv[1], protocols, "protocol", 0, &index) != TCL_OK) {
+	    return TCL_ERROR;
+	} else {
+	    switch ((enum protocol)index) {
+		case TLS_SSL2:
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L || defined(NO_SSL2) || defined(OPENSSL_NO_SSL2)
+		    version = -1;
+#else
+		    version = SSL2_VERSION;
+#endif
+		    break;
+		case TLS_SSL3:
+#if defined(NO_SSL3) || defined(OPENSSL_NO_SSL3)
+		    version = -1;
+#else
+		    version = SSL3_VERSION;
+#endif
+		    break;
+		case TLS_TLS1:
+#if defined(NO_TLS1) || defined(OPENSSL_NO_TLS1)
+		    version = -1;
+#else
+		    version = TLS1_VERSION;
+#endif
+		    break;
+		case TLS_TLS1_1:
+#if defined(NO_TLS1_1) || defined(OPENSSL_NO_TLS1_1)
+		    version = -1;
+#else
+		    version = TLS1_1_VERSION;
+#endif
+		    break;
+		case TLS_TLS1_2:
+#if defined(NO_TLS1_2) || defined(OPENSSL_NO_TLS1_2)
+		    version = -1;
+#else
+		    version = TLS1_2_VERSION;
+#endif
+		    break;
+		case TLS_TLS1_3:
+#if defined(NO_TLS1_3) || defined(OPENSSL_NO_TLS1_3)
+		    version = -1;
+#else
+		    version = TLS1_3_VERSION;
+#endif
+		    break;
+		default:
+		    version = -1;
+		}
+        }
+
+	if (version < 0) {
+	    Tcl_AppendResult(interp, protocols[index], ": protocol not supported", (char *)NULL);
+	    return TCL_ERROR;
+	}
     }
+
     if ((objc > 2) && Tcl_GetBooleanFromObj(interp, objv[2], &verbose) != TCL_OK) {
 	return TCL_ERROR;
     }
+
     if ((objc > 3) && Tcl_GetBooleanFromObj(interp, objv[3], &use_supported) != TCL_OK) {
 	return TCL_ERROR;
     }
 
     ERR_clear_error();
 
-    switch ((enum protocol)index) {
-	case TLS_SSL2:
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L || defined(NO_SSL2) || defined(OPENSSL_NO_SSL2)
-	    Tcl_AppendResult(interp, protocols[index], ": protocol not supported", (char *)NULL);
-	    return TCL_ERROR;
-#else
-	    method = SSLv2_method(); break;
-#endif
-	case TLS_SSL3:
-#if defined(NO_SSL3) || defined(OPENSSL_NO_SSL3) || defined(OPENSSL_NO_SSL3_METHOD)
-	    Tcl_AppendResult(interp, protocols[index], ": protocol not supported", (char *)NULL);
-	    return TCL_ERROR;
-#else
-	    method = SSLv3_method(); break;
-#endif
-	case TLS_TLS1:
-#if defined(NO_TLS1) || defined(OPENSSL_NO_TLS1) || defined(OPENSSL_NO_TLS1_METHOD)
-	    Tcl_AppendResult(interp, protocols[index], ": protocol not supported", (char *)NULL);
-	    return TCL_ERROR;
-#else
-	    method = TLSv1_method(); break;
-#endif
-	case TLS_TLS1_1:
-#if defined(NO_TLS1_1) || defined(OPENSSL_NO_TLS1_1) || defined(OPENSSL_NO_TLS1_1_METHOD)
-	    Tcl_AppendResult(interp, protocols[index], ": protocol not supported", (char *)NULL);
-	    return TCL_ERROR;
-#else
-	    method = TLSv1_1_method(); break;
-#endif
-	case TLS_TLS1_2:
-#if defined(NO_TLS1_2) || defined(OPENSSL_NO_TLS1_2) || defined(OPENSSL_NO_TLS1_2_METHOD)
-	    Tcl_AppendResult(interp, protocols[index], ": protocol not supported", (char *)NULL);
-	    return TCL_ERROR;
-#else
-	    method = TLSv1_2_method(); break;
-#endif
-	case TLS_TLS1_3:
-#if defined(NO_TLS1_3) || defined(OPENSSL_NO_TLS1_3)
-	    Tcl_AppendResult(interp, protocols[index], ": protocol not supported", (char *)NULL);
-	    return TCL_ERROR;
-#else
-	    method = TLS_method();
-	    SSL_CTX_set_min_proto_version(ctx, TLS1_3_VERSION);
-	    SSL_CTX_set_max_proto_version(ctx, TLS1_3_VERSION);
-	    break;
-#endif
-	default:
-	    method = TLS_method();
-	    break;
-    }
-
     ctx = SSL_CTX_new(method);
     if (ctx == NULL) {
 	Tcl_AppendResult(interp, GET_ERR_REASON(), (char *)NULL);
 	return TCL_ERROR;
     }
+
+    SSL_CTX_set_min_proto_version(ctx, version);
+    SSL_CTX_set_max_proto_version(ctx, version);
 
     ssl = SSL_new(ctx);
     if (ssl == NULL) {
@@ -1158,6 +1167,8 @@ CiphersObjCmd(
 	if (use_supported) {
 	    sk_SSL_CIPHER_free(sk);
 	}
+    } else {
+	objPtr = Tcl_NewStringObj("",0);
     }
     SSL_free(ssl);
     SSL_CTX_free(ctx);
@@ -1920,7 +1931,7 @@ TlsLoadClientCAFileFromMemory(
     Tcl_Close(interp, in);
 
     data = (const void *) Tcl_GetByteArrayFromObj(buf, &len);
-    bio = BIO_new_mem_buf(data, len);
+    bio = BIO_new_mem_buf(data, (int)len);
     if (bio == NULL) {
 	goto cleanup;
     }
@@ -2029,132 +2040,67 @@ CTX_Init(
     int off = 0, abort = 0;
     int load_private_key;
     const SSL_METHOD *method;
+    method = isServer ? TLS_server_method() : TLS_client_method();
 
     dprintf("Called");
 
-    if (!proto) {
-	Tcl_AppendResult(interp, "no valid protocol selected", (char *)NULL);
-	return NULL;
-    }
+    /* Get user defined allowed protocols */
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+#if !defined(NO_SSL2) && !defined(OPENSSL_NO_SSL2)
+    if (!(proto & TLS_PROTO_SSL2))
+#endif
+	off |= SSL_OP_NO_SSLv2;
+#endif
 
-    /* create SSL context */
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L || defined(NO_SSL2) || defined(OPENSSL_NO_SSL2)
-    if (ENABLED(proto, TLS_PROTO_SSL2)) {
-	Tcl_AppendResult(interp, "SSL2 protocol not supported", (char *)NULL);
-	return NULL;
-    }
-#endif
-#if defined(NO_SSL3) || defined(OPENSSL_NO_SSL3)
-    if (ENABLED(proto, TLS_PROTO_SSL3)) {
-	Tcl_AppendResult(interp, "SSL3 protocol not supported", (char *)NULL);
-	return NULL;
-    }
-#endif
-#if defined(NO_TLS1) || defined(OPENSSL_NO_TLS1)
-    if (ENABLED(proto, TLS_PROTO_TLS1)) {
-	Tcl_AppendResult(interp, "TLS 1.0 protocol not supported", (char *)NULL);
-	return NULL;
-    }
-#endif
-#if defined(NO_TLS1_1) || defined(OPENSSL_NO_TLS1_1)
-    if (ENABLED(proto, TLS_PROTO_TLS1_1)) {
-	Tcl_AppendResult(interp, "TLS 1.1 protocol not supported", (char *)NULL);
-	return NULL;
-    }
-#endif
-#if defined(NO_TLS1_2) || defined(OPENSSL_NO_TLS1_2)
-    if (ENABLED(proto, TLS_PROTO_TLS1_2)) {
-	Tcl_AppendResult(interp, "TLS 1.2 protocol not supported", (char *)NULL);
-	return NULL;
-    }
-#endif
-#if defined(NO_TLS1_3) || defined(OPENSSL_NO_TLS1_3)
-    if (ENABLED(proto, TLS_PROTO_TLS1_3)) {
-	Tcl_AppendResult(interp, "TLS 1.3 protocol not supported", (char *)NULL);
-	return NULL;
-    }
-#endif
-    if (proto == 0) {
-	/* Use full range */
-	SSL_CTX_set_min_proto_version(ctx, 0);
-	SSL_CTX_set_max_proto_version(ctx, 0);
-    }
-
-    switch (proto) {
-#if OPENSSL_VERSION_NUMBER < 0x10100000L && !defined(NO_SSL2) && !defined(OPENSSL_NO_SSL2)
-    case TLS_PROTO_SSL2:
-	method = isServer ? SSLv2_server_method() : SSLv2_client_method();
-	break;
-#endif
-#if !defined(NO_SSL3) && !defined(OPENSSL_NO_SSL3) && !defined(OPENSSL_NO_SSL3_METHOD)
-    case TLS_PROTO_SSL3:
-	method = isServer ? SSLv3_server_method() : SSLv3_client_method();
-	break;
-#endif
-#if !defined(NO_TLS1) && !defined(OPENSSL_NO_TLS1) && !defined(OPENSSL_NO_TLS1_METHOD)
-    case TLS_PROTO_TLS1:
-	method = isServer ? TLSv1_server_method() : TLSv1_client_method();
-	break;
-#endif
-#if !defined(NO_TLS1_1) && !defined(OPENSSL_NO_TLS1_1) && !defined(OPENSSL_NO_TLS1_1_METHOD)
-    case TLS_PROTO_TLS1_1:
-	method = isServer ? TLSv1_1_server_method() : TLSv1_1_client_method();
-	break;
-#endif
-#if !defined(NO_TLS1_2) && !defined(OPENSSL_NO_TLS1_2) && !defined(OPENSSL_NO_TLS1_2_METHOD)
-    case TLS_PROTO_TLS1_2:
-	method = isServer ? TLSv1_2_server_method() : TLSv1_2_client_method();
-	break;
-#endif
-#if !defined(NO_TLS1_3) && !defined(OPENSSL_NO_TLS1_3)
-    case TLS_PROTO_TLS1_3:
-	/* Use the generic method and constraint range after context is created */
-	method = isServer ? TLS_server_method() : TLS_client_method();
-	break;
-#endif
-    default:
-	/* Negotiate highest available SSL/TLS version */
-	method = isServer ? TLS_server_method() : TLS_client_method();
-#if OPENSSL_VERSION_NUMBER < 0x10100000L && !defined(NO_SSL2) && !defined(OPENSSL_NO_SSL2)
-	off |= (ENABLED(proto, TLS_PROTO_SSL2)   ? 0 : SSL_OP_NO_SSLv2);
-#endif
 #if !defined(NO_SSL3) && !defined(OPENSSL_NO_SSL3)
-	off |= (ENABLED(proto, TLS_PROTO_SSL3)   ? 0 : SSL_OP_NO_SSLv3);
+    if (!(proto & TLS_PROTO_SSL3))
 #endif
+	off |= SSL_OP_NO_SSLv3;
+
 #if !defined(NO_TLS1) && !defined(OPENSSL_NO_TLS1)
-	off |= (ENABLED(proto, TLS_PROTO_TLS1)   ? 0 : SSL_OP_NO_TLSv1);
+    if (!(proto & TLS_PROTO_TLS1))
 #endif
+	off |= SSL_OP_NO_TLSv1;
+
 #if !defined(NO_TLS1_1) && !defined(OPENSSL_NO_TLS1_1)
-	off |= (ENABLED(proto, TLS_PROTO_TLS1_1) ? 0 : SSL_OP_NO_TLSv1_1);
+    if (!(proto & TLS_PROTO_TLS1_1))
 #endif
+	off |= SSL_OP_NO_TLSv1_1;
+
 #if !defined(NO_TLS1_2) && !defined(OPENSSL_NO_TLS1_2)
-	off |= (ENABLED(proto, TLS_PROTO_TLS1_2) ? 0 : SSL_OP_NO_TLSv1_2);
+    if (!(proto & TLS_PROTO_TLS1_2))
 #endif
+	off |= SSL_OP_NO_TLSv1_2;
+
 #if !defined(NO_TLS1_3) && !defined(OPENSSL_NO_TLS1_3)
-	off |= (ENABLED(proto, TLS_PROTO_TLS1_3) ? 0 : SSL_OP_NO_TLSv1_3);
+    if (!(proto & TLS_PROTO_TLS1_3))
 #endif
-	break;
-    }
+	off |= SSL_OP_NO_TLSv1_3;
 
     ERR_clear_error();
 
+    /* Create context */
     ctx = SSL_CTX_new(method);
     if (!ctx) {
 	return NULL;
     }
 
+    /* Specify allowed protocol range */
+    if (!proto) {
+	SSL_CTX_set_min_proto_version(ctx, TLS1_2_VERSION);
+	SSL_CTX_set_max_proto_version(ctx, TLS1_3_VERSION);
+    } else {
+	SSL_CTX_set_min_proto_version(ctx, 0); /* Support all */
+	SSL_CTX_set_max_proto_version(ctx, 0);
+	SSL_CTX_set_options(ctx, off);	/* Disable specific protocol versions */
+    }
+
+    /* Set crypyo key log file */
     if (getenv(SSLKEYLOGFILE)) {
 	SSL_CTX_set_keylog_callback(ctx, KeyLogCallback);
     }
 
-#if !defined(NO_TLS1_3) && !defined(OPENSSL_NO_TLS1_3)
-    if (proto == TLS_PROTO_TLS1_3) {
-	SSL_CTX_set_min_proto_version(ctx, TLS1_3_VERSION);
-	SSL_CTX_set_max_proto_version(ctx, TLS1_3_VERSION);
-    }
-#endif
-
-    /* Force cipher selection order by server */
+    /* Force client cipher selection order to set by server */
     if (!isServer) {
 	SSL_CTX_set_options(ctx, SSL_OP_CIPHER_SERVER_PREFERENCE);
     }
@@ -2166,7 +2112,6 @@ CTX_Init(
     SSL_CTX_set_app_data(ctx, (void*)interp);	/* remember the interpreter */
     SSL_CTX_set_options(ctx, SSL_OP_ALL);	/* Enable all SSL bug workarounds */
     SSL_CTX_set_options(ctx, SSL_OP_NO_COMPRESSION);	/* Disable compression even if supported */
-    SSL_CTX_set_options(ctx, off);		/* Disable specified protocol versions */
 
     /* Allow writes to report success when less than all records have been written */
     SSL_CTX_set_mode(ctx, SSL_MODE_ENABLE_PARTIAL_WRITE);
@@ -2176,9 +2121,10 @@ CTX_Init(
        non-application record was sent without any application data. */
     /*SSL_CTX_clear_mode(ctx, SSL_MODE_AUTO_RETRY);*/
 
+    /* Set number of sessions to cache */
     SSL_CTX_sess_set_cache_size(ctx, 128);
 
-    /* Set user defined ciphers, cipher suites, and security level */
+    /* Set user defined ciphers and cipher suites */
     if ((ciphers != NULL) && !SSL_CTX_set_cipher_list(ctx, ciphers)) {
 	Tcl_AppendResult(interp, "Set ciphers failed: No valid ciphers", (char *)NULL);
 	SSL_CTX_free(ctx);
@@ -2190,7 +2136,7 @@ CTX_Init(
 	return NULL;
     }
 
-    /* set automatic curve selection */
+    /* Set automatic curve selection */
 #if OPENSSL_VERSION_NUMBER < 0x10101000L
     SSL_CTX_set_ecdh_auto(ctx, 1);
 #endif
@@ -2201,7 +2147,7 @@ CTX_Init(
 	SSL_CTX_set_security_level(ctx, level);
     }
 
-    /* set some callbacks */
+    /* Set get password callback */
     SSL_CTX_set_default_passwd_cb(ctx, PasswordCallback);
     SSL_CTX_set_default_passwd_cb_userdata(ctx, (void *)statePtr);
 
@@ -2277,7 +2223,7 @@ CTX_Init(
     }
 #endif
 
-    /* set our certificate */
+    /* Set our certificate */
     load_private_key = 0;
     if (certfile != NULL) {
 	load_private_key = 1;
@@ -2312,7 +2258,7 @@ CTX_Init(
 	}
     }
 
-    /* set our private key */
+    /* Set our private key */
     if (load_private_key) {
 	if (keyfile == NULL && key == NULL) {
 	    keyfile = certfile;
