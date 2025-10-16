@@ -235,7 +235,7 @@ MessageCallback(
     State *statePtr = (State*)arg;
     Tcl_Interp *interp	= statePtr->interp;
     Tcl_Obj *cmdPtr;
-    char *ver, *type;
+    const char *ver, *type;
     BIO *bio;
     char buffer[15000];
     Tcl_Size blen = 0;
@@ -500,7 +500,7 @@ Tls_Error(
  */
 
 void KeyLogCallback(
-    const SSL *ssl,		/* Client state for TLS socket */
+    TCL_UNUSED(const SSL *),		/* Client state for TLS socket */
     const char *line)		/* Key data to be logged */
 {
     char *str = getenv(SSLKEYLOGFILE);
@@ -715,7 +715,7 @@ ALPNCallback(
     }
 
     /* Select protocol */
-    if (SSL_select_next_proto((unsigned char **) out, outlen, statePtr->protos, statePtr->protos_len,
+    if (SSL_select_next_proto((unsigned char **) out, outlen, statePtr->protos, (unsigned)statePtr->protos_len,
 	in, inlen) == OPENSSL_NPN_NEGOTIATED) {
 	/* Match found */
 	res = SSL_TLSEXT_ERR_OK;
@@ -936,7 +936,7 @@ HelloCallback(
 	}
 
 	/* Extract the length of the supplied list of names. */
-	len = (*(p++) << 8);
+	len = (size_t)(*(p++) << 8);
 	len += *(p++);
 	if (len + 2 != remaining) {
 	    *alert = SSL_R_SSLV3_ALERT_ILLEGAL_PARAMETER;
@@ -956,7 +956,7 @@ HelloCallback(
 	    *alert = SSL_R_TLSV1_ALERT_INTERNAL_ERROR;
 	    return SSL_CLIENT_HELLO_ERROR;
 	}
-	len = (*(p++) << 8);
+	len = (size_t)(*(p++) << 8);
 	len += *(p++);
 	if (len + 2 > remaining) {
 	    *alert = SSL_R_TLSV1_ALERT_INTERNAL_ERROR;
@@ -1643,7 +1643,7 @@ ImportObjCmd(
     if (alpn) {
 	/* Convert a TCL list into a protocol-list in wire-format */
 	unsigned char *protos = NULL, *p;
-	unsigned int protos_len = 0;
+	size_t protos_len = 0;
 	Tcl_Size cnt, i;
 	int res = TCL_OK;
 	Tcl_Obj **list;
@@ -1662,11 +1662,11 @@ ImportObjCmd(
 		res = TCL_ERROR;
 		goto done;
 	    }
-	    protos_len += 1 + (int) len;
+	    protos_len += 1 + (size_t)len;
 	}
 
 	/* Build the complete protocol-list */
-	protos = ckalloc(protos_len);
+	protos = (unsigned char *)ckalloc(protos_len);
 	/* protocol-lists consist of 8-bit length-prefixed, byte strings */
 	for (i = 0, p = protos; i < cnt; i++) {
 	    char *str = Tcl_GetStringFromObj(list[i], &len);
@@ -1677,7 +1677,7 @@ ImportObjCmd(
 
 	/* SSL_set_alpn_protos makes a copy of the protocol-list */
 	/* Note: This function reverses the return value convention */
-	if (SSL_set_alpn_protos(statePtr->ssl, protos, protos_len)) {
+	if (SSL_set_alpn_protos(statePtr->ssl, protos, (unsigned)protos_len)) {
 	    Tcl_AppendResult(interp, "Set ALPN protocols failed: ", GET_ERR_REASON(), (char *)NULL);
 	    Tcl_SetErrorCode(interp, "TLS", "IMPORT", "ALPN", "FAILED", (char *)NULL);
 	    res = TCL_ERROR;
@@ -1920,7 +1920,7 @@ TlsLoadClientCAFileFromMemory(
     Tcl_Close(interp, in);
 
     data = (const void *) Tcl_GetByteArrayFromObj(buf, &len);
-    bio = BIO_new_mem_buf(data, len);
+    bio = BIO_new_mem_buf(data, (int)len);
     if (bio == NULL) {
 	goto cleanup;
     }
@@ -2026,7 +2026,8 @@ CTX_Init(
     Tcl_Interp *interp = statePtr->interp;
     SSL_CTX *ctx = NULL;
     Tcl_DString ds;
-    int off = 0, abort = 0;
+    uint64_t off = 0;
+    int abort = 0;
     int load_private_key;
     const SSL_METHOD *method;
 
@@ -2456,7 +2457,8 @@ StatusObjCmd(
     int mode;
     const unsigned char *proto;
     unsigned int len;
-    int nid, res;
+    int nid;
+    long res;
 
     dprintf("Called");
 
@@ -2801,7 +2803,7 @@ static int ConnectionInfoObjCmd(
     /* Server info */
     {
 	long mode = SSL_CTX_get_session_cache_mode(statePtr->ctx);
-	char *msg;
+	const char *msg;
 
 	if (mode & SSL_SESS_CACHE_OFF) {
 	    msg = "off";
@@ -3396,7 +3398,7 @@ BuildInfoCommand(
  */
 
 void TlsLibShutdown(
-    ClientData clientData)	/* Not used */
+    TCL_UNUSED(ClientData))
 {
     dprintf("Called");
 

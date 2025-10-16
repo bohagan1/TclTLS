@@ -46,8 +46,8 @@ Tcl_Obj *String_to_Hex(unsigned char* input, int ilen) {
     }
 
     for (int i = 0; i < ilen; i++) {
-	*dptr++ = hex[(*iptr>>4)&0xF];
-	*dptr++ = hex[(*iptr++)&0xF];
+	*dptr++ = (unsigned char)hex[(*iptr>>4)&0xF];
+	*dptr++ = (unsigned char)hex[(*iptr++)&0xF];
     }
     return resultObj;
 }
@@ -213,8 +213,8 @@ Tcl_Obj *Tls_x509KeyUsage(Tcl_Interp *interp, X509 *cert, uint32_t xflags) {
  *
  *-----------------------------------------------------------------------------
  */
-char *Tls_x509Purpose(X509 *cert) {
-    char *purpose = NULL;
+const char *Tls_x509Purpose(X509 *cert) {
+    const char *purpose = NULL;
 
     if (X509_check_purpose(cert, X509_PURPOSE_SSL_CLIENT, 0) > 0) {
 	purpose = "SSL Client";
@@ -302,7 +302,7 @@ Tcl_Obj *Tls_x509Names(Tcl_Interp *interp, X509 *cert, int nid, BIO *bio) {
 	return NULL;
     }
 
-    if ((names = X509_get_ext_d2i(cert, nid, NULL, NULL)) != NULL) {
+    if ((names = (STACK_OF(GENERAL_NAME) *)X509_get_ext_d2i(cert, nid, NULL, NULL)) != NULL) {
 	for (int i=0; i < sk_GENERAL_NAME_num(names); i++) {
 	    const GENERAL_NAME *name = sk_GENERAL_NAME_value(names, i);
 
@@ -396,7 +396,7 @@ Tcl_Obj *Tls_x509CrlDp(Tcl_Interp *interp, X509 *cert) {
 	return NULL;
     }
 
-    if ((crl = X509_get_ext_d2i(cert, NID_crl_distribution_points, NULL, NULL)) != NULL) {
+    if ((crl = (STACK_OF(DIST_POINT) *)X509_get_ext_d2i(cert, NID_crl_distribution_points, NULL, NULL)) != NULL) {
 	for (int i=0; i < sk_DIST_POINT_num(crl); i++) {
 	    DIST_POINT *dp = sk_DIST_POINT_value(crl, i);
 	    DIST_POINT_NAME *distpoint = dp->distpoint;
@@ -406,7 +406,7 @@ Tcl_Obj *Tls_x509CrlDp(Tcl_Interp *interp, X509 *cert) {
 		for (int j = 0; j < sk_GENERAL_NAME_num(distpoint->name.fullname); j++) {
 		    GENERAL_NAME *gen = sk_GENERAL_NAME_value(distpoint->name.fullname, j);
 		    int type;
-		    ASN1_STRING *uri = GENERAL_NAME_get0_value(gen, &type);
+		    ASN1_STRING *uri = (ASN1_STRING *)GENERAL_NAME_get0_value(gen, &type);
 		    if (type == GEN_URI) {
 			LAPPEND_STR(interp, resultObj, (char *) NULL, (char *) ASN1_STRING_get0_data(uri), (Tcl_Size) ASN1_STRING_length(uri));
 		    }
@@ -483,9 +483,9 @@ Tcl_Obj *Tls_x509CaIssuers(Tcl_Interp *interp, X509 *cert) {
 	return NULL;
     }
 
-    if ((ads = X509_get_ext_d2i(cert, NID_info_access, NULL, NULL)) != NULL) {
+    if ((ads = (STACK_OF(ACCESS_DESCRIPTION) *)X509_get_ext_d2i(cert, NID_info_access, NULL, NULL)) != NULL) {
 	for (int i = 0; i < sk_ACCESS_DESCRIPTION_num(ads); i++) {
-	    ad = sk_ACCESS_DESCRIPTION_value(ads, i);
+	    ad = (ACCESS_DESCRIPTION *)sk_ACCESS_DESCRIPTION_value(ads, i);
 	    if (OBJ_obj2nid(ad->method) == NID_ad_ca_issuers && ad->location) {
 		if (ad->location->type == GEN_URI) {
 		    Tcl_Size len = (Tcl_Size) ASN1_STRING_to_UTF8(&buf, ad->location->d.uniformResourceIdentifier);
@@ -524,9 +524,9 @@ Tcl_Obj *Tls_NewX509Obj(Tcl_Interp *interp, X509 *cert, int all) {
     unsigned int ulen;
     uint32_t xflags;
     unsigned long flags = XN_FLAG_RFC2253 | ASN1_STRFLGS_UTF8_CONVERT;
-    flags &= ~ASN1_STRFLGS_ESC_MSB;
+    flags &= ~(unsigned long)ASN1_STRFLGS_ESC_MSB;
 
-    char *buffer = ckalloc(BUFSIZ > EVP_MAX_MD_SIZE ? BUFSIZ : EVP_MAX_MD_SIZE);
+    char *buffer = (char *)ckalloc(BUFSIZ > EVP_MAX_MD_SIZE ? BUFSIZ : EVP_MAX_MD_SIZE);
 
     dprintf("Called");
 

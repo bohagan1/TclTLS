@@ -320,7 +320,7 @@ static long BioCtrl(BIO *bio, int cmd, long num, void *ptr) {
 	case BIO_CTRL_SET_CLOSE:
 		/* man - Set the close on BIO_free() flag. Implements BIO_set_close. */
 		dprintf("Got BIO_SET_CLOSE");
-		BIO_set_shutdown(bio, num);
+		BIO_set_shutdown(bio, (int)num);
 		/* Returns 1 on success or <=0 for failure. */
 		ret = 1;
 		break;

@@ -209,7 +209,7 @@ typedef struct State {
 	BIO *bio;		/* Struct for SSL processing */
 	BIO *p_bio;		/* Parent BIO (that is layered on Tcl_Channel) */
 
-	unsigned int protos_len; /* Length of protos */
+	size_t protos_len; /* Length of protos */
 	unsigned char *protos;	/* List of supported protocols in protocol format */
 
 	const char *err;

@@ -91,7 +91,7 @@ static int TlsBlockModeProc(
  */
 static int TlsCloseProc(
     ClientData instanceData,	/* Connection state info */
-    Tcl_Interp *interp)		/* Tcl interpreter to report errors to */
+    TCL_UNUSED(Tcl_Interp *))		/* Tcl interpreter to report errors to */
 {
     State *statePtr = (State *) instanceData;
 
