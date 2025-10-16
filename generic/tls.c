@@ -2185,7 +2185,7 @@ CTX_Init(
 	return NULL;
     }
     if ((ciphersuites != NULL) && !SSL_CTX_set_ciphersuites(ctx, ciphersuites)) {
-	Tcl_AppendResult(interp, "Set cipher suites failed: No valid ciphers", (char *)NULL);
+	Tcl_AppendResult(interp, "Set cipher suites failed: No valid cipher suites", (char *)NULL);
 	SSL_CTX_free(ctx);
 	return NULL;
     }
@@ -2205,7 +2205,8 @@ CTX_Init(
     SSL_CTX_set_default_passwd_cb(ctx, PasswordCallback);
     SSL_CTX_set_default_passwd_cb_userdata(ctx, (void *)statePtr);
 
-    /* read a Diffie-Hellman parameters file, or use the built-in one */
+    /* Set Diffie-Hellman parameters from file, or use the built-in one.
+     * Used by servers requiring ephemeral DH keys. */
     Tcl_DStringInit(&ds);
 #ifdef OPENSSL_NO_DH
     if (DHparams != NULL) {
@@ -2215,7 +2216,6 @@ CTX_Init(
     }
 #else
     {
-	DH* dh;
 	if (DHparams != NULL) {
 	    BIO *bio;
 
@@ -2227,16 +2227,43 @@ CTX_Init(
 		return NULL;
 	    }
 
-	    dh = PEM_read_bio_DHparams(bio, NULL, NULL, NULL);
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
+	    DH* dh = PEM_read_bio_DHparams(bio, NULL, NULL, NULL);
 	    BIO_free(bio);
 	    Tcl_DStringFree(&ds);
 	    if (!dh) {
-		Tcl_AppendResult(interp, "Could not read DH parameters from file", (char *)NULL);
+		Tcl_AppendResult(interp, "Could not read DH parameters from file: ",
+		    GET_ERR_REASON(), (char *)NULL);
 		SSL_CTX_free(ctx);
 		return NULL;
 	    }
-	    SSL_CTX_set_tmp_dh(ctx, dh);
+	    if (!SSL_CTX_set_tmp_dh(ctx, dh)) {
+		Tcl_AppendResult(interp, "Could not set DH parameters from file: ",
+		    GET_ERR_REASON(), (char *)NULL);
+		DH_free(dh);
+		SSL_CTX_free(ctx);
+		return NULL;
+	    }
 	    DH_free(dh);
+	    dprintf("Diffie-Hellman initialized with %d bit key", 8 * DH_size(dh));
+#else
+	    EVP_PKEY *dh = PEM_read_bio_Parameters(bio, NULL);
+	    BIO_free(bio);
+	    Tcl_DStringFree(&ds);
+	    if (!dh) {
+		Tcl_AppendResult(interp, "Could not read DH parameters from file: ",
+		    GET_ERR_REASON(), (char *)NULL);
+		SSL_CTX_free(ctx);
+		return NULL;
+	    }
+	    if (!SSL_CTX_set0_tmp_dh_pkey(ctx, dh)) {
+		Tcl_AppendResult(interp, "Could not set DH parameters from file: ",
+		    GET_ERR_REASON(), (char *)NULL);
+		SSL_CTX_free(ctx);
+		return NULL;
+	    }
+	    dprintf("Diffie-Hellman initialized with %d bit key", 8 * EVP_PKEY_get_size(dh));
+#endif
 
 	} else {
 	    /* Use well known DH parameters that have built-in support in OpenSSL */
@@ -2484,7 +2511,11 @@ StatusObjCmd(
 
     /* Get certificate for peer or self */
     if (objc == 2) {
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
 	peer = SSL_get_peer_certificate(statePtr->ssl);
+#else
+	peer = SSL_get1_peer_certificate(statePtr->ssl);
+#endif
     } else {
 	peer = SSL_get_certificate(statePtr->ssl);
     }
