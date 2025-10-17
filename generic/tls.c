@@ -3045,7 +3045,7 @@ MiscObjCmd(
 		    PEM_write_bio_PrivateKey(out,pkey,NULL,NULL,0,NULL,NULL);
 		    /* PEM_write_bio_RSAPrivateKey(out, rsa, NULL, NULL, 0, NULL, NULL); */
 		    BIO_free_all(out);
-	 	}
+		}
 
 		if ((cert=X509_new())==NULL) {
 		    Tcl_SetResult(interp,"Error generating certificate request",NULL);
