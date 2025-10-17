@@ -229,21 +229,19 @@ AC_DEFUN([TCLTLS_SSL_OPENSSL], [
 
 		pkgConfigExtraArgs=''
 		if test "$SHARED_BUILD" == "0" -o "$TCLEXT_TLS_STATIC_SSL" == 'yes'; then
+			# Skip since sometimes will include extra libraries
 			pkgConfigExtraArgs='--static'
+			pkgConfigExtraArgs=''
 		fi
 
-		if test -z "$TCLTLS_SSL_LIBS"; then
-			TCLTLS_SSL_LIBS="$SSL_LIBS_PATH `${PKG_CONFIG} openssl --libs $pkgConfigExtraArgs`" || AC_MSG_ERROR([Unable to get OpenSSL Configuration])
-			system="`uname -s`"
-			if test "$system" == "Linux" -a "${TCLEXT_TLS_STATIC_SSL}" == 'yes'; then
-				TCLTLS_SSL_LIBS="-Wl,-Bstatic ${TCLTLS_SSL_LIBS} -Wl,-Bdynamic"
-			fi
-		fi
 		if test -z "$TCLTLS_SSL_CFLAGS"; then
 			TCLTLS_SSL_CFLAGS="`"${PKG_CONFIG}" openssl --cflags-only-other $pkgConfigExtraArgs`" || AC_MSG_ERROR([Unable to get OpenSSL Configuration])
 		fi
 		if test -z "$TCLTLS_SSL_INCLUDES"; then
 			TCLTLS_SSL_INCLUDES="`"${PKG_CONFIG}" openssl --cflags-only-I $pkgConfigExtraArgs`" || AC_MSG_ERROR([Unable to get OpenSSL Configuration])
+		fi
+		if test -z "$TCLTLS_SSL_LIBS"; then
+			TCLTLS_SSL_LIBS="`${PKG_CONFIG} openssl --libs $pkgConfigExtraArgs`" || AC_MSG_ERROR([Unable to get OpenSSL Configuration])
 		fi
 		PKG_CONFIG_PATH="${PKG_CONFIG_PATH_SAVE}"
 	    fi
@@ -258,35 +256,33 @@ AC_DEFUN([TCLTLS_SSL_OPENSSL], [
 			TCLTLS_SSL_INCLUDES="-I/usr/include"
 		fi
 	fi
-
-	dnl Use fallback settings for OpenSSL libraries if not already found
 	if test -z "$TCLTLS_SSL_LIBS"; then
-		if test "$TCLEXT_TLS_STATIC_SSL" == 'no'; then
-			TCLTLS_SSL_LIBS="$SSL_LIBS_PATH -lssl -lcrypto"
-		else
-			system="`uname -s`"
-			case $system in
-				AIX*)
-					TCLTLS_SSL_LIBS="$SSL_LIBS_PATH -Wl,-bstatic -lssl -lcrypto -Wl,-bdynamic";;
-				BSD*|OpenBSD*)
-					TCLTLS_SSL_LIBS="$SSL_LIBS_PATH -Wl,-Bstatic -lssl -lcrypto -Wl,-Bdynamic";;
-				CYGWIN_*|MINGW32_*|MINGW64_*|MSYS_*)
-					TCLTLS_SSL_LIBS="$SSL_LIBS_PATH -Wl,-Bstatic -lssl -lcrypto -Wl,-Bdynamic";;
-				Darwin-*)
-					TCLTLS_SSL_LIBS="$SSL_LIBS_PATH -lssl -lcrypto";;
-				HP-UX-*)
-					TCLTLS_SSL_LIBS="$SSL_LIBS_PATH -Wl,-a,archive -lssl -lcrypto -Wl,-a,shared_archive";;
-				IRIX-*)
-					TCLTLS_SSL_LIBS="$SSL_LIBS_PATH -Wl,-B, static -lssl -lcrypto -Wl,-B, dynamic";;
-				Solaris*)
-					TCLTLS_SSL_LIBS="$SSL_LIBS_PATH -Bstatic -lssl -lcrypto -Bdynamic";;
-				Linux*|GNU*|NetBSD-Debian|DragonFly-*|FreeBSD-*)
-					TCLTLS_SSL_LIBS="$SSL_LIBS_PATH -Wl,-Bstatic -lssl -lcrypto -Wl,-Bdynamic";;
-				*)
-					TCLTLS_SSL_LIBS="$SSL_LIBS_PATH -lssl -lcrypto";;
-			esac
-		fi
+		TCLTLS_SSL_LIBS="-lssl -lcrypto"
 	fi
+	
+	dnl Set for static libraries
+	if test "$TCLEXT_TLS_STATIC_SSL" == 'yes'; then
+		system="`uname -s`"
+		case $system in
+			AIX*)
+				TCLTLS_SSL_LIBS="-Wl,-bstatic $TCLTLS_SSL_LIBS -Wl,-bdynamic";;
+			BSD*|OpenBSD*)
+				TCLTLS_SSL_LIBS="-Wl,-Bstatic $TCLTLS_SSL_LIBS -Wl,-Bdynamic";;
+			CYGWIN_*|MINGW32_*|MINGW64_*|MSYS_*)
+				TCLTLS_SSL_LIBS="-Wl,-Bstatic $TCLTLS_SSL_LIBS -Wl,-Bdynamic";;
+			Darwin-*)
+				TCLTLS_SSL_LIBS="$TCLTLS_SSL_LIBS";;
+			HP-UX-*)
+				TCLTLS_SSL_LIBS="-Wl,-a,archive $TCLTLS_SSL_LIBS -Wl,-a,shared_archive";;
+			IRIX-*)
+				TCLTLS_SSL_LIBS="-Wl,-B, static $TCLTLS_SSL_LIBS -Wl,-B, dynamic";;
+			Solaris*)
+				TCLTLS_SSL_LIBS="-Bstatic $TCLTLS_SSL_LIBS -Bdynamic";;
+			Linux*|GNU*|NetBSD-Debian|DragonFly-*|FreeBSD-*)
+				TCLTLS_SSL_LIBS="-Wl,-Bstatic $TCLTLS_SSL_LIBS -Wl,-Bdynamic";;
+		esac
+	fi
+	TCLTLS_SSL_LIBS="$SSL_LIBS_PATH $TCLTLS_SSL_LIBS"
 	AC_MSG_CHECKING([for SSL libs])
 	AC_MSG_RESULT([$TCLTLS_SSL_LIBS])
 
