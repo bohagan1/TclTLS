@@ -48,7 +48,7 @@ proc __doCommands__ {l s} {
     set callerSocket $s
     set ::errorInfo ""
     if {[catch {uplevel "#0" $l} msg]} {
-	if {0} {
+    	if {0} {
 	    set fd [open remoteServer.log a]
 	    puts $fd "error: $msg"
 	    close $fd
