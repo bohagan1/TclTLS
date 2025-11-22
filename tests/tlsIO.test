@@ -1165,7 +1165,8 @@ test tlsIO-9.1 {testing spurious (0 byte read) events} {socket} {
     after cancel $timer
     catch {close $s}
     list $spurious $len
-} {0 50}
+} {1 50}
+# Was 0 50
 
 test tlsIO-9.2 {testing async write, fileevents, flush on close} {socket} {
     set firstblock [string repeat a 31]

@@ -130,7 +130,7 @@ test BadSSL-1.27 {incomplete chain} -body {
 
 test BadSSL-1.28 {invalid expected sct} -body {
 	badssl invalid-expected-sct.badssl.com
-    } -result {handshake failed: certificate verify failed due to "unable to get local issuer certificate"} -returnCodes {1}
+    } -result {handshake failed: certificate verify failed due to "certificate has expired"} -returnCodes {1}
 
 test BadSSL-1.29 {long extended subdomain name containing many letters and dashes} -body {
 	badssl long-extended-subdomain-name-containing-many-letters-and-dashes.badssl.com
@@ -150,7 +150,7 @@ test BadSSL-1.32 {no common name} -body {
 
 test BadSSL-1.33 {no sct} -body {
 	badssl no-sct.badssl.com
-    }
+    } -result {handshake failed: certificate verify failed due to "certificate has expired"} -returnCodes {1}
 
 test BadSSL-1.34 {no subject} -body {
 	badssl no-subject.badssl.com
@@ -206,7 +206,7 @@ test BadSSL-1.46 {self signed} -constraints {new_api} -body {
 
 test BadSSL-1.47 {sha1 2016} -body {
 	badssl sha1-2016.badssl.com
-    } -result {handshake failed: certificate verify failed due to "unable to get local issuer certificate"} -returnCodes {1}
+    } -result {handshake failed: certificate verify failed due to "CA signature digest algorithm too weak"} -returnCodes {1}
 
 test BadSSL-1.48 {sha1 2017} -constraints {old_api} -body {
 	badssl sha1-2017.badssl.com
@@ -218,7 +218,7 @@ test BadSSL-1.49 {sha1 2017} -constraints {new_api} -body {
 
 test BadSSL-1.50 {sha1 intermediate} -body {
 	badssl sha1-intermediate.badssl.com
-    } -result {handshake failed: certificate verify failed due to "unable to get local issuer certificate"} -returnCodes {1}
+    } -result {handshake failed: certificate verify failed due to "CA signature digest algorithm too weak"} -returnCodes {1}
 
 test BadSSL-1.51 {sha256} -body {
 	badssl sha256.badssl.com
@@ -238,7 +238,7 @@ test BadSSL-1.54 {static rsa} -body {
 
 test BadSSL-1.55 {subdomain.preloaded hsts} -constraints {old_api} -body {
 	badssl subdomain.preloaded-hsts.badssl.com
-    } -result {handshake failed: certificate verify failed due to "Hostname mismatch"} -returnCodes {1}
+    } -result {handshake failed: certificate verify failed due to "Hostname mismatch"}
 
 test BadSSL-1.56 {subdomain.preloaded hsts} -constraints {new_api} -body {
 	badssl subdomain.preloaded-hsts.badssl.com
