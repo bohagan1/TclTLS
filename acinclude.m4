@@ -183,7 +183,11 @@ AC_DEFUN([TCLTLS_SSL_OPENSSL], [
 		if test "$TCLEXT_TLS_STATIC_SSL" == 'no'; then
 			LIBEXT=${SHLIB_SUFFIX}
 		else
-			LIBEXT='.a'
+			if test "${TEA_PLATFORM}" == 'unix'; then
+				LIBEXT='.a'
+			else
+				LIBEXT='.lib'
+			fi
 		fi
 
 		if test -f "${openssllibdir}/libssl${LIBEXT}"; then
@@ -229,9 +233,7 @@ AC_DEFUN([TCLTLS_SSL_OPENSSL], [
 
 		pkgConfigExtraArgs=''
 		if test "$SHARED_BUILD" == "0" -o "$TCLEXT_TLS_STATIC_SSL" == 'yes'; then
-			# Skip since sometimes will include extra libraries
 			pkgConfigExtraArgs='--static'
-			pkgConfigExtraArgs=''
 		fi
 
 		if test -z "$TCLTLS_SSL_CFLAGS"; then
@@ -257,7 +259,16 @@ AC_DEFUN([TCLTLS_SSL_OPENSSL], [
 		fi
 	fi
 	if test -z "$TCLTLS_SSL_LIBS"; then
-		TCLTLS_SSL_LIBS="-lssl -lcrypto"
+		if test "$TCLEXT_TLS_STATIC_SSL" == 'yes'; then
+			if test "${TEA_PLATFORM}" == 'unix'; then
+				LIBEXT='.a'
+			else
+				LIBEXT='.lib'
+			fi
+			TCLTLS_SSL_LIBS="$SSL_LIBS_PATH -lssl${LIBEXT} -lcrypto${LIBEXT}"
+		else
+			TCLTLS_SSL_LIBS="$SSL_LIBS_PATH -lssl -lcrypto"
+		fi
 	fi
 	
 	dnl Set for static libraries
@@ -270,19 +281,20 @@ AC_DEFUN([TCLTLS_SSL_OPENSSL], [
 				TCLTLS_SSL_LIBS="-Wl,-Bstatic $TCLTLS_SSL_LIBS -Wl,-Bdynamic";;
 			CYGWIN_*|MINGW32_*|MINGW64_*|MSYS_*)
 				TCLTLS_SSL_LIBS="-Wl,-Bstatic $TCLTLS_SSL_LIBS -Wl,-Bdynamic";;
-			Darwin-*)
-				TCLTLS_SSL_LIBS="$TCLTLS_SSL_LIBS";;
-			HP-UX-*)
+			Darwin*)
+				TCLTLS_SSL_LIBS="${openssllibdir}/libssl.a ${openssllibdir}/libcrypto.a ${openssllibdir}/../libz.a";;
+			HP-UX*)
 				TCLTLS_SSL_LIBS="-Wl,-a,archive $TCLTLS_SSL_LIBS -Wl,-a,shared_archive";;
-			IRIX-*)
+			IRIX*)
 				TCLTLS_SSL_LIBS="-Wl,-B, static $TCLTLS_SSL_LIBS -Wl,-B, dynamic";;
-			Solaris*)
+			Solaris*|illumos*)
 				TCLTLS_SSL_LIBS="-Bstatic $TCLTLS_SSL_LIBS -Bdynamic";;
 			Linux*|GNU*|NetBSD-Debian|DragonFly-*|FreeBSD-*)
 				TCLTLS_SSL_LIBS="-Wl,-Bstatic $TCLTLS_SSL_LIBS -Wl,-Bdynamic";;
+			*)
+				TCLTLS_SSL_LIBS="-Wl,-Bstatic $TCLTLS_SSL_LIBS -Wl,-Bdynamic";;
 		esac
 	fi
-	TCLTLS_SSL_LIBS="$SSL_LIBS_PATH $TCLTLS_SSL_LIBS"
 	AC_MSG_CHECKING([for SSL libs])
 	AC_MSG_RESULT([$TCLTLS_SSL_LIBS])
 
