@@ -1378,25 +1378,12 @@ ImportObjCmd(
     char *servername		= NULL;	/* hostname for Server Name Indication */
     char *session_id		= NULL;
     Tcl_Obj *alpn		= NULL;
-    int ssl2 = 0, ssl3 = 0;
-    int tls1 = 0, tls1_1 = 0, tls1_2 = 1, tls1_3 = 1;
+    int ssl2 = 0, ssl3 = 0; /* Default to disabled */
+    int tls1 = 0, tls1_1 = 0, tls1_2 = 0, tls1_3 = 0; /* Default to autp select */
     int proto = 0, level = -1;
     int verify = 0, require = -1, request = -1, post_handshake = 0;
 
     dprintf("Called");
-
-#if defined(NO_TLS1) || defined(OPENSSL_NO_TLS1)
-    tls1 = 0;
-#endif
-#if defined(NO_TLS1_1) || defined(OPENSSL_NO_TLS1_1)
-    tls1_1 = 0;
-#endif
-#if defined(NO_TLS1_2) || defined(OPENSSL_NO_TLS1_2)
-    tls1_2 = 0;
-#endif
-#if defined(NO_TLS1_3) || defined(OPENSSL_NO_TLS1_3)
-    tls1_3 = 0;
-#endif
 
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "channel ?options?");
@@ -1470,6 +1457,7 @@ ImportObjCmd(
     if (request && post_handshake) verify |= SSL_VERIFY_POST_HANDSHAKE;
     if (!verify)		verify = SSL_VERIFY_NONE;
 
+    /* Enable specific SSL/TLS versions */
     proto |= (ssl2 ? TLS_PROTO_SSL2 : 0);
     proto |= (ssl3 ? TLS_PROTO_SSL3 : 0);
     proto |= (tls1 ? TLS_PROTO_TLS1 : 0);
