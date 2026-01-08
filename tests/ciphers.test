@@ -84,19 +84,19 @@ test Ciphers_With_Descriptions-3.2 {SSL3} -constraints {ssl3} -body {
 	lcompare [exec_get "\r\n" ciphers -ssl3 -v] [split [string trim [::tls::ciphers ssl3 1]] \n]
     } -result {missing {} unexpected {}}
 
-test Ciphers_With_Descriptions-3.3 {TLS1.0} -constraints {tls1 old_api} -body {
+test Ciphers_With_Descriptions-3.3 {TLS1.0} -constraints {tls1 OpenSSL1.1.1} -body {
 	lcompare [exec_get "\r\n" ciphers -tls1 -v] [split [string trim [::tls::ciphers tls1 1]] \n]
     } -result {missing {} unexpected {}}
 
-test Ciphers_With_Descriptions-3.4 {TLS1.1} -constraints {tls1.1 old_api} -body {
+test Ciphers_With_Descriptions-3.4 {TLS1.1} -constraints {tls1.1 OpenSSL1.1.1} -body {
 	lcompare [exec_get "\r\n" ciphers -tls1_1 -v] [split [string trim [::tls::ciphers tls1.1 1]] \n]
     } -result {missing {} unexpected {}}
 
-test Ciphers_With_Descriptions-3.5 {TLS1.2} -constraints {tls1.2 old_api} -body {
+test Ciphers_With_Descriptions-3.5 {TLS1.2} -constraints {tls1.2 OpenSSL1.1.1} -body {
 	lcompare [exec_get "\r\n" ciphers -tls1_2 -v] [split [string trim [::tls::ciphers tls1.2 1]] \n]
     } -result {missing {} unexpected {}}
 
-test Ciphers_With_Descriptions-3.6 {TLS1.3} -constraints {tls1.3 old_api} -body {
+test Ciphers_With_Descriptions-3.6 {TLS1.3} -constraints {tls1.3 OpenSSL1.1.1} -body {
 	lcompare [exec_get "\r\n" ciphers -tls1_3 -v] [split [string trim [::tls::ciphers tls1.3 1]] \n]
     } -result {missing {} unexpected {}}
 
@@ -111,19 +111,19 @@ test Ciphers_Protocol_Specific-4.2 {SSL3} -constraints {ssl3} -body {
 	lcompare [exec_get ":" ciphers -ssl3 -s] [::tls::ciphers ssl3 0 1]
     } -result {missing {} unexpected {}}
 
-test Ciphers_Protocol_Specific-4.3 {TLS1.0} -constraints {tls1 old_api} -body {
+test Ciphers_Protocol_Specific-4.3 {TLS1.0} -constraints {tls1 OpenSSL1.1.1} -body {
 	lcompare [exec_get ":" ciphers -tls1 -s] [::tls::ciphers tls1 0 1]
     } -result {missing {} unexpected {}}
 
-test Ciphers_Protocol_Specific-4.4 {TLS1.1} -constraints {tls1.1 old_api} -body {
+test Ciphers_Protocol_Specific-4.4 {TLS1.1} -constraints {tls1.1 OpenSSL1.1.1} -body {
 	lcompare [exec_get ":" ciphers -tls1_1 -s] [::tls::ciphers tls1.1 0 1]
     } -result {missing {} unexpected {}}
 
-test Ciphers_Protocol_Specific-4.5 {TLS1.2} -constraints {tls1.2 old_api} -body {
+test Ciphers_Protocol_Specific-4.5 {TLS1.2} -constraints {tls1.2 OpenSSL1.1.1} -body {
 	lcompare [exec_get ":" ciphers -tls1_2 -s] [::tls::ciphers tls1.2 0 1]
     } -result {missing {} unexpected {}}
 
-test Ciphers_Protocol_Specific-4.6 {TLS1.3} -constraints {tls1.3 old_api} -body {
+test Ciphers_Protocol_Specific-4.6 {TLS1.3} -constraints {tls1.3 OpenSSL1.1.1} -body {
 	lcompare [exec_get ":" ciphers -tls1_3 -s] [::tls::ciphers tls1.3 0 1]
     } -result {missing {} unexpected {}}
 

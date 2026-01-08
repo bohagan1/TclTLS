@@ -15,285 +15,337 @@ package require tls
 source [file join [file dirname [info script]] common.tcl]
 
 # Helper functions
-proc badssl {url} {set port 443;lassign [split $url ":"] url port;if {$port eq ""} {set port 443};set cmd [list tls::socket -autoservername 1 -require 1];if {[info exists ::env(SSL_CERT_FILE)]} {lappend cmd -cafile $::env(SSL_CERT_FILE)};lappend cmd $url $port;set ch [eval $cmd];if {[catch {tls::handshake $ch} err]} {close $ch;return -code error $err} else {close $ch}}
+set ::cafile [file join [pwd] certs cacert.pem]
+set ::env(SSL_CERT_FILE) $::cafile
+proc connect {url} {
+    set cafile certs/cacert.pem
+    set port 443
+    lassign [split $url ":"] url port
+    if {$port eq ""} {
+ set port 443
+    }
+    set ch [tls::socket -autoservername 1 -require 1 -cafile $cafile $url $port]
+    if {[catch {tls::handshake $ch} err]} {
+ close $ch
+ return -code error $err
+    } else {
+ close $ch
+    }
+}
 
 # BadSSL.com Tests
 
 
 test BadSSL-1.1 {1000 sans} -body {
-	badssl 1000-sans.badssl.com
+	connect 1000-sans.connect.com
+    }
+
+test BadSSL-1.2 {1000 sans} -body {
+	connect 1000-sans.badssl.com
     } -result {handshake failed: certificate verify failed due to "certificate has expired"} -returnCodes {1}
 
-test BadSSL-1.2 {10000 sans} -body {
-	badssl 10000-sans.badssl.com
+test BadSSL-1.3 {10000 sans} -body {
+	connect 10000-sans.badssl.com
     } -result {handshake failed: excessive message size} -returnCodes {1}
 
-test BadSSL-1.3 {3des} -body {
-	badssl 3des.badssl.com
+test BadSSL-1.4 {3des} -body {
+	connect 3des.badssl.com
     } -match {glob} -result {handshake failed: * alert handshake failure} -returnCodes {1}
 
-test BadSSL-1.4 {captive portal} -constraints {old_api} -body {
-	badssl captive-portal.badssl.com
+test BadSSL-1.5 {captive portal} -constraints {OpenSSL1.1.1} -body {
+	connect captive-portal.badssl.com
     } -result {handshake failed: certificate verify failed due to "Hostname mismatch"} -returnCodes {1}
 
-test BadSSL-1.5 {captive portal} -constraints {new_api} -body {
-	badssl captive-portal.badssl.com
+test BadSSL-1.6 {captive portal} -constraints {!OpenSSL1.1.1} -body {
+	connect captive-portal.badssl.com
     } -result {handshake failed: certificate verify failed due to "hostname mismatch"} -returnCodes {1}
 
-test BadSSL-1.6 {cbc} -body {
-	badssl cbc.badssl.com
+test BadSSL-1.7 {cbc} -body {
+	connect cbc.badssl.com
     }
 
-test BadSSL-1.7 {client cert missing} -body {
-	badssl client-cert-missing.badssl.com
+test BadSSL-1.8 {client cert missing} -body {
+	connect client-cert-missing.badssl.com
     }
 
-test BadSSL-1.8 {client} -body {
-	badssl client.badssl.com
+test BadSSL-1.9 {client} -body {
+	connect client.badssl.com
     }
 
-test BadSSL-1.9 {dh composite} -constraints {old_api} -body {
-	badssl dh-composite.badssl.com
+test BadSSL-1.10 {dh composite} -constraints {OpenSSL1.1.1} -body {
+	connect dh-composite.badssl.com
     }
 
-test BadSSL-1.10 {dh composite} -constraints {new_api} -body {
-	badssl dh-composite.badssl.com
+test BadSSL-1.11 {dh composite} -constraints {win OpenSSL3.0} -body {
+	connect dh-composite.badssl.com
+    }
+
+test BadSSL-1.12 {dh composite} -constraints {unix OpenSSL3.0} -body {
+	connect dh-composite.badssl.com
     } -result {handshake failed: dh key too small} -returnCodes {1}
 
-test BadSSL-1.11 {dh small subgroup} -body {
-	badssl dh-small-subgroup.badssl.com
-    }
-
-test BadSSL-1.12 {dh480} -constraints {old_api} -body {
-	badssl dh480.badssl.com
+test BadSSL-1.13 {dh composite} -constraints {OpenSSL3.2} -body {
+	connect dh-composite.badssl.com
     } -result {handshake failed: dh key too small} -returnCodes {1}
 
-test BadSSL-1.13 {dh480} -constraints {new_api} -body {
-	badssl dh480.badssl.com
+test BadSSL-1.14 {dh small subgroup} -body {
+	connect dh-small-subgroup.badssl.com
+    }
+
+test BadSSL-1.15 {dh480} -constraints {OpenSSL1.1.1} -body {
+	connect dh480.badssl.com
+    } -result {handshake failed: dh key too small} -returnCodes {1}
+
+test BadSSL-1.16 {dh480} -constraints {!OpenSSL1.1.1} -body {
+	connect dh480.badssl.com
     } -result {handshake failed: modulus too small} -returnCodes {1}
 
-test BadSSL-1.14 {dh512} -constraints {old_api} -body {
-	badssl dh512.badssl.com
+test BadSSL-1.17 {dh512} -constraints {OpenSSL1.1.1} -body {
+	connect dh512.badssl.com
     } -result {handshake failed: dh key too small} -returnCodes {1}
 
-test BadSSL-1.15 {dh512} -constraints {mac} -body {
-	badssl dh512.badssl.com
+test BadSSL-1.18 {dh512} -constraints {OpenSSL3.0} -body {
+	connect dh512.badssl.com
+    } -result {handshake failed: dh key too small} -returnCodes {1}
+
+test BadSSL-1.19 {dh512} -constraints {OpenSSL3.2} -body {
+	connect dh512.badssl.com
     } -result {handshake failed: unknown security bits} -returnCodes {1}
 
-test BadSSL-1.16 {dh1024} -constraints {old_api} -body {
-	badssl dh1024.badssl.com
+test BadSSL-1.20 {dh1024} -constraints {OpenSSL1.1.1} -body {
+	connect dh1024.badssl.com
     }
 
-test BadSSL-1.17 {dh1024} -constraints {new_api} -body {
-	badssl dh1024.badssl.com
+test BadSSL-1.21 {dh1024} -constraints {win OpenSSL3.0} -body {
+	connect dh1024.badssl.com
+    }
+
+test BadSSL-1.22 {dh1024} -constraints {unix OpenSSL3.0} -body {
+	connect dh1024.badssl.com
     } -result {handshake failed: dh key too small} -returnCodes {1}
 
-test BadSSL-1.18 {dh2048} -body {
-	badssl dh2048.badssl.com
+test BadSSL-1.23 {dh1024} -constraints {OpenSSL3.2} -body {
+	connect dh1024.badssl.com
+    } -result {handshake failed: dh key too small} -returnCodes {1}
+
+test BadSSL-1.24 {dh2048} -body {
+	connect dh2048.badssl.com
     }
 
-test BadSSL-1.19 {dsdtestprovider} -body {
-	badssl dsdtestprovider.badssl.com
+test BadSSL-1.25 {dsdtestprovider} -body {
+	connect dsdtestprovider.badssl.com
     } -result {handshake failed: certificate verify failed due to "unable to get local issuer certificate"} -returnCodes {1}
 
-test BadSSL-1.20 {ecc256} -body {
-	badssl ecc256.badssl.com
+test BadSSL-1.26 {ecc256} -body {
+	connect ecc256.badssl.com
     }
 
-test BadSSL-1.21 {ecc384} -body {
-	badssl ecc384.badssl.com
+test BadSSL-1.27 {ecc384} -body {
+	connect ecc384.badssl.com
     }
 
-test BadSSL-1.22 {edellroot} -body {
-	badssl edellroot.badssl.com
+test BadSSL-1.28 {edellroot} -body {
+	connect edellroot.badssl.com
     } -result {handshake failed: certificate verify failed due to "unable to get local issuer certificate"} -returnCodes {1}
 
-test BadSSL-1.23 {expired} -body {
-	badssl expired.badssl.com
+test BadSSL-1.29 {expired} -body {
+	connect expired.badssl.com
     } -result {handshake failed: certificate verify failed due to "certificate has expired"} -returnCodes {1}
 
-test BadSSL-1.24 {extended validation} -body {
-	badssl extended-validation.badssl.com
+test BadSSL-1.30 {extended validation} -body {
+	connect extended-validation.badssl.com
     } -result {handshake failed: certificate verify failed due to "certificate has expired"} -returnCodes {1}
 
-test BadSSL-1.25 {hsts} -body {
-	badssl hsts.badssl.com
+test BadSSL-1.31 {hsts} -body {
+	connect hsts.badssl.com
     }
 
-test BadSSL-1.26 {https everywhere} -body {
-	badssl https-everywhere.badssl.com
+test BadSSL-1.32 {https everywhere} -body {
+	connect https-everywhere.badssl.com
     }
 
-test BadSSL-1.27 {incomplete chain} -body {
-	badssl incomplete-chain.badssl.com
+test BadSSL-1.33 {incomplete chain} -body {
+	connect incomplete-chain.badssl.com
     } -result {handshake failed: certificate verify failed due to "unable to get local issuer certificate"} -returnCodes {1}
 
-test BadSSL-1.28 {invalid expected sct} -body {
-	badssl invalid-expected-sct.badssl.com
-    } -result {handshake failed: certificate verify failed due to "certificate has expired"} -returnCodes {1}
-
-test BadSSL-1.29 {long extended subdomain name containing many letters and dashes} -body {
-	badssl long-extended-subdomain-name-containing-many-letters-and-dashes.badssl.com
-    }
-
-test BadSSL-1.30 {longextendedsubdomainnamewithoutdashesinordertotestwordwrapping} -body {
-	badssl longextendedsubdomainnamewithoutdashesinordertotestwordwrapping.badssl.com
-    }
-
-test BadSSL-1.31 {mitm software} -body {
-	badssl mitm-software.badssl.com
+test BadSSL-1.34 {invalid expected sct} -body {
+	connect invalid-expected-sct.badssl.com
     } -result {handshake failed: certificate verify failed due to "unable to get local issuer certificate"} -returnCodes {1}
 
-test BadSSL-1.32 {no common name} -body {
-	badssl no-common-name.badssl.com
+test BadSSL-1.35 {long extended subdomain name containing many letters and dashes} -body {
+	connect long-extended-subdomain-name-containing-many-letters-and-dashes.badssl.com
+    }
+
+test BadSSL-1.36 {longextendedsubdomainnamewithoutdashesinordertotestwordwrapping} -body {
+	connect longextendedsubdomainnamewithoutdashesinordertotestwordwrapping.badssl.com
+    }
+
+test BadSSL-1.37 {mitm software} -body {
+	connect mitm-software.badssl.com
+    } -result {handshake failed: certificate verify failed due to "unable to get local issuer certificate"} -returnCodes {1}
+
+test BadSSL-1.38 {no common name} -body {
+	connect no-common-name.badssl.com
     } -result {handshake failed: certificate verify failed due to "certificate has expired"} -returnCodes {1}
 
-test BadSSL-1.33 {no sct} -body {
-	badssl no-sct.badssl.com
+test BadSSL-1.39 {no sct} -body {
+	connect no-sct.badssl.com
     } -result {handshake failed: certificate verify failed due to "certificate has expired"} -returnCodes {1}
 
-test BadSSL-1.34 {no subject} -body {
-	badssl no-subject.badssl.com
+test BadSSL-1.40 {no subject} -body {
+	connect no-subject.badssl.com
     } -result {handshake failed: certificate verify failed due to "certificate has expired"} -returnCodes {1}
 
-test BadSSL-1.35 {null} -body {
-	badssl null.badssl.com
+test BadSSL-1.41 {null} -body {
+	connect null.badssl.com
     } -match {glob} -result {handshake failed: * alert handshake failure} -returnCodes {1}
 
-test BadSSL-1.36 {pinning test} -body {
-	badssl pinning-test.badssl.com
+test BadSSL-1.42 {pinning test} -body {
+	connect pinning-test.badssl.com
     }
 
-test BadSSL-1.37 {preact cli} -body {
-	badssl preact-cli.badssl.com
+test BadSSL-1.43 {preact cli} -body {
+	connect preact-cli.badssl.com
     } -result {handshake failed: certificate verify failed due to "unable to get local issuer certificate"} -returnCodes {1}
 
-test BadSSL-1.38 {preloaded hsts} -body {
-	badssl preloaded-hsts.badssl.com
+test BadSSL-1.44 {preloaded hsts} -body {
+	connect preloaded-hsts.badssl.com
     }
 
-test BadSSL-1.39 {rc4 md5} -body {
-	badssl rc4-md5.badssl.com
+test BadSSL-1.45 {rc4 md5} -body {
+	connect rc4-md5.badssl.com
     } -match {glob} -result {handshake failed: * alert handshake failure} -returnCodes {1}
 
-test BadSSL-1.40 {rc4} -body {
-	badssl rc4.badssl.com
+test BadSSL-1.46 {rc4} -body {
+	connect rc4.badssl.com
     } -match {glob} -result {handshake failed: * alert handshake failure} -returnCodes {1}
 
-test BadSSL-1.41 {revoked} -body {
-	badssl revoked.badssl.com
+test BadSSL-1.47 {revoked} -body {
+	connect revoked.badssl.com
     }
 
-test BadSSL-1.42 {rsa2048} -body {
-	badssl rsa2048.badssl.com
+test BadSSL-1.48 {rsa2048} -body {
+	connect rsa2048.badssl.com
     }
 
-test BadSSL-1.43 {rsa4096} -body {
-	badssl rsa4096.badssl.com
+test BadSSL-1.49 {rsa4096} -body {
+	connect rsa4096.badssl.com
     }
 
-test BadSSL-1.44 {rsa8192} -body {
-	badssl rsa8192.badssl.com
+test BadSSL-1.50 {rsa8192} -body {
+	connect rsa8192.badssl.com
     } -result {handshake failed: certificate verify failed due to "certificate has expired"} -returnCodes {1}
 
-test BadSSL-1.45 {self signed} -constraints {old_api} -body {
-	badssl self-signed.badssl.com
+test BadSSL-1.51 {self signed} -constraints {OpenSSL1.1.1} -body {
+	connect self-signed.badssl.com
     } -result {handshake failed: certificate verify failed due to "self signed certificate"} -returnCodes {1}
 
-test BadSSL-1.46 {self signed} -constraints {new_api} -body {
-	badssl self-signed.badssl.com
+test BadSSL-1.52 {self signed} -constraints {!OpenSSL1.1.1} -body {
+	connect self-signed.badssl.com
     } -result {handshake failed: certificate verify failed due to "self-signed certificate"} -returnCodes {1}
 
-test BadSSL-1.47 {sha1 2016} -body {
-	badssl sha1-2016.badssl.com
-    } -result {handshake failed: certificate verify failed due to "CA signature digest algorithm too weak"} -returnCodes {1}
-
-test BadSSL-1.48 {sha1 2017} -constraints {old_api} -body {
-	badssl sha1-2017.badssl.com
-    } -result {handshake failed: certificate verify failed due to "certificate has expired"} -returnCodes {1}
-
-test BadSSL-1.49 {sha1 2017} -constraints {new_api} -body {
-	badssl sha1-2017.badssl.com
-    } -result {handshake failed: certificate verify failed due to "CA signature digest algorithm too weak"} -returnCodes {1}
-
-test BadSSL-1.50 {sha1 intermediate} -body {
-	badssl sha1-intermediate.badssl.com
-    } -result {handshake failed: certificate verify failed due to "CA signature digest algorithm too weak"} -returnCodes {1}
-
-test BadSSL-1.51 {sha256} -body {
-	badssl sha256.badssl.com
-    }
-
-test BadSSL-1.52 {sha384} -body {
-	badssl sha384.badssl.com
-    } -result {handshake failed: certificate verify failed due to "certificate has expired"} -returnCodes {1}
-
-test BadSSL-1.53 {sha512} -body {
-	badssl sha512.badssl.com
-    } -result {handshake failed: certificate verify failed due to "certificate has expired"} -returnCodes {1}
-
-test BadSSL-1.54 {static rsa} -body {
-	badssl static-rsa.badssl.com
-    }
-
-test BadSSL-1.55 {subdomain.preloaded hsts} -constraints {old_api} -body {
-	badssl subdomain.preloaded-hsts.badssl.com
-    } -result {handshake failed: certificate verify failed due to "Hostname mismatch"}
-
-test BadSSL-1.56 {subdomain.preloaded hsts} -constraints {new_api} -body {
-	badssl subdomain.preloaded-hsts.badssl.com
-    } -result {handshake failed: certificate verify failed due to "hostname mismatch"} -returnCodes {1}
-
-test BadSSL-1.57 {superfish} -body {
-	badssl superfish.badssl.com
+test BadSSL-1.53 {sha1 2016} -body {
+	connect sha1-2016.badssl.com
     } -result {handshake failed: certificate verify failed due to "unable to get local issuer certificate"} -returnCodes {1}
 
-test BadSSL-1.58 {tls v1 0:1010} -constraints {tls1 old_api} -body {
-	badssl tls-v1-0.badssl.com:1010
-    }
+test BadSSL-1.54 {sha1 2017} -constraints {win OpenSSL1.1.1} -body {
+	connect sha1-2017.badssl.com
+    } -result {handshake failed: certificate verify failed due to "certificate has expired"} -returnCodes {1}
 
-test BadSSL-1.59 {tls v1 0:1010} -constraints {tls1 new_api} -body {
-	badssl tls-v1-0.badssl.com:1010
-    } -result {handshake failed: unsupported protocol} -returnCodes {1}
+test BadSSL-1.55 {sha1 2017} -constraints {unix !mac OpenSSL3.2} -body {
+	connect sha1-2017.badssl.com
+    } -result {handshake failed: certificate verify failed due to "certificate has expired"} -returnCodes {1}
 
-test BadSSL-1.60 {tls v1 1:1011} -constraints {tls1.1 old_api} -body {
-	badssl tls-v1-1.badssl.com:1011
-    }
+test BadSSL-1.56 {sha1 2017} -constraints {unix OpenSSL3.0} -body {
+	connect sha1-2017.badssl.com
+    } -result {handshake failed: certificate verify failed due to "CA signature digest algorithm too weak"} -returnCodes {1}
 
-test BadSSL-1.61 {tls v1 1:1011} -constraints {tls1.1 new_api} -body {
-	badssl tls-v1-1.badssl.com:1011
-    } -result {handshake failed: unsupported protocol} -returnCodes {1}
+test BadSSL-1.57 {sha1 2017} -constraints {mac OpenSSL3.2} -body {
+	connect sha1-2017.badssl.com
+    } -result {handshake failed: certificate verify failed due to "CA signature digest algorithm too weak"} -returnCodes {1}
 
-test BadSSL-1.62 {tls v1 2:1012} -constraints {tls1.2} -body {
-	badssl tls-v1-2.badssl.com:1012
-    }
+test BadSSL-1.58 {sha1 2017} -constraints {win !OpenSSL1.1.1} -body {
+	connect sha1-2017.badssl.com
+    } -result {handshake failed: certificate verify failed due to "CA signature digest algorithm too weak"} -returnCodes {1}
 
-test BadSSL-1.63 {untrusted root} -constraints {old_api} -body {
-	badssl untrusted-root.badssl.com
-    } -result {handshake failed: certificate verify failed due to "self signed certificate in certificate chain"} -returnCodes {1}
-
-test BadSSL-1.64 {untrusted root} -constraints {new_api} -body {
-	badssl untrusted-root.badssl.com
-    } -result {handshake failed: certificate verify failed due to "self-signed certificate in certificate chain"} -returnCodes {1}
-
-test BadSSL-1.65 {upgrade} -body {
-	badssl upgrade.badssl.com
-    }
-
-test BadSSL-1.66 {webpack dev server} -body {
-	badssl webpack-dev-server.badssl.com
+test BadSSL-1.59 {sha1 intermediate} -body {
+	connect sha1-intermediate.badssl.com
     } -result {handshake failed: certificate verify failed due to "unable to get local issuer certificate"} -returnCodes {1}
 
-test BadSSL-1.67 {wrong.host} -constraints {old_api} -body {
-	badssl wrong.host.badssl.com
+test BadSSL-1.60 {sha256} -body {
+	connect sha256.badssl.com
+    }
+
+test BadSSL-1.61 {sha384} -body {
+	connect sha384.badssl.com
+    } -result {handshake failed: certificate verify failed due to "certificate has expired"} -returnCodes {1}
+
+test BadSSL-1.62 {sha512} -body {
+	connect sha512.badssl.com
+    } -result {handshake failed: certificate verify failed due to "certificate has expired"} -returnCodes {1}
+
+test BadSSL-1.63 {static rsa} -body {
+	connect static-rsa.badssl.com
+    }
+
+test BadSSL-1.64 {subdomain.preloaded hsts} -constraints {OpenSSL1.1.1} -body {
+	connect subdomain.preloaded-hsts.badssl.com
     } -result {handshake failed: certificate verify failed due to "Hostname mismatch"} -returnCodes {1}
 
-test BadSSL-1.68 {wrong.host} -constraints {new_api} -body {
-	badssl wrong.host.badssl.com
+test BadSSL-1.65 {subdomain.preloaded hsts} -constraints {OpenSSL3.0} -body {
+	connect subdomain.preloaded-hsts.badssl.com
     } -result {handshake failed: certificate verify failed due to "hostname mismatch"} -returnCodes {1}
 
-test BadSSL-1.69 {mozilla modern} -body {
-	badssl mozilla-modern.badssl.com
+test BadSSL-1.66 {superfish} -body {
+	connect superfish.badssl.com
+    } -result {handshake failed: certificate verify failed due to "unable to get local issuer certificate"} -returnCodes {1}
+
+test BadSSL-1.67 {tls v1 0:1010} -body {
+	connect tls-v1-0.badssl.com:1010
+    } -result {handshake failed: unsupported protocol} -returnCodes {1}
+
+test BadSSL-1.68 {tls v1 1:1011} -body {
+	connect tls-v1-1.badssl.com:1011
+    } -result {handshake failed: unsupported protocol} -returnCodes {1}
+
+test BadSSL-1.69 {tls v1 2:1012} -constraints {tls1.2} -body {
+	connect tls-v1-2.badssl.com:1012
+    }
+
+test BadSSL-1.70 {untrusted root} -constraints {OpenSSL1.1.1} -body {
+	connect untrusted-root.badssl.com
+    } -result {handshake failed: certificate verify failed due to "self signed certificate in certificate chain"} -returnCodes {1}
+
+test BadSSL-1.71 {untrusted root} -constraints {!OpenSSL1.1.1} -body {
+	connect untrusted-root.badssl.com
+    } -result {handshake failed: certificate verify failed due to "self-signed certificate in certificate chain"} -returnCodes {1}
+
+test BadSSL-1.72 {upgrade} -body {
+	connect upgrade.badssl.com
+    }
+
+test BadSSL-1.73 {webpack dev server} -body {
+	connect webpack-dev-server.badssl.com
+    } -result {handshake failed: certificate verify failed due to "unable to get local issuer certificate"} -returnCodes {1}
+
+test BadSSL-1.74 {wrong.host} -constraints {OpenSSL1.1.1} -body {
+	connect wrong.host.badssl.com
+    } -result {handshake failed: certificate verify failed due to "Hostname mismatch"} -returnCodes {1}
+
+test BadSSL-1.75 {wrong.host} -constraints {!OpenSSL1.1.1} -body {
+	connect wrong.host.badssl.com
+    } -result {handshake failed: certificate verify failed due to "hostname mismatch"} -returnCodes {1}
+
+test BadSSL-1.76 {mozilla modern} -body {
+	connect mozilla-modern.badssl.com
+    }
+
+test BadSSL-1.77 {mozilla old} -body {
+	connect mozilla-old.badssl.com
+    }
+
+test BadSSL-1.78 {mozilla intermediate} -body {
+	connect mozilla-intermediate.badssl.com
     }
 
 # Cleanup
