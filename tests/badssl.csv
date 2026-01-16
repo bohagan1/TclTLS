@@ -9,18 +9,17 @@ command,# Helper functions,,,,,,,,,
 command,set ::cafile [file join [pwd] certs cacert.pem],,,,,,,,,
 command,set ::env(SSL_CERT_FILE) $::cafile,,,,,,,,,
 command,"proc connect {url} {
-    set cafile certs/cacert.pem
     set port 443
     lassign [split $url "":""] url port
     if {$port eq """"} {
- set port 443
+	set port 443
     }
-    set ch [tls::socket -autoservername 1 -require 1 -cafile $cafile $url $port]
+    set ch [tls::socket -autoservername 1 -require 1 -cafile $::cafile $url $port]
     if {[catch {tls::handshake $ch} err]} {
- close $ch
- return -code error $err
+	close $ch
+	return -code error $err
     } else {
- close $ch
+	close $ch
     }
 }",,,,,,,,,
 ,,,,,,,,,,

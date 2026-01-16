@@ -15,26 +15,22 @@ package require tls
 source [file join [file dirname [info script]] common.tcl]
 
 # Helper functions
+set ::cafile [file join [pwd] certs cacert.pem]
+set ::env(SSL_CERT_FILE) $::cafile
 proc connect {url} {
     set port 443
     lassign [split $url ":"] url port
     if {$port eq ""} {
- set port 443
+	set port 443
     }
-    set cmd [list tls::socket -autoservername 1 -require 1]
-    if {[info exists ::env(SSL_CERT_FILE)]} {
- lappend cmd -cafile $::env(SSL_CERT_FILE)
-    }
-    lappend cmd $url $port
-    set ch [eval $cmd]
+    set ch [tls::socket -autoservername 1 -require 1 -cafile $::cafile $url $port]
     if {[catch {tls::handshake $ch} err]} {
- close $ch
- return -code error $err
+	close $ch
+	return -code error $err
     } else {
- close $ch
+	close $ch
     }
 }
-
 
 # clienttest.ssllabs.com Tests
 

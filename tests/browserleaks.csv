@@ -8,8 +8,8 @@ command,source [file join [file dirname [info script]] common.tcl],,,,,,,,,
 ,,,,,,,,,,
 command,# Helper functions,,,,,,,,,
 command,set ::cafile [file join [pwd] certs cacert.pem],,,,,,,,,
-command,::http::register https 443 [list ::tls::socket -cafile $::cafile],,,,,,,,,
 command,set ::env(SSL_CERT_FILE) $::cafile,,,,,,,,,
+command,::http::register https 443 [list ::tls::socket -cafile $::cafile],,,,,,,,,
 command,"proc get_url {url} {
     set token [::http::geturl $url]
     set body [::http::data $token]

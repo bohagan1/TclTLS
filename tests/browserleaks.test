@@ -17,8 +17,8 @@ source [file join [file dirname [info script]] common.tcl]
 
 # Helper functions
 set ::cafile [file join [pwd] certs cacert.pem]
-::http::register https 443 [list ::tls::socket -cafile $::cafile]
 set ::env(SSL_CERT_FILE) $::cafile
+::http::register https 443 [list ::tls::socket -cafile $::cafile]
 proc get_url {url} {
     set token [::http::geturl $url]
     set body [::http::data $token]
