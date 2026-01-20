@@ -13,10 +13,11 @@ package require tls
 package require http
 
 # Constraints
-source [file join [file dirname [info script]] common.tcl]
+set dir [file join [pwd] [file dirname [info script]]]
+source [file join $dir common.tcl]
 
 # Helper functions
-set ::cafile [file join [pwd] certs cacert.pem]
+set ::cafile [file join $dir certs cacert.pem]
 set ::env(SSL_CERT_FILE) $::cafile
 ::http::register https 443 [list ::tls::socket -cafile $::cafile]
 proc get_url {url} {

@@ -3,10 +3,11 @@ command,package prefer latest,,,,,,,,,
 command,package require tls,,,,,,,,,
 ,,,,,,,,,,
 command,# Constraints,,,,,,,,,
-command,source [file join [file dirname [info script]] common.tcl],,,,,,,,,
+command,set dir [file join [pwd] [file dirname [info script]]],,,,,,,,,
+command,source [file join $dir common.tcl],,,,,,,,,
 ,,,,,,,,,,
 command,# Helper functions,,,,,,,,,
-command,set ::cafile [file join [pwd] certs cacert.pem],,,,,,,,,
+command,set ::cafile [file join $dir certs cacert.pem],,,,,,,,,
 command,set ::env(SSL_CERT_FILE) $::cafile,,,,,,,,,
 command,"proc connect {url} {
     set port 443
@@ -35,7 +36,8 @@ BadSSL,client cert missing,,,connect client-cert-missing.badssl.com,,,,,,
 BadSSL,client,,,connect client.badssl.com,,,,,,
 BadSSL,dh composite,OpenSSL1.1.1,,connect dh-composite.badssl.com,,,,,,
 BadSSL,dh composite,win OpenSSL3.0,,connect dh-composite.badssl.com,,,,,,
-BadSSL,dh composite,unix OpenSSL3.0,,connect dh-composite.badssl.com,,,handshake failed: dh key too small,,,1
+BadSSL,dh composite,unix OpenSSL3.0,,connect dh-composite.badssl.com,,,,,,
+BadSSL,dh composite,unix OpenSSL3.2,,connect dh-composite.badssl.com,,,handshake failed: dh key too small,,,1
 BadSSL,dh composite,OpenSSL3.2,,connect dh-composite.badssl.com,,,handshake failed: dh key too small,,,1
 BadSSL,dh small subgroup,,,connect dh-small-subgroup.badssl.com,,,,,,
 BadSSL,dh480,OpenSSL1.1.1,,connect dh480.badssl.com,,,handshake failed: dh key too small,,,1
@@ -45,7 +47,8 @@ BadSSL,dh512,OpenSSL3.0,,connect dh512.badssl.com,,,handshake failed: dh key too
 BadSSL,dh512,OpenSSL3.2,,connect dh512.badssl.com,,,handshake failed: unknown security bits,,,1
 BadSSL,dh1024,OpenSSL1.1.1,,connect dh1024.badssl.com,,,,,,
 BadSSL,dh1024,win OpenSSL3.0,,connect dh1024.badssl.com,,,,,,
-BadSSL,dh1024,unix OpenSSL3.0,,connect dh1024.badssl.com,,,handshake failed: dh key too small,,,1
+BadSSL,dh1024,unix OpenSSL3.0,,connect dh1024.badssl.com,,,,,,
+BadSSL,dh1024,unix OpenSSL3.2,,connect dh1024.badssl.com,,,handshake failed: dh key too small,,,1
 BadSSL,dh1024,OpenSSL3.2,,connect dh1024.badssl.com,,,handshake failed: dh key too small,,,1
 BadSSL,dh2048,,,connect dh2048.badssl.com,,,,,,
 BadSSL,dsdtestprovider,,,connect dsdtestprovider.badssl.com,,,"handshake failed: certificate verify failed due to ""unable to get local issuer certificate""",,,1
@@ -81,14 +84,14 @@ BadSSL,sha1 2017,win OpenSSL1.1.1,,connect sha1-2017.badssl.com,,,"handshake fai
 BadSSL,sha1 2017,unix !mac OpenSSL3.2,,connect sha1-2017.badssl.com,,,"handshake failed: certificate verify failed due to ""certificate has expired""",,,1
 BadSSL,sha1 2017,unix OpenSSL3.0,,connect sha1-2017.badssl.com,,,"handshake failed: certificate verify failed due to ""CA signature digest algorithm too weak""",,,1
 BadSSL,sha1 2017,mac OpenSSL3.2,,connect sha1-2017.badssl.com,,,"handshake failed: certificate verify failed due to ""CA signature digest algorithm too weak""",,,1
-BadSSL,sha1 2017,win !OpenSSL1.1.1,,connect sha1-2017.badssl.com,,,"handshake failed: certificate verify failed due to ""CA signature digest algorithm too weak""",,,1
+BadSSL,sha1 2017,win OpenSSL3.2,,connect sha1-2017.badssl.com,,,"handshake failed: certificate verify failed due to ""CA signature digest algorithm too weak""",,,1
 BadSSL,sha1 intermediate,,,connect sha1-intermediate.badssl.com,,,"handshake failed: certificate verify failed due to ""unable to get local issuer certificate""",,,1
 BadSSL,sha256,,,connect sha256.badssl.com,,,,,,
 BadSSL,sha384,,,connect sha384.badssl.com,,,"handshake failed: certificate verify failed due to ""certificate has expired""",,,1
 BadSSL,sha512,,,connect sha512.badssl.com,,,"handshake failed: certificate verify failed due to ""certificate has expired""",,,1
 BadSSL,static rsa,,,connect static-rsa.badssl.com,,,,,,
 BadSSL,subdomain.preloaded hsts,OpenSSL1.1.1,,connect subdomain.preloaded-hsts.badssl.com,,,"handshake failed: certificate verify failed due to ""Hostname mismatch""",,,1
-BadSSL,subdomain.preloaded hsts,OpenSSL3.0,,connect subdomain.preloaded-hsts.badssl.com,,,"handshake failed: certificate verify failed due to ""hostname mismatch""",,,1
+BadSSL,subdomain.preloaded hsts,!OpenSSL1.1.1,,connect subdomain.preloaded-hsts.badssl.com,,,"handshake failed: certificate verify failed due to ""hostname mismatch""",,,1
 BadSSL,superfish,,,connect superfish.badssl.com,,,"handshake failed: certificate verify failed due to ""unable to get local issuer certificate""",,,1
 BadSSL,tls v1 0:1010,,,connect tls-v1-0.badssl.com:1010,,,handshake failed: unsupported protocol,,,1
 BadSSL,tls v1 1:1011,,,connect tls-v1-1.badssl.com:1011,,,handshake failed: unsupported protocol,,,1

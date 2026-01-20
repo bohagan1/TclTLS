@@ -295,7 +295,7 @@ test: binaries libraries
 	$(TCLSH) `@CYGPATH@ $(srcdir)/tests/all.tcl` $(TESTFLAGS) \
 	    -load "package ifneeded $(PACKAGE_NAME) $(PACKAGE_VERSION) \
 		[list load $(PKG_LIB_FILE) [string totitle $(PACKAGE_NAME)]]; \
-		source $(srcdir)/library/$(PACKAGE_NAME).tcl}"
+		source $(srcdir)/library/$(PACKAGE_NAME).tcl"
 
 shell: binaries libraries
 	@$(TCLSH) $(SCRIPT)

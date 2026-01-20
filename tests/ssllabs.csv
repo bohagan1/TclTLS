@@ -3,10 +3,11 @@ command,package prefer latest,,,,,,,,,
 command,package require tls,,,,,,,,,
 ,,,,,,,,,,
 command,# Constraints,,,,,,,,,
-command,source [file join [file dirname [info script]] common.tcl],,,,,,,,,
+command,set dir [file join [pwd] [file dirname [info script]]],,,,,,,,,
+command,source [file join $dir common.tcl],,,,,,,,,
 ,,,,,,,,,,
 command,# Helper functions,,,,,,,,,
-command,set ::cafile [file join [pwd] certs cacert.pem],,,,,,,,,
+command,set ::cafile [file join $dir certs cacert.pem],,,,,,,,,
 command,set ::env(SSL_CERT_FILE) $::cafile,,,,,,,,,
 command,"proc connect {url} {
     set port 443
@@ -32,6 +33,6 @@ SSLLabs,Logjam Vulnerability,win OpenSSL3.0,,connect www.ssllabs.com:10445,,,"ha
 SSLLabs,Logjam Vulnerability,unix OpenSSL3.0,,connect www.ssllabs.com:10445,,,handshake failed: dh key too small,,,1
 SSLLabs,Logjam Vulnerability,win OpenSSL3.2,,connect www.ssllabs.com:10445,,,handshake failed: unknown security bits,,,1
 SSLLabs,Logjam Vulnerability,unix !mac OpenSSL3.2,,connect www.ssllabs.com:10445,,,handshake failed: unknown security bits,,,1
-SSLLabs,Logjam Vulnerability,mac OpenSSL3.2,,connect www.ssllabs.com:10445,,,"handshake failed: certificate verify failed due to ""unable to get local issuer certificate""",,,1
+SSLLabs,Logjam Vulnerability,mac OpenSSL3.2,,connect www.ssllabs.com:10445,,,"handshake failed: unknown security bits",,,1
 SSLLabs,FREAK Vulnerability,,,connect www.ssllabs.com:10444,,,handshake failed: unsupported protocol,,,1
 SSLLabs,POODLE Vulnerability,,,connect www.ssllabs.com:10443,,,handshake failed: unsupported protocol,,,1

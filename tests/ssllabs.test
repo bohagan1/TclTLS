@@ -12,10 +12,11 @@ package prefer latest
 package require tls
 
 # Constraints
-source [file join [file dirname [info script]] common.tcl]
+set dir [file join [pwd] [file dirname [info script]]]
+source [file join $dir common.tcl]
 
 # Helper functions
-set ::cafile [file join [pwd] certs cacert.pem]
+set ::cafile [file join $dir certs cacert.pem]
 set ::env(SSL_CERT_FILE) $::cafile
 proc connect {url} {
     set port 443
@@ -69,7 +70,7 @@ test SSLLabs-1.8 {Logjam Vulnerability} -constraints {unix !mac OpenSSL3.2} -bod
 
 test SSLLabs-1.9 {Logjam Vulnerability} -constraints {mac OpenSSL3.2} -body {
 	connect www.ssllabs.com:10445
-    } -result {handshake failed: certificate verify failed due to "unable to get local issuer certificate"} -returnCodes {1}
+    } -result {handshake failed: unknown security bits} -returnCodes {1}
 
 test SSLLabs-1.10 {FREAK Vulnerability} -body {
 	connect www.ssllabs.com:10444

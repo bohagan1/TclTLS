@@ -252,33 +252,33 @@ if {$doTestsWithRemoteServer == 1} {
     }
 }
 
-test tlsIO-1.1 {arg parsing for socket command} {socket} {
+test tlsIO-1.1 {arg parsing for socket command} -constraints {socket} -body {
     list [catch {tls::socket -server} msg] $msg
-} {1 {wrong # args: should be "tls::socket -server command ?options? port"}}
+} -result {1 {wrong # args: should be "tls::socket -server command ?options? port"}}
 
-test tlsIO-1.2 {arg parsing for socket command} {socket} {
+test tlsIO-1.2 {arg parsing for socket command} -constraints {socket} -body {
     list [catch {tls::socket -server foo} msg] $msg
-} {1 {wrong # args: should be "tls::socket -server command ?options? port"}}
+} -result {1 {wrong # args: should be "tls::socket -server command ?options? port"}}
 
-test tlsIO-1.3 {arg parsing for socket command} {socket} {
+test tlsIO-1.3 {arg parsing for socket command} -constraints {socket} -body {
     list [catch {tls::socket -myaddr} msg] $msg
-} {1 {"-myaddr" option must be followed by value}}
+} -result {1 {"-myaddr" option must be followed by value}}
 
-test tlsIO-1.4 {arg parsing for socket command} {socket} {
+test tlsIO-1.4 {arg parsing for socket command} -constraints {socket} -body {
     list [catch {tls::socket -myaddr 127.0.0.1} msg] $msg
-} {1 {wrong # args: should be "tls::socket ?options? host port"}}
+} -result {1 {wrong # args: should be "tls::socket ?options? host port"}}
 
-test tlsIO-1.5 {arg parsing for socket command} {socket} {
+test tlsIO-1.5 {arg parsing for socket command} -constraints {socket} -body {
     list [catch {tls::socket -myport} msg] $msg
-} {1 {"-myport" option must be followed by value}}
+} -result {1 {"-myport" option must be followed by value}}
 
-test tlsIO-1.6 {arg parsing for socket command} {socket} {
+test tlsIO-1.6 {arg parsing for socket command} -constraints {socket} -body {
     list [catch {tls::socket -myport xxxx} msg] $msg
-} {1 {wrong # args: should be "tls::socket ?options? host port"}}
+} -result {1 {wrong # args: should be "tls::socket ?options? host port"}}
 
-test tlsIO-1.7 {arg parsing for socket command} {socket} {
+test tlsIO-1.7 {arg parsing for socket command} -constraints {socket} -body {
     list [catch {tls::socket -myport 2522} msg] $msg
-} {1 {wrong # args: should be "tls::socket ?options? host port"}}
+} -result {1 {wrong # args: should be "tls::socket ?options? host port"}}
 
 test tlsIO-1.8 {arg parsing for socket command} -constraints {socket} -body {
     list [catch {tls::socket -froboz} msg] $msg
@@ -288,19 +288,19 @@ test tlsIO-1.9 {arg parsing for socket command} -constraints {socket} -body {
     list [catch {tls::socket -server foo -myport 2521 3333} msg] $msg
 } -match glob -result {1 {bad option "-myport": must be one of *}}
 
-test tlsIO-1.10 {arg parsing for socket command} {socket} {
+test tlsIO-1.10 {arg parsing for socket command} -constraints {socket} -body {
     list [catch {tls::socket host 2528 -junk} msg] $msg
-} {1 {wrong # args: should be "tls::socket ?options? host port"}}
+} -result {1 {wrong # args: should be "tls::socket ?options? host port"}}
 
-test tlsIO-1.11 {arg parsing for socket command} {socket} {
+test tlsIO-1.11 {arg parsing for socket command} -constraints {socket} -body {
     list [catch {tls::socket -server callback 2520 --} msg] $msg
-} {1 {wrong # args: should be "tls::socket -server command ?options? port"}}
+} -result {1 {wrong # args: should be "tls::socket -server command ?options? port"}}
 
-test tlsIO-1.12 {arg parsing for socket command} {socket} {
+test tlsIO-1.12 {arg parsing for socket command} -constraints {socket} -body {
     list [catch {tls::socket foo badport} msg] $msg
-} {1 {expected integer but got "badport"}}
+} -result {1 {expected integer but got "badport"}}
 
-test tlsIO-2.1 {tcp connection} {socket stdio} {
+test tlsIO-2.1 {tcp connection} -constraints {socket stdio} -body {
     removeFile script
     set f [open script w]
     puts $f [list set auto_path $auto_path]
@@ -335,7 +335,7 @@ test tlsIO-2.1 {tcp connection} {socket stdio} {
     lappend x [gets $f]
     close $f
     set x
-} {ready done {}}
+} -result {ready done {}}
 
 if [info exists port] {
     incr port
@@ -343,7 +343,7 @@ if [info exists port] {
     set port [expr {$tlsServerPort + [pid]%1024}]
 }
 
-test tlsIO-2.2 {tcp connection with client port specified} {socket stdio} {
+test tlsIO-2.2 {tcp connection with client port specified} -constraints {socket stdio} -body {
     removeFile script
     set f [open script w]
     puts $f [list set auto_path $auto_path]
@@ -382,9 +382,9 @@ test tlsIO-2.2 {tcp connection with client port specified} {socket stdio} {
     }
     close $f
     set x
-} [list ready "hello $port"]
+} -result [list ready "hello $port"]
 
-test tlsIO-2.3 {tcp connection with client interface specified} {socket stdio} {
+test tlsIO-2.3 {tcp connection with client interface specified} -constraints {socket stdio} -body {
     removeFile script
     set f [open script w]
     puts $f [list set auto_path $auto_path]
@@ -421,9 +421,9 @@ test tlsIO-2.3 {tcp connection with client interface specified} {socket stdio} {
     }
     close $f
     set x
-} {ready {hello 127.0.0.1}}
+} -result {ready {hello 127.0.0.1}}
 
-test tlsIO-2.4 {tcp connection with server interface specified} {socket stdio} {
+test tlsIO-2.4 {tcp connection with server interface specified} -constraints {socket stdio} -body {
     removeFile script
     set f [open script w]
     puts $f [list set auto_path $auto_path]
@@ -459,9 +459,9 @@ test tlsIO-2.4 {tcp connection with server interface specified} {socket stdio} {
     }
     close $f
     set x
-} {ready hello}
+} -result {ready hello}
 
-test tlsIO-2.5 {tcp connection with redundant server port} {socket stdio} {
+test tlsIO-2.5 {tcp connection with redundant server port} -constraints {socket stdio} -body {
     removeFile script
     set f [open script w]
     puts $f [list set auto_path $auto_path]
@@ -497,9 +497,9 @@ test tlsIO-2.5 {tcp connection with redundant server port} {socket stdio} {
     }
     close $f
     set x
-} {ready hello}
+} -result {ready hello}
 
-test tlsIO-2.6 {tcp connection} {socket} {
+test tlsIO-2.6 {tcp connection} -constraints {socket} -body {
     set status ok
     if {![catch {set sock [tls::socket -require 0 127.0.0.1 8833]}]} {
 	if {![catch {gets $sock}]} {
@@ -508,9 +508,9 @@ test tlsIO-2.6 {tcp connection} {socket} {
 	close $sock
     }
     set status
-} ok
+} -result ok
 
-test tlsIO-2.7 {echo server, one line} {socket stdio} {
+test tlsIO-2.7 {echo server, one line} -constraints {socket stdio} -body {
     removeFile script
     set f [open script w]
     puts $f [list set auto_path $auto_path]
@@ -554,9 +554,9 @@ test tlsIO-2.7 {echo server, one line} {socket stdio} {
     set y [gets $f]
     close $f
     list $x $y
-} {{hello abcdefghijklmnop} done}
+} -result {{hello abcdefghijklmnop} done}
 
-test tlsIO-2.8 {echo server, loop 50 times, single connection} {socket stdio} {
+test tlsIO-2.8 {echo server, loop 50 times, single connection} -constraints {socket stdio} -body {
     set f [open script w]
     puts $f [list set auto_path $auto_path]
     puts $f {
@@ -608,9 +608,9 @@ test tlsIO-2.8 {echo server, loop 50 times, single connection} {socket stdio} {
     catch {set x [gets $f]}
     catch {close $f}
     set x
-} {done 50}
+} -result {done 50}
 
-test tlsIO-2.9 {socket conflict} {socket stdio} {
+test tlsIO-2.9 {socket conflict} -constraints {socket stdio} -body {
     set s [tls::socket -server accept -require 0 8828]
     removeFile script
     set f [open script w]
@@ -627,9 +627,9 @@ test tlsIO-2.9 {socket conflict} {socket stdio} {
     set x [list [catch {close $f} msg] [string range $msg 0 43]]
     close $s
     set x
-} {1 {couldn't open socket: address already in use}}
+} -result {1 {couldn't open socket: address already in use}}
 
-test tlsIO-2.10 {close on accept, accepted socket lives} {socket} {
+test tlsIO-2.10 {close on accept, accepted socket lives} -constraints {socket} -body {
     set done 0
     set timer [after 20000 [list set done timed_out]]
     set ss [tls::socket -server accept -require 0 -certfile $serverCert -cafile $caCert \
@@ -653,9 +653,9 @@ test tlsIO-2.10 {close on accept, accepted socket lives} {socket} {
     vwait done
     after cancel $timer
     set done
-} 1
+} -result 1
 
-test tlsIO-2.11 {detecting new data} {socket} {
+test tlsIO-2.11 {detecting new data} -constraints {socket} -body {
     proc accept {s a p} {
 	global sock
 	# when doing an in-process client/server test, both sides need
@@ -694,10 +694,10 @@ test tlsIO-2.11 {detecting new data} {socket} {
     close $s
     close $sock
     set result
-} {a:one b: c:two}
+} -result {a:one b: c:two}
 
 test tlsIO-2.12 {tcp connection; no certificates specified} \
-	{socket stdio unixOnly} {
+	 -constraints {socket stdio unixOnly} -body {
     # There is a debug assertion on Windows/SSL that causes a crash when the
     # certificate isn't specified.
     removeFile script
@@ -731,9 +731,9 @@ test tlsIO-2.12 {tcp connection; no certificates specified} \
     lappend x [gets $f]
     close $f
     set x
-} {ready done {}}
+} -result {ready done {}}
 
-test tlsIO-3.1 {socket conflict} {socket stdio} {
+test tlsIO-3.1 {socket conflict} -constraints {socket stdio} -body {
     removeFile script
     set f [open script w]
     puts $f [list set auto_path $auto_path]
@@ -756,9 +756,9 @@ test tlsIO-3.1 {socket conflict} {socket stdio} {
     puts $f bye
     close $f
     set x
-} {1 {couldn't open socket: address already in use}}
+} -result {1 {couldn't open socket: address already in use}}
 
-test tlsIO-3.2 {server with several clients} {socket stdio} {
+test tlsIO-3.2 {server with several clients} -constraints {socket stdio} -body {
     removeFile script
     set f [open script w]
     puts $f [list set auto_path $auto_path]
@@ -825,9 +825,9 @@ test tlsIO-3.2 {server with several clients} {socket stdio} {
     lappend x [gets $f]
     close $f
     set x
-} {ready done}
+} -result {ready done}
 
-test tlsIO-4.1 {server with several clients} {socket stdio} {
+test tlsIO-4.1 {server with several clients} -constraints {socket stdio} -body {
     # have seen intermittent hangs on Windows
     removeFile script
     set f [open script w]
@@ -895,9 +895,9 @@ test tlsIO-4.1 {server with several clients} {socket stdio} {
     close $p2
     close $p3
     set l
-} {{p1 bye done} {p2 bye done} {p3 bye done}}
+} -result {{p1 bye done} {p2 bye done} {p3 bye done}}
 
-test tlsIO-4.2 {byte order problems, socket numbers, htons} {socket} {
+test tlsIO-4.2 {byte order problems, socket numbers, htons} -constraints {socket} -body {
     set x ok
     if {[catch {tls::socket -server dodo -require 0 0x3000} msg]} {
 	set x $msg
@@ -905,36 +905,38 @@ test tlsIO-4.2 {byte order problems, socket numbers, htons} {socket} {
 	close $msg
     }
     set x
-} ok
+} -result ok
 
 test tlsIO-5.1 {byte order problems, socket numbers, htons} \
-	{socket unixOnly notRoot} {
+	 -constraints {socket unixOnly notRoot} -body {
     set x {couldn't open socket: not owner}
     if {![catch {tls::socket -server dodo -require 0 0x1} msg]} {
 	set x {htons problem, should be disallowed, are you running as SU?}
 	close $msg
     }
     set x
-} {couldn't open socket: not owner}
-test tlsIO-5.2 {byte order problems, socket numbers, htons} {socket} {
+} -result {couldn't open socket: not owner}
+
+test tlsIO-5.2 {byte order problems, socket numbers, htons} -constraints {socket} -body {
     set x {couldn't open socket: port number too high}
     if {![catch {tls::socket -server dodo -require 0 0x10000} msg]} {
 	set x {port resolution problem, should be disallowed}
 	close $msg
     }
     set x
-} {couldn't open socket: port number too high}
+} -result {couldn't open socket: port number too high}
+
 test tlsIO-5.3 {byte order problems, socket numbers, htons} \
-	{socket unixOnly notRoot} {
+	-constraints {socket unixOnly notRoot} -body {
     set x {couldn't open socket: not owner}
     if {![catch {tls::socket -server dodo -require 0 21} msg]} {
 	set x {htons problem, should be disallowed, are you running as SU?}
 	close $msg
     }
     set x
-} {couldn't open socket: not owner}
+} -result {couldn't open socket: not owner}
 
-test tlsIO-6.1 {accept callback error} {socket stdio} {
+test tlsIO-6.1 {accept callback error} -constraints {socket stdio} -body {
     # There is a debug assertion on Windows/SSL that causes a crash when the
     # certificate isn't specified.
     removeFile script
@@ -963,9 +965,9 @@ test tlsIO-6.1 {accept callback error} {socket stdio} {
     close $s
     rename bgerror {}
     set x
-} {{divide by zero}}
+} -result {{divide by zero}}
 
-test tlsIO-7.1 {testing socket specific options} {socket stdio} {
+test tlsIO-7.1 {testing socket specific options} -constraints {socket stdio} -body {
     removeFile script
     set f [open script w]
     puts $f [list set auto_path $auto_path]
@@ -998,9 +1000,9 @@ test tlsIO-7.1 {testing socket specific options} {socket stdio} {
     lappend l [string compare [lindex $p 0] 127.0.0.1]
     lappend l [string compare [lindex $p 2] 8820]
     lappend l [llength $p]
-} {0 0 3}
+} -result {0 0 3}
 
-test tlsIO-7.2 {testing socket specific options} {socket stdio} {
+test tlsIO-7.2 {testing socket specific options} -constraints {socket stdio} -body {
     removeFile script
     set f [open script w]
     puts $f [list set auto_path $auto_path]
@@ -1032,9 +1034,9 @@ test tlsIO-7.2 {testing socket specific options} {socket stdio} {
     lappend l [llength $p]
     lappend l [lindex $p 0]
     lappend l [string equal [lindex $p 2] 8821]
-} {3 127.0.0.1 0}
+} -result {3 127.0.0.1 0}
 
-test tlsIO-7.3 {testing socket specific options} {socket} {
+test tlsIO-7.3 {testing socket specific options} -constraints {socket} -body {
     set s [tls::socket -server accept -require 0 \
 	-certfile $serverCert -cafile $caCert -keyfile $serverKey 8822]
     set l [llength [fconfigure $s]]
@@ -1043,11 +1045,11 @@ test tlsIO-7.3 {testing socket specific options} {socket} {
     # A bug fixed in fconfigure for 8.3.4+ make this return 14 normally,
     # but 12 in older versions.
     expr {$l >= 12 && (($l % 2) == 0)}
-} 1
+} -result 1
 
 # bug report #5812 fconfigure doesn't return value for '-sockname'
 
-test tlsIO-7.4 {testing socket specific options} {socket} {
+test tlsIO-7.4 {testing socket specific options} -constraints {socket} -body {
     set s [tls::socket -server accept -require 0 \
 	-certfile $serverCert -cafile $caCert -keyfile $serverKey 8823]
     proc accept {s a p} {
@@ -1065,11 +1067,11 @@ test tlsIO-7.4 {testing socket specific options} {socket} {
     close $s1
     set l ""
     lappend l [lindex $x 2] [llength $x]
-} {8823 3}
+} -result {8823 3}
 
 # bug report #5812 fconfigure doesn't return value for '-sockname'
 
-test tlsIO-7.5 {testing socket specific options} {socket unixOrPc} {
+test tlsIO-7.5 {testing socket specific options} -constraints {socket unixOrPc} -body {
     set s [tls::socket -server accept -require 0 \
 	    -certfile $serverCert -cafile $caCert -keyfile $serverKey 8829]
     proc accept {s a p} {
@@ -1087,46 +1089,49 @@ test tlsIO-7.5 {testing socket specific options} {socket unixOrPc} {
     close $s1
     set l ""
     lappend l [lindex $x 0] [lindex $x 2] [llength $x]
-} {127.0.0.1 8829 3}
+} -result {127.0.0.1 8829 3}
 
-test tlsIO-8.1 {testing -async flag on sockets} {socket} {
+test tlsIO-8.1 {testing -async flag on sockets} -constraints {socket} -body {
     # NOTE: This test may fail on some Solaris 2.4 systems.
     # See notes in Tcl's socket.test.
     set s [tls::socket -server accept -require 0 \
 	    -certfile $serverCert -cafile $caCert -keyfile $serverKey 8830]
     proc accept {s a p} {
 	global x
-	# when doing an in-process client/server test, both sides need
-	# to be non-blocking for the TLS handshake.  Also make sure
-	# to return the channel to line buffering mode.
+	# When doing an in-process client/server test, both sides need to be
+	# non-blocking for the TLS handshake.  Also make sure to return the
+	# channel to line buffering mode.
 	fconfigure $s -blocking 0 -buffering line
 	puts $s bye
-	# Only OpenSSL 0.9.5a on Windows seems to need the after (delayed)
-	# close, but it works just the same for all others. -hobbs
-	after 500 close $s
-	set x done
+	set x accepted
     }
-    set s1 [tls::socket -require 0 \
-	    -certfile $clientCert -cafile $caCert -keyfile $clientKey \
-	    -async localhost 8830]
-    # when doing an in-process client/server test, both sides need
-    # to be non-blocking for the TLS handshake  Also make sure to
-    # return the channel to line buffering mode (TLS sets it to 'none').
+    proc connected {s} {
+	global x
+	fileevent $s writable {}
+	set x connected
+    }
+    set s1 [tls::socket -require 0 -certfile $clientCert -cafile $caCert \
+	-keyfile $clientKey -async localhost 8830]
+    set c [chan configure $s1 -connecting]
+    # When doing an in-process client/server test, both sides need to be
+    # non-blocking for the TLS handshake  Also make sure to return the
+    # channel to line buffering mode.
     fconfigure $s1 -blocking 0 -buffering line
+    # Create async handler
+    fileevent $s1 writable [list connected $s1]
     vwait x
     # TLS handshaking needs one byte from the client...
     puts $s1 a
-    # need update to complete TLS handshake in-process
-    update
+    vwait x
+    # Get data from server
     fconfigure $s1 -blocking 1
-    set z [gets $s1]
+    gets $s1
+} -cleanup {
     close $s
     close $s1
-    set z
-} bye
+} -result bye
 
-
-test tlsIO-9.1 {testing spurious (0 byte read) events} {socket} {
+test tlsIO-9.1 {testing spurious (0 byte read) events} -constraints {socket} -body {
     set len 0
     set spurious 0
     set done 0
@@ -1164,11 +1169,11 @@ test tlsIO-9.1 {testing spurious (0 byte read) events} {socket} {
     vwait done
     after cancel $timer
     catch {close $s}
-    list $spurious $len
-} {1 50}
+    list [expr {$spurious <= 1}] $len
+} -result {1 50}
 # Was 0 50
 
-test tlsIO-9.2 {testing async write, fileevents, flush on close} {socket} {
+test tlsIO-9.2 {testing async write, fileevents, flush on close} -constraints {socket} -body {
     set firstblock [string repeat a 31]
     set secondblock [string repeat b 65535]
     proc accept {s a p} {
@@ -1224,9 +1229,9 @@ test tlsIO-9.2 {testing async write, fileevents, flush on close} {socket} {
     catch {close $c}
     catch {close $s}
     list $count $done
-} {65566 1}
+} -result {65566 1}
 
-test tlsIO-9.3 {testing EOF stickyness} {unexplainedFailure socket} {
+test tlsIO-9.3 {testing EOF stickyness} -constraints {unexplainedFailure socket} -body {
     # HOBBS: never worked correctly
     proc count_to_eof {s} {
 	global count done timer
@@ -1269,11 +1274,11 @@ test tlsIO-9.3 {testing EOF stickyness} {unexplainedFailure socket} {
     vwait done
     close $s
     set count
-} {eof is sticky}
+} -result {eof is sticky}
 
 removeFile script
 
-test tlsIO-10.1 {testing socket accept callback error handling} {socket} {
+test tlsIO-10.1 {testing socket accept callback error handling} -constraints {socket} -body {
     set goterror 0
     proc bgerror args {global goterror; set goterror 1}
     set s [tls::socket -server accept -require 0 -cafile $caCert 8898]
@@ -1283,9 +1288,9 @@ test tlsIO-10.1 {testing socket accept callback error handling} {socket} {
     close $s
     close $c
     set goterror
-} 1
+} -result 1
 
-test tlsIO-11.1 {tcp connection} {socket doTestsWithRemoteServer} {
+test tlsIO-11.1 {tcp connection} -constraints {socket doTestsWithRemoteServer} -body {
     sendCertValues
     sendCommand {
 	set socket9_1_test_server [tls::socket -server accept -require 0 \
@@ -1303,9 +1308,9 @@ test tlsIO-11.1 {tcp connection} {socket doTestsWithRemoteServer} {
     close $s
     sendCommand {close $socket9_1_test_server}
     set r
-} done
+} -result done
 
-test tlsIO-11.2 {client specifies its port} {socket doTestsWithRemoteServer} {
+test tlsIO-11.2 {client specifies its port} -constraints {socket doTestsWithRemoteServer} -body {
     if {[info exists port]} {
 	incr port
     } else {
@@ -1333,9 +1338,9 @@ test tlsIO-11.2 {client specifies its port} {socket doTestsWithRemoteServer} {
 	set result broken
     }
     set result
-} ok
+} -result ok
 
-test tlsIO-11.3 {trying to connect, no server} {socket doTestsWithRemoteServer} {
+test tlsIO-11.3 {trying to connect, no server} -constraints {socket doTestsWithRemoteServer} -body {
     set status ok
     if {![catch {set s [tls::socket -require 0 \
 	    -certfile $clientCert -cafile $caCert -keyfile $clientKey \
@@ -1346,9 +1351,9 @@ test tlsIO-11.3 {trying to connect, no server} {socket doTestsWithRemoteServer} 
 	close $s
     }
     set status
-} ok
+} -result ok
 
-test tlsIO-11.4 {remote echo, one line} {socket doTestsWithRemoteServer} {
+test tlsIO-11.4 {remote echo, one line} -constraints {socket doTestsWithRemoteServer} -body {
     sendCertValues
     sendCommand {
 	set socket10_6_test_server [tls::socket -server accept -require 0 \
@@ -1376,9 +1381,9 @@ test tlsIO-11.4 {remote echo, one line} {socket doTestsWithRemoteServer} {
     close $f
     sendCommand {close $socket10_6_test_server}
     set r
-} hello
+} -result hello
 
-test tlsIO-11.5 {remote echo, 50 lines} {socket doTestsWithRemoteServer} {
+test tlsIO-11.5 {remote echo, 50 lines} -constraints {socket doTestsWithRemoteServer} -body {
     sendCertValues
     sendCommand {
 	set socket10_7_test_server [tls::socket -server accept -require 0 \
@@ -1410,7 +1415,7 @@ test tlsIO-11.5 {remote echo, 50 lines} {socket doTestsWithRemoteServer} {
     close $f
     sendCommand {close $socket10_7_test_server}
     set cnt
-} 50
+} -result 50
 
 # Macintosh sockets can have more than one server per port
 if {$tcl_platform(platform) eq "macintosh"} {
@@ -1419,7 +1424,7 @@ if {$tcl_platform(platform) eq "macintosh"} {
     set conflictResult {1 {couldn't open socket: address already in use}}
 }
 
-test tlsIO-11.6 {socket conflict} {socket doTestsWithRemoteServer} {
+test tlsIO-11.6 {socket conflict} -constraints {socket doTestsWithRemoteServer} -body {
     set s1 [tls::socket -server accept -require 0 \
 	    -certfile $serverCert -cafile $caCert -keyfile $serverKey 8836]
     if {[catch {set s2 [tls::socket -server accept -require 0 \
@@ -1431,9 +1436,9 @@ test tlsIO-11.6 {socket conflict} {socket doTestsWithRemoteServer} {
     }
     close $s1
     set result
-} $conflictResult
+} -result $conflictResult
 
-test tlsIO-11.7 {server with several clients} {socket doTestsWithRemoteServer} {
+test tlsIO-11.7 {server with several clients} -constraints {socket doTestsWithRemoteServer} -body {
     sendCertValues
     sendCommand {
 	set socket10_9_test_server [tls::socket -server accept -require 0 \
@@ -1476,9 +1481,9 @@ test tlsIO-11.7 {server with several clients} {socket doTestsWithRemoteServer} {
     close $s3
     sendCommand {close $socket10_9_test_server}
     set i
-} 100
+} -result 100
 
-test tlsIO-11.8 {client with several servers} {socket doTestsWithRemoteServer} {
+test tlsIO-11.8 {client with several servers} -constraints {socket doTestsWithRemoteServer} -body {
     sendCertValues
     sendCommand {
 	tls::init -certfile $serverCert -cafile $caCert -keyfile $serverKey
@@ -1520,9 +1525,9 @@ test tlsIO-11.8 {client with several servers} {socket doTestsWithRemoteServer} {
 	close $s3
     }
     set l
-} {4003 {} 1 4004 {} 1 4005 {} 1}
+} -result {4003 {} 1 4004 {} 1 4005 {} 1}
 
-test tlsIO-11.9 {accept callback error} {socket doTestsWithRemoteServer} {
+test tlsIO-11.9 {accept callback error} -constraints {socket doTestsWithRemoteServer} -body {
     set s [tls::socket -server accept -require 0 \
 	    -certfile $serverCert -cafile $caCert -keyfile $serverKey 8836]
     proc accept {s a p} {expr 10 / 0}
@@ -1547,9 +1552,9 @@ test tlsIO-11.9 {accept callback error} {socket doTestsWithRemoteServer} {
     close $s
     rename bgerror {}
     set x
-} {{divide by zero}}
+} -result {{divide by zero}}
 
-test tlsIO-11.10 {testing socket specific options} {socket doTestsWithRemoteServer} {
+test tlsIO-11.10 {testing socket specific options} -constraints {socket doTestsWithRemoteServer} -body {
     sendCertValues
     sendCommand {
 	set socket10_12_test_server [tls::socket -server accept -require 0 \
@@ -1566,9 +1571,9 @@ test tlsIO-11.10 {testing socket specific options} {socket doTestsWithRemoteServ
     close $s
     sendCommand {close $socket10_12_test_server}
     set l
-} {8836 3 3}
+} -result {8836 3 3}
 
-test tlsIO-11.11 {testing spurious events} {socket doTestsWithRemoteServer} {
+test tlsIO-11.11 {testing spurious events} -constraints {socket doTestsWithRemoteServer} -body {
     # remote equivalent of 9.1
     sendCertValues
     sendCommand {
@@ -1626,9 +1631,9 @@ test tlsIO-11.11 {testing spurious events} {socket doTestsWithRemoteServer} {
     after cancel $timer
     sendCommand {close $socket_test_server}
     list $spurious $len
-} {0 2690}
+} -result {0 2690}
 
-test tlsIO-11.12 {testing EOF stickyness} {unexplainedFailure socket doTestsWithRemoteServer} {
+test tlsIO-11.12 {testing EOF stickyness} -constraints {unexplainedFailure socket doTestsWithRemoteServer} -body {
     # remote equivalent of 9.3
     # HOBBS: never worked correctly
     set counter 0
@@ -1667,10 +1672,10 @@ test tlsIO-11.12 {testing EOF stickyness} {unexplainedFailure socket doTestsWith
     vwait done
     sendCommand {close $socket10_14_test_server}
     set done
-} {EOF is sticky}
+} -result {EOF is sticky}
 
 test tlsIO-11.13 {testing async write, async flush, async close} \
-	{socket doTestsWithRemoteServer} {
+	-constraints {socket doTestsWithRemoteServer} -body {
     proc readit {s} {
 	global count done
 	set l [read $s]
@@ -1720,7 +1725,7 @@ test tlsIO-11.13 {testing async write, async flush, async close} \
     after cancel $timer
     sendCommand {close $l}
     set count
-} 65566
+} -result 65566
 
 proc getdata {type file} {
     # Read handler on the accepted socket.
@@ -1746,7 +1751,7 @@ proc getdata {type file} {
     return
 }
 
-test tlsIO-12.1 {testing inheritance of server sockets} {socket exec} {
+test tlsIO-12.1 {testing inheritance of server sockets} -constraints {socket exec} -body {
     makeFile {} script1
     makeFile {} script2
 
@@ -1802,9 +1807,9 @@ test tlsIO-12.1 {testing inheritance of server sockets} {socket exec} {
     }
 
     set x
-} {server socket was not inherited}
+} -result {server socket was not inherited}
 
-test tlsIO-12.2 {testing inheritance of client sockets} {socket exec} {
+test tlsIO-12.2 {testing inheritance of client sockets} -constraints {socket exec} -body {
     makeFile {} script1
     makeFile {} script2
 
@@ -1869,10 +1874,10 @@ test tlsIO-12.2 {testing inheritance of client sockets} {socket exec} {
 	vwait failed
     }
     set x
-} {client socket was not inherited}
+} -result {client socket was not inherited}
 
 test tlsIO-12.3 {testing inheritance of accepted sockets} \
-	{socket exec unixOnly} {
+	-constraints {socket exec unixOnly} -body {
     makeFile {} script1
     makeFile {} script2
 
@@ -1929,10 +1934,10 @@ test tlsIO-12.3 {testing inheritance of accepted sockets} \
 
     vwait x
     set x
-} {accepted socket was not inherited}
+} -result {accepted socket was not inherited}
 
 test tlsIO-13.1 {Testing use of shared socket between two threads} \
-	{socket testthread} {
+	-constraints {socket testthread} -body {
     # HOBBS: never tested
     removeFile script
     threadReap
@@ -1985,23 +1990,23 @@ test tlsIO-13.1 {Testing use of shared socket between two threads} \
 
     set result
 
-} {hello 1}
+} -result {hello 1}
 
-test tlsIO-14.1 {test tls::unimport} {socket} {
+test tlsIO-14.1 {test tls::unimport} -constraints {socket} -body {
     list [catch {tls::unimport} msg] $msg
-} {1 {wrong # args: should be "tls::unimport channel"}}
-test tlsIO-14.2 {test tls::unimport} {socket} {
+} -result {1 {wrong # args: should be "tls::unimport channel"}}
+test tlsIO-14.2 {test tls::unimport} -constraints {socket} -body {
     list [catch {tls::unimport foo bar} msg] $msg
-} {1 {wrong # args: should be "tls::unimport channel"}}
-test tlsIO-14.3 {test tls::unimport} {socket} {
+} -result {1 {wrong # args: should be "tls::unimport channel"}}
+test tlsIO-14.3 {test tls::unimport} -constraints {socket} -body {
     list [catch {tls::unimport bogus} msg] $msg
-} {1 {can not find channel named "bogus"}}
-test tlsIO-14.4 {test tls::unimport} {socket} {
+} -result {1 {can not find channel named "bogus"}}
+test tlsIO-14.4 {test tls::unimport} -constraints {socket} -body {
     # stdin can take different names as the "top" channel
     list [catch {tls::unimport stdin} msg] \
 	[string match {bad channel "*": not a stacked channel} $msg]
-} {1 1}
-test tlsIO-14.5 {test tls::unimport} {socket} {
+} -result {1 1}
+test tlsIO-14.5 {test tls::unimport} -constraints {socket} -body {
     set len 0
     set spurious 0
     set done 0
@@ -2032,9 +2037,9 @@ test tlsIO-14.5 {test tls::unimport} {socket} {
     set res [tls::unimport $c]
     list $res [catch {close $c} err] $err \
 	[catch {close $s} err] $err
-} {{} 0 {} 0 {}}
+} -result {{} 0 {} 0 {}}
 
-test tls-bug58-1.0 {test protocol negotiation failure} {socket} {
+test tls-bug58-1.0 {test protocol negotiation failure} -constraints {socket} -body {
     # Following code is based on what was reported in bug #58. Prior
     # to fix the program would crash with a segfault.
     proc accept {sock args} {
@@ -2069,7 +2074,7 @@ test tls-bug58-1.0 {test protocol negotiation failure} {socket} {
     catch {close $c}
     catch {close $s}
     set ::done
-} {handshake failed: wrong version number}
+} -result {handshake failed: wrong version number}
 
 # cleanup
 if {[string match sock* $commandSocket] == 1} {
