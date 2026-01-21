@@ -4,6 +4,7 @@
 #
 #################################################
 
+package prefer latest
 package require Tcl 8.6-
 package require tls
 
@@ -73,5 +74,5 @@ proc gets_non_blocking_with_variable {host port path protocol} {
 
 set data ""
 gets_non_blocking_with_variable $host $port $path $protocol
-save_file "gets_non_blocking_with_variable.txt" $data
+save_file "gets_nonblocking_with_variable.txt" $data
 

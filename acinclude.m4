@@ -183,7 +183,11 @@ AC_DEFUN([TCLTLS_SSL_OPENSSL], [
 		if test "$TCLEXT_TLS_STATIC_SSL" == 'no'; then
 			LIBEXT=${SHLIB_SUFFIX}
 		else
-			LIBEXT='.a'
+			if test "${TEA_PLATFORM}" == 'unix'; then
+				LIBEXT='.a'
+			else
+				LIBEXT='.lib'
+			fi
 		fi
 
 		if test -f "${openssllibdir}/libssl${LIBEXT}"; then
@@ -210,9 +214,9 @@ AC_DEFUN([TCLTLS_SSL_OPENSSL], [
 	AC_MSG_CHECKING([for OpenSSL pkgconfig])
 	AC_MSG_RESULT($opensslpkgconfigdir)
 
-	dnl Use pkg-config to find OpenSSL if not already found 
+	dnl Use pkg-config to find OpenSSL if not already found
 	if test -n "$PKG_CONFIG" -a -z "$openssldir" -a -z "$opensslincludedir" -a -z "$openssllibdir"; then
-	    USE_PKG_CONFIG=`"${PKG_CONFIG}" --list-all | grep openssl`
+	    USE_PKG_CONFIG=`"${PKG_CONFIG}" --list-all | grep openssl | uniq`
 
 	    dnl Use pkg-config to find the library names
 	    if test -n "$USE_PKG_CONFIG"; then
@@ -232,17 +236,14 @@ AC_DEFUN([TCLTLS_SSL_OPENSSL], [
 			pkgConfigExtraArgs='--static'
 		fi
 
-		if test -z "$TCLTLS_SSL_LIBS"; then
-			TCLTLS_SSL_LIBS="$SSL_LIBS_PATH `${PKG_CONFIG} openssl --libs $pkgConfigExtraArgs`" || AC_MSG_ERROR([Unable to get OpenSSL Configuration])
-			if test "${TCLEXT_TLS_STATIC_SSL}" == 'yes'; then
-				TCLTLS_SSL_LIBS="-Wl,-Bstatic $TCLTLS_SSL_LIBS -Wl,-Bdynamic"
-			fi
-		fi
 		if test -z "$TCLTLS_SSL_CFLAGS"; then
 			TCLTLS_SSL_CFLAGS="`"${PKG_CONFIG}" openssl --cflags-only-other $pkgConfigExtraArgs`" || AC_MSG_ERROR([Unable to get OpenSSL Configuration])
 		fi
 		if test -z "$TCLTLS_SSL_INCLUDES"; then
 			TCLTLS_SSL_INCLUDES="`"${PKG_CONFIG}" openssl --cflags-only-I $pkgConfigExtraArgs`" || AC_MSG_ERROR([Unable to get OpenSSL Configuration])
+		fi
+		if test -z "$TCLTLS_SSL_LIBS"; then
+			TCLTLS_SSL_LIBS="`${PKG_CONFIG} openssl --libs $pkgConfigExtraArgs`" || AC_MSG_ERROR([Unable to get OpenSSL Configuration])
 		fi
 		PKG_CONFIG_PATH="${PKG_CONFIG_PATH_SAVE}"
 	    fi
@@ -258,14 +259,44 @@ AC_DEFUN([TCLTLS_SSL_OPENSSL], [
 		fi
 	fi
 	if test -z "$TCLTLS_SSL_LIBS"; then
-		if test "$TCLEXT_TLS_STATIC_SSL" == 'no'; then
-		    TCLTLS_SSL_LIBS="$SSL_LIBS_PATH -lssl -lcrypto"
+		if test "$TCLEXT_TLS_STATIC_SSL" == 'yes'; then
+			if test "${TEA_PLATFORM}" == 'unix'; then
+				LIBEXT='.a'
+			else
+				LIBEXT='.lib'
+			fi
+			TCLTLS_SSL_LIBS="$SSL_LIBS_PATH -lssl${LIBEXT} -lcrypto${LIBEXT}"
 		else
-		    # Linux and Solaris
-		    TCLTLS_SSL_LIBS="$SSL_LIBS_PATH -Wl,-Bstatic -lssl -lcrypto -Wl,-Bdynamic"
-		    # HPUX: -Wl,-a,archive ... -Wl,-a,shared_archive
+			TCLTLS_SSL_LIBS="$SSL_LIBS_PATH -lssl -lcrypto"
 		fi
 	fi
+	
+	dnl Set for static libraries
+	if test "$TCLEXT_TLS_STATIC_SSL" == 'yes'; then
+		system="`uname -s`"
+		case $system in
+			AIX*)
+				TCLTLS_SSL_LIBS="-Wl,-bstatic $TCLTLS_SSL_LIBS -Wl,-bdynamic";;
+			BSD*|OpenBSD*)
+				TCLTLS_SSL_LIBS="-Wl,-Bstatic $TCLTLS_SSL_LIBS -Wl,-Bdynamic";;
+			CYGWIN_*|MINGW32_*|MINGW64_*|MSYS_*)
+				TCLTLS_SSL_LIBS="-Wl,-Bstatic $TCLTLS_SSL_LIBS -Wl,-Bdynamic";;
+			Darwin*)
+				TCLTLS_SSL_LIBS="${openssllibdir}/libssl.a ${openssllibdir}/libcrypto.a ${openssllibdir}/../libz.a";;
+			HP-UX*)
+				TCLTLS_SSL_LIBS="-Wl,-a,archive $TCLTLS_SSL_LIBS -Wl,-a,shared_archive";;
+			IRIX*)
+				TCLTLS_SSL_LIBS="-Wl,-B, static $TCLTLS_SSL_LIBS -Wl,-B, dynamic";;
+			Solaris*|illumos*)
+				TCLTLS_SSL_LIBS="-Bstatic $TCLTLS_SSL_LIBS -Bdynamic";;
+			Linux*|GNU*|NetBSD-Debian|DragonFly-*|FreeBSD-*)
+				TCLTLS_SSL_LIBS="-Wl,-Bstatic $TCLTLS_SSL_LIBS -Wl,-Bdynamic";;
+			*)
+				TCLTLS_SSL_LIBS="-Wl,-Bstatic $TCLTLS_SSL_LIBS -Wl,-Bdynamic";;
+		esac
+	fi
+	AC_MSG_CHECKING([for SSL libs])
+	AC_MSG_RESULT([$TCLTLS_SSL_LIBS])
 
 	dnl Include config variables in --help list and make available to be substituted via AC_SUBST.
 	AC_ARG_VAR([TCLTLS_SSL_CFLAGS], [C compiler flags for OpenSSL])

@@ -16,7 +16,7 @@ dnl	to configure the system for the local environment.
 # so that we create the export library with the dll.
 #-----------------------------------------------------------------------
 
-AC_INIT([tls],[1.8.0])
+AC_INIT([tls],[2.0])
 
 #--------------------------------------------------------------------
 # Call TEA_INIT as the first TEA_ macro to set up initial vars.
@@ -173,7 +173,7 @@ if test "${TEA_PLATFORM}" = "windows" ; then
     if test "$GCC" = "yes"; then
 	TEA_ADD_CFLAGS([${TCLTLS_SSL_CFLAGS} -Wno-deprecated-declarations])
 	TEA_ADD_INCLUDES([${TCLTLS_SSL_INCLUDES}])
-	TEA_ADD_LIBS([${TCLTLS_SSL_LIBS}])
+	TEA_ADD_LIBS([${TCLTLS_SSL_LIBS} ws2_32.lib Crypt32.lib])
     fi
 else
 	TEA_ADD_CFLAGS([${TCLTLS_SSL_CFLAGS} -Wno-deprecated-declarations])

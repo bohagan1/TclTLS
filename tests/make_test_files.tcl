@@ -1,3 +1,4 @@
+#!/usr/bin/env tclsh
 #
 # Name:		Make Test Files From CSV Files
 # Version:	0.3
@@ -83,15 +84,15 @@ proc process_config_file {filename} {
 
     # Package requires
     puts $out "\n# Load Tcl Test package"
-    puts $out [subst -nocommands {if {[lsearch [namespace children] ::tcltest] == -1} {\n\tpackage require tcltest\n\tnamespace import ::tcltest::*\n}\n}]
-    puts $out {set auto_path [concat [list [file dirname [file dirname [info script]]]] $auto_path]}
+    puts $out [subst -nocommands {if {[lsearch [namespace children] ::tcltest] < 0} {\n\tpackage require tcltest\n\tnamespace import ::tcltest::*\n}\n}]
+    puts $out {set ::auto_path [concat [list [file dirname [file dirname [info script]]]] $::auto_path]}
     puts $out ""
 
     # Generate test cases and add to test file
     while {[gets $in data] > -1} {
 	# Skip comments
 	set data [string trim $data]
-	if {[string match "#*" $data]} continue
+	if {[string match "#*" $data] || [string match "\"#*" $data]} continue
 	# Split comma separated fields with quotes
 	set list [parse_csv $in $data]
 
@@ -101,20 +102,25 @@ proc process_config_file {filename} {
 		puts $out $name
 
 	    } elseif {$group ne "" && $body ne ""} {
-		set group [string map [list " " "_"] $group]
+		# Remove illegal characters
+		set group [string map [list " " "_" "-" "_"] $group]
+		set name [string map [list "-" "_"] $name]
+
+		# Define test number
 		if {$group ne $prev} {
 		    incr test
 		    set prev $group
 		    puts $out ""
 		}
 
-		# Test case
+		# Create test case
 		if {[string index $name 0] ne {$}} {
 		    set buffer [format "\ntest %s-%d.%d {%s}" $group $test [incr cases($group)] $name]
 		} else {
 		    set buffer [format "\ntest %s-%d.%d %s" $group $test [incr cases($group)] $name]
 		}
 
+		# Add test case arguments
 		foreach opt [list -constraints -setup -body -cleanup -match -result -output -errorOutput -returnCodes] {
 		    set cmd [string trim [set [string trimleft $opt "-"]]]
 		    if {$cmd ne ""} {

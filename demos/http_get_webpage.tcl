@@ -4,11 +4,12 @@
 #
 #################################################
 
+package prefer latest
 package require Tcl 8.6-
 package require tls
 package require http
 
-set url "https://www.tcl.tk/"
+set url "https://www.tcl-lang.org/"
 set port 443
 set protocol "http/1.1"
 

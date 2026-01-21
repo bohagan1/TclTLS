@@ -13,9 +13,10 @@
 #
 
 # load tls package
+package prefer latest
 package require tls
 
-# Initialize message delimitor
+# Initialize message delimiter
 
 # Initialize command array
 catch {unset command}
@@ -45,16 +46,19 @@ proc __doCommands__ {l s} {
 	close $fd
     }
     set callerSocket $s
-    if {[catch {uplevel #0 $l} msg]} {
-    	if {0} {
+    set ::errorInfo ""
+    if {[catch {uplevel "#0" $l} msg]} {
+	if {0} {
 	    set fd [open remoteServer.log a]
 	    puts $fd "error: $msg"
 	    close $fd
 	}
-	list error $msg
+	set code error
     } else {
-	list success $msg
+	set code success
     }
+    #return [list $code $::errorInfo $msg]
+    return [list $code $msg]
 }
 
 proc __readAndExecute__ {s} {
@@ -98,8 +102,8 @@ proc __accept__ {s a p} {
 	puts "Server accepts new connection from $a:$p on $s"
     }
     tls::handshake $s
-    fileevent $s readable [list __readAndExecute__ $s]
     fconfigure $s -buffering line -translation crlf
+    fileevent $s readable [list __readAndExecute__ $s]
 }
 
 set serverIsSilent 0
@@ -117,8 +121,8 @@ if {![info exists serverPort]} {
 if {![info exists serverPort]} {
     for {set i 0} {$i < $argc} {incr i} {
 	if {[lindex $argv $i] eq "-port"} {
-	    if {$i < [expr $argc - 1]} {
-		set serverPort [lindex $argv [expr $i + 1]]
+	    if {$i < $argc - 1} {
+		set serverPort [lindex $argv [expr {$i + 1}]]
 	    }
 	    break
 	}
@@ -136,8 +140,8 @@ if {![info exists serverAddress]} {
 if {![info exists serverAddress]} {
     for {set i 0} {$i < $argc} {incr i} {
 	if {[lindex $argv $i] eq "-address"} {
-	    if {$i < [expr $argc - 1]} {
-		set serverAddress [lindex $argv [expr $i + 1]]
+	    if {$i < $argc - 1} {
+		set serverAddress [lindex $argv [expr {$i + 1}]]
 	    }
 	    break
 	}
@@ -177,10 +181,11 @@ set serverCert	[file join $certsDir server.pem]
 set caCert	[file join $certsDir cacert.pem]
 set serverKey	[file join $certsDir server.key]
 if {[catch {set serverSocket \
-	[tls::socket -myaddr $serverAddress -server __accept__ \
+	[tls::socket -require 0 -myaddr $serverAddress -server __accept__ \
 	-cafile $caCert -certfile $serverCert -keyfile $serverKey \
 	$serverPort]} msg]} {
     puts "Server on $serverAddress:$serverPort cannot start: $msg"
 } else {
+    puts ready
     vwait __server_wait_variable__
 }

@@ -37,7 +37,7 @@
 #ifdef BUILD_tls
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLEXPORT
-#endif /* BUILD_udp */
+#endif /* BUILD_tls */
 
 /* Handle TCL 8.6 CONST changes */
 #ifndef CONST86
@@ -124,7 +124,7 @@
 	if (((statePtr)->flags & TLS_TCL_INIT) == TLS_TCL_INIT) { dprintfBuffer_p += sprintf(dprintfBuffer_p, "|TLS_TCL_INIT"); }; \
 	if (((statePtr)->flags & TLS_TCL_DEBUG) == TLS_TCL_DEBUG) { dprintfBuffer_p += sprintf(dprintfBuffer_p, "|TLS_TCL_DEBUG"); }; \
 	if (((statePtr)->flags & TLS_TCL_CALLBACK) == TLS_TCL_CALLBACK) { dprintfBuffer_p += sprintf(dprintfBuffer_p, "|TLS_TCL_CALLBACK"); }; \
-	if (((statePtr)->flags & TLS_TCL_HANDSHAKE_FAILED) == TLS_TCL_HANDSHAKE_FAILED) { dprintfBuffer_p += sprintf(dprintfBuffer_p, "|TLS_TCL_HANDSHAKE_FAILED"); }; \
+	if (((statePtr)->flags & TLS_TCL_FATAL_ERROR) == TLS_TCL_FATAL_ERROR) { dprintfBuffer_p += sprintf(dprintfBuffer_p, "|TLS_TCL_FATAL_ERROR"); }; \
 	if (((statePtr)->flags & TLS_TCL_FASTPATH) == TLS_TCL_FASTPATH) { dprintfBuffer_p += sprintf(dprintfBuffer_p, "|TLS_TCL_FASTPATH"); }; \
 	fprintf(stderr, "%s\n", dprintfBuffer); \
 }
@@ -161,6 +161,10 @@
     if (text != NULL) Tcl_ListObjAppendElement(interp, obj, Tcl_NewStringObj(text, -1)); \
     Tcl_ListObjAppendElement(interp, obj, (tclObj != NULL) ? tclObj : Tcl_NewStringObj("", 0)); \
 }
+#define LAPPEND_WIDE(interp, obj, text, value) {\
+    if (text != NULL) Tcl_ListObjAppendElement(interp, obj, Tcl_NewStringObj(text, -1)); \
+    Tcl_ListObjAppendElement(interp, obj, Tcl_NewWideIntObj(value)); \
+}
 
 /*
  * Defines for State.flags
@@ -171,10 +175,13 @@
 #define TLS_TCL_DEBUG		(1<<3)	/* Show debug tracing */
 #define TLS_TCL_CALLBACK	(1<<4)	/* In a callback, prevent update
 					 * looping problem. [Bug 1652380] */
-#define TLS_TCL_HANDSHAKE_FAILED (1<<5) /* Set on handshake failures and once set, all
+#define TLS_TCL_FATAL_ERROR	(1<<5)	/* Set on handshake failure or other fatal error. All
 					 * further I/O will result in ECONNABORTED errors. */
-#define TLS_TCL_FASTPATH 	(1<<6)	/* The parent channel is being used
+#define TLS_TCL_FASTPATH	(1<<6)	/* The parent channel is being used
 					 * directly by the SSL library. */
+#define TLS_TCL_EOF		(1<<7)	/* At EOF. Can't read, but can write. */
+
+/* Set timer delay */
 #define TLS_TCL_DELAY (5)
 
 /*
@@ -202,7 +209,7 @@ typedef struct State {
 	BIO *bio;		/* Struct for SSL processing */
 	BIO *p_bio;		/* Parent BIO (that is layered on Tcl_Channel) */
 
-	unsigned int protos_len; /* Length of protos */
+	size_t protos_len; /* Length of protos */
 	unsigned char *protos;	/* List of supported protocols in protocol format */
 
 	const char *err;
@@ -230,7 +237,6 @@ Tcl_Obj		*Tls_NewX509Obj(Tcl_Interp *interp, X509 *cert, int all);
 Tcl_Obj		*Tls_NewCAObj(Tcl_Interp *interp, const SSL *ssl, int peer);
 void		Tls_Error(State *statePtr, const char *msg);
 void		Tls_Free(tls_free_type *blockPtr);
-void		Tls_Clean(State *statePtr);
 int		Tls_WaitForConnect(State *statePtr, int *errorCodePtr, int handshakeFailureIsPermanent);
 
 BIO		*BIO_new_tcl(State* statePtr, int flags);

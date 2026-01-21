@@ -1,5 +1,6 @@
 #!/usr/bin/env tclsh
 
+package prefer latest
 package require tls
 
 set dir			[file join [file dirname [info script]] ../tests/certs]
@@ -7,11 +8,12 @@ set OPTS(-cafile)	[file join $dir ca.pem]
 set OPTS(-cert)		[file join $dir client.pem]
 set OPTS(-key)		[file join $dir client.key]
 
-set OPTS(-host)		lorax
+set OPTS(-host)		localhost
 set OPTS(-port)		2468
 set OPTS(-debug)	1
 set OPTS(-count)	8
 set OPTS(-parallel)	1
+set OPTS(-require)	0
 
 foreach {key val} $argv {
     if {![info exists OPTS($key)]} {
@@ -23,7 +25,8 @@ foreach {key val} $argv {
 		\n\t-count     num       No of sync. connections to make per client ($OPTS(-count))\
 		\n\t-parallel  num       No of parallel clients to run ($OPTS(-parallel))\
 		\n\t-host      hostname  Server hostname ($OPTS(-host))\
-		\n\t-port      num       Server port ($OPTS(-port))"
+		\n\t-port      num       Server port ($OPTS(-port))\
+		\n\t-require   boolean   Require Certificate ($OPTS(-require))"
 	exit
     }
     set OPTS($key) $val
@@ -106,6 +109,6 @@ proc go {} {
     }
 }
 
-tls::init -cafile $OPTS(-cafile) -certfile $OPTS(-cert) -keyfile $OPTS(-key)
+tls::init -cafile $OPTS(-cafile) -certfile $OPTS(-cert) -keyfile $OPTS(-key) -require $OPTS(-require)
 
 go
