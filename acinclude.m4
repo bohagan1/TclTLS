@@ -183,11 +183,7 @@ AC_DEFUN([TCLTLS_SSL_OPENSSL], [
 		if test "$TCLEXT_TLS_STATIC_SSL" == 'no'; then
 			LIBEXT=${SHLIB_SUFFIX}
 		else
-			if test "${TEA_PLATFORM}" == 'unix'; then
-				LIBEXT='.a'
-			else
-				LIBEXT='.lib'
-			fi
+			LIBEXT='.a'
 		fi
 
 		if test -f "${openssllibdir}/libssl${LIBEXT}"; then
@@ -259,18 +255,9 @@ AC_DEFUN([TCLTLS_SSL_OPENSSL], [
 		fi
 	fi
 	if test -z "$TCLTLS_SSL_LIBS"; then
-		if test "$TCLEXT_TLS_STATIC_SSL" == 'yes'; then
-			if test "${TEA_PLATFORM}" == 'unix'; then
-				LIBEXT='.a'
-			else
-				LIBEXT='.lib'
-			fi
-			TCLTLS_SSL_LIBS="$SSL_LIBS_PATH -lssl${LIBEXT} -lcrypto${LIBEXT}"
-		else
-			TCLTLS_SSL_LIBS="$SSL_LIBS_PATH -lssl -lcrypto"
-		fi
+		TCLTLS_SSL_LIBS="$SSL_LIBS_PATH -lssl -lcrypto"
 	fi
-	
+
 	dnl Set for static libraries
 	if test "$TCLEXT_TLS_STATIC_SSL" == 'yes'; then
 		system="`uname -s`"
