@@ -290,3 +290,17 @@ AC_DEFUN([TCLTLS_SSL_OPENSSL], [
 	AC_ARG_VAR([TCLTLS_SSL_INCLUDES], [C compiler include paths for OpenSSL])
 	AC_ARG_VAR([TCLTLS_SSL_LIBS], [libraries to pass to the linker for OpenSSL])
 ])
+
+#-------------------------------------------------------------------------
+# TEA_PROG_DTPLITE
+#
+#	Do we have a usable dtplite program to use in document generation?
+#
+# Results
+#	Sets up DTPLITE
+#
+#-------------------------------------------------------------------------
+
+AC_DEFUN(TEA_PROG_DTPLITE, [
+    AC_PATH_TOOL([DTPLITE], [dtplite], [:])
+])
