@@ -9665,6 +9665,11 @@ printf "%s\n" "$opensslpkgconfigdir" >&6; }
 		TCLTLS_SSL_LIBS="$SSL_LIBS_PATH -lssl -lcrypto"
 	fi
 
+	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for libs" >&5
+printf %s "checking for libs... " >&6; }
+	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $libdir" >&5
+printf "%s\n" "$libdir" >&6; }
+
 		if test "$TCLEXT_TLS_STATIC_SSL" == 'yes'; then
 		system="`uname -s`"
 		case $system in
@@ -9675,7 +9680,22 @@ printf "%s\n" "$opensslpkgconfigdir" >&6; }
 			CYGWIN_*|MINGW32_*|MINGW64_*|MSYS_*)
 				TCLTLS_SSL_LIBS="-Wl,-Bstatic $TCLTLS_SSL_LIBS -Wl,-Bdynamic";;
 			Darwin*)
-				TCLTLS_SSL_LIBS="${openssllibdir}/libssl.a ${openssllibdir}/libcrypto.a ${openssllibdir}/../libz.a";;
+				# Mac requires path for static linking
+				if test -n "${openssllibdir}" -a -f "${openssllibdir}/libssl.a"; then
+					TCLTLS_SSL_LIBS="${openssllibdir}/libssl.a ${openssllibdir}/libcrypto.a"
+				elif test -f "${libdir}/libssl.a"; then
+					TCLTLS_SSL_LIBS="${libdir}/libssl.a ${libdir}/libcrypto.a"
+				else
+					as_fn_error $? "Unable to locate OpenSSL static libraries" "$LINENO" 5
+				fi
+				# Some installations (like MacPorts) also require libz
+				if test -f "${openssllibdir}/../libz.a"; then
+					TCLTLS_SSL_LIBS="$TCLTLS_SSL_LIBS ${openssllibdir}/../libz.a"
+				elif test -f "${openssllibdir}/libz.a"; then
+					TCLTLS_SSL_LIBS="$TCLTLS_SSL_LIBS ${openssllibdir}/libz.a"
+				elif test -f "${libdir}/libz.a"; then
+					TCLTLS_SSL_LIBS="$TCLTLS_SSL_LIBS ${libdir}/libz.a"
+				fi;;
 			HP-UX*)
 				TCLTLS_SSL_LIBS="-Wl,-a,archive $TCLTLS_SSL_LIBS -Wl,-a,shared_archive";;
 			IRIX*)
