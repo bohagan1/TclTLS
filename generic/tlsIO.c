@@ -167,6 +167,7 @@ int Tls_WaitForConnect(
     unsigned long err;
     int ret, rc, reason, is_fatal, bioShouldRetry, io_err;
     *errorCodePtr = 0;
+    int retries = 10;
 
     dprintf("WaitForConnect(%p)", (void *) statePtr);
     dprintf("Called with handshakeFailureIsPermanent %d", handshakeFailureIsPermanent);
@@ -246,8 +247,10 @@ int Tls_WaitForConnect(
 		dprintf("Returning EAGAIN so that it can be retried later");
 		*errorCodePtr = EAGAIN;
 		return 0;
-	    } else {
+	    } else if (retries > 0) {
 		dprintf("Doing so now");
+		Tcl_Sleep(50);
+		retries--;
 		continue;
 	    }
 	}
