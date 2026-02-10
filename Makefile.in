@@ -214,7 +214,7 @@ DTPLITE=`@CYGPATH@ @DTPLITE@`
 
 doc: make-docs-n make-docs-html
 
-make-docs-n: doc/tls.man
+make-docs-n: doc/$(PACKAGE_NAME).man
 	@echo "make nroff documentation"
 	@if [ -n "$(DTPLITE)" -a -e "$(DTPLITE)" ]; then \
 	    $(TCLSH) $(DTPLITE) -o doc/$(PACKAGE_NAME).n nroff doc/$(PACKAGE_NAME).man; \
@@ -222,7 +222,7 @@ make-docs-n: doc/tls.man
 	    echo "Can't find dtplite. Please install Tcllib."; \
 	fi
 
-make-docs-html: doc/tls.man
+make-docs-html: doc/$(PACKAGE_NAME).man
 	@echo "make HTML documentation"
 	@if [ -n "$(DTPLITE)" -a -e "$(DTPLITE)" ]; then \
 	    $(TCLSH) $(DTPLITE) -o doc/$(PACKAGE_NAME).html html doc/$(PACKAGE_NAME).man; \
@@ -230,7 +230,7 @@ make-docs-html: doc/tls.man
 	    echo "Can't find dtplite. Please install Tcllib."; \
 	fi
 
-make-docs: doc/tls.man
+make-docs: doc/$(PACKAGE_NAME).man
 	@echo "make documentation"
 	@if [ -n "$(DTPLITE)" -a -e "$(DTPLITE)" ]; then \
 	    $(TCLSH) $(DTPLITE) -o doc nroff doc; \
