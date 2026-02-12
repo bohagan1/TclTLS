@@ -1378,8 +1378,8 @@ ImportObjCmd(
     char *servername		= NULL;	/* hostname for Server Name Indication */
     char *session_id		= NULL;
     Tcl_Obj *alpn		= NULL;
-    int ssl2 = 0, ssl3 = 0; /* Default to disabled */
-    int tls1 = 0, tls1_1 = 0, tls1_2 = 0, tls1_3 = 0; /* Default to autp select */
+    int ssl2 = 0, ssl3 = 0, tls1 = 0, tls1_1 = 0; /* Default to disabled */
+    int tls1_2 = 1, tls1_3 = 1; /* Default to enabled */
     int proto = 0, level = -1;
     int verify = 0, require = -1, request = -1, post_handshake = 0;
 
@@ -2075,7 +2075,7 @@ CTX_Init(
     }
 
     /* Specify allowed protocol range */
-    if (!proto) {
+    if (proto == 0) {
 	SSL_CTX_set_min_proto_version(ctx, TLS1_2_VERSION);
 	SSL_CTX_set_max_proto_version(ctx, TLS1_3_VERSION);
     } else {
