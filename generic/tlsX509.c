@@ -526,14 +526,14 @@ Tcl_Obj *Tls_NewX509Obj(Tcl_Interp *interp, X509 *cert, int all) {
     unsigned long flags = XN_FLAG_RFC2253 | ASN1_STRFLGS_UTF8_CONVERT;
     flags &= ~(unsigned long)ASN1_STRFLGS_ESC_MSB;
 
-    char *buffer = (char *)ckalloc(BUFSIZ > EVP_MAX_MD_SIZE ? BUFSIZ : EVP_MAX_MD_SIZE);
+    char *buffer = (char *)Tcl_Alloc(BUFSIZ > EVP_MAX_MD_SIZE ? BUFSIZ : EVP_MAX_MD_SIZE);
 
     dprintf("Called");
 
     if (interp == NULL || cert == NULL || bio == NULL || resultObj == NULL || buffer == NULL) {
 	Tcl_DecrRefCount(resultObj);
 	BIO_free(bio);
-	if (buffer != NULL) ckfree(buffer);
+	if (buffer != NULL) Tcl_Free(buffer);
 	return NULL;
     }
 
@@ -755,7 +755,7 @@ Tcl_Obj *Tls_NewX509Obj(Tcl_Interp *interp, X509 *cert, int all) {
 	if (allObj == NULL || certObj == NULL) {
 	    Tcl_DecrRefCount(allObj);
 	    BIO_free(bio);
-	    ckfree(buffer);
+	    Tcl_Free(buffer);
 	    return resultObj;
 	}
 
@@ -773,6 +773,6 @@ Tcl_Obj *Tls_NewX509Obj(Tcl_Interp *interp, X509 *cert, int all) {
     }
 
     BIO_free(bio);
-    ckfree(buffer);
+    Tcl_Free(buffer);
     return resultObj;
 }

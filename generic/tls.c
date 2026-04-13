@@ -1478,7 +1478,7 @@ ImportObjCmd(
     if (DHparams && !*DHparams)	        DHparams        = NULL;
 
     /* new SSL state */
-    statePtr		= (State *) ckalloc((unsigned) sizeof(State));
+    statePtr		= (State *) Tcl_Alloc((unsigned) sizeof(State));
     memset(statePtr, 0, sizeof(State));
 
     statePtr->flags	= flags;
@@ -1665,7 +1665,7 @@ ImportObjCmd(
 	}
 
 	/* Build the complete protocol-list */
-	protos = (unsigned char *)ckalloc(protos_len);
+	protos = (unsigned char *)Tcl_Alloc(protos_len);
 	/* protocol-lists consist of 8-bit length-prefixed, byte strings */
 	for (i = 0, p = protos; i < cnt; i++) {
 	    char *str = Tcl_GetStringFromObj(list[i], &len);
@@ -1690,7 +1690,7 @@ done:	for (i = 0; i < cnt; i++) {
 	if (res != TCL_OK) {
 	    Tls_Free((tls_free_type *) statePtr);
 	    if (protos != NULL) {
-		ckfree(protos);
+		Tcl_Free(protos);
 	    }
 	    return TCL_ERROR;
 	}
@@ -3203,7 +3203,7 @@ void Tls_Clean(
 
     /* Remove list of ALPN protocols */
     if (statePtr->protos) {
-	ckfree(statePtr->protos);
+	Tcl_Free(statePtr->protos);
 	statePtr->protos = NULL;
     }
 
@@ -3258,7 +3258,7 @@ Tls_Free(
     dprintf("Called");
 
     Tls_Clean(statePtr);
-    ckfree(blockPtr);
+    Tcl_Free(blockPtr);
 }
 
 /*
