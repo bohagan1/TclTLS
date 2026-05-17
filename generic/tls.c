@@ -2423,7 +2423,7 @@ StatusObjCmd(
 
     dprintf("Called");
 
-    if (objc < 2 || objc > 3 || (objc == 3 && !strcmp(Tcl_GetString(objv[1]), "-local"))) {
+    if (objc < 2 || objc > 3 || (objc == 3 && strcmp(Tcl_GetString(objv[1]), "-local"))) {
 	Tcl_WrongNumArgs(interp, 1, objv, "?-local? channel");
 	return TCL_ERROR;
     }
