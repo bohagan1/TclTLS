@@ -1690,7 +1690,7 @@ done:	for (i = 0; i < cnt; i++) {
 	if (res != TCL_OK) {
 	    Tls_Free((tls_free_type *) statePtr);
 	    if (protos != NULL) {
-		Tcl_Free(protos);
+		Tcl_Free((void *)protos);
 	    }
 	    return TCL_ERROR;
 	}
@@ -3176,6 +3176,7 @@ done:	    if (k_C != NULL) {
 void Tls_Clean(
     State *statePtr)		/* Client state for TLS socket */
 {
+    int do_release = 0;
     dprintf("Called");
 
     /*
@@ -3184,7 +3185,7 @@ void Tls_Clean(
     if (statePtr->timer != (Tcl_TimerToken) NULL) {
 	Tcl_DeleteTimerHandler(statePtr->timer);
 	statePtr->timer = NULL;
-	Tcl_Release((ClientData) statePtr);
+	do_release = 1;
     }
 
     /* Remove callbacks */
@@ -3203,7 +3204,7 @@ void Tls_Clean(
 
     /* Remove list of ALPN protocols */
     if (statePtr->protos) {
-	Tcl_Free(statePtr->protos);
+	Tcl_Free((void *)statePtr->protos);
 	statePtr->protos = NULL;
     }
 
@@ -3228,7 +3229,10 @@ void Tls_Clean(
 	SSL_CTX_free(statePtr->ctx);
 	statePtr->ctx = NULL;
     }
-
+ 
+    if (do_release) {
+	Tcl_Release((ClientData) statePtr);
+    }
     dprintf("Returning");
 }
 

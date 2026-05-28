@@ -105,6 +105,7 @@ static int TlsCloseProc(
 	    !(statePtr->flags & TLS_TCL_FATAL_ERROR)) {
 	BIO_flush(statePtr->bio);
 	SSL_shutdown(statePtr->ssl);
+	statePtr->flags |= TLS_TCL_CLOSED;
     }
 
     /* Tls_Free calls Tls_Clean */
@@ -1035,32 +1036,42 @@ static void TlsChannelHandlerTimer(
 {
     State *statePtr = (State *) clientData;
     int mask = statePtr->want; /* Init to SSL_ERROR_WANT_READ and SSL_ERROR_WANT_WRITE */
+    int do_release = 0;
 
     dprintf("Called with mask 0x%02x", mask);
 
+    /* Remove old timer handle */
     if (statePtr->timer != (Tcl_TimerToken) NULL) {
 	statePtr->timer = (Tcl_TimerToken) NULL;
-	Tcl_Release((ClientData) statePtr);
+	do_release = 1;
     }
 
     /* Check for amount of data pending in IO or BIO write buffer */
     if (Tcl_OutputBuffered(statePtr->self) || BIO_wpending(statePtr->bio)) {
 	dprintf("[chan=%p] BIO writable", statePtr->self);
 
-	mask |= TCL_WRITABLE;
+	if (!(statePtr->flags & TLS_TCL_EOF)) {
+	    mask |= TCL_WRITABLE;
+	}
     }
 
     /* Check for amount of data pending in IO or BIO read buffer */
     if (Tcl_InputBuffered(statePtr->self) || BIO_pending(statePtr->bio)) {
 	dprintf("[chan=%p] BIO readable", statePtr->self);
 
-	mask |= TCL_READABLE;
+	if (!(statePtr->flags & TLS_TCL_CLOSED)) {
+	    mask |= TCL_READABLE;
+	}
     }
 
     /* Notify the generic IO layer that mask events have occurred on the channel */
     dprintf("Notifying ourselves with mask=%d", mask);
     Tcl_NotifyChannel(statePtr->self, mask);
     statePtr->want = 0;
+
+    if (do_release) {
+	Tcl_Release((ClientData) statePtr);
+    }
     return;
 }
 

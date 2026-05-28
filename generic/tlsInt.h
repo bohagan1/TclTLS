@@ -180,6 +180,7 @@
 #define TLS_TCL_FASTPATH	(1<<6)	/* The parent channel is being used
 					 * directly by the SSL library. */
 #define TLS_TCL_EOF		(1<<7)	/* At EOF. Can't read, but can write. */
+#define TLS_TCL_CLOSED		(1<<8)	/* Chan closed. Can't write, but can read. */
 
 /* Set timer delay */
 #define TLS_TCL_DELAY (5)
