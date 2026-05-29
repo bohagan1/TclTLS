@@ -500,7 +500,7 @@ Tls_Error(
  */
 
 void KeyLogCallback(
-    TCL_UNUSED(const SSL *),		/* Client state for TLS socket */
+    TCL_UNUSED(const SSL *),	/* Client state for TLS socket */
     const char *line)		/* Key data to be logged */
 {
     char *str = getenv(SSLKEYLOGFILE);
@@ -1569,7 +1569,6 @@ ImportObjCmd(
     /* Create stacked channel */
     dprintf("Consuming Tcl channel %s", Tcl_GetChannelName(chan));
     statePtr->self = Tcl_StackChannel(interp, Tls_ChannelType(), statePtr, (TCL_READABLE | TCL_WRITABLE), chan);
-    dprintf("Created channel named %s", Tcl_GetChannelName(statePtr->self));
     if (statePtr->self == (Tcl_Channel) NULL) {
 	/*
 	 * No use of Tcl_EventuallyFree because no possible Tcl_Preserve.
@@ -1581,6 +1580,7 @@ ImportObjCmd(
 	Tcl_DStringFree(&upperChannelBlocking);
 	return TCL_ERROR;
     }
+    dprintf("Created channel named %s", Tcl_GetChannelName(statePtr->self));
 
     /* Restore channel config */
     Tcl_SetChannelOption(interp, statePtr->self, "-translation", Tcl_DStringValue(&upperChannelTranslation));

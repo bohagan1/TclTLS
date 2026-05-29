@@ -91,7 +91,7 @@ static int TlsBlockModeProc(
  */
 static int TlsCloseProc(
     ClientData instanceData,	/* Connection state info */
-    TCL_UNUSED(Tcl_Interp *))		/* Tcl interpreter to report errors to */
+    TCL_UNUSED(Tcl_Interp *))	/* Tcl interpreter to report errors to */
 {
     State *statePtr = (State *) instanceData;
 
@@ -106,6 +106,13 @@ static int TlsCloseProc(
 	BIO_flush(statePtr->bio);
 	SSL_shutdown(statePtr->ssl);
 	statePtr->flags |= TLS_TCL_CLOSED;
+    }
+
+    /* Remove pending timer, if any */
+    if (statePtr->timer != (Tcl_TimerToken) NULL) {
+	Tcl_DeleteTimerHandler(statePtr->timer);
+	statePtr->timer = NULL;
+	Tcl_Release((ClientData) statePtr);
     }
 
     /* Tls_Free calls Tls_Clean */
