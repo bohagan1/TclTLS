@@ -280,6 +280,10 @@ int Tls_WaitForConnect(
 	       usually a protocol error. This includes certificate validation
 	       errors. */
 	    dprintf("SSL_ERROR_SSL: Fatal SSL protocol error occurred");
+	    *errorCodePtr = ECONNABORTED;
+	    statePtr->flags |= TLS_TCL_FATAL_ERROR; /* Chan unusable */
+	    statePtr->flags |= TLS_TCL_EOF; /* Can't read */
+
 	    if (SSL_get_verify_result(statePtr->ssl) != X509_V_OK) {
 		Tls_Error(statePtr,
 		    X509_verify_cert_error_string(SSL_get_verify_result(statePtr->ssl)));
@@ -287,9 +291,6 @@ int Tls_WaitForConnect(
 	    if (err != 0) {
 		Tls_Error(statePtr, ERR_reason_error_string(err));
 	    }
-	    *errorCodePtr = ECONNABORTED;
-	    statePtr->flags |= TLS_TCL_FATAL_ERROR;
-	    statePtr->flags |= TLS_TCL_EOF;
 	    return -1;
 
 	case SSL_ERROR_WANT_READ:
@@ -322,6 +323,8 @@ int Tls_WaitForConnect(
 	case SSL_ERROR_SYSCALL:
 	    /* Some non-recoverable, fatal I/O error occurred */
 	    dprintf("SSL_ERROR_SYSCALL: Fatal I/O error occurred");
+	    statePtr->flags |= TLS_TCL_FATAL_ERROR; /* Chan unusable */
+	    statePtr->flags |= TLS_TCL_EOF; /* Can't read */
 
 	    if (err == 0 && ret == 0) {
 		/* Unexpected EOF for 1.1.1 */
@@ -335,7 +338,6 @@ int Tls_WaitForConnect(
 		if (*errorCodePtr == ECONNRESET) {
 		    *errorCodePtr = ECONNABORTED;
 		}
-		statePtr->flags |= TLS_TCL_FATAL_ERROR;
 		Tls_Error(statePtr, Tcl_ErrnoMsg(*errorCodePtr));
 
 	    } else {
@@ -344,19 +346,18 @@ int Tls_WaitForConnect(
 		if (*errorCodePtr == ECONNRESET) {
 		    *errorCodePtr = ECONNABORTED;
 		}
-		statePtr->flags |= TLS_TCL_FATAL_ERROR;
 		Tls_Error(statePtr, ERR_reason_error_string(err));
 	    }
-	    statePtr->flags |= TLS_TCL_EOF;
 	    return -1;
 
 	case SSL_ERROR_ZERO_RETURN:
 	    /* Peer has cleanly closed the connection by sending the close_notify
 	       alert. Can't read, but can write. Need to return an EOF, so the
-	       channel is closed which will send an SSL_shutdown(). */
+	       channel is closed which will do a SSL_shutdown(). */
 	    dprintf("SSL_ERROR_ZERO_RETURN: Peer has closed the connection");
 	    *errorCodePtr = ECONNRESET;
 	    statePtr->flags |= TLS_TCL_EOF;
+	    BIO_set_flags(statePtr->bio, BIO_FLAGS_IN_EOF);
 	    Tls_Error(statePtr, "Peer has closed the connection for writing by sending the close_notify alert");
 	    return -1;
 
@@ -443,7 +444,7 @@ static int TlsInputProc(
 {
     unsigned long err;
     State *statePtr = (State *) instanceData;
-    int bytesRead, rc, reason, is_fatal, bioShouldRetry, io_err;
+    int bytesRead, rc, reason, is_eof, is_fatal, bioShouldRetry, io_err;
     *errorCodePtr = 0;
 
     dprintf("Read %d bytes", bufSize);
@@ -505,9 +506,10 @@ static int TlsInputProc(
     ERR_clear_error();
     BIO_clear_retry_flags(statePtr->bio);
     bytesRead = BIO_read(statePtr->bio, buf, bufSize);
+    is_eof = BIO_eof(statePtr->bio);
     dprintf("BIO_read -> %d", bytesRead);
-    dprintf("BIO_read eof=%d, buffered=%d, input=%d, output=%d", Tcl_Eof(statePtr->self), Tcl_ChannelBuffered(statePtr->self), \
-        Tcl_InputBuffered(statePtr->self), Tcl_OutputBuffered(statePtr->self));
+    dprintf("BIO_read eof=%d, buffered=%d, input=%d, output=%d, eof=%d", Tcl_Eof(statePtr->self), Tcl_ChannelBuffered(statePtr->self), \
+        Tcl_InputBuffered(statePtr->self), Tcl_OutputBuffered(statePtr->self), is_eof);
 
     /* Same as SSL_want, but also checks the error queue */
     rc = SSL_get_error(statePtr->ssl, bytesRead);
@@ -525,7 +527,7 @@ static int TlsInputProc(
 	dprintf("Read failed: is EOF=%d, should retry=%d, retry read=%d, retry write=%d, other=%d",
 	    BIO_eof(statePtr->bio), BIO_should_retry(statePtr->bio), BIO_should_read(statePtr->bio),
 	    BIO_should_write(statePtr->bio), BIO_should_io_special(statePtr->bio));
-	if (BIO_should_retry(statePtr->bio)) {
+	if (!is_eof && BIO_should_retry(statePtr->bio)) {
 	    *errorCodePtr = EAGAIN;
 	}
     }
@@ -542,6 +544,11 @@ static int TlsInputProc(
 	    /* A non-recoverable, fatal error in the SSL library occurred,
 	       usually a protocol error. */
 	    dprintf("SSL_ERROR_SSL: Fatal SSL protocol error occurred");
+	    *errorCodePtr = ECONNABORTED;
+	    bytesRead = -1;
+	    statePtr->flags |= TLS_TCL_FATAL_ERROR; /* Chan unusable */
+	    statePtr->flags |= TLS_TCL_EOF; /* Can't read */
+
 	    if (err != 0) {
 		Tls_Error(statePtr, ERR_reason_error_string(err));
 	    } else if (SSL_get_verify_result(statePtr->ssl) != X509_V_OK) {
@@ -550,8 +557,6 @@ static int TlsInputProc(
 	    } else {
 		Tls_Error(statePtr, "Unknown SSL error");
 	    }
-	    *errorCodePtr = ECONNABORTED;
-	    bytesRead = -1;
 
 #if OPENSSL_VERSION_NUMBER >= 0x30000000L
 	    /* Unexpected EOF from the peer for OpenSSL 3.0+ */
@@ -560,14 +565,8 @@ static int TlsInputProc(
 		*errorCodePtr = 0;
 		bytesRead = 0;
 		Tls_Error(statePtr, "EOF reached");
-	    } else {
-		statePtr->flags |= TLS_TCL_FATAL_ERROR;
 	    }
-#else
-	    statePtr->flags |= TLS_TCL_FATAL_ERROR;
 #endif
-	    
-	    statePtr->flags |= TLS_TCL_EOF;
 	    break;
 
 	case SSL_ERROR_WANT_READ:
@@ -596,11 +595,15 @@ static int TlsInputProc(
 	    dprintf("Got SSL_ERROR_WANT_X509_LOOKUP, mapping it to EAGAIN");
 	    *errorCodePtr = EAGAIN;
 	    bytesRead = -1;
+	    BIO_set_retry_special(statePtr->bio);
+	    BIO_set_retry_reason(statePtr->bio, BIO_RR_SSL_X509_LOOKUP);
 	    break;
 
 	case SSL_ERROR_SYSCALL:
 	    /* Some non-recoverable, fatal I/O error occurred */
 	    dprintf("SSL_ERROR_SYSCALL: Fatal I/O error occurred");
+	    statePtr->flags |= TLS_TCL_FATAL_ERROR; /* Chan unusable */
+	    statePtr->flags |= TLS_TCL_EOF; /* Can't read */
 
 	    if (err == 0 && bytesRead == 0) {
 		/* Unexpected EOF from the peer for OpenSSL 1.1 */
@@ -613,27 +616,25 @@ static int TlsInputProc(
 		dprintf("I/O error occurred (errno = %lu)", (unsigned long) Tcl_GetErrno());
 		*errorCodePtr = Tcl_GetErrno();
 		bytesRead = -1;
-		statePtr->flags |= TLS_TCL_FATAL_ERROR;
 		Tls_Error(statePtr, Tcl_ErrnoMsg(*errorCodePtr));
 
 	    } else {
 		dprintf("I/O error occurred (err = %lu)", err);
 		*errorCodePtr = Tcl_GetErrno();
 		bytesRead = -1;
-		statePtr->flags |= TLS_TCL_FATAL_ERROR;
 		Tls_Error(statePtr, ERR_reason_error_string(err));
 	    }
-	    statePtr->flags |= TLS_TCL_EOF;
 	    break;
 
 	case SSL_ERROR_ZERO_RETURN:
 	    /* Peer has cleanly closed the connection by sending the close_notify
 	       alert. Can't read, but can write. Need to return an EOF, so the
-	       channel is closed which will send an SSL_shutdown(). */
+	       channel is closed which will do a SSL_shutdown(). */
 	    dprintf("SSL_ERROR_ZERO_RETURN: Peer has closed the connection");
 	    *errorCodePtr = 0;
 	    bytesRead = 0;
 	    statePtr->flags |= TLS_TCL_EOF;
+	    BIO_set_flags(statePtr->bio, BIO_FLAGS_IN_EOF);
 	    Tls_Error(statePtr, "Peer has closed the connection for writing by sending the close_notify alert");
 	    break;
 
@@ -684,7 +685,7 @@ static int TlsOutputProc(
 {
     unsigned long err;
     State *statePtr = (State *) instanceData;
-    int written, rc, reason, is_fatal, bioShouldRetry, io_err;
+    int written, rc, reason, is_eof, is_fatal, bioShouldRetry, io_err;
     *errorCodePtr = 0;
 
     dprintf("Write %d bytes", toWrite);
@@ -763,9 +764,10 @@ static int TlsOutputProc(
     ERR_clear_error();
     BIO_clear_retry_flags(statePtr->bio);
     written = BIO_write(statePtr->bio, buf, toWrite);
+    is_eof = BIO_eof(statePtr->bio);
     dprintf("BIO_write(%p, %d) -> [%d]", (void *) statePtr, toWrite, written);
-    dprintf("BIO_write eof=%d, buffered=%d, input=%d, output=%d", Tcl_Eof(statePtr->self), Tcl_ChannelBuffered(statePtr->self), \
-        Tcl_InputBuffered(statePtr->self), Tcl_OutputBuffered(statePtr->self));
+    dprintf("BIO_write eof=%d, buffered=%d, input=%d, output=%d, eof=%d", Tcl_Eof(statePtr->self), Tcl_ChannelBuffered(statePtr->self), \
+        Tcl_InputBuffered(statePtr->self), Tcl_OutputBuffered(statePtr->self), is_eof);
 
     /* Same as SSL_want, but also checks the error queue */
     rc = SSL_get_error(statePtr->ssl, written);
@@ -782,7 +784,7 @@ static int TlsOutputProc(
 	dprintf("Write failed: is EOF=%d, should retry=%d, retry read=%d, retry write=%d, other=%d",
 	    BIO_eof(statePtr->bio), BIO_should_retry(statePtr->bio), BIO_should_read(statePtr->bio),
 	    BIO_should_write(statePtr->bio), BIO_should_io_special(statePtr->bio));
-	if (BIO_should_retry(statePtr->bio)) {
+	if (!is_eof && BIO_should_retry(statePtr->bio)) {
 	    *errorCodePtr = EAGAIN;
 	}
     } else {
@@ -803,6 +805,11 @@ static int TlsOutputProc(
 	    /* A non-recoverable, fatal error in the SSL library occurred,
 	       usually a protocol error */
 	    dprintf("SSL_ERROR_SSL: Fatal SSL protocol error occurred");
+	    *errorCodePtr = ECONNABORTED;
+	    written = -1;
+	    statePtr->flags |= TLS_TCL_FATAL_ERROR; /* Chan unusable */
+	    statePtr->flags |= TLS_TCL_EOF; /* Can't read */
+
 	    if (err != 0) {
 		Tls_Error(statePtr, ERR_reason_error_string(err));
 	    } else if (SSL_get_verify_result(statePtr->ssl) != X509_V_OK) {
@@ -811,10 +818,6 @@ static int TlsOutputProc(
 	    } else {
 		Tls_Error(statePtr, "Unknown SSL error");
 	    }
-	    *errorCodePtr = ECONNABORTED;
-	    statePtr->flags |= TLS_TCL_FATAL_ERROR;
-	    statePtr->flags |= TLS_TCL_EOF;
-	    written = -1;
 	    break;
 
 	case SSL_ERROR_WANT_READ:
@@ -843,11 +846,15 @@ static int TlsOutputProc(
 	    dprintf("Got SSL_ERROR_WANT_X509_LOOKUP, mapping it to EAGAIN");
 	    *errorCodePtr = EAGAIN;
 	    written = -1;
+	    BIO_set_retry_special(statePtr->bio);
+	    BIO_set_retry_reason(statePtr->bio, BIO_RR_SSL_X509_LOOKUP);
 	    break;
 
 	case SSL_ERROR_SYSCALL:
 	    /* Some non-recoverable, fatal I/O error occurred */
 	    dprintf("SSL_ERROR_SYSCALL: Fatal I/O error occurred");
+	    statePtr->flags |= TLS_TCL_FATAL_ERROR; /* Chan unusable */
+	    statePtr->flags |= TLS_TCL_EOF; /* Can't read */
 
 	    if (err == 0 && written == 0) {
 		dprintf("EOF reached")
@@ -859,23 +866,20 @@ static int TlsOutputProc(
 		dprintf("I/O error occurred (errno = %lu)", (unsigned long) Tcl_GetErrno());
 		*errorCodePtr = Tcl_GetErrno();
 		written = -1;
-		statePtr->flags |= TLS_TCL_FATAL_ERROR;
 		Tls_Error(statePtr, Tcl_ErrnoMsg(*errorCodePtr));
 
 	    } else {
 		dprintf("I/O error occurred (err = %lu)", err);
 		*errorCodePtr = Tcl_GetErrno();
 		written = -1;
-		statePtr->flags |= TLS_TCL_FATAL_ERROR;
 		Tls_Error(statePtr, ERR_reason_error_string(err));
 	    }
-	    statePtr->flags |= TLS_TCL_EOF;
 	    break;
 
 	case SSL_ERROR_ZERO_RETURN:
 	    /* Peer has cleanly closed the connection by sending the close_notify
 	       alert. Can't read, but can write. Need to return an EOF, so the
-	       channel is closed which will send an SSL_shutdown(). */
+	       channel is closed which will do a SSL_shutdown(). */
 	    dprintf("SSL_ERROR_ZERO_RETURN: Peer has closed the connection");
 	    *errorCodePtr = 0;
 	    written = 0;

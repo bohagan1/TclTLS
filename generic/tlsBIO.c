@@ -103,6 +103,10 @@ static int BioOutput(BIO *bio, const char *buf, int bufLen) {
     dprintf("[chan=%p] BioOutput(bio=%p, buf=%p, len=%d)", (void *)chan,
 	(void *) bio, buf, bufLen);
 
+    if (Tcl_Eof(chan)) {
+	return 0;
+    }
+
     BIO_clear_retry_flags(bio);
     Tcl_SetErrno(0);
 
@@ -132,6 +136,7 @@ static int BioOutput(BIO *bio, const char *buf, int bufLen) {
 	}
 
     } else {
+	/* EPIPE or ECONNRESET mean peer is gone */
 	dprintf("We got some kind of I/O error");
 
 	if (BIOShouldRetry(tclErrno)) {
@@ -167,7 +172,7 @@ static int BioOutput(BIO *bio, const char *buf, int bufLen) {
  */
 
 static int BioInput(BIO *bio, char *buf, int bufLen) {
-    Tcl_Size ret = 0;
+    Tcl_Size ret;
     int is_eof, tclErrno, is_blocked;
     State *statePtr = (State *) BIO_get_data(bio);
     Tcl_Channel chan = Tls_GetParent(statePtr, 0);
@@ -175,7 +180,7 @@ static int BioInput(BIO *bio, char *buf, int bufLen) {
     dprintf("[chan=%p] BioInput(bio=%p, buf=%p, len=%d)", (void *) chan,
 	(void *) bio, buf, bufLen);
 
-    if (buf == NULL || bufLen <= 0) {
+    if (buf == NULL || bufLen <= 0 || Tcl_Eof(chan)) {
 	return 0;
     }
 
@@ -184,7 +189,6 @@ static int BioInput(BIO *bio, char *buf, int bufLen) {
 
     /* Read data from underlying channel */
     ret = Tcl_ReadRaw(chan, buf, (Tcl_Size) bufLen);
-
     is_eof = Tcl_Eof(chan);
     tclErrno = Tcl_GetErrno();
     is_blocked = Tcl_InputBlocked(chan);

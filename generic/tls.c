@@ -1665,7 +1665,7 @@ ImportObjCmd(
 	}
 
 	/* Build the complete protocol-list */
-	protos = (unsigned char *)Tcl_Alloc(protos_len);
+	protos = (unsigned char *)Tcl_Alloc((Tcl_Size)protos_len);
 	/* protocol-lists consist of 8-bit length-prefixed, byte strings */
 	for (i = 0, p = protos; i < cnt; i++) {
 	    char *str = Tcl_GetStringFromObj(list[i], &len);
