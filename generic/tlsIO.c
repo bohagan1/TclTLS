@@ -173,7 +173,7 @@ int Tls_WaitForConnect(
     int handshakeFailureIsPermanent)	/* Is the connect failure permanent */
 {
     unsigned long err;
-    int ret, rc, reason, is_fatal, bioShouldRetry, io_err;
+    int ret, rc, reason, is_eof, is_fatal, bioShouldRetry, io_err;
     *errorCodePtr = 0;
     int retries = 10;
 
@@ -229,6 +229,7 @@ int Tls_WaitForConnect(
 	rc = SSL_get_error(statePtr->ssl, ret);
 	err = ERR_get_error();
 	reason = ERR_GET_REASON(err);
+	is_eof = BIO_eof(statePtr->bio);
 	is_fatal = ERR_FATAL_ERROR(err);
 	/* The retry flag is set by the BIO_set_retry_* functions */
 	bioShouldRetry = BIO_should_retry(statePtr->bio);
@@ -357,6 +358,9 @@ int Tls_WaitForConnect(
 	    dprintf("SSL_ERROR_ZERO_RETURN: Peer has closed the connection");
 	    *errorCodePtr = ECONNRESET;
 	    statePtr->flags |= TLS_TCL_EOF;
+	    if (is_eof) {
+		statePtr->flags |= TLS_TCL_FATAL_ERROR;
+	    }
 	    BIO_set_flags(statePtr->bio, BIO_FLAGS_IN_EOF);
 	    Tls_Error(statePtr, "Peer has closed the connection for writing by sending the close_notify alert");
 	    return -1;
@@ -522,16 +526,6 @@ static int TlsInputProc(
     dprintf("Read: bytesRead=%d, rc=%d, err=%ld, reason=%d, is_fatal=%d, lib=%s, msg=%s, bioShouldRetry=%d, errno=%d, id=%s, msg=%s", \
         bytesRead, rc, err, reason, is_fatal, ERR_lib_error_string(err), ERR_reason_error_string(err), bioShouldRetry, io_err, Tcl_ErrnoId(), Tcl_ErrnoMsg(io_err));
 
-    if (bytesRead <= 0) {
-	/* The retry flag is set by the BIO_set_retry_* functions */
-	dprintf("Read failed: is EOF=%d, should retry=%d, retry read=%d, retry write=%d, other=%d",
-	    BIO_eof(statePtr->bio), BIO_should_retry(statePtr->bio), BIO_should_read(statePtr->bio),
-	    BIO_should_write(statePtr->bio), BIO_should_io_special(statePtr->bio));
-	if (!is_eof && BIO_should_retry(statePtr->bio)) {
-	    *errorCodePtr = EAGAIN;
-	}
-    }
-
     /* Based on error, do retry or abort */
     switch (rc) {
 	case SSL_ERROR_NONE:
@@ -634,6 +628,9 @@ static int TlsInputProc(
 	    *errorCodePtr = 0;
 	    bytesRead = 0;
 	    statePtr->flags |= TLS_TCL_EOF;
+	    if (is_eof) {
+		statePtr->flags |= TLS_TCL_FATAL_ERROR;
+	    }
 	    BIO_set_flags(statePtr->bio, BIO_FLAGS_IN_EOF);
 	    Tls_Error(statePtr, "Peer has closed the connection for writing by sending the close_notify alert");
 	    break;
@@ -780,17 +777,6 @@ static int TlsOutputProc(
     dprintf("Write: written=%d, rc=%d, err=%ld, reason=%d, is_fatal=%d, lib=%s, msg=%s, bioShouldRetry=%d, errno=%d, id=%s, msg=%s", \
         written, rc, err, reason, is_fatal, ERR_lib_error_string(err), ERR_reason_error_string(err), bioShouldRetry, io_err, Tcl_ErrnoId(), Tcl_ErrnoMsg(io_err));
 
-    if (written <= 0) {
-	dprintf("Write failed: is EOF=%d, should retry=%d, retry read=%d, retry write=%d, other=%d",
-	    BIO_eof(statePtr->bio), BIO_should_retry(statePtr->bio), BIO_should_read(statePtr->bio),
-	    BIO_should_write(statePtr->bio), BIO_should_io_special(statePtr->bio));
-	if (!is_eof && BIO_should_retry(statePtr->bio)) {
-	    *errorCodePtr = EAGAIN;
-	}
-    } else {
-	BIO_flush(statePtr->bio);
-    }
-
     /* Based on error, do retry or abort */
     switch (rc) {
 	case SSL_ERROR_NONE:
@@ -884,6 +870,9 @@ static int TlsOutputProc(
 	    *errorCodePtr = 0;
 	    written = 0;
 	    statePtr->flags |= TLS_TCL_EOF;
+	    if (is_eof) {
+		statePtr->flags |= TLS_TCL_FATAL_ERROR;
+	    }
 	    Tls_Error(statePtr, "Peer has closed the connection for writing by sending the close_notify alert");
 	    break;
 
