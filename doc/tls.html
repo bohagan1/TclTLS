@@ -168,8 +168,8 @@ the same as channels created using the built-in <b class="syscmd">socket</b> com
 provide additional options for controlling the SSL/TLS session.</p>
 </div>
 <div id="section2" class="doctools_section"><h2><a name="section2">Compatibility</a></h2>
-<p>This extension is compatible with OpenSSL 1.1.1 or later. It requires Tcl
-version 8.5 or later and will work with Tcl 9.0.</p>
+<p>This extension is compatible with OpenSSL 1.1.1 or later including the 3.x and 4.0
+releases. It requires Tcl version 8.5 or later and will work with Tcl 9.0.</p>
 </div>
 <div id="section3" class="doctools_section"><h2><a name="section3">Commands</a></h2>
 <p>The following are the commands provided by the TcLTLS package. See
@@ -311,6 +311,7 @@ See the <b class="cmd">tls::protocols</b> command for supported protocols.</p></
 <dt><b class="option">-ssl3</b> <i class="arg">bool</i></dt>
 <dd><p>Enable use of SSL v3. The default is <b class="const">false</b>. Starting in TclTLS 1.8,
 use of SSL v3 if only available via a compile time option.
+OpenSSL 4.0+ no longer supports SSL v3, so this may not have any effect.
 See the <b class="cmd">tls::protocols</b> command for supported protocols.</p></dd>
 <dt><b class="option">-tls1</b> <i class="arg">bool</i></dt>
 <dd><p>Enable use of TLS v1. Starting in TclTLS 2.0, the default is <b class="const">false</b>.

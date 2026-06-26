@@ -1604,9 +1604,11 @@ ImportObjCmd(
 	return TCL_ERROR;
     }
 
-    /* Set host server name */
+    /* Set host server name and SNI */
     if (servername) {
-	/* Sets the server name indication (SNI) in ClientHello extension */
+	int res;
+
+	/* Sets the server name indication (SNI) in ClientHello extension. */
 	/* Per RFC 6066, hostname is a ASCII encoded string, though RFC 4366 says UTF-8. */
 	if (!SSL_set_tlsext_host_name(statePtr->ssl, servername) && require) {
 	    Tcl_AppendResult(interp, "Set SNI extension failed: ", GET_ERR_REASON(), (char *)NULL);
@@ -1615,9 +1617,28 @@ ImportObjCmd(
 	    return TCL_ERROR;
 	}
 
-	/* Set hostname for peer certificate hostname verification in clients.
-	   Don't use SSL_set1_host since it has limitations. */
-	if (!SSL_add1_host(statePtr->ssl, servername)) {
+	/* Set hostname for peer certificate hostname verification. */
+	/* We use add instead of set so multiple names can be used. */
+#if OPENSSL_VERSION_NUMBER < 0x40000000L
+	res = SSL_add1_host(statePtr->ssl, servername);
+#else
+	int is_name = 0;
+	size_t slen = strlen(servername);
+
+	for (size_t i = 0; i < slen; i++) {
+	    if ((servername[i] < '0' || servername[i] > '9') &&
+		servername[i] != '.' && servername[i] != ':') {
+		is_name = 1;
+		break;
+	    }
+	}
+	if (is_name) {
+	    res = SSL_add1_dnsname(statePtr->ssl, servername);
+	} else {
+	    res = SSL_add1_ipaddr(statePtr->ssl, servername);
+	}
+#endif
+	if (!res) {
 	    Tcl_AppendResult(interp, "Set DNS hostname failed: ", GET_ERR_REASON(), (char *)NULL);
 	    Tcl_SetErrorCode(interp, "TLS", "IMPORT", "HOSTNAME", "FAILED", (char *)NULL);
 	    Tls_Free((tls_free_type *) statePtr);
@@ -1898,7 +1919,11 @@ TlsLoadClientCAFileFromMemory(
     X509_STORE *store = NULL;
     Tcl_Obj    *buf = NULL;
     const void *data = NULL;
+#if OPENSSL_VERSION_NUMBER < 0x40000000L
     X509_NAME  *name = NULL;
+#else
+    const X509_NAME  *name = NULL;
+#endif
     STACK_OF(X509_NAME) *certNames = NULL;
     int ret = 0;
     Tcl_Size len = 0;
@@ -2881,7 +2906,11 @@ MiscObjCmd(
 	case C_STRREQ: {
 	    EVP_PKEY *pkey=NULL;
 	    X509 *cert=NULL;
+#if OPENSSL_VERSION_NUMBER < 0x40000000L
 	    X509_NAME *name=NULL;
+#else
+	    const X509_NAME *name=NULL;
+#endif
 	    Tcl_Obj **listv;
 	    Tcl_Size listc, i;
 
@@ -3028,7 +3057,7 @@ MiscObjCmd(
 		X509_gmtime_adj(X509_getm_notAfter(cert),(long)60*60*24*days);
 		X509_set_pubkey(cert,pkey);
 
-		name=X509_get_subject_name(cert);
+		name = X509_get_subject_name(cert);
 
 		if (k_C != NULL) {
 		    string = (const unsigned char *) Tcl_GetStringFromObj(k_C, &len);
@@ -3036,7 +3065,7 @@ MiscObjCmd(
 		    string = NULL;
 		    len = 0;
 		}
-		X509_NAME_add_entry_by_txt(name,"C", MBSTRING_ASC, string, (int) len, -1, 0);
+		X509_NAME_add_entry_by_txt((X509_NAME *)name,"C", MBSTRING_ASC, string, (int) len, -1, 0);
 
 		if (k_ST != NULL) {
 		    string = (const unsigned char *) Tcl_GetStringFromObj(k_ST, &len);
@@ -3044,7 +3073,7 @@ MiscObjCmd(
 		    string = NULL;
 		    len = 0;
 		}
-		X509_NAME_add_entry_by_txt(name,"ST", MBSTRING_ASC, string, (int) len, -1, 0);
+		X509_NAME_add_entry_by_txt((X509_NAME *)name,"ST", MBSTRING_ASC, string, (int) len, -1, 0);
 
 		if (k_L != NULL) {
 		    string = (const unsigned char *) Tcl_GetStringFromObj(k_L, &len);
@@ -3052,7 +3081,7 @@ MiscObjCmd(
 		    string = NULL;
 		    len = 0;
 		}
-		X509_NAME_add_entry_by_txt(name,"L", MBSTRING_ASC, string, (int) len, -1, 0);
+		X509_NAME_add_entry_by_txt((X509_NAME *)name,"L", MBSTRING_ASC, string, (int) len, -1, 0);
 
 		if (k_O != NULL) {
 		    string = (const unsigned char *) Tcl_GetStringFromObj(k_O, &len);
@@ -3060,7 +3089,7 @@ MiscObjCmd(
 		    string = NULL;
 		    len = 0;
 		}
-		X509_NAME_add_entry_by_txt(name,"O", MBSTRING_ASC, string, (int) len, -1, 0);
+		X509_NAME_add_entry_by_txt((X509_NAME *)name,"O", MBSTRING_ASC, string, (int) len, -1, 0);
 
 		if (k_OU != NULL) {
 		    string = (const unsigned char *) Tcl_GetStringFromObj(k_OU, &len);
@@ -3068,7 +3097,7 @@ MiscObjCmd(
 		    string = NULL;
 		    len = 0;
 		}
-		X509_NAME_add_entry_by_txt(name,"OU", MBSTRING_ASC, string, (int) len, -1, 0);
+		X509_NAME_add_entry_by_txt((X509_NAME *)name,"OU", MBSTRING_ASC, string, (int) len, -1, 0);
 
 		if (k_CN != NULL) {
 		    string = (const unsigned char *) Tcl_GetStringFromObj(k_CN, &len);
@@ -3076,7 +3105,7 @@ MiscObjCmd(
 		    string = NULL;
 		    len = 0;
 		}
-		X509_NAME_add_entry_by_txt(name,"CN", MBSTRING_ASC, string, (int) len, -1, 0);
+		X509_NAME_add_entry_by_txt((X509_NAME *)name,"CN", MBSTRING_ASC, string, (int) len, -1, 0);
 
 		if (k_Email != NULL) {
 		    string = (const unsigned char *) Tcl_GetStringFromObj(k_Email, &len);
@@ -3084,7 +3113,7 @@ MiscObjCmd(
 		    string = NULL;
 		    len = 0;
 		}
-		X509_NAME_add_entry_by_txt(name,"Email", MBSTRING_ASC, string, (int) len, -1, 0);
+		X509_NAME_add_entry_by_txt((X509_NAME *)name,"Email", MBSTRING_ASC, string, (int) len, -1, 0);
 
 		X509_set_subject_name(cert,name);
 
@@ -3229,7 +3258,7 @@ void Tls_Clean(
 	SSL_CTX_free(statePtr->ctx);
 	statePtr->ctx = NULL;
     }
- 
+
     if (do_release) {
 	Tcl_Release((ClientData) statePtr);
     }
