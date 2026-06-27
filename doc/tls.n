@@ -4,7 +4,7 @@
 '\" Copyright (c) 2004 Starfish Systems
 '\" Copyright (c) 2024 Brian O'Hagan
 '\"
-.TH "tls" n 2\&.0 tls "Tcl TLS extension"
+.TH "tls" n 2\&.0\&.1 tls "Tcl TLS extension"
 .\" The -*- nroff -*- definitions below are for supplemental macros used
 .\" in Tcl/Tk manual entries.
 .\"
@@ -278,7 +278,7 @@ tls \- binding to the OpenSSL library for encrypted socket and I/O channel commu
 .SH SYNOPSIS
 package require \fBTcl 8\&.5-\fR
 .sp
-package require \fBtls 2\&.0\fR
+package require \fBtls 2\&.0\&.1\fR
 .sp
 \fBtls::init\fR ?\fI-option\fR? ?\fIvalue\fR? ?\fI-option value \&.\&.\&.\fR?
 .sp
@@ -317,8 +317,8 @@ generic binding to \fIOpenSSL\fR [https://www\&.openssl\&.org/], utilizing the
 the same as channels created using the built-in \fBsocket\fR command, but
 provide additional options for controlling the SSL/TLS session\&.
 .SH COMPATIBILITY
-This extension is compatible with OpenSSL 1\&.1\&.1 or later\& including the 3\&.x and
-4\&.0 releases. It requires Tcl version 8\&.5 or later and will work with Tcl 9\&.0\&.
+This extension is compatible with OpenSSL 1\&.1\&.1 or later\&. It requires Tcl
+version 8\&.5 or later and will work with Tcl 9\&.0\&.
 .SH COMMANDS
 The following are the commands provided by the TcLTLS package\&. See
 \fBExamples\fR for example usage and the "\fIdemos\fR" directory for

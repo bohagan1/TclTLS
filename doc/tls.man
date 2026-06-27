@@ -3,7 +3,7 @@
           script from tcllib: dtplite -o tls.n nroff tls.man
                               dtplite -o tls.html html tls.man
 }]
-[manpage_begin tls n 2.0]
+[manpage_begin tls n 2.0.1]
 [category tls]
 [copyright {1999 Matt Newman}]
 [copyright {2004 Starfish Systems}]
@@ -13,7 +13,7 @@
 [see_also http socket [uri https://www.openssl.org/ OpenSSL]]
 [titledesc {binding to the OpenSSL library for encrypted socket and I/O channel communications}]
 [require Tcl 8.5-]
-[require tls 2.0]
+[require tls 2.0.1]
 [description]
 
 This extension provides TCL script access to Secure Socket Layer (SSL)
@@ -24,8 +24,8 @@ the same as channels created using the built-in [syscmd socket] command, but
 provide additional options for controlling the SSL/TLS session.
 
 [section Compatibility]
-This extension is compatible with OpenSSL 1.1.1 or later including the 3.x and 4.0
-releases. It requires Tcl version 8.5 or later and will work with Tcl 9.0.
+This extension is compatible with OpenSSL 1.1.1 or later. It requires Tcl
+version 8.5 or later and will work with Tcl 9.0.
 
 [section Commands]
 
